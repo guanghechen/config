@@ -16,6 +16,7 @@ local M = {}
 ---@param ctx                            era.m.diffview.view.commits.IContext
 ---@return stl.t.IKeymap[]
 function M.gen_cross_pane(ctx)
+  -- stylua: ignore
   ---@type stl.t.IKeymap[]
   return {
     { modes = { "n" }, key = "<C-a>r", desc = "diffview(commits): Refresh", callback = function() stl.async.run(function() action.refresh(ctx) end) end, aliases = { "<D-r>", "<M-r>" } },
@@ -39,6 +40,7 @@ end
 ---@param ctx                            era.m.diffview.view.commits.IContext
 ---@return stl.t.IKeymap[]
 function M.gen_commit_pane(ctx)
+  -- stylua: ignore
   ---@type stl.t.IKeymap[]
   local keymaps = {
     { modes = { "n" }, key = "<2-LeftMouse>", desc = "diffview(commits): Select / Toggle expand", callback = function() action.select(ctx) end },
@@ -90,6 +92,7 @@ end
 ---@param ctx                            era.m.diffview.view.commits.IContext
 ---@return stl.t.IKeymap[]
 function M.gen_filetree(ctx)
+  -- stylua: ignore
   ---@type stl.t.IKeymap[]
   local keymaps = {
     { modes = { "n" }, key = "<2-LeftMouse>", desc = "diffview(commits): Select file", callback = function() action.view_diff(ctx) end },
@@ -116,6 +119,7 @@ end
 ---@param ctx                            era.m.diffview.view.commits.IContext
 ---@return stl.t.IKeymap[]
 function M.gen_sbs(ctx)
+  -- stylua: ignore
   ---@type stl.t.IKeymap[]
   local keymaps = {
     { modes = { "n" }, key = "g?", desc = "diffview(commits): Show keymap help", callback = function() action.show_help(ctx) end },

@@ -299,14 +299,16 @@ local function poll(state)
   local attach_ready, attached_count, total_listed = check_lsp_attach_status(expected_attach_count)
   if not attach_ready then
     state.stable_count = 0
-    log(string.format(
-      "[%s] [%ds] Waiting for LSP to attach... (attached=%d/%d, expected=%d)",
-      __module_name__,
-      math.floor(elapsed / 1000),
-      attached_count,
-      total_listed,
-      expected_attach_count
-    ))
+    log(
+      string.format(
+        "[%s] [%ds] Waiting for LSP to attach... (attached=%d/%d, expected=%d)",
+        __module_name__,
+        math.floor(elapsed / 1000),
+        attached_count,
+        total_listed,
+        expected_attach_count
+      )
+    )
     vim.defer_fn(function()
       poll(state)
     end, config.poll_interval_ms)
@@ -334,27 +336,31 @@ local function poll(state)
   state.last_diagnostic_count = current_count
 
   if busy then
-    log(string.format(
-      "[%s] [%ds] [%d%%] LSP busy (attached=%d/%d), diagnostics=%d",
-      __module_name__,
-      elapsed_s,
-      progress_pct,
-      attached_count,
-      expected_attach_count,
-      current_count
-    ))
+    log(
+      string.format(
+        "[%s] [%ds] [%d%%] LSP busy (attached=%d/%d), diagnostics=%d",
+        __module_name__,
+        elapsed_s,
+        progress_pct,
+        attached_count,
+        expected_attach_count,
+        current_count
+      )
+    )
   else
-    log(string.format(
-      "[%s] [%ds] [%d%%] LSP idle (attached=%d/%d), diagnostics=%d, stable=%d/%d",
-      __module_name__,
-      elapsed_s,
-      progress_pct,
-      attached_count,
-      expected_attach_count,
-      current_count,
-      state.stable_count,
-      config.stable_count_required
-    ))
+    log(
+      string.format(
+        "[%s] [%ds] [%d%%] LSP idle (attached=%d/%d), diagnostics=%d, stable=%d/%d",
+        __module_name__,
+        elapsed_s,
+        progress_pct,
+        attached_count,
+        expected_attach_count,
+        current_count,
+        state.stable_count,
+        config.stable_count_required
+      )
+    )
   end
 
   local busy_stable_threshold = config.stable_count_required * 3
@@ -364,7 +370,13 @@ local function poll(state)
     vim.cmd(diag_count > 0 and "cq!" or "qa!")
     return
   elseif state.busy_stable_count >= busy_stable_threshold then
-    log(string.format("[%s] LSP still busy but diagnostics stable for %d cycles, completing...", __module_name__, state.busy_stable_count))
+    log(
+      string.format(
+        "[%s] LSP still busy but diagnostics stable for %d cycles, completing...",
+        __module_name__,
+        state.busy_stable_count
+      )
+    )
     local diag_count = collect_and_output(state)
     vim.cmd(diag_count > 0 and "cq!" or "qa!")
     return
@@ -399,7 +411,13 @@ local function main()
 
   if config.output_file == "" then
     log(string.format("[%s] ERROR: OUTPUT_FILE is required but not specified", __module_name__))
-    log(string.format("[%s] Usage: nvim --headless -c \"lua OUTPUT_FILE='/path/to/output.json'\" -c \"luafile %s\"", __module_name__, debug.getinfo(1, "S").source:sub(2)))
+    log(
+      string.format(
+        '[%s] Usage: nvim --headless -c "lua OUTPUT_FILE=\'/path/to/output.json\'" -c "luafile %s"',
+        __module_name__,
+        debug.getinfo(1, "S").source:sub(2)
+      )
+    )
     vim.cmd("cq!")
     return
   end

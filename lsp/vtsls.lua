@@ -93,7 +93,10 @@ local function on_attach(client, bufnr)
         client:exec_cmd({
           title = "Go to source definition",
           command = "typescript.goToSourceDefinition",
-          arguments = { vim.uri_from_bufnr(bufnr), vim.lsp.util.make_position_params(0, client.offset_encoding).position },
+          arguments = {
+            vim.uri_from_bufnr(bufnr),
+            vim.lsp.util.make_position_params(0, client.offset_encoding).position,
+          },
         })
       end,
       desc = "lsp: go to source definition",

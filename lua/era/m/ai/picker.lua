@@ -93,7 +93,6 @@ local function dispose_picker_flags(flags)
   end
 end
 
-
 ---@param winnr                         integer
 ---@return nil
 local function restore_window(winnr)
@@ -508,7 +507,12 @@ function M.show_attach(params)
     keymaps_common = on_toggle and {
       { modes = { "i", "n", "x" }, key = "<C-l>", callback = do_toggle, desc = "Toggle attach/detach" },
       { modes = { "i", "n", "x" }, key = "<C-h>", callback = do_toggle, desc = "Toggle attach/detach" },
-      { modes = { "i", "n", "x" }, key = "<Tab>", callback = do_toggle_tmux, desc = "Toggle attach/detach (tmux only)" },
+      {
+        modes = { "i", "n", "x" },
+        key = "<Tab>",
+        callback = do_toggle_tmux,
+        desc = "Toggle attach/detach (tmux only)",
+      },
     } or nil,
     keymaps_result = on_toggle and {
       { modes = { "i", "n", "x" }, key = "<space>", callback = do_toggle, desc = "Toggle attach/detach" },

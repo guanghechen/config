@@ -313,13 +313,17 @@ function M:__show_popup__(hunk, is_staged)
   vim.api.nvim_set_option_value("winblend", 0, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("wrap", false, { win = winnr, scope = "local" })
-  vim.api.nvim_set_option_value("winhighlight", table.concat({
-    "CursorLine:m_ghp_cursor",
-    "FloatBorder:ms_b_bg0",
-    "FloatTitle:ms_b_bg0",
-    "Normal:m_ghp_normal",
-    "SignColumn:m_ghp_normal",
-  }, ","), { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value(
+    "winhighlight",
+    table.concat({
+      "CursorLine:m_ghp_cursor",
+      "FloatBorder:ms_b_bg0",
+      "FloatTitle:ms_b_bg0",
+      "Normal:m_ghp_normal",
+      "SignColumn:m_ghp_normal",
+    }, ","),
+    { win = winnr, scope = "local" }
+  )
 
   self:__setup_keymaps__(board_bufnr, hunk, is_staged)
 end

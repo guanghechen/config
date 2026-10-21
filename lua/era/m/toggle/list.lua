@@ -161,7 +161,10 @@ local group_items = {
           })
         end
 
-        if vim.api.nvim_get_option_value("buftype", { buf = bufnr }) == "nowrite" or vim.api.nvim_get_option_value("readonly", { buf = bufnr }) then
+        if
+          vim.api.nvim_get_option_value("buftype", { buf = bufnr }) == "nowrite"
+          or vim.api.nvim_get_option_value("readonly", { buf = bufnr })
+        then
           reopen()
         else
           era.m.select.open({
@@ -254,7 +257,10 @@ local group_items = {
           })
         end
 
-        if vim.api.nvim_get_option_value("buftype", { buf = bufnr }) == "nowrite" or vim.api.nvim_get_option_value("readonly", { buf = bufnr }) then
+        if
+          vim.api.nvim_get_option_value("buftype", { buf = bufnr }) == "nowrite"
+          or vim.api.nvim_get_option_value("readonly", { buf = bufnr })
+        then
           select_fileformat(function(fileformat_next)
             if fileformat_next ~= nil then
               vim.api.nvim_set_option_value("fileformat", fileformat_next, { buf = bufnr })

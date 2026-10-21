@@ -35,6 +35,7 @@ end
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 ---@return stl.t.IKeymap[]
 function M.gen_changes(ctx)
+  -- stylua: ignore
   ---@type stl.t.IKeymap[]
   return {
     { modes = { "n" }, key = "<2-LeftMouse>", desc = "diffview(workspace): Select entry / Toggle directory", callback = function() action.select(ctx) end },
@@ -74,6 +75,7 @@ end
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 ---@return stl.t.IKeymap[]
 function M.gen_sbs(ctx)
+  -- stylua: ignore
   ---@type stl.t.IKeymap[]
   local keymaps = {
     { modes = { "n" }, key = "<C-j>", desc = "diffview(workspace): Next file diff", callback = function() dispatch_preview(ctx, action.goto_next_entry, "goto_next_commit") end },
@@ -94,6 +96,7 @@ function M.gen_sbs(ctx)
   }
 
   if ctx.layout == nil or ctx.layout.preview_source ~= "history" then
+    -- stylua: ignore
     vim.list_extend(keymaps, {
       { modes = { "n" }, key = "gs", desc = "diffview(workspace): Stage file", callback = function() action.stage(ctx) end },
       { modes = { "n" }, key = "gu", desc = "diffview(workspace): Unstage file", callback = function() action.unstage(ctx) end },
@@ -116,6 +119,7 @@ function M.gen_history(ctx)
 
   local commits_action = require("era.m.diffview.view.commits.action")
   local pane_commits = require("era.m.diffview.pane.commits")
+  -- stylua: ignore
   return {
     { modes = { "n" }, key = "<2-LeftMouse>", desc = "diffview(history): Select / Toggle expand", callback = function() commits_action.select(history) end },
     { modes = { "n" }, key = "<ScrollWheelDown>", desc = "diffview(history): Scroll window under mouse down", callback = function() commits_action.scroll_mouse("down") end },

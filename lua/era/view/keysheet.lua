@@ -123,12 +123,16 @@ function M:open()
   vim.api.nvim_set_option_value("winblend", 0, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("wrap", false, { win = winnr, scope = "local" })
-  vim.api.nvim_set_option_value("winhighlight", table.concat({
-    "CursorLine:m_bk_cursorline",
-    "FloatBorder:ms_b_bg0",
-    "FloatTitle:ms_b_bg0",
-    "Normal:m_bk_normal",
-  }, ","), { win = winnr, scope = "local" })
+  vim.api.nvim_set_option_value(
+    "winhighlight",
+    table.concat({
+      "CursorLine:m_bk_cursorline",
+      "FloatBorder:ms_b_bg0",
+      "FloatTitle:ms_b_bg0",
+      "Normal:m_bk_normal",
+    }, ","),
+    { win = winnr, scope = "local" }
+  )
 
   self:__setup_keymaps__(bufnr)
 end
@@ -207,7 +211,8 @@ function M:__render__(available_width)
       local mode_padding = string.rep(" ", mode_width - strwidth(item.modes)) ---@type string
       local desc_padding = string.rep(" ", desc_width - strwidth(item.desc)) ---@type string
 
-      local part = string.format("%s%s  %s%s  %s%s", item.key, key_padding, item.modes, mode_padding, item.desc, desc_padding)
+      local part =
+        string.format("%s%s  %s%s  %s%s", item.key, key_padding, item.modes, mode_padding, item.desc, desc_padding)
       line_parts[#line_parts + 1] = part
 
       row_highlights[#row_highlights + 1] = {
@@ -255,6 +260,7 @@ end
 ---@param bufnr                         integer
 ---@return nil
 function M:__setup_keymaps__(bufnr)
+  -- stylua: ignore
   ---@type stl.t.IKeymap[]
   local keymaps = {
     { modes = { "n" }, key = "q", callback = function() self:close() end, desc = "keysheet: close" },

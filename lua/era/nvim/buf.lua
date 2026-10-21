@@ -356,7 +356,10 @@ function M.save(args)
   local bufnrs_new_file = {} ---@type integer[]
 
   for _, bufnr in ipairs(bufnrs) do
-    if vim.api.nvim_get_option_value("modified", { buf = bufnr }) and vim.api.nvim_get_option_value("buftype", { buf = bufnr }) == "" then
+    if
+      vim.api.nvim_get_option_value("modified", { buf = bufnr })
+      and vim.api.nvim_get_option_value("buftype", { buf = bufnr }) == ""
+    then
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
       if #filepath > 0 and yoz.path.is_absolute(filepath) then
         table.insert(bufnrs_modified, bufnr)

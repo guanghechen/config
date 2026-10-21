@@ -136,4 +136,3 @@ M.replace_pattern_history = stl.c.History.deserialize({
 })
 
 return M
-

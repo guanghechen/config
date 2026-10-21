@@ -32,22 +32,21 @@ M.LogLevelEnum = {
 -- NvimbarPositionEnum
 ----------------------------------------------------------------------------------------------------
 
+-- stylua: ignore
 ---@class stl.e.INvimbarPositionEnum
 M.NvimbarPositionEnum = {
-  -- stylua: ignore start
   F_SL = "f_sl",                                -- statusline
   F_TL = "f_tl",                                -- tabline
   F_WL = "f_wl",                                -- winbar
-  -- stylua: ignore end
 }
 
 ----------------------------------------------------------------------------------------------------
 -- VimModeEnum
 ----------------------------------------------------------------------------------------------------
 
+-- stylua: ignore
 ---@class stl.e.IVimModeEnum
 M.VimModeEnum = {
-  -- stylua: ignore start
   C = "c",                                      -- cmdline-mode
   I = "i",                                      -- insert-mode
   N = "n",                                      -- normal-mode
@@ -58,16 +57,15 @@ M.VimModeEnum = {
   V = "v",                                      -- visual-mode
   V_LINE = "V",                                 -- visual-line-mode
   X = "x",                                      -- visual-block-mode
-  -- stylua: ignore end
 }
 
 ----------------------------------------------------------------------------------------------------
 -- VimModeNameEnum
 ----------------------------------------------------------------------------------------------------
 
+-- stylua: ignore
 ---@class stl.e.IVimModeNameEnum
 M.VimModeNameEnum = {
-  -- stylua: ignore start
   NORMAL   = "normal",
   VISUAL   = "visual",
   INSERT   = "insert",
@@ -77,21 +75,19 @@ M.VimModeNameEnum = {
   CONFIRM  = "confirm",
   COMMAND  = "command",
   SELECT   = "select",
-  -- stylua: ignore end
 }
 
 ----------------------------------------------------------------------------------------------------
 -- TabTypeEnum
 ----------------------------------------------------------------------------------------------------
 
+-- stylua: ignore
 ---@class stl.e.ITabTypeEnum
 M.TabTypeEnum = {
-  -- stylua: ignore start
   DIFFVIEW_COMMITS   = "diffview_commits",
   DIFFVIEW_WORKSPACE = "diffview_workspace",
   MAXIMIZE           = "maximize",
   NORMAL             = "normal",
-  -- stylua: ignore end
 }
 
 ---@class stl.e.ITabTypeSet
@@ -121,9 +117,9 @@ M.TabTypeSet = {
 -- WinTypeEnum
 ----------------------------------------------------------------------------------------------------
 
+-- stylua: ignore
 ---@class stl.e.IWinTypeEnum
 M.WinTypeEnum = {
-  -- stylua: ignore start
   BOARD             = "ux:board",
   CMDLINE           = "ux:cmdline",
   EXPLORER          = "ux:explorer",
@@ -141,7 +137,6 @@ M.WinTypeEnum = {
   TEXTAREA          = "ux:textarea",
   WINPICKER         = "ux:winpicker",
   WINSEP            = "ux:winsep",
-  -- stylua: ignore end
 }
 
 return M
