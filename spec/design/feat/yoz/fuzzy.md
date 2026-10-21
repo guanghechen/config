@@ -148,6 +148,7 @@ Find Explorer 与其他设置 pattern 的 Treeview 视图因此与 picker 语义
 ## 性能
 
 所有数据来自 Apple M5 Pro（6P + 12E）、外接电源、NVIM v0.12.6，基线为提交 `117a4fc88`。
+以下数字按统一结果格式之前的输出测得（L1/L2 的 p95 不设样本下限），待按当前格式重测后替换。
 
 | 层级 | 场景 | 基线 | 当前 | 预算 |
 | --- | --- | ---: | ---: | --- |
@@ -172,8 +173,8 @@ L3 的预算沿用 [Treeview 性能契约](../../treeview/performance.md) 对 fi
 
 ```sh
 node script/benchmark/fuzzy-corpus.mjs --out __test__/bench/results/fuzzy/corpus   # 语料，固定种子 0x5eed1234
-node script/benchmark/fuzzy.mjs --build --baseline-rev 117a4fc88 --runs 3          # L1、L2、L3
-node script/benchmark/fuzzy.mjs --level e2e --case files_10k_tree --build --runs 20
+node script/benchmark/fuzzy.mjs --build --baseline-rev 117a4fc88 --processes 3     # L1、L2、L3
+node script/benchmark/fuzzy.mjs --level e2e --case files_10k_tree --build --processes 20
 ```
 
 - **输出**：结果写入 `__test__/bench/results/fuzzy/<时间戳>/`（git 忽略），包括 `metadata.json`、`results.jsonl`、`summary.json`
@@ -191,7 +192,9 @@ node script/benchmark/fuzzy.mjs --level e2e --case files_10k_tree --build --runs
     `sweep_t*` 探针扫描线程数。
   - **L2**：`__test__/bench/fuzzy/ffi.lua`，逐段计时，包含原生 id 解析，并统计每次按键的 Lua 分配。
   - **L3**：`__test__/bench/fuzzy/e2e.lua`，在挂 UI 的子进程中运行完整配置，以真实按键计时，由父进程观测刷屏。
-- **统计**：每个进程取中位数，再跨进程取中位数；L3 的按键样本合并统计。进程数达到 20 才报告进程级 p95。
+- **统计**：`--iterations` 是 L1/L2 每个进程内的计时轮数，`--processes` 是独立进程数。每个进程取中位数，再跨进程取中位数；
+  L3 的按键样本合并统计。中位数在偶数个值时取中点；样本少于 20 个时不报告 p95，进程数达到 20 才报告进程级 p95。
+  L1/L2 的单条查询耗时以毫秒记录，内存以字节记录。
   标定循环显著变慢的进程（疑似跑在能效核上）会被标记。
 - **排序质量**：`fuzzy::perf_tests::t_fuzzy_quality`。
   - 方法：按 L3 的口径给 2% 的条目分配 frecency，统计每个打字序列的目标在每次按键后的名次；分两种场景，目标本身常用（frecency 60）与目标不常用。

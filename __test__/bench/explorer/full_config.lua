@@ -6,8 +6,8 @@ local harness = vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(here)))
 local root = vim.env.NVIM_EXPLORER_BENCH_CHECKOUT or harness
 local Metrics = assert(loadfile(vim.fs.dirname(here) .. "/metrics.lua"))()
 package.path = harness .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
-local samples, moves = tonumber(arg[1]) or 3, tonumber(arg[2]) or 100
-assert(samples >= 1 and samples <= 100 and samples % 1 == 0)
+local processes, moves = tonumber(arg[1]) or 3, tonumber(arg[2]) or 100
+assert(processes >= 1 and processes <= 100 and processes % 1 == 0)
 assert(moves >= 10 and moves <= 1000 and moves % 1 == 0)
 local UI = require("__test__.support.ui")
 local Grid = require("__test__.support.ui_grid")
@@ -28,7 +28,7 @@ local function until_(predicate, message)
 end
 
 local ok, error = xpcall(function()
-  for sample = 1, samples do
+  for trial = 1, processes do
     directory = vim.fn.tempname()
     assert(vim.uv.fs_mkdir(directory, 448))
     directory = assert(vim.uv.fs_realpath(directory))
@@ -52,7 +52,7 @@ local ok, error = xpcall(function()
     vim.wait(1500, function()
       return false
     end, 20)
-    local result = { sample = sample, operations = {} }
+    local result = { trial = trial, operations = {} }
     ui:rpc(
       "nvim_exec_lua",
       [[
@@ -161,7 +161,7 @@ local ok, error = xpcall(function()
         prompt_ms = prompt_ms,
         confirmed_ms = (vim.uv.hrtime() - started) / 1000000,
       }
-      io.stderr:write("Completed ", operation, " in sample ", sample, "\n")
+      io.stderr:write("Completed ", operation, " in trial ", trial, "\n")
       if operation == "create" then
         ui:rpc(
           "nvim_exec_lua",
@@ -226,7 +226,7 @@ local ok, error = xpcall(function()
         ]],
           { row }
         )
-      end, string.format("cursor did not reach row %d at step %d in sample %d", row, step, sample))
+      end, string.format("cursor did not reach row %d at step %d in trial %d", row, step, trial))
       worst = math.max(worst, (vim.uv.hrtime() - started) / 1000000)
     end
     local summary = ui:rpc(
@@ -255,7 +255,7 @@ local ok, error = xpcall(function()
     ui = nil
     vim.fn.delete(directory, "rf")
     directory = nil
-    io.stderr:write("Completed full-config sample ", sample, "\n")
+    io.stderr:write("Completed full-config trial ", trial, "\n")
   end
 end, debug.traceback)
 if not ok and ui then
@@ -291,7 +291,7 @@ end
 assert(ok, error)
 io.stdout:write(
   vim.json.encode({
-    samples = results,
+    records = results,
     nvim = vim.version(),
     memory_measurement = Metrics.memory_description(),
     conditions = "Full init.lua, plugins and UI dressing; 200 text files in an owned temporary fixture; isolated context persistence; automatic input-method changes disabled. Prompt timing ends at observed UI text. Confirmation timing includes filesystem/buffer effects and published Explorer content, not a UI flush. Real create/rename/delete UI, unsaved-buffer preservation and typed cursor motion during repeated refresh. Parent RPC observation included in timings.",

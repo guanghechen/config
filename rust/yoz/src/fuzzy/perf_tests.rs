@@ -8,7 +8,7 @@
 //! Environment:
 //! - `YOZ_FUZZY_BENCH_CORPORA`: comma-separated corpus names (default: every corpus below 1M items).
 //! - `YOZ_FUZZY_BENCH_PROBES`: comma-separated probe names (default: all but the `sweep_t*` thread sweep).
-//! - `YOZ_FUZZY_BENCH_SAMPLES`: timed passes over every query (default: 5).
+//! - `YOZ_FUZZY_BENCH_ITERATIONS`: timed passes over every query (default: 5).
 //! - `YOZ_FUZZY_BENCH_SEQUENCES`: keep every n-th typing sequence, for the largest corpora (default: 1).
 //! - `YOZ_FUZZY_BENCH_OUT`: JSON Lines output file (default: stdout lines prefixed `FUZZY_BENCH_JSON `).
 
@@ -27,7 +27,7 @@ use std::io::Write as _;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
-const SCHEMA: &str = "fuzzy-l1/1";
+const SCHEMA: &str = "fuzzy-l1/2";
 /** Highlight ranges a viewport needs per query; ranges beyond it are never drawn. */
 const VISIBLE_ROWS: usize = 50;
 
@@ -356,8 +356,8 @@ fn t_fuzzy_l1() {
     let corpora = env("YOZ_FUZZY_BENCH_CORPORA").unwrap_or_else(|| {
         "repo,runtime,plugins,synthetic-10k,synthetic-100k,labels,labels-100k,unicode".into()
     });
-    let samples: usize =
-        env("YOZ_FUZZY_BENCH_SAMPLES").map_or(5, |value| value.parse().expect("samples"));
+    let iterations: usize =
+        env("YOZ_FUZZY_BENCH_ITERATIONS").map_or(5, |value| value.parse().expect("iterations"));
     let every: u32 =
         env("YOZ_FUZZY_BENCH_SEQUENCES").map_or(1, |value| value.parse().expect("sequences"));
     let mut output: Box<dyn std::io::Write> = match env("YOZ_FUZZY_BENCH_OUT") {
@@ -391,12 +391,12 @@ fn t_fuzzy_l1() {
             }
         }
         let mut timings =
-            vec![vec![Vec::with_capacity(samples); corpus.queries.len()]; probes.len()];
+            vec![vec![Vec::with_capacity(iterations); corpus.queries.len()]; probes.len()];
         let mut matched = vec![vec![0usize; corpus.queries.len()]; probes.len()];
-        for sample in 0..samples {
+        for iteration in 0..iterations {
             // Rotate the probe order so drift does not favour one probe.
             for step in 0..probes.len() {
-                let index = (step + sample) % probes.len();
+                let index = (step + iteration) % probes.len();
                 for (at, query) in corpus.queries.iter().enumerate() {
                     let started = Instant::now();
                     let count = black_box(probes[index].run(&corpus, query));
@@ -405,6 +405,7 @@ fn t_fuzzy_l1() {
                 }
             }
         }
+        let ms = |ns: u64| ns as f64 / 1e6;
         for (index, probe) in probes.iter().enumerate() {
             let mut medians = Vec::with_capacity(corpus.queries.len());
             let mut rows = String::new();
@@ -416,19 +417,18 @@ fn t_fuzzy_l1() {
                 }
                 let _ = write!(
                     rows,
-                    "[{},{},{},{},{},{}]",
+                    "[{},{},{},{},{:.6},{}]",
                     query.sequence,
                     query.step,
                     query.text.chars().count(),
                     escape(&query.kind),
-                    value,
+                    ms(value),
                     matched[index][at]
                 );
             }
             medians.sort_unstable();
-            let ms = |ns: u64| ns as f64 / 1e6;
             let line = format!(
-                "{{\"schema\":\"{SCHEMA}\",\"level\":\"rust\",\"corpus\":{},\"corpus_sha256\":{},\"kind\":{},\"scheme\":{},\"items\":{},\"probe\":{},\"threads\":{},\"samples\":{},\"sequence_stride\":{},\"build_ms\":{:.3},\"qos\":{qos},\"calibration_ms\":{calibration_ms:.3},\"queries\":[{}]}}",
+                "{{\"schema\":\"{SCHEMA}\",\"level\":\"rust\",\"corpus\":{},\"corpus_sha256\":{},\"kind\":{},\"scheme\":{},\"items\":{},\"probe\":{},\"threads\":{},\"iterations\":{},\"sequence_stride\":{},\"build_ms\":{:.3},\"qos\":{qos},\"calibration_ms\":{calibration_ms:.3},\"queries\":[{}]}}",
                 escape(&corpus.name),
                 escape(&corpus.sha256),
                 escape(&corpus.kind),
@@ -436,14 +436,14 @@ fn t_fuzzy_l1() {
                 corpus.items.len(),
                 escape(probe.name()),
                 probe.threads(),
-                samples,
+                iterations,
                 every,
                 build_ms[index],
                 rows
             );
             writeln!(output, "{prefix}{line}").expect("write benchmark record");
             eprintln!(
-                "{:<16} {:<16} n={:<4} p50={:>9.3}ms p95={:>9.3}ms max={:>9.3}ms",
+                "{:<16} {:<16} n={:<4} median={:>9.3}ms p95={:>9.3}ms max={:>9.3}ms",
                 corpus.name,
                 probe.name(),
                 medians.len(),

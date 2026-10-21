@@ -6,12 +6,12 @@ local harness = vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(here)))
 local root = vim.env.NVIM_EXPLORER_BENCH_CHECKOUT or harness
 local Metrics = assert(loadfile(vim.fs.dirname(here) .. "/metrics.lua"))()
 package.path = harness .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
-local samples = tonumber(arg[1]) or 3
+local processes = tonumber(arg[1]) or 3
 local library = arg[2] and assert(vim.uv.fs_realpath(arg[2]))
   or vim.env.NVIM_EXPLORER_BENCH_NATIVE
   or root .. "/lua/yoz.so"
 assert(vim.uv.os_uname().sysname == "Darwin", "recursive root-watch acceptance requires macOS")
-assert(samples >= 1 and samples <= 100 and samples % 1 == 0 and arg[3] == nil)
+assert(processes >= 1 and processes <= 100 and processes % 1 == 0 and arg[3] == nil)
 local UI = require("__test__.support.ui")
 local Grid = require("__test__.support.ui_grid")
 local records, screens = {}, {}
@@ -93,7 +93,7 @@ local function reveal(path)
 end
 
 local ok, failure = xpcall(function()
-  for sample = 1, samples do
+  for trial = 1, processes do
     directory = vim.fn.tempname()
     assert(vim.uv.fs_mkdir(directory, 448))
     directory = assert(vim.uv.fs_realpath(directory))
@@ -141,7 +141,7 @@ local ok, failure = xpcall(function()
     ]],
       { here .. "/runtime.lua", root, workspace, library }
     )
-    local record = { sample = sample, wide = watching(1, 97), cases = {} }
+    local record = { trial = trial, wide = watching(1, 97), cases = {} }
     records[#records + 1] = record
     until_(function()
       return execute("return select(2, bench.widget:context()):frame():header().row_count") == 192
@@ -183,7 +183,7 @@ local ok, failure = xpcall(function()
     until_(function()
       return grid:find("after-rename") ~= nil
     end, "renamed directory lost event delivery")
-    screen("wide-events-" .. sample)
+    screen("wide-events-" .. trial)
     assert(vim.fn.delete(workspace .. "/branch-last", "rf") == 0)
     until_(function()
       return grid:find("branch-last") == nil and grid:find("after-rename") == nil
@@ -233,7 +233,7 @@ local ok, failure = xpcall(function()
     end, "restored symlink target was not displayed")
     watching(2, 98)
     record.cases[#record.cases + 1] = "external-root-recovery"
-    screen("external-root-" .. sample)
+    screen("external-root-" .. trial)
 
     execute("bench.await(bench.widget:set_root(...))", { first })
     record.narrow = watching(1, 1)
@@ -267,7 +267,7 @@ local ok, failure = xpcall(function()
     ui = nil
     assert(vim.fn.delete(directory, "rf") == 0)
     directory = nil
-    io.stderr:write("Completed recursive root watch sample ", sample, "\n")
+    io.stderr:write("Completed recursive root watch trial ", trial, "\n")
   end
 end, debug.traceback)
 if not ok and ui then

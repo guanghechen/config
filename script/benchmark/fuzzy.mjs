@@ -20,12 +20,12 @@ export const LEVELS = ["rust", "ffi", "e2e"]
 /** L1 invocations; larger corpora keep every n-th typing sequence and fewer passes, as the old matchers are slow there. */
 export const rustPlans = [
   { corpora: ["repo", "runtime", "plugins", "synthetic-10k", "labels", "unicode"], stride: 1 },
-  { corpora: ["synthetic-100k", "labels-100k"], stride: 2, samples: 3 },
-  { corpora: ["synthetic-1m"], stride: 8, samples: 1 },
+  { corpora: ["synthetic-100k", "labels-100k"], stride: 2, iterations: 3 },
+  { corpora: ["synthetic-1m"], stride: 8, iterations: 1 },
 ]
 export const ffiPlans = [
   { corpus: "repo", stride: 1 }, { corpus: "synthetic-10k", stride: 1 }, { corpus: "labels", stride: 1 }, { corpus: "unicode", stride: 1 },
-  { corpus: "synthetic-100k", stride: 2, samples: 3 }, { corpus: "labels-100k", stride: 2, samples: 3 },
+  { corpus: "synthetic-100k", stride: 2, iterations: 3 }, { corpus: "labels-100k", stride: 2, iterations: 3 },
 ]
 
 /** L3 cases; `pace` is the delay between keystrokes against the picker's 64 ms match debounce. */
@@ -145,7 +145,7 @@ async function main() {
     current: { type: "string", default: checkout }, baseline: { type: "string" }, "baseline-rev": { type: "string" },
     build: { type: "boolean" }, native: { type: "string" }, probes: { type: "string" },
     "corpus-dir": { type: "string", default: join(resultsRoot, "corpus") },
-    samples: { type: "string", default: "5" }, runs: { type: "string", default: "3" }, sequences: { type: "string", default: "8" },
+    iterations: { type: "string", default: "5" }, processes: { type: "string", default: "3" }, sequences: { type: "string", default: "8" },
     output: { type: "string" }, nvim: { type: "string", default: "nvim" }, "timeout-ms": { type: "string", default: "900000" },
     help: { type: "boolean", short: "h" },
   } })
@@ -160,8 +160,8 @@ async function main() {
   --native PATH          Native library for the current checkout (default: current/lua/${nativeName})
   --probes A,B           L1 matchers to run (default: all)
   --corpus-dir DIR       Corpus cache (default: ${join(resultsRoot, "corpus")})
-  --samples N            Timed passes per process for L1/L2 (default: 5)
-  --runs N               Independent processes per case and implementation (default: 3)
+  --iterations N         Timed passes per process for L1/L2 (default: 5)
+  --processes N          Independent processes per case and implementation (default: 3)
   --sequences N          Typing sequences per L3 process (default: 8)
   --output DIR           Result directory (default: ${join(resultsRoot, "<timestamp>")})
 L3 cases: ${cases.map((item) => item.name).join(", ")}`)
@@ -171,8 +171,8 @@ L3 cases: ${cases.map((item) => item.name).join(", ")}`)
   for (const level of levels) if (!LEVELS.includes(level)) throw new Error(`unknown level: ${level}`)
   const selected = values.case ?? cases.map((item) => item.name)
   for (const name of selected) if (!cases.some((item) => item.name === name)) throw new Error(`unknown case: ${name}`)
-  const samples = Number(values.samples), runs = Number(values.runs), sequences = Number(values.sequences), timeout = Number(values["timeout-ms"])
-  if (![samples, runs, sequences].every((value) => Number.isInteger(value) && value >= 1 && value <= 200)) throw new Error("samples, runs and sequences must be integers from 1 through 200")
+  const iterations = Number(values.iterations), processes = Number(values.processes), sequences = Number(values.sequences), timeout = Number(values["timeout-ms"])
+  if (![iterations, processes, sequences].every((value) => Number.isInteger(value) && value >= 1 && value <= 200)) throw new Error("iterations, processes and sequences must be integers from 1 through 200")
   if (values.baseline && values["baseline-rev"]) throw new Error("use --baseline or --baseline-rev, not both")
 
   const output = resolve(values.output ?? join(resultsRoot, new Date().toISOString().replaceAll(":", "-")))
@@ -211,13 +211,13 @@ L3 cases: ${cases.map((item) => item.name).join(", ")}`)
 
   const metadata = {
     schema_version: 1, started_at: new Date().toISOString(), status: "running", host: host(),
-    nvim: capture(values.nvim, ["--version"]).split("\n").slice(0, 3), levels, cases: e2eCases, samples, runs, sequences,
+    nvim: capture(values.nvim, ["--version"]).split("\n").slice(0, 3), levels, cases: e2eCases, iterations, processes, sequences,
     corpora: Object.fromEntries(names.map((name) => [name, manifest.corpora[name]])),
-    implementations: Object.fromEntries(Object.entries(implementations).map(([name, item]) => [name, { path: item.path, library: item.library, source: item.source, runtime_sha256: item.runtime, native_sha256: item.provenance.source.sha256, artifact_sha256: item.provenance.artifact_sha256 }])),
+    implementations: Object.fromEntries(Object.entries(implementations).map(([name, item]) => [name, { path: item.path, library: item.library, source: item.source, runtime_sha256: item.runtime, native_source_sha256: item.provenance.source.sha256, native_artifact_sha256: item.provenance.artifact_sha256 }])),
     harness_sha256: Object.fromEntries(["fuzzy.mjs", "fuzzy-corpus.mjs", "fuzzy-report.mjs", "stats.mjs"].map((name) => [`script/benchmark/${name}`, fileHash(join(here, name))]).concat(["ffi.lua", "e2e.lua", "probes.lua", "init.lua"].map((name) => [`__test__/bench/fuzzy/${name}`, fileHash(join(checkout, "__test__/bench/fuzzy", name))]))),
     conditions: {
       order: "fresh processes; one benchmark at a time; L3 implementations alternate A/B and B/A by run",
-      rust: "L1 compares matchers inside one release test process: one untimed warm pass, then samples with the probe order rotated per sample; per-query medians",
+      rust: "L1 compares matchers inside one release test process: one untimed warm pass, then iterations with the probe order rotated per iteration; per-query medians",
       ffi: "L2 loads one native library into headless nvim; full GC before and GC stopped during each timed keystroke to count Lua allocation; the first query of the process is reported as cold",
       e2e: "L3 runs the full config of each checkout in an embedded UI (120x40) with workspace, editor and frecency state in a fresh directory; frecency seeded for 2% of file items with recency spread over every bucket; file corpora are empty files under the temporary directory, outside Git; completion is disabled in picker finders because its popup diverts TextChangedI; keystrokes enter through nvim_input; visibility is a parent-observed flush whose header shows the published total",
       corpora: "generated once and cached with SHA-256; regenerating with --force changes the inputs",
@@ -240,14 +240,14 @@ L3 cases: ${cases.map((item) => item.name).join(", ")}`)
     save()
     const current = implementations.current
     if (levels.includes("rust")) {
-      for (let run = 1; run <= runs; run++) {
+      for (let run = 1; run <= processes; run++) {
         for (const plan of rustPlans) {
           check()
           const file = join(output, `rust-${run}-${plan.corpora[0]}.jsonl`)
           const args = ["test", "--manifest-path", join(current.path, "rust/Cargo.toml"), "-p", "yoz", "--release", "--offline", "--locked", "--lib", "fuzzy::perf_tests::t_fuzzy_l1", "--", "--exact", "--ignored", "--nocapture", "--test-threads=1"]
-          const env = { YOZ_FUZZY_BENCH_CORPUS: corpusDir, YOZ_FUZZY_BENCH_CORPORA: plan.corpora.join(","), YOZ_FUZZY_BENCH_SAMPLES: String(plan.samples ?? samples), YOZ_FUZZY_BENCH_SEQUENCES: String(plan.stride), YOZ_FUZZY_BENCH_OUT: file, ...(values.probes ? { YOZ_FUZZY_BENCH_PROBES: values.probes } : {}) }
+          const env = { YOZ_FUZZY_BENCH_CORPUS: corpusDir, YOZ_FUZZY_BENCH_CORPORA: plan.corpora.join(","), YOZ_FUZZY_BENCH_ITERATIONS: String(plan.iterations ?? iterations), YOZ_FUZZY_BENCH_SEQUENCES: String(plan.stride), YOZ_FUZZY_BENCH_OUT: file, ...(values.probes ? { YOZ_FUZZY_BENCH_PROBES: values.probes } : {}) }
           metadata.commands.push({ level: "rust", run, command: "cargo", args, env })
-          console.log(`rust ${run}/${runs} ${plan.corpora.join(",")}`)
+          console.log(`rust ${run}/${processes} ${plan.corpora.join(",")}`)
           const result = await execute("cargo", args, timeout, controller.signal, env)
           writeFileSync(join(output, "logs", `rust-${run}-${plan.corpora[0]}.stderr`), result.stderr)
           for (const line of readFileSync(file, "utf8").split("\n").filter(Boolean)) record(JSON.parse(line), { implementation: "current", run })
@@ -255,12 +255,12 @@ L3 cases: ${cases.map((item) => item.name).join(", ")}`)
       }
     }
     if (levels.includes("ffi")) {
-      for (let run = 1; run <= runs; run++) {
+      for (let run = 1; run <= processes; run++) {
         for (const plan of ffiPlans) {
           check()
-          const args = ["-l", join(checkout, "__test__/bench/fuzzy/ffi.lua"), current.path, corpusDir, plan.corpus, String(plan.samples ?? samples), current.library, String(plan.stride)]
+          const args = ["-l", join(checkout, "__test__/bench/fuzzy/ffi.lua"), current.path, corpusDir, plan.corpus, String(plan.iterations ?? iterations), current.library, String(plan.stride)]
           metadata.commands.push({ level: "ffi", run, command: values.nvim, args })
-          console.log(`ffi ${run}/${runs} ${plan.corpus}`)
+          console.log(`ffi ${run}/${processes} ${plan.corpus}`)
           const result = await execute(values.nvim, args, timeout, controller.signal)
           for (const line of result.stdout.split("\n").filter(Boolean)) record(JSON.parse(line), { implementation: "current", run })
         }
@@ -270,7 +270,7 @@ L3 cases: ${cases.map((item) => item.name).join(", ")}`)
     mkdirSync(empty, { recursive: true })
     for (const scenario of e2eCases) {
       const workspace = scenario.scenario === "files" ? materialize(corpusDir, scenario.corpus, manifest) : empty
-      for (let run = 1; run <= runs; run++) {
+      for (let run = 1; run <= processes; run++) {
         const order = Object.keys(implementations)
         if (run % 2 === 0) order.reverse()
         for (const name of order) {
@@ -278,7 +278,7 @@ L3 cases: ${cases.map((item) => item.name).join(", ")}`)
           const implementation = implementations[name]
           const args = ["-l", join(checkout, "__test__/bench/fuzzy/e2e.lua"), implementation.path, corpusDir, scenario.corpus, workspace, scenario.scenario, scenario.mode, String(scenario.pace), String(sequences), implementation.library]
           metadata.commands.push({ level: "e2e", case: scenario.name, implementation: name, run, command: values.nvim, args })
-          console.log(`e2e ${scenario.name} ${name} ${run}/${runs}`)
+          console.log(`e2e ${scenario.name} ${name} ${run}/${processes}`)
           try {
             const result = await execute(values.nvim, args, timeout, controller.signal)
             record(JSON.parse(result.stdout), { case: scenario.name, implementation: name, run })

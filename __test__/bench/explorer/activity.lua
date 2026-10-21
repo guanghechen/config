@@ -5,9 +5,12 @@ local here = vim.fs.dirname(assert(vim.uv.fs_realpath(debug.getinfo(1, "S").sour
 local harness = vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(here)))
 local root = vim.env.NVIM_EXPLORER_BENCH_CHECKOUT or harness
 local Metrics = assert(loadfile(vim.fs.dirname(here) .. "/metrics.lua"))()
-local kind, samples = arg[1] or "jobs", tonumber(arg[2]) or 3
+local kind, processes = arg[1] or "jobs", tonumber(arg[2]) or 3
 assert(
-  (kind == "jobs" or kind == "jobs-many" or kind == "watch") and samples >= 1 and samples <= 100 and samples % 1 == 0
+  (kind == "jobs" or kind == "jobs-many" or kind == "watch")
+    and processes >= 1
+    and processes <= 100
+    and processes % 1 == 0
 )
 assert(arg[5] == nil)
 local variant = {
@@ -124,7 +127,7 @@ local setup = [=[
 
 local ok, result = xpcall(function()
   local records = {}
-  for trial = 1, samples do
+  for trial = 1, processes do
     local path = directory .. "/" .. trial
     assert(vim.uv.fs_mkdir(path, 448))
     local rows = kind ~= "watch" and 2 or 1002
@@ -315,7 +318,7 @@ local ok, result = xpcall(function()
     ui:close()
     ui = nil
     vim.fn.delete(path, "rf")
-    io.stderr:write("Completed ", kind, " sample ", trial, "\n")
+    io.stderr:write("Completed ", kind, " trial ", trial, "\n")
   end
   return {
     records = records,
@@ -323,7 +326,7 @@ local ok, result = xpcall(function()
     memory_measurement = Metrics.memory_description(),
     current = root,
     variant = variant,
-    conditions = "Actual Widget, 110x40 UI, release native module, fresh process per sample; Git/LSP collection disabled. Jobs copy either a 256 MiB sparse file or a directory with 1000 four-byte files; filesystem caches are warm. Watch uses 1000 initial files plus a stable cursor anchor and a visible rename marker, 20 isolated renames, 80 creations/renames 20 ms apart, and a burst of 500 creations. A 5 ms latency timer and parent RPC observation are included in CPU. CPU is percent of one core; main-thread CPU is available on macOS. The final tick-to-completion interval is included in the maximum gap. Continuous events may be coalesced; visible_ms contains only displayed versions, while final_change_ms measures catch-up. Watch phases run in the stated order.",
+    conditions = "Actual Widget, 110x40 UI, release native module, fresh process per trial; Git/LSP collection disabled. Jobs copy either a 256 MiB sparse file or a directory with 1000 four-byte files; filesystem caches are warm. Watch uses 1000 initial files plus a stable cursor anchor and a visible rename marker, 20 isolated renames, 80 creations/renames 20 ms apart, and a burst of 500 creations. A 5 ms latency timer and parent RPC observation are included in CPU. CPU is percent of one core; main-thread CPU is available on macOS. The final tick-to-completion interval is included in the maximum gap. Continuous events may be coalesced; visible_ms contains only displayed versions, while final_change_ms measures catch-up. Watch phases run in the stated order.",
   }
 end, debug.traceback)
 if ui then

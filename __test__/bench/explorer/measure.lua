@@ -6,7 +6,7 @@ local support = vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(here)))
 package.path = support .. "/?.lua;" .. package.path
 local repo, directory, implementation = assert(arg[1]), assert(arg[2]), assert(arg[3])
 local entries, branch_entries = assert(tonumber(arg[4])), tonumber(arg[5]) or 0
-local repeats = assert(tonumber(arg[6]))
+local iterations = assert(tonumber(arg[6]))
 local mode = assert(arg[7])
 assert(implementation == "native" or implementation == "baseline")
 assert(mode == "tree" or mode == "list")
@@ -153,7 +153,7 @@ local ok, result = xpcall(function()
     { here .. "/runtime.lua", repo, directory, implementation, entries, branch_entries, mode }
   )
   local output = {
-    schema_version = 2,
+    schema_version = 3,
     implementation = implementation,
     mode = mode,
     entries = entries,
@@ -167,24 +167,24 @@ local ok, result = xpcall(function()
   position(1)
   if branch_entries > 0 and mode == "tree" then
     output.operations[#output.operations + 1] = measure("expand", rows + branch_entries)
-    for _ = 1, repeats do
+    for _ = 1, iterations do
       output.operations[#output.operations + 1] = measure("collapse", rows)
       output.operations[#output.operations + 1] = measure("expand", rows + branch_entries)
     end
     rows = rows + branch_entries
   end
-  for index = 1, repeats * 2 do
+  for index = 1, iterations * 2 do
     output.operations[#output.operations + 1] = measure("cursor", rows, index % 2 == 1 and 2 or 1)
   end
-  for index = 1, repeats * 2 do
+  for index = 1, iterations * 2 do
     output.operations[#output.operations + 1] = measure("scroll", rows, index % 2 == 1 and rows or 1)
   end
   position(rows)
-  for index = 1, repeats * 2 do
+  for index = 1, iterations * 2 do
     output.operations[#output.operations + 1] = measure("selection", rows, nil, index % 2 == 1 and 1 or 0)
   end
   local count = math.min(100, math.floor(rows / 2))
-  for _ = 1, repeats do
+  for _ = 1, iterations do
     position(rows - count + 1)
     output.operations[#output.operations + 1] = measure("visual_selection", rows, nil, count)
     ui:rpc("nvim_exec_lua", "bench.clear_selection()", {})
@@ -193,13 +193,13 @@ local ok, result = xpcall(function()
     end, 10000, "selection reset did not finish its redraw", 1)
   end
   position(1)
-  for _ = 1, math.min(3, repeats) do
+  for _ = 1, math.min(3, iterations) do
     output.operations[#output.operations + 1] = measure("refresh", rows)
   end
-  for _ = 1, repeats do
+  for _ = 1, iterations do
     output.operations[#output.operations + 1] = measure("empty_git_notification", rows)
   end
-  for _ = 1, repeats do
+  for _ = 1, iterations do
     ui:rpc("nvim_exec_lua", "bench.widget:hide()", {})
     ui:rpc("nvim_command", "redraw!")
     output.operations[#output.operations + 1] = measure("reopen", rows)

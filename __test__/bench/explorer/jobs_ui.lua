@@ -6,8 +6,8 @@ local harness = vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(here)))
 local root = vim.env.NVIM_EXPLORER_BENCH_CHECKOUT or harness
 local Metrics = assert(loadfile(vim.fs.dirname(here) .. "/metrics.lua"))()
 package.path = harness .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
-local samples = tonumber(arg[1]) or 3
-assert(samples >= 1 and samples <= 100 and samples % 1 == 0 and arg[2] == nil)
+local processes = tonumber(arg[1]) or 3
+assert(processes >= 1 and processes <= 100 and processes % 1 == 0 and arg[2] == nil)
 local UI = require("__test__.support.ui")
 local Grid = require("__test__.support.ui_grid")
 local records, screens = {}, {}
@@ -135,7 +135,7 @@ local function contents(path, expected)
 end
 
 local ok, failure = xpcall(function()
-  for sample = 1, samples do
+  for trial = 1, processes do
     directory = vim.fn.tempname()
     assert(vim.uv.fs_mkdir(directory, 448))
     directory = assert(vim.uv.fs_realpath(directory))
@@ -143,7 +143,7 @@ local ok, failure = xpcall(function()
       assert(vim.uv.fs_mkdir(directory .. suffix, 448))
     end
     local files, cases = directory .. "/files", {}
-    local record = { sample = sample, cases = cases, complete = false }
+    local record = { trial = trial, cases = cases, complete = false }
     records[#records + 1] = record
     write(files .. "/source.txt", "source payload\n")
     write(files .. "/overwrite.txt", "target sentinel\n")
@@ -205,7 +205,7 @@ local ok, failure = xpcall(function()
         acceptance.job = assert(acceptance.session.job)
         assert(acceptance.job:status().confirmation)
       ]])
-      screen("overwrite-" .. answer .. "-" .. sample)
+      screen("overwrite-" .. answer .. "-" .. trial)
       ui:rpc("nvim_input", answer)
       local result = idle("overwrite " .. answer)
       assert(result.status.terminal and not result.status.cancelled)
@@ -225,7 +225,7 @@ local ok, failure = xpcall(function()
     until_(function()
       return grid:find("copied.txt") ~= nil
     end, "copied file was not displayed")
-    screen("missing-parent-copy-" .. sample)
+    screen("missing-parent-copy-" .. trial)
     cases[#cases + 1] = { name = "copy-missing-parents", result = copy_result }
     transfer("x", moved)
     local move_result = idle("move to missing parents")
@@ -304,7 +304,7 @@ local ok, failure = xpcall(function()
     until_(function()
       return grid:find("file-0260.txt") ~= nil
     end, "hidden paste was not visible after reopening")
-    screen("hidden-backlog-reopened-" .. sample)
+    screen("hidden-backlog-reopened-" .. trial)
     cases[#cases + 1] = { name = "hidden-backlog", backlog = backlog, result = bulk_result }
 
     cursor(files .. "/cancel-source")
@@ -323,7 +323,7 @@ local ok, failure = xpcall(function()
     until_(function()
       return grid:find("Cancel operation") ~= nil and grid:find("Progress") ~= nil
     end, "running Job menu was not displayed")
-    screen("running-cancel-menu-" .. sample)
+    screen("running-cancel-menu-" .. trial)
     assert(
       execute("return acceptance.session.job ~= nil and not acceptance.session.job:status().terminal"),
       "copy fixture completed before the cancellation menu could act"
@@ -406,7 +406,7 @@ local ok, failure = xpcall(function()
     ]],
       { marker }
     )
-    local scripted = sample % 2 == 0
+    local scripted = trial % 2 == 0
     if scripted then
       -- ExitPre must also drain native cancellation when no interactive prompt runs.
       pcall(ui.rpc, ui, "nvim_command", "qall!")
@@ -415,7 +415,7 @@ local ok, failure = xpcall(function()
       until_(function()
         return grid:find("Cancel unfinished Filetree operations and exit?") ~= nil
       end, "exit confirmation was not displayed")
-      screen("exit-confirmation-" .. sample)
+      screen("exit-confirmation-" .. trial)
       ui:rpc("nvim_input", "y")
     end
     until_(function()
@@ -432,7 +432,7 @@ local ok, failure = xpcall(function()
     ui = nil
     assert(vim.fn.delete(directory, "rf") == 0)
     directory = nil
-    io.stderr:write("Completed Job UI sample ", sample, ": ", #cases, " scenarios\n")
+    io.stderr:write("Completed Job UI trial ", trial, ": ", #cases, " scenarios\n")
   end
 end, debug.traceback)
 local diagnostic
@@ -465,10 +465,10 @@ io.stdout:write(
     conditions = "Full init.lua and installed native, real keymaps/input/select UI; RPC places the cursor and fills path prompts. "
       .. "A bounded synchronous Lua pause accumulates native results for hidden backlog delivery. "
       .. "Cancellation uses the real Space menu during a 50,000-file copy; partial destinations are allowed. "
-      .. "Fresh-process samples alternate typed and scripted exit during another running copy. Owned fixtures only.",
+      .. "Fresh processes alternate typed and scripted exit during another running copy. Owned fixtures only.",
     nvim = vim.version(),
     memory_measurement = Metrics.memory_description(),
-    samples = records,
+    records = records,
     screens = screens,
     diagnostic = diagnostic,
     error = not ok and tostring(failure) or nil,

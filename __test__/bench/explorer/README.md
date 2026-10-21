@@ -11,32 +11,36 @@ Git state. Git writes are confined to newly created disposable Git fixtures.
 This guide keeps each scenario's method and its latest accepted baseline. Dated
 acceptance logs, superseded measurements and their local evidence paths remain in
 this file's Git history (`git log -p -- __test__/bench/explorer/README.md`).
+The baselines below predate the unified benchmark naming: their `samples` are independent
+processes, `repeats` are iterations within a process, and the standalone Lua probes reported a
+lower-middle p50. They are not directly comparable with current results and are replaced as each
+scenario is measured again.
 
 ## Unified runner
 
 ```sh
 # Comprehensive matrix: alternating baseline/native Tree, native List, and acceptance.
 # Build both release libraries from their sources without deploying to either checkout.
-node script/benchmark/explorer.mjs --baseline ~/.config/nvim --build --samples 3
+node script/benchmark/explorer.mjs --baseline ~/.config/nvim --build --processes 3
 
 # Native only, using the installed library.
-node script/benchmark/explorer.mjs --samples 3
+node script/benchmark/explorer.mjs --processes 3
 
 # Fast harness smoke. Repeat --case to select any subset.
 node script/benchmark/explorer.mjs --baseline ~/.config/nvim \
-  --samples 1 --repeats 1 --mode both --case mixed_200 --case git_1000
+  --processes 1 --iterations 1 --mode both --case mixed_200 --case git_1000
 
 # Rebuild the report from an existing result directory.
 node script/benchmark/explorer-report.mjs /absolute/result/directory
 ```
 
 Run `--help` for all options. Defaults are three independent processes,
-three interaction repeats, both widget modes, 200 soak cycles, and a ten-minute
-deadline per driver process. `--samples` and `--repeats` accept 1–100;
-`--cycles` accepts multiples of 20 through 10,000. Large sample counts may
-require a longer `--timeout-ms` because several acceptance drivers manage all
-their samples within one invocation. Copy/startup run once per process; unchanged
-refresh repeats at most three times. Soak runs the requested cycles in each sample.
+three interaction iterations within a process, both widget modes, 200 soak cycles,
+and a ten-minute deadline per driver process. `--processes` and `--iterations`
+accept 1–100; `--cycles` accepts multiples of 20 through 10,000. Large process
+counts may require a longer `--timeout-ms` because several acceptance drivers start
+all their processes within one invocation. Copy/startup run once per process; unchanged
+refresh repeats at most three times. Soak runs the requested cycles in each process.
 
 `--current` selects another native checkout and `--baseline` a baseline checkout.
 The harness stays in this checkout. `--output` must name a new directory outside
@@ -148,7 +152,7 @@ Outputs:
   Older records without selection `visible_ms` keep that metric unavailable; the report
   never substitutes their ready values. Start/finish notifications add no parent readiness
   RPCs during measurement, and the existing tick-gap/CPU measurements remain separate.
-- `active_loading` uses a fresh native process per sample and mode. It injects typed `j`
+- `active_loading` uses a fresh native process per trial and mode. It injects typed `j`
   only while the branch reports Loading and the visible frame is applicable, and requires
   the cursor publication to complete during Loading. The parent separately observes the
   matching cursor in a UI flush. Typed `h` (Tree) or `t2` (List to Tree) must collapse the
@@ -248,7 +252,7 @@ source/build provenance, coverage and a reproducible report are required.
 ## Navigation acceptance
 
 ```sh
-node script/benchmark/explorer.mjs --case navigation --samples 20 --native /absolute/yoz.so
+node script/benchmark/explorer.mjs --case navigation --processes 20 --native /absolute/yoz.so
 ```
 
 Each fresh process performs ten cycles. Real j/mx input selects a file for cut,

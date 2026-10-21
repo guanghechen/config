@@ -6,8 +6,8 @@ local harness = vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(here)))
 local root = vim.env.NVIM_EXPLORER_BENCH_CHECKOUT or harness
 local Metrics = assert(loadfile(vim.fs.dirname(here) .. "/metrics.lua"))()
 package.path = harness .. "/?.lua;" .. package.path
-local samples, entries = tonumber(arg[1]) or 3, tonumber(arg[2]) or 50000
-assert(samples >= 1 and samples <= 100 and samples % 1 == 0)
+local processes, entries = tonumber(arg[1]) or 3, tonumber(arg[2]) or 50000
+assert(processes >= 1 and processes <= 100 and processes % 1 == 0)
 assert(entries >= 2048 and entries <= 50000 and entries % 1 == 0 and arg[3] == nil)
 local UI = require("__test__.support.ui")
 local Grid = require("__test__.support.ui_grid")
@@ -143,7 +143,7 @@ local ok, result = xpcall(function()
     file(string.format("%s/a-branch/inside-%05d.lua", directory, index))
   end
   local records = {}
-  for trial = 1, samples do
+  for trial = 1, processes do
     for _, mode in ipairs({ "tree", "list" }) do
       ui = UI.new({ timeout_ms = 90000 })
       local active, failure
@@ -249,7 +249,7 @@ local ok, result = xpcall(function()
   return {
     records = records,
     memory_measurement = Metrics.memory_description(),
-    conditions = "Fresh native process per sample and mode; one shared warm filesystem fixture. Typed j is injected only while the branch reports Loading and the published frame is applicable. Cursor publication must finish during Loading; visible latency ends at the parent UI flush. Typed h (Tree) or t2 (List to Tree) must retire scan work, preserve the collapsed view, and allow a complete reopen. Cold expansion and warm refresh remain separate. Two-ms child checks, no readiness RPCs during measurement; acceptance only, not a baseline comparison or p95 claim.",
+    conditions = "Fresh native process per trial and mode; one shared warm filesystem fixture. Typed j is injected only while the branch reports Loading and the published frame is applicable. Cursor publication must finish during Loading; visible latency ends at the parent UI flush. Typed h (Tree) or t2 (List to Tree) must retire scan work, preserve the collapsed view, and allow a complete reopen. Cold expansion and warm refresh remain separate. Two-ms child checks, no readiness RPCs during measurement; acceptance only, not a baseline comparison or p95 claim.",
   }
 end, debug.traceback)
 if ui then

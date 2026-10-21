@@ -161,7 +161,6 @@ t:test("bulk Move preserves every file and unsaved buffer", function()
   local finished = vim.uv.hrtime()
   local after = Metrics.usage()
   record = {
-    schema_version = 1,
     files = count,
     buffers = buffer_count,
     lsp = mode,

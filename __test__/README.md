@@ -281,7 +281,7 @@ process and `processes` counts fresh processes.
 - [Completion](../spec/debug/cmp-benchmark.md): the completion benchmark and reporter.
 
 Fuzzy matcher measurements run through `node script/benchmark/fuzzy.mjs`;
-for example `node script/benchmark/fuzzy.mjs --level e2e --case files_10k_tree --build --baseline-rev 117a4fc88 --runs 3`.
+for example `node script/benchmark/fuzzy.mjs --level e2e --case files_10k_tree --build --baseline-rev 117a4fc88 --processes 3`.
 `--current DIR` times a snapshot so the working tree stays editable during long runs. Corpora, levels, statistics, the
 fzf parity check (`fuzzy::perf_tests::t_fzf_parity`) and the ranking-quality probe (`fuzzy::perf_tests::t_fuzzy_quality`)
 are described in the fuzzy design.

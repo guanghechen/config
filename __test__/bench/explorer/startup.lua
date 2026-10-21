@@ -93,7 +93,7 @@ local ok, result = xpcall(function()
   )
   ui:rpc("nvim_exec_lua", "startup_bench.dispose()", {})
   return {
-    schema_version = 2,
+    schema_version = 3,
     scope = "startup",
     mode = "tree",
     implementation = implementation,

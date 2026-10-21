@@ -175,13 +175,16 @@ local function call(name, ...)
   return ui:rpc("nvim_exec_lua", "return require('__test__.bench.fuzzy.probes')." .. name .. "(...)", { ... })
 end
 
+-- The predicates make RPCs, so they run outside vim.wait; a timeout reports the picker status and screen.
 ---@param timeout                       integer
 ---@param predicate                     fun(): boolean
 ---@param message                       string
 ---@return nil
 local function wait(timeout, predicate, message)
-  if not vim.wait(timeout, predicate, 2) then
-    error(message .. ": " .. vim.inspect(call("status")) .. "\n" .. table.concat(screen_lines(grid), "\n"))
+  local ok, failure = pcall(ui.wait_until, ui, predicate, timeout, message, 2)
+  if not ok then
+    local _, status = pcall(call, "status")
+    error(tostring(failure) .. "\n" .. vim.inspect(status) .. "\n" .. table.concat(screen_lines(grid), "\n"), 0)
   end
 end
 
@@ -317,7 +320,7 @@ local ok, result = xpcall(function()
     }
   end
   return {
-    schema = "fuzzy-l3/1",
+    schema = "fuzzy-l3/2",
     level = "e2e",
     scenario = scenario,
     mode = mode,

@@ -165,7 +165,7 @@ local ok, result = xpcall(function()
   ]=],
     { top + 2, branch }
   )
-  local samples, changes = {}, {}
+  local snapshots, changes = {}, {}
   local name = "a-watch.lua"
   for index = 1, cycles do
     ui:rpc("nvim_exec_lua", "soak.prepare(...)", { index })
@@ -186,7 +186,7 @@ local ok, result = xpcall(function()
     )
     changes[#changes + 1] = (watched.flushed - watched.started) / 1000000
     name, watched = next_name, nil
-    samples[#samples + 1] = ui:rpc("nvim_exec_lua", "return soak.finish(...)", { index })
+    snapshots[#snapshots + 1] = ui:rpc("nvim_exec_lua", "return soak.finish(...)", { index })
     if index % 20 == 0 then
       ui:rpc("nvim_exec_lua", "soak.releases[#soak.releases + 1] = soak.check_release()", {})
     end
@@ -217,7 +217,7 @@ local ok, result = xpcall(function()
   return {
     cycles = cycles,
     files = entries,
-    samples = samples,
+    snapshots = snapshots,
     final = final,
     watch_change_to_flush_ms = {
       median = (changes[math.floor((cycles + 1) / 2)] + changes[math.ceil((cycles + 1) / 2)]) / 2,

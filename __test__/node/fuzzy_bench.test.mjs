@@ -67,15 +67,15 @@ test("slow processes are those whose calibration exceeds 1.3 times the median", 
 })
 
 test("L1 summaries reduce each query across processes before summarizing", () => {
-  const row = (sequence, step, length, ns) => [sequence, step, length, "stem", ns, 3]
+  const row = (sequence, step, length, ms) => [sequence, step, length, "stem", ms, 3]
   const records = [1, 2, 3].map((run) => ({
     level: "rust", corpus: "repo", items: 10, probe: "fuzzy", threads: 1, build_ms: 1, run,
-    queries: [row(1, 1, 1, 1e6 * run), row(1, 2, 2, 2e6), row(2, 1, 7, 9e6)],
+    queries: [row(1, 1, 1, run), row(1, 2, 2, 2), row(2, 1, 7, 9)],
   }))
   const [group] = summarizeRust(records)
-  assert.equal(group.runs, 3)
+  assert.equal(group.processes, 3)
   assert.equal(group.overall.n, 3)
-  assert.equal(group.lengths["1"].p50, 2)
+  assert.equal(group.lengths["1"].median, 2)
   assert.equal(group.lengths["7+"].max, 9)
   assert.equal(group.matched_median, 3)
 })
@@ -83,11 +83,11 @@ test("L1 summaries reduce each query across processes before summarizing", () =>
 test("L2 summaries keep stage and allocation distributions", () => {
   const records = [{
     level: "ffi", corpus: "labels", items: 5, pipeline: "old_list", stages: ["lines", "search"], cold: { total_ms: 4 },
-    queries: [[1, 1, 1, "prefix", 3e6, 2, 10, [1e6, 2e6]], [1, 2, 2, "prefix", 1e6, 1, 4, [0.5e6, 0.5e6]]],
+    queries: [[1, 1, 1, "prefix", 3, 2, 10240, [1, 2]], [1, 2, 2, "prefix", 1, 1, 4096, [0.5, 0.5]]],
   }]
   const [group] = summarizeFfi(records)
   assert.equal(group.stages.search.max, 2)
-  assert.equal(group.allocated_kib.max, 10)
+  assert.equal(group.allocated_bytes.max, 10240)
   assert.equal(group.cold_ms, 4)
 })
 
@@ -115,7 +115,7 @@ test("analyze writes a report from a result directory", () => {
   const directory = mkdtempSync(join(tmpdir(), "fuzzy-report-"))
   writeFileSync(join(directory, "metadata.json"), JSON.stringify({ status: "complete", started_at: "now", host: {}, nvim: ["NVIM"] }))
   writeFileSync(join(directory, "results.jsonl"), `${JSON.stringify({
-    level: "rust", corpus: "repo", items: 10, probe: "search_in_lines", threads: 1, build_ms: 0, queries: [[1, 1, 1, "stem", 1e6, 1]],
+    level: "rust", corpus: "repo", items: 10, probe: "search_in_lines", threads: 1, build_ms: 0, queries: [[1, 1, 1, "stem", 1, 1]],
   })}\n`)
   const summary = analyze(directory)
   assert.equal(summary.rust.length, 1)

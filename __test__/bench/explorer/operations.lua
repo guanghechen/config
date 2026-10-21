@@ -5,7 +5,7 @@ local here = vim.fs.dirname(assert(vim.uv.fs_realpath(debug.getinfo(1, "S").sour
 local harness = vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(here)))
 package.path = harness .. "/?.lua;" .. package.path
 local repo, directory, implementation, kind = assert(arg[1]), assert(arg[2]), assert(arg[3]), assert(arg[4])
-local entries, repeats = assert(tonumber(arg[5])), assert(tonumber(arg[6]))
+local entries, iterations = assert(tonumber(arg[5])), assert(tonumber(arg[6]))
 local bytes, files = tonumber(arg[7]) or 0, tonumber(arg[8]) or 0
 local options = arg[9] and vim.json.decode(arg[9]) or {}
 options.files = files
@@ -117,9 +117,9 @@ local ok, result = xpcall(function()
     { here .. "/operations_runtime.lua", directory, implementation, kind, entries, options }
   )
   output.baseline, output.open_memory = baseline, open_memory or output.open_memory
-  output.schema_version, output.scope, output.mode, output.implementation = 2, kind, "tree", implementation
+  output.schema_version, output.scope, output.mode, output.implementation = 3, kind, "tree", implementation
   output.operations = {}
-  for index = 1, kind == "git" and repeats * 2 or 1 do
+  for index = 1, kind == "git" and iterations * 2 or 1 do
     active = {}
     -- Append after the cursor anchor so both renderers can display the result without scrolling.
     local destination = options.destination or (files > 1 and "zz-copied/" or "zz-copied.bin")

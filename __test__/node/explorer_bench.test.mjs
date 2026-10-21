@@ -7,9 +7,9 @@ import { analyze, summarize, summarizeProbes } from "../../script/benchmark/expl
 import { inputFingerprint, measuredRepository, parseStatus, probeArguments } from "../../script/benchmark/explorer.mjs"
 
 function run(trial, cursorTimes, mode = "tree") {
-  const memory = { process_memory_bytes: 10485760, process_memory_kind: "physical_footprint", lua_heap_kib: 1024 }
+  const memory = { process_memory_bytes: 10485760, process_memory_kind: "physical_footprint", lua_heap_bytes: 1048576 }
   return {
-    schema_version: 2,
+    schema_version: 3,
     input_fingerprint: "a".repeat(64),
     trial,
     mode,
@@ -90,8 +90,8 @@ test("porcelain metadata preserves unusual paths and consumes rename sources", (
   assert.throws(() => parseStatus(" M file\0\0"), /invalid.*entry/)
 })
 
-test("probe arguments preserve requested process samples and native-only idle", () => {
-  const options = { samples: 100, repeats: 3, cycles: 200, lsp: "/vtsls" }
+test("probe arguments preserve requested process counts and native-only idle", () => {
+  const options = { processes: 100, iterations: 3, cycles: 200, lsp: "/vtsls" }
   assert.deepEqual(probeArguments("idle", options), ["-", "100"])
   assert.deepEqual(probeArguments("root_watch", options), ["100"])
   assert.deepEqual(probeArguments("active_loading", options), ["100", "50000"])
@@ -117,10 +117,10 @@ test("active loading keeps modes and cold versus warm scans in separate process 
 })
 
 test("fingerprints ignore JSON field ordering while retaining measurement and plugin changes", () => {
-  const first = { plugins: [{ name: "plugin", loaded: true }], measurement: { repeats: 3, nvim: "0.12" } }
-  const reordered = { measurement: { nvim: "0.12", repeats: 3 }, plugins: [{ loaded: true, name: "plugin" }] }
+  const first = { plugins: [{ name: "plugin", loaded: true }], measurement: { iterations: 3, nvim: "0.12" } }
+  const reordered = { measurement: { nvim: "0.12", iterations: 3 }, plugins: [{ loaded: true, name: "plugin" }] }
   assert.equal(inputFingerprint(first), inputFingerprint(reordered))
-  assert.notEqual(inputFingerprint(first), inputFingerprint({ ...first, measurement: { ...first.measurement, repeats: 4 } }))
+  assert.notEqual(inputFingerprint(first), inputFingerprint({ ...first, measurement: { ...first.measurement, iterations: 4 } }))
   assert.notEqual(inputFingerprint(first), inputFingerprint({ ...first, plugins: [{ name: "plugin", loaded: false }] }))
 })
 
@@ -137,7 +137,7 @@ test("failed and partial runs still produce an honest report", (t) => {
   const directory = mkdtempSync(join(tmpdir(), "explorer-report-test-"))
   t.after(() => rmSync(directory, { recursive: true, force: true }))
   writeFileSync(join(directory, "metadata.json"), JSON.stringify({
-    status: "failed", repositories: {}, samples: 3,
+    status: "failed", repositories: {}, processes: 3,
     coverage: [{ case: "example", comparison: "baseline/native", status: "failed", reason: "second process failed" },
       { case: "lsp", comparison: "native", status: "blocked", reason: "missing server" }],
   }))

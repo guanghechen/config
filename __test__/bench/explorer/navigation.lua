@@ -6,8 +6,8 @@ local harness = vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(here)))
 local root = vim.env.NVIM_EXPLORER_BENCH_CHECKOUT or harness
 local Metrics = assert(loadfile(vim.fs.dirname(here) .. "/metrics.lua"))()
 package.path = harness .. "/?.lua;" .. package.path
-local samples = tonumber(arg[1]) or 3
-assert(samples >= 1 and samples <= 100 and samples % 1 == 0 and arg[2] == nil)
+local processes = tonumber(arg[1]) or 3
+assert(processes >= 1 and processes <= 100 and processes % 1 == 0 and arg[2] == nil)
 local UI = require("__test__.support.ui")
 local Grid = require("__test__.support.ui_grid")
 local directory, ui
@@ -50,7 +50,7 @@ end
 
 local ok, result = xpcall(function()
   local records = {}
-  for sample = 1, samples do
+  for trial = 1, processes do
     directory = vim.fn.tempname()
     assert(vim.uv.fs_mkdir(directory, 448))
     directory = assert(vim.uv.fs_realpath(directory))
@@ -148,7 +148,7 @@ local ok, result = xpcall(function()
         { directory }
       )
     end
-    records[#records + 1] = { sample = sample, nested_reveals = 10, removed_roots = 10, released_views = 10 }
+    records[#records + 1] = { trial = trial, nested_reveals = 10, removed_roots = 10, released_views = 10 }
     ui:close()
     ui = nil
     assert(vim.fn.delete(directory, "rf") == 0)
@@ -157,7 +157,7 @@ local ok, result = xpcall(function()
   return {
     records = records,
     memory_measurement = Metrics.memory_description(),
-    conditions = "Fresh native process per sample, 110x40 attached UI, ten cycles per process. Typed j/mx then nested reveal preserves cut selection; external removal of the display root, refresh and reveal reaches an existing external file. Cursor and target are checked in UI flushes; hidden views release watches and queued work. Observations are limited to one RPC per 20 ms; this is acceptance, not an A/B latency benchmark.",
+    conditions = "Fresh native process per trial, 110x40 attached UI, ten cycles per process. Typed j/mx then nested reveal preserves cut selection; external removal of the display root, refresh and reveal reaches an existing external file. Cursor and target are checked in UI flushes; hidden views release watches and queued work. Observations are limited to one RPC per 20 ms; this is acceptance, not an A/B latency benchmark.",
   }
 end, debug.traceback)
 if ui then

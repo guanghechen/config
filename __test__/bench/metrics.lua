@@ -48,7 +48,7 @@ function M.memory()
   return {
     process_memory_bytes = vim.uv.resident_set_memory(),
     process_memory_kind = M.memory_description().kind,
-    lua_heap_kib = collectgarbage("count"),
+    lua_heap_bytes = collectgarbage("count") * 1024,
     libuv_version = vim.uv.version_string(),
   }
 end

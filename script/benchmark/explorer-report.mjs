@@ -17,7 +17,7 @@ export function summarize(trials) {
   const groups = new Map(),
     identities = new Set()
   for (const trial of trials) {
-    if (trial.schema_version !== 2) throw new Error("unsupported result schema; rerun with schema 2 measurements")
+    if (trial.schema_version !== 3) throw new Error("unsupported result schema; rerun with schema 3 measurements")
     if (!/^[a-f0-9]{64}$/.test(trial.input_fingerprint ?? "")) throw new Error("missing or invalid input fingerprint")
     const key = JSON.stringify([trial.case, trial.mode, trial.implementation])
     const identity = `${key}:${trial.trial}`
@@ -55,7 +55,7 @@ export function summarize(trials) {
       if (group.memory_kind && group.memory_kind !== memory.process_memory_kind) throw new Error("incompatible memory measurements")
       group.memory_kind = memory.process_memory_kind
       add(`${phase}.process_memory_mib`, memory.process_memory_bytes / 1048576)
-      add(`${phase}.lua_heap_mib`, memory.lua_heap_kib / 1024)
+      add(`${phase}.lua_heap_mib`, memory.lua_heap_bytes / 1048576)
       if (memory.retained) add(`${phase}.rust_retained_mib`, memory.retained.retained_bytes / 1048576)
     }
     for (const [name, values] of metrics) {
@@ -71,7 +71,7 @@ export function summarize(trials) {
       group.metrics[name] = { ...statistics(metric.medians, metric.observations), maximum_observation: metric.maximum_observation }
     }
   }
-  return { schema_version: 2, groups: [...groups.values()] }
+  return { schema_version: 3, groups: [...groups.values()] }
 }
 
 export function summarizeProbes(probes) {
@@ -102,17 +102,17 @@ export function summarizeProbes(probes) {
       } else if (caseName === "root_watch") {
         for (const record of output.records) add(caseName, "idle_97_directories", "native", record.idle, memoryKind)
       } else if (caseName === "full_config") {
-        for (const sample of output.samples) {
-          add(caseName, "cursor_during_refresh", "native", { cursor_worst_ms: sample.cursor_worst_ms }, memoryKind)
-          for (const operation of sample.operations) add(caseName, operation.kind, "native", operation, memoryKind)
+        for (const record of output.records) {
+          add(caseName, "cursor_during_refresh", "native", { cursor_worst_ms: record.cursor_worst_ms }, memoryKind)
+          for (const operation of record.operations) add(caseName, operation.kind, "native", operation, memoryKind)
         }
       } else if (caseName === "lsp") {
         add(caseName, "rename", "native", output.timings, memoryKind)
       } else if (caseName === "soak") {
         add(caseName, "session", "native", {
           cycle_watch_median_ms: output.watch_change_to_flush_ms.median,
-          first_hidden_process_memory_mib: output.samples[0].process_memory_bytes / 1048576,
-          last_hidden_process_memory_mib: output.samples.at(-1).process_memory_bytes / 1048576,
+          first_hidden_process_memory_mib: output.snapshots[0].process_memory_bytes / 1048576,
+          last_hidden_process_memory_mib: output.snapshots.at(-1).process_memory_bytes / 1048576,
           before_trace_flush_process_memory_mib: output.final.before_trace_flush.memory.process_memory_bytes / 1048576,
           after_trace_flush_process_memory_mib: output.final.memory.process_memory_bytes / 1048576,
         }, memoryKind)
@@ -133,7 +133,7 @@ export function analyze(directory) {
     .split("\n")
     .filter(Boolean)
     .map((line) => JSON.parse(line))
-  const summary = trials.length ? summarize(trials) : { schema_version: 2, groups: [] }
+  const summary = trials.length ? summarize(trials) : { schema_version: 3, groups: [] }
   const probes = {}
   for (const entry of metadata.coverage ?? []) {
     if (entry.status !== "passed" || !entry.result?.startsWith("probes/")) continue

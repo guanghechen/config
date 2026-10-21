@@ -2,7 +2,7 @@
 local __module_name__ = "__test__.bench.fuzzy.ffi" ---@type string
 
 -- Level L2: one typed query at a time through the Lua/native boundary, without the picker UI.
--- Usage: nvim -l __test__/bench/fuzzy/ffi.lua CHECKOUT CORPUS_DIR CORPUS [SAMPLES] [LIBRARY] [SEQUENCE_STRIDE]
+-- Usage: nvim -l __test__/bench/fuzzy/ffi.lua CHECKOUT CORPUS_DIR CORPUS [ITERATIONS] [LIBRARY] [SEQUENCE_STRIDE]
 -- Prints one JSON line per pipeline. The old pipeline repeats the list composer's per-keystroke work
 -- (lua/era/m/picker/composer/list.lua: __match__ and render_result) stage by stage.
 
@@ -16,7 +16,7 @@ local qos = cpu.prefer_performance_cores()
 local calibration_ms = cpu.calibrate()
 
 local checkout, directory, corpus = assert(arg[1]), assert(arg[2]), assert(arg[3])
-local samples = tonumber(arg[4]) or 5
+local iterations = tonumber(arg[4]) or 5
 local library = arg[5] ~= nil and arg[5] ~= "" and arg[5] or checkout .. "/lua/yoz.so"
 local stride = tonumber(arg[6]) or 1
 yoz = assert(package.loadlib(library, "luaopen_yoz"))()
@@ -216,9 +216,9 @@ local function run(name, query)
     timings[stage.name] = vim.uv.hrtime() - before
   end
   local total = vim.uv.hrtime() - started
-  local allocated = collectgarbage("count") - heap
+  local allocated_bytes = (collectgarbage("count") - heap) * 1024
   collectgarbage("restart")
-  return { timings = timings, total = total, allocated_kib = allocated, matched = state.matched or 0 }
+  return { timings = timings, total = total, allocated_bytes = allocated_bytes, matched = state.matched or 0 }
 end
 
 -- The first query of a fresh process, before any warm-up.
@@ -240,14 +240,14 @@ for _, name in ipairs(names) do
     records[name][index] = { total = {}, allocated = {}, stages = {} }
   end
 end
-for sample = 1, samples do
+for iteration = 1, iterations do
   for offset = 0, #names - 1 do
-    local name = names[(offset + sample - 1) % #names + 1]
+    local name = names[(offset + iteration - 1) % #names + 1]
     for index, query in ipairs(queries) do
       local result = run(name, query.text)
       local record = records[name][index]
       record.total[#record.total + 1] = result.total
-      record.allocated[#record.allocated + 1] = result.allocated_kib
+      record.allocated[#record.allocated + 1] = result.allocated_bytes
       for stage, value in pairs(result.timings) do
         record.stages[stage] = record.stages[stage] or {}
         table.insert(record.stages[stage], value)
@@ -267,14 +267,14 @@ for _, name in ipairs(names) do
     local record = records[name][index]
     local stages = {}
     for _, stage in ipairs(stage_names) do
-      stages[#stages + 1] = Stats.median(record.stages[stage])
+      stages[#stages + 1] = Stats.median(record.stages[stage]) / 1e6
     end
     rows[index] = {
       query.sequence,
       query.step,
       vim.fn.strchars(query.text),
       query.kind,
-      Stats.median(record.total),
+      Stats.median(record.total) / 1e6,
       record.matched,
       Stats.median(record.allocated),
       stages,
@@ -282,13 +282,13 @@ for _, name in ipairs(names) do
   end
   io.stdout:write(
     vim.json.encode({
-      schema = "fuzzy-l2/1",
+      schema = "fuzzy-l2/2",
       level = "ffi",
       corpus = corpus,
       corpus_sha256 = manifest.corpora[corpus].sha256,
       items = #items,
       pipeline = name,
-      samples = samples,
+      iterations = iterations,
       sequence_stride = stride,
       library = library,
       qos = qos,
@@ -296,7 +296,7 @@ for _, name in ipairs(names) do
       stages = stage_names,
       cold = cold[name],
       setup = setup,
-      columns = { "sequence", "step", "length", "kind", "total_ns", "matched", "allocated_kib", "stage_ns" },
+      columns = { "sequence", "step", "length", "kind", "total_ms", "matched", "allocated_bytes", "stage_ms" },
       queries = rows,
     }),
     "\n"

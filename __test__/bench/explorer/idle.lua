@@ -6,8 +6,8 @@ local harness = vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(here)))
 local root = vim.env.NVIM_EXPLORER_BENCH_CHECKOUT or harness
 local Metrics = assert(loadfile(vim.fs.dirname(here) .. "/metrics.lua"))()
 local baseline = arg[1] and arg[1] ~= "-" and assert(vim.uv.fs_realpath(arg[1])) or nil
-local samples = tonumber(arg[2]) or 3
-assert(arg[3] == nil and samples >= 1 and samples <= 100 and samples % 1 == 0)
+local processes = tonumber(arg[2]) or 3
+assert(arg[3] == nil and processes >= 1 and processes <= 100 and processes % 1 == 0)
 package.path = harness .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
 local UI = require("__test__.support.ui")
 local directory = vim.fn.tempname()
@@ -21,7 +21,7 @@ local ok, result = xpcall(function()
     assert(vim.uv.fs_close(fd))
   end
   local records = {}
-  for trial = 1, samples do
+  for trial = 1, processes do
     local order = baseline and (trial % 2 == 1 and { "baseline", "native" } or { "native", "baseline" }) or { "native" }
     for _, implementation in ipairs(order) do
       local checkout = implementation == "native" and root or baseline
@@ -103,7 +103,7 @@ local ok, result = xpcall(function()
           redraw_notifications = ui.redraws - redraws,
           process_memory_mib = after.process_memory_bytes / 1048576,
         }
-        io.stderr:write("Completed ", implementation, " ", phase, " in sample ", trial, "\n")
+        io.stderr:write("Completed ", implementation, " ", phase, " in trial ", trial, "\n")
       end
       ui:close()
       ui = nil
@@ -115,7 +115,7 @@ local ok, result = xpcall(function()
     memory_measurement = Metrics.memory_description(),
     current = root,
     baseline = baseline,
-    samples = samples,
+    processes = processes,
     conditions = "Actual Widget; release native module; 200 empty Lua files; 110x40 attached UI; fresh processes per implementation in alternating order. Three idle phases, each after 500 ms settling and full GC, then 3 s with no parent polling. Benchmark timer stopped; Git collection and LSP disabled; process CPU includes all native threads.",
   }
 end, debug.traceback)

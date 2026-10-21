@@ -233,17 +233,17 @@ function verifyCopy(folder, scenario) {
   if (scenario.files > 1 && readdirSync(paths.target).length !== names.length) throw new Error("copy has unexpected entries")
 }
 
-export function probeArguments(name, { samples, repeats, cycles, baseline, lsp }) {
+export function probeArguments(name, { processes, iterations, cycles, baseline, lsp }) {
   switch (name) {
-    case "idle": return [baseline ?? "-", String(samples)]
-    case "watch": return ["watch", String(samples)]
-    case "jobs_activity": return ["jobs", String(samples)]
-    case "navigation": return [String(samples)]
-    case "active_loading": return [String(samples), "50000"]
-    case "root_watch": return [String(samples)]
+    case "idle": return [baseline ?? "-", String(processes)]
+    case "watch": return ["watch", String(processes)]
+    case "jobs_activity": return ["jobs", String(processes)]
+    case "navigation": return [String(processes)]
+    case "active_loading": return [String(processes), "50000"]
+    case "root_watch": return [String(processes)]
     case "soak": return [String(cycles), "1000"]
-    case "full_config": return [String(samples), String(Math.min(1000, Math.max(10, repeats * 40)))]
-    case "jobs_ui": return [String(samples)]
+    case "full_config": return [String(processes), String(Math.min(1000, Math.max(10, iterations * 40)))]
+    case "jobs_ui": return [String(processes)]
     case "lsp": return [lsp]
     default: throw new Error(`unknown probe: ${name}`)
   }
@@ -253,7 +253,7 @@ async function main() {
   const { values } = parseArgs({ options: {
     current: { type: "string", default: checkout }, baseline: { type: "string" },
     native: { type: "string" }, "baseline-native": { type: "string" },
-    samples: { type: "string", default: "3" }, repeats: { type: "string", default: "3" },
+    processes: { type: "string", default: "3" }, iterations: { type: "string", default: "3" },
     case: { type: "string", multiple: true }, mode: { type: "string", default: "both" },
     output: { type: "string" }, nvim: { type: "string", default: "nvim" },
     "timeout-ms": { type: "string", default: "600000" }, cycles: { type: "string", default: "200" },
@@ -267,8 +267,8 @@ async function main() {
   --native PATH        Preserved native release module (default: current/lua/yoz.so)
   --baseline-native PATH  Preserved baseline release module
   --case NAME          Repeat to select cases (default: the comprehensive matrix)
-  --samples N          Independent processes per comparison/probe (default: 3)
-  --repeats N          Repeated interactions within a process (default: 3)
+  --processes N        Independent processes per comparison/probe (default: 3)
+  --iterations N       Repeated interactions within a process (default: 3)
   --mode tree|list|both Widget modes; List is native only (default: both)
   --cycles N           Long-session cycles, a positive multiple of 20 (default: 200)
   --lsp PATH           Existing vtsls executable (default: Mason's vtsls)
@@ -279,8 +279,8 @@ async function main() {
 Cases: ${cases.map((item) => item.name).join(", ")}`)
     return
   }
-  const samples = Number(values.samples), repeats = Number(values.repeats), timeout = Number(values["timeout-ms"]), cycles = Number(values.cycles)
-  if (![samples, repeats].every((n) => Number.isInteger(n) && n >= 1 && n <= 100)) throw new Error("samples and repeats must be integers from 1 through 100")
+  const processes = Number(values.processes), iterations = Number(values.iterations), timeout = Number(values["timeout-ms"]), cycles = Number(values.cycles)
+  if (![processes, iterations].every((n) => Number.isInteger(n) && n >= 1 && n <= 100)) throw new Error("processes and iterations must be integers from 1 through 100")
   if (!Number.isInteger(timeout) || timeout < 1000) throw new Error("timeout-ms must be an integer >= 1000")
   if (!Number.isInteger(cycles) || cycles < 20 || cycles > 10000 || cycles % 20 !== 0) throw new Error("cycles must be a multiple of 20 from 20 through 10000")
   if (!["tree", "list", "both"].includes(values.mode)) throw new Error("mode must be tree, list or both")
@@ -308,10 +308,10 @@ Cases: ${cases.map((item) => item.name).join(", ")}`)
   mkdirSync(join(output, "logs"))
   const data = realpathSync(mkdtempSync(join(tmpdir(), "explorer-bench-data-")))
   const metadata = {
-    schema_version: 2, started_at: new Date().toISOString(), status: "running",
+    schema_version: 3, started_at: new Date().toISOString(), status: "running",
     host: { platform: platform(), release: release(), arch: arch(), cpu: cpus()[0]?.model, memory_bytes: totalmem() },
     nvim: nvimVersion,
-    repositories: {}, repository_metadata_changes: [], plugin_inputs: {}, samples, repeats, cycles, cases: scenarios, mode: values.mode,
+    repositories: {}, repository_metadata_changes: [], plugin_inputs: {}, processes, iterations, cycles, cases: scenarios, mode: values.mode,
     harness_sha256: harness,
     coverage: scenarios.map((scenario) => ({
       case: scenario.name,
@@ -324,7 +324,7 @@ Cases: ${cases.map((item) => item.name).join(", ")}`)
       order: "fresh processes; A/B and B/A alternate; no concurrent measurements",
       widget: "110x40 UI, width 44, rosepine-main, compression off; modules preloaded, Git/LSP disabled",
       startup: "fresh full-config process plus first default Explorer; embedded UI handshake included, context isolated, automatic IM disabled; locally installed plugins/caches retained",
-      plugins: "one unmeasured startup discovers each full-config environment; configured plugin Lua/Vim/native/query/data/JS/Wasm contents, including ignored native libraries, are fingerprinted before samples and checked before/after cases; plugin caches are warm",
+      plugins: "one unmeasured startup discovers each full-config environment; configured plugin Lua/Vim/native/query/data/JS/Wasm contents, including ignored native libraries, are fingerprinted before the measured processes and checked before/after cases; plugin caches are warm",
       git: "real disposable Git repository and queries; staged/untracked/ignored fixtures; changed status must reach the Explorer model; no UI-flush claim for Git ready",
       copy: "actual Explorer copy action with automatically accepted path input; dense 64 MiB file or 100/1000/10000 files, four bytes/4 KiB/64 KiB each; collapsed source, expanded source and destination outside display root are separate cases; all names and contents verified after timing; native ready includes target-follow, outside copies change the native root while the baseline retains it; job_ms remains the IO throughput boundary",
       observer: "comparable phases send completion notifications with zero readiness RPCs during timing; widget checks run on publication/cursor events and a 2 ms timer; copy/Git readiness checks begin only after terminal/query notification; startup uses 5 ms configuration and 2 ms first-view checks. Process/main-thread CPU and Job-terminal CPU are separate; readiness_checks and observer_rpcs audit observation work",
@@ -418,12 +418,12 @@ Cases: ${cases.map((item) => item.name).join(", ")}`)
             Object.assign(coverage, { status: "blocked", reason: `installed vtsls not found: ${values.lsp}` })
             continue
           }
-          const iterations = scenario.name === "lsp" || scenario.name === "soak" ? samples : 1
+          const invocations = scenario.name === "lsp" || scenario.name === "soak" ? processes : 1
           const records = []
-          for (let trial = 1; trial <= iterations; trial++) {
-            const args = ["-l", join(drivers, scenario.driver), ...probeArguments(scenario.name, { samples, repeats, cycles, baseline: locations.baseline, lsp: values.lsp })]
+          for (let trial = 1; trial <= invocations; trial++) {
+            const args = ["-l", join(drivers, scenario.driver), ...probeArguments(scenario.name, { processes, iterations, cycles, baseline: locations.baseline, lsp: values.lsp })]
             metadata.commands.push({ case: scenario.name, trial, command: values.nvim, args })
-            console.log(`Running ${scenario.name} ${trial}/${iterations}`)
+            console.log(`Running ${scenario.name} ${trial}/${invocations}`)
             const record = await execute(values.nvim, args, timeout, controller.signal, env)
             saveLog(`${scenario.name}-${trial}`, record)
             records.push(JSON.parse(record.stdout))
@@ -436,13 +436,13 @@ Cases: ${cases.map((item) => item.name).join(", ")}`)
           populate(folder, scenario)
           const modes = scenario.scope === "widget" ? values.mode === "both" ? ["tree", "list"] : [values.mode] : ["tree"]
           for (const mode of modes) {
-            for (let trial = 1; trial <= samples; trial++) {
+            for (let trial = 1; trial <= processes; trial++) {
               const order = locations.baseline && mode === "tree" ? trial % 2 ? ["baseline", "native"] : ["native", "baseline"] : ["native"]
               for (const implementation of order) {
                 resetFixture(folder, scenario)
                 const repo = metadata.repositories[implementation]
                 let args
-                if (scenario.scope === "widget") args = ["-l", join(drivers, "measure.lua"), repo.path, folder, implementation, String(scenario.entries), String(scenario.branch), String(repeats), mode]
+                if (scenario.scope === "widget") args = ["-l", join(drivers, "measure.lua"), repo.path, folder, implementation, String(scenario.entries), String(scenario.branch), String(iterations), mode]
                 else if (scenario.scope === "startup") args = ["-l", join(drivers, "startup.lua"), repo.path, folder, implementation, String(scenario.entries)]
                 else {
                   const paths = scenario.scope === "copy" ? copyPaths(folder, scenario) : { directory: folder }
@@ -451,15 +451,15 @@ Cases: ${cases.map((item) => item.name).join(", ")}`)
                     outside: scenario.outside ?? false,
                     destination: relative(paths.directory, paths.target) + (scenario.files > 1 ? "/" : ""),
                   } : {}
-                  args = ["-l", join(drivers, "operations.lua"), repo.path, paths.directory, implementation, scenario.scope, String(scenario.scope === "git" ? scenario.entries + 2 : scenario.entries), String(repeats), String(scenario.bytes ?? 0), String(scenario.files ?? 0), JSON.stringify(options)]
+                  args = ["-l", join(drivers, "operations.lua"), repo.path, paths.directory, implementation, scenario.scope, String(scenario.scope === "git" ? scenario.entries + 2 : scenario.entries), String(iterations), String(scenario.bytes ?? 0), String(scenario.files ?? 0), JSON.stringify(options)]
                 }
                 metadata.commands.push({ case: scenario.name, mode, implementation, trial, command: values.nvim, args })
-                console.log(`Running ${scenario.name} ${mode} ${implementation} ${trial}/${samples}`)
+                console.log(`Running ${scenario.name} ${mode} ${implementation} ${trial}/${processes}`)
                 const started = performance.now()
                 const record = await execute(values.nvim, args, timeout, controller.signal, env)
                 saveLog(`${scenario.name}-${mode}-${implementation}-${trial}`, record)
                 const result = JSON.parse(record.stdout)
-                if (result.schema_version !== 2 || result.implementation !== implementation || result.mode !== mode) throw new Error("unexpected result identity/schema")
+                if (result.schema_version !== 3 || result.implementation !== implementation || result.mode !== mode) throw new Error("unexpected result identity/schema")
                 if (result.operations.some((operation) => operation.observer_rpcs !== 0)) throw new Error("readiness RPCs must remain zero during comparable measurements")
                 if (scenario.scope === "copy") { verifyCopy(folder, scenario); result.checks.content_verified = true }
                 if (scenario.scope === "startup") {
@@ -475,7 +475,7 @@ Cases: ${cases.map((item) => item.name).join(", ")}`)
                   elapsed_seconds: (performance.now() - started) / 1000,
                   input_fingerprint: inputFingerprint({
                     repo: measuredRepository(repo), harness: metadata.harness_sha256, plugins: result.plugins, plugin_inputs: metadata.plugin_inputs[implementation],
-                    measurement: { host: metadata.host, nvim: metadata.nvim, conditions: metadata.conditions, scenario, repeats },
+                    measurement: { host: metadata.host, nvim: metadata.nvim, conditions: metadata.conditions, scenario, iterations },
                   }),
                 })
                 results.push(result)
