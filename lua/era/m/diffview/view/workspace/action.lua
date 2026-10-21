@@ -28,6 +28,7 @@ local M = {}
 ---@field public pending_discards        table<string, stl.c.Future> Untracked discards in flight, by path.
 ---@field public close                   fun(self: era.m.diffview.view.workspace.IContext): nil
 ---@field public get_keymaps             fun(self: era.m.diffview.view.workspace.IContext): stl.t.IKeymap[]
+---@field public refresh                 fun(self: era.m.diffview.view.workspace.IContext): nil Refreshes Changes and History.
 ---@field public setup_changes           fun(self: era.m.diffview.view.workspace.IContext): nil
 ---@field public setup_history           fun(self: era.m.diffview.view.workspace.IContext): nil
 ---@field public setup_keymaps           fun(self: era.m.diffview.view.workspace.IContext): nil

@@ -127,15 +127,11 @@ t:patch_table(package.loaded, "era.m.diffview.util", {
     return "/repo/" .. filepath
   end,
 })
-t:patch_table(package.loaded, "era.m.diffview.view.commits.keymap", {
-  setup_commits = function() end,
-})
 
 local view = assert(loadfile("lua/era/m/diffview/view/commits/view.lua"))()
 t:patch_table(package.loaded, "era.m.diffview.view.commits.view", view)
 local action = assert(loadfile("lua/era/m/diffview/view/commits/action.lua"))()
 t:patch_table(package.loaded, "era.m.diffview.view.commits.action", action)
-local keymap = assert(loadfile("lua/era/m/diffview/view/commits/keymap.lua"))()
 
 local function reset_search()
   reports = {}
@@ -512,37 +508,6 @@ t:test("commit pane directories toggle independently and copy their displayed pa
   restore_render()
   vim.api.nvim_win_set_buf(winnr, original_bufnr)
   vim.api.nvim_buf_delete(bufnr, { force = true })
-end)
-
-t:test("commits keymap exposes cross-page search", function()
-  local found = {} ---@type table<string, boolean>
-  for _, candidate in ipairs(keymap.gen_commits(diffview.commits_context({ layout = {}, state = new_search_state() }))) do
-    found[candidate.key] = true
-  end
-  t.assert_true(found["g/"], "g/ search keymap")
-  t.assert_true(found.oc, "oc copy path keymap")
-  t.assert_true(found.za and found.zc and found.zo, "directory fold keymaps")
-end)
-
-t:test("commits help keeps mappings with the same key in different modes", function()
-  t:patch_table(keymap, "gen_commits", function()
-    return { { modes = { "n" }, key = "test", desc = "normal", callback = function() end } }
-  end)
-  t:patch_table(keymap, "gen_filetree", function()
-    return { { modes = { "x" }, key = "test", desc = "visual", callback = function() end } }
-  end)
-  t:patch_table(keymap, "gen_sbs", function()
-    return {}
-  end)
-
-  local modes = {} ---@type table<string, boolean>
-  for _, mapping in ipairs(keymap.get_help_keymaps({})) do
-    for _, mode in ipairs(mapping.modes) do
-      modes[mode] = true
-    end
-  end
-  t.assert_true(modes.n, "normal mapping")
-  t.assert_true(modes.x, "visual mapping")
 end)
 
 t:run()

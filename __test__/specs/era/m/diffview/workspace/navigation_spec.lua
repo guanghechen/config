@@ -41,9 +41,6 @@ local function load_action(line_map, opened, ordered_entries)
   end
   t:patch_table(package.loaded, "era.m.diffview.pane.changes", pane)
   t:patch_table(package.loaded, "era.m.diffview.pane.sbs", {})
-  t:patch_table(package.loaded, "era.m.diffview.view.workspace.keymap", {
-    setup_changes = function() end,
-  })
   t:patch_table(package.loaded, "era.m.diffview.view.workspace.view", {
     focus_changes = function(lyt, stage_type)
       local pane = lyt.changes[stage_type]

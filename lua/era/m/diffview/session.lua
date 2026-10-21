@@ -225,22 +225,22 @@ WorkspaceSession.__index = WorkspaceSession
 
 ---@return stl.t.IKeymap[]
 function WorkspaceSession:get_keymaps()
-  return workspace_keymap.get_help_keymaps(self)
+  return workspace_keymap.get_help_keymaps(self, workspace_action, commits_action)
 end
 
 ---@return stl.t.IKeymap[]
 function WorkspaceSession:sbs_keymaps()
-  return workspace_keymap.gen_sbs(self)
+  return workspace_keymap.gen_sbs(self, workspace_action, commits_action)
 end
 
 ---@return nil
 function WorkspaceSession:setup_changes()
-  workspace_keymap.setup_changes(self)
+  workspace_keymap.setup_changes(self, workspace_action)
 end
 
 ---@return nil
 function WorkspaceSession:setup_history()
-  workspace_keymap.setup_history(self)
+  workspace_keymap.setup_history(self, workspace_action, commits_action)
 end
 
 ---@param bufnr                         integer
@@ -416,22 +416,22 @@ function CommitsSession:render_winline() end
 
 ---@return stl.t.IKeymap[]
 function CommitsSession:get_keymaps()
-  return commits_keymap.get_help_keymaps(self)
+  return commits_keymap.get_help_keymaps(self, commits_action)
 end
 
 ---@return stl.t.IKeymap[]
 function CommitsSession:sbs_keymaps()
-  return commits_keymap.gen_sbs(self)
+  return commits_keymap.gen_sbs(self, commits_action)
 end
 
 ---@return nil
 function CommitsSession:setup_commits()
-  commits_keymap.setup_commits(self)
+  commits_keymap.setup_commits(self, commits_action)
 end
 
 ---@return nil
 function CommitsSession:setup_filetree()
-  commits_keymap.setup_filetree(self)
+  commits_keymap.setup_filetree(self, commits_action)
 end
 
 ---@param bufnr                         integer

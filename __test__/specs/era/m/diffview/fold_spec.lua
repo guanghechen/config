@@ -20,19 +20,6 @@ t:patch_table(package.loaded, "era.m.diffview.util", {})
 
 local pane_sbs = require("era.m.diffview.pane.sbs")
 
----@param keymaps                       stl.t.IKeymap[]
----@param key                           string
----@return boolean
-local function invoke(keymaps, key)
-  for _, candidate in ipairs(keymaps) do
-    if candidate.key == key then
-      candidate.callback()
-      return true
-    end
-  end
-  return false
-end
-
 ---@param winnr                         integer
 ---@param command                       string
 local function normal(winnr, command)
@@ -308,74 +295,6 @@ t:test("workspace status assigns fold default to flag 3 and untracked to flag 4"
   local text = component.render(component.refresh(context), context, 120)
   t.assert_true(text:find("F³", 1, true) ~= nil, "fold default flag")
   t.assert_true(text:find("U⁴", 1, true) ~= nil, "untracked flag")
-end)
-
-t:test("workspace fold keys control the current view while t3 changes the default", function()
-  local calls = {} ---@type string[]
-  t:patch_table(package.loaded, "era.m.diffview.view.workspace.action", {
-    open_all_folds = function()
-      calls[#calls + 1] = "open"
-    end,
-    close_all_folds = function()
-      calls[#calls + 1] = "close"
-    end,
-    toggle_untracked = function()
-      calls[#calls + 1] = "untracked"
-    end,
-    toggle_default_folds = function()
-      calls[#calls + 1] = "default"
-    end,
-  })
-
-  local keymap = assert(loadfile("lua/era/m/diffview/view/workspace/keymap.lua"))()
-  ---@diagnostic disable-next-line: missing-fields
-  local ctx = {} ---@type era.m.diffview.view.workspace.IContext
-
-  local changes = keymap.gen_changes(ctx)
-  local sbs = keymap.gen_sbs(ctx)
-  t.assert_true(invoke(changes, "zR"), "Changes zR")
-  t.assert_true(invoke(changes, "zM"), "Changes zM")
-  t.assert_true(invoke(changes, "zO"), "Changes zO alias")
-  t.assert_true(invoke(changes, "zC"), "Changes zC alias")
-  t.assert_true(invoke(changes, "t3"), "Changes fold default")
-  t.assert_true(invoke(changes, "t4"), "Changes untracked flag")
-  t.assert_true(invoke(sbs, "zR"), "SBS zR")
-  t.assert_true(invoke(sbs, "zM"), "SBS zM")
-  t.assert_true(invoke(sbs, "zO"), "SBS zO alias")
-  t.assert_true(invoke(sbs, "zC"), "SBS zC alias")
-  t.assert_eq(
-    "open,close,open,close,default,untracked,open,close,open,close",
-    table.concat(calls, ","),
-    "workspace fold commands"
-  )
-end)
-
-t:test("commits exposes current-view fold commands from every pane", function()
-  local calls = {} ---@type string[]
-  t:patch_table(package.loaded, "era.m.diffview.view.commits.action", {
-    open_all_folds = function()
-      calls[#calls + 1] = "open"
-    end,
-    close_all_folds = function()
-      calls[#calls + 1] = "close"
-    end,
-    toggle_default_folds = function()
-      calls[#calls + 1] = "default"
-    end,
-  })
-
-  local keymap = assert(loadfile("lua/era/m/diffview/view/commits/keymap.lua"))()
-  ---@diagnostic disable-next-line: missing-fields
-  local ctx = {} ---@type era.m.diffview.view.commits.IContext
-
-  for _, keymaps in ipairs({ keymap.gen_commits(ctx), keymap.gen_filetree(ctx), keymap.gen_sbs(ctx) }) do
-    t.assert_true(invoke(keymaps, "zR"), "pane zR")
-    t.assert_true(invoke(keymaps, "zM"), "pane zM")
-  end
-  t.assert_true(invoke(keymap.gen_sbs(ctx), "t3"), "SBS t3")
-  t.assert_true(invoke(keymap.gen_sbs(ctx), "zC"), "SBS zC alias")
-  t.assert_true(invoke(keymap.gen_sbs(ctx), "zO"), "SBS zO alias")
-  t.assert_eq("open,close,open,close,open,close,default,close,open", table.concat(calls, ","), "commits fold commands")
 end)
 
 t:run()

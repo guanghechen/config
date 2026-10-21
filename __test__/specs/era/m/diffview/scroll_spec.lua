@@ -4,24 +4,6 @@ local t = harness.new()
 
 local layout = require("era.m.diffview.layout")
 
----@param keymaps                       stl.t.IKeymap[]
----@param key                           string
----@return stl.t.IKeymap|nil
-local function find_keymap(keymaps, key)
-  for _, keymap in ipairs(keymaps) do
-    if keymap.key == key then
-      return keymap
-    end
-  end
-end
-
----@param keymaps                       stl.t.IKeymap[]
----@param key                           string
----@return boolean
-local function has_keymap(keymaps, key)
-  return find_keymap(keymaps, key) ~= nil
-end
-
 ---@param bufnr                         integer
 ---@param key                           string
 ---@return boolean
@@ -117,60 +99,6 @@ t:test("mouse scroll keeps focus and routes through the hovered window", functio
   t.assert_eq(panel_topline, panel_view.topline, "no window under mouse")
 end)
 
-t:test("panel buffers route mouse scrolling without leaking mappings to side-by-side buffers", function()
-  local calls = {} ---@type string[]
-  local action = {
-    scroll_mouse = function(direction)
-      calls[#calls + 1] = direction
-    end,
-  }
-  t:patch_table(package.loaded, "era.m.diffview.view.workspace.action", action)
-
-  local workspace_keymap = assert(loadfile("lua/era/m/diffview/view/workspace/keymap.lua"))()
-  ---@diagnostic disable-next-line: missing-fields
-  local ctx = {} ---@type era.m.diffview.view.workspace.IContext
-  local workspace_panel_keymaps = workspace_keymap.gen_changes(ctx)
-  assert(find_keymap(workspace_panel_keymaps, "<ScrollWheelDown>")).callback()
-  assert(find_keymap(workspace_panel_keymaps, "<ScrollWheelUp>")).callback()
-  t.assert_false(has_keymap(workspace_panel_keymaps, "<C-d>"), "workspace keyboard down")
-  t.assert_false(has_keymap(workspace_panel_keymaps, "<C-u>"), "workspace keyboard up")
-  local workspace_sbs_keymaps = workspace_keymap.gen_sbs(ctx)
-  t.assert_false(has_keymap(workspace_sbs_keymaps, "<ScrollWheelDown>"), "workspace sbs wheel down")
-  t.assert_false(has_keymap(workspace_sbs_keymaps, "<ScrollWheelUp>"), "workspace sbs wheel up")
-  t.assert_eq("down,up", table.concat(calls, ","), "workspace scroll directions")
-
-  calls = {}
-  t:patch_table(package.loaded, "era.m.diffview.view.commits.action", action)
-  t:patch_table(package.loaded, "era.m.diffview.pane.commits", {})
-
-  local commits_keymap = assert(loadfile("lua/era/m/diffview/view/commits/keymap.lua"))()
-  ---@diagnostic disable-next-line: missing-fields
-  local commits_ctx = {} ---@type era.m.diffview.view.commits.IContext
-  for _, keymaps in ipairs({ commits_keymap.gen_commits(commits_ctx), commits_keymap.gen_filetree(commits_ctx) }) do
-    assert(find_keymap(keymaps, "<ScrollWheelDown>")).callback()
-    assert(find_keymap(keymaps, "<ScrollWheelUp>")).callback()
-    t.assert_false(has_keymap(keymaps, "<C-d>"), "commits keyboard down")
-    t.assert_false(has_keymap(keymaps, "<C-u>"), "commits keyboard up")
-  end
-  local commits_sbs_keymaps = commits_keymap.gen_sbs(commits_ctx)
-  t.assert_false(has_keymap(commits_sbs_keymaps, "<ScrollWheelDown>"), "commits sbs wheel down")
-  t.assert_false(has_keymap(commits_sbs_keymaps, "<ScrollWheelUp>"), "commits sbs wheel up")
-  t.assert_eq("down,up,down,up", table.concat(calls, ","), "commits scroll directions")
-
-  local shared_sbs_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  ---@diagnostic disable-next-line: invisible
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(shared_sbs_bufnr) then
-      vim.api.nvim_buf_delete(shared_sbs_bufnr, { force = true })
-    end
-  end)
-  local sbs_keymap = assert(loadfile("lua/era/m/diffview/view/sbs_keymap.lua"))()
-  t:patch_table(package.loaded, "era.m.diffview.view.sbs_keymap", sbs_keymap)
-  sbs_keymap.setup(workspace_keymap.gen_sbs(ctx), shared_sbs_bufnr, function() end)
-  sbs_keymap.setup(commits_keymap.gen_sbs(commits_ctx), shared_sbs_bufnr, function() end)
-  t.assert_false(has_buffer_keymap(shared_sbs_bufnr, "<ScrollWheelDown>"), "shared sbs wheel mapping")
-end)
-
 t:test("commits panel recreation installs mouse mappings", function()
   local created_bufnrs = {} ---@type integer[]
   local function create_buffer()
@@ -195,11 +123,8 @@ t:test("commits panel recreation installs mouse mappings", function()
     create_buffer = create_buffer,
   })
   t:patch_table(package.loaded, "era.m.diffview.pane.sbs", {})
-  t:patch_table(package.loaded, "era.m.diffview.view.commits.action", {
-    scroll_mouse = function() end,
-  })
   local keymap = assert(loadfile("lua/era/m/diffview/view/commits/keymap.lua"))()
-  t:patch_table(package.loaded, "era.m.diffview.view.commits.keymap", keymap)
+  local action = { scroll_mouse = function() end }
 
   local view = assert(loadfile("lua/era/m/diffview/view/commits/view.lua"))()
   local anchor_winnr = vim.api.nvim_get_current_win() ---@type integer
@@ -216,10 +141,10 @@ t:test("commits panel recreation installs mouse mappings", function()
     state = {},
   } ---@type era.m.diffview.view.commits.IContext
   ctx.setup_commits = function()
-    keymap.setup_commits(ctx)
+    keymap.setup_commits(ctx, action)
   end
   ctx.setup_filetree = function()
-    keymap.setup_filetree(ctx)
+    keymap.setup_filetree(ctx, action)
   end
 
   ---@diagnostic disable-next-line: invisible

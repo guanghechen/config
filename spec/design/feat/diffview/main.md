@@ -100,6 +100,8 @@ fn / tabline ──> session ───────────────> sbs_
   layout 与共享 preview 的 commits context。
 - Context 的钩子都是必有方法：`setup_*`、`get_keymaps`，commits context 另有 `begin_preview`（返回判断预览是否
   仍为最新的函数）与 `render_winline`。`action` 与 `view` 通过这些钩子请求 keymap refresh，不反向依赖 `keymap`。
+- `keymap` 不 require `action`：`gen_*`、`setup_*` 与 `get_help_keymaps` 以参数接收 action 模块，workspace 另收
+  History 使用的 commits action。Session 传入真实模块，路由测试传入记录调用的替身。
 - Session 拥有 Git 订阅、Changes 尺寸监听、预览代次与 untracked discard 队列；`close()` 统一回收。一个模块级
   `TabClosed` autocmd 关闭失去 tab 的 session；漏掉 `TabClosed` 的 session 在下一次查找时关闭。
 - `sbs_keymap` 只安装 buffer-local mappings；按键时由当前 tab 的 session 解析对应 keymap。

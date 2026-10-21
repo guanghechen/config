@@ -154,9 +154,6 @@ t:test("workspace preview generation makes the latest request the sole writer", 
       requests[#requests + 1] = opts
     end,
   })
-  t:patch_table(package.loaded, "era.m.diffview.view.workspace.keymap", {
-    setup_sbs = function() end,
-  })
 
   local view = assert(loadfile("lua/era/m/diffview/view/workspace/view.lua"))()
   local left_winnr, right_winnr = create_windows()

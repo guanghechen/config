@@ -1,10 +1,9 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.diffview.view.commits.keymap" ---@type string
 
-local action = require("era.m.diffview.view.commits.action")
 local pane_commits = require("era.m.diffview.pane.commits")
 
----Commits view keymaps.
+---Commits view keymaps. Generators bind keys to `action`: the commits action module, or a stand-in in tests.
 ---@class era.m.diffview.view.commits.keymap
 local M = {}
 
@@ -14,8 +13,9 @@ local M = {}
 
 ---Generate cross-pane keymaps (shared by all panes)
 ---@param ctx                            era.m.diffview.view.commits.IContext
+---@param action                         era.m.diffview.view.commits.action
 ---@return stl.t.IKeymap[]
-function M.gen_cross_pane(ctx)
+function M.gen_cross_pane(ctx, action)
   -- stylua: ignore
   ---@type stl.t.IKeymap[]
   return {
@@ -38,8 +38,9 @@ end
 
 ---Generate domain actions for a commits buffer without standalone-view layout bindings.
 ---@param ctx                            era.m.diffview.view.commits.IContext
+---@param action                         era.m.diffview.view.commits.action
 ---@return stl.t.IKeymap[]
-function M.gen_commit_pane(ctx)
+function M.gen_commit_pane(ctx, action)
   -- stylua: ignore
   ---@type stl.t.IKeymap[]
   local keymaps = {
@@ -78,10 +79,11 @@ end
 
 ---Generate keymaps for the standalone commits view.
 ---@param ctx                            era.m.diffview.view.commits.IContext
+---@param action                         era.m.diffview.view.commits.action
 ---@return stl.t.IKeymap[]
-function M.gen_commits(ctx)
-  local keymaps = M.gen_commit_pane(ctx) ---@type stl.t.IKeymap[]
-  for _, km in ipairs(M.gen_cross_pane(ctx)) do
+function M.gen_commits(ctx, action)
+  local keymaps = M.gen_commit_pane(ctx, action) ---@type stl.t.IKeymap[]
+  for _, km in ipairs(M.gen_cross_pane(ctx, action)) do
     keymaps[#keymaps + 1] = km
   end
 
@@ -90,8 +92,9 @@ end
 
 ---Generate keymaps for filetree buffer (in commits view)
 ---@param ctx                            era.m.diffview.view.commits.IContext
+---@param action                         era.m.diffview.view.commits.action
 ---@return stl.t.IKeymap[]
-function M.gen_filetree(ctx)
+function M.gen_filetree(ctx, action)
   -- stylua: ignore
   ---@type stl.t.IKeymap[]
   local keymaps = {
@@ -108,7 +111,7 @@ function M.gen_filetree(ctx)
   }
 
   -- Append cross-pane keymaps
-  for _, km in ipairs(M.gen_cross_pane(ctx)) do
+  for _, km in ipairs(M.gen_cross_pane(ctx, action)) do
     keymaps[#keymaps + 1] = km
   end
 
@@ -117,8 +120,9 @@ end
 
 ---Generate keymaps for sbs (side-by-side) buffers
 ---@param ctx                            era.m.diffview.view.commits.IContext
+---@param action                         era.m.diffview.view.commits.action
 ---@return stl.t.IKeymap[]
-function M.gen_sbs(ctx)
+function M.gen_sbs(ctx, action)
   -- stylua: ignore
   ---@type stl.t.IKeymap[]
   local keymaps = {
@@ -133,7 +137,7 @@ function M.gen_sbs(ctx)
   }
 
   -- Append cross-pane keymaps
-  for _, km in ipairs(M.gen_cross_pane(ctx)) do
+  for _, km in ipairs(M.gen_cross_pane(ctx, action)) do
     keymaps[#keymaps + 1] = km
   end
 
@@ -173,25 +177,27 @@ end
 
 ---Setup keymaps for commits buffer
 ---@param ctx                            era.m.diffview.view.commits.IContext
-function M.setup_commits(ctx)
+---@param action                         era.m.diffview.view.commits.action
+function M.setup_commits(ctx, action)
   local lyt = ctx.layout
   if not lyt.commits_bufnr or not vim.api.nvim_buf_is_valid(lyt.commits_bufnr) then
     return
   end
 
-  local keymaps = M.gen_commits(ctx)
+  local keymaps = M.gen_commits(ctx, action)
   apply_keymaps(lyt.commits_bufnr, keymaps)
 end
 
 ---Setup keymaps for filetree buffer
 ---@param ctx                            era.m.diffview.view.commits.IContext
-function M.setup_filetree(ctx)
+---@param action                         era.m.diffview.view.commits.action
+function M.setup_filetree(ctx, action)
   local lyt = ctx.layout
   if not lyt.filetree_bufnr or not vim.api.nvim_buf_is_valid(lyt.filetree_bufnr) then
     return
   end
 
-  local keymaps = M.gen_filetree(ctx)
+  local keymaps = M.gen_filetree(ctx, action)
   apply_keymaps(lyt.filetree_bufnr, keymaps)
 end
 
@@ -201,12 +207,13 @@ end
 
 ---Get all keymaps for help display
 ---@param ctx                            era.m.diffview.view.commits.IContext
+---@param action                         era.m.diffview.view.commits.action
 ---@return stl.t.IKeymap[]
-function M.get_help_keymaps(ctx)
+function M.get_help_keymaps(ctx, action)
   local all = {} ---@type stl.t.IKeymap[]
   local seen = {} ---@type table<string, boolean>
 
-  for _, keymaps in ipairs({ M.gen_commits(ctx), M.gen_filetree(ctx), M.gen_sbs(ctx) }) do
+  for _, keymaps in ipairs({ M.gen_commits(ctx, action), M.gen_filetree(ctx, action), M.gen_sbs(ctx, action) }) do
     for _, km in ipairs(keymaps) do
       local unseen_modes = {} ---@type string[]
       for _, mode in ipairs(km.modes) do

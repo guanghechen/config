@@ -28,6 +28,7 @@ function M.workspace_context(fields)
     pending_discards = {},
     close = noop,
     get_keymaps = no_keymaps,
+    refresh = noop,
     setup_changes = noop,
     setup_history = noop,
     setup_keymaps = noop,
@@ -54,6 +55,34 @@ function M.commits_context(fields)
     setup_keymaps = noop,
     setup_sbs = noop,
   }, fields)
+end
+
+---An action module stand-in: every function records its name and arguments in `calls`.
+---@return table action
+---@return { name: string, args: any[] }[] calls
+function M.recorder()
+  local calls = {} ---@type { name: string, args: any[] }[]
+  local action = setmetatable({}, {
+    __index = function(action, name)
+      local function record(...)
+        calls[#calls + 1] = { name = name, args = { ... } }
+      end
+      rawset(action, name, record)
+      return record
+    end,
+  })
+  return action, calls
+end
+
+---The names of `calls`, comma-separated.
+---@param calls                         { name: string }[]
+---@return string
+function M.names(calls)
+  local names = {} ---@type string[]
+  for i, call in ipairs(calls) do
+    names[i] = call.name
+  end
+  return table.concat(names, ",")
 end
 
 ---A repository with one commit of a.txt, b.txt and d.txt, then a staged addition (c.txt) and an unstaged edit

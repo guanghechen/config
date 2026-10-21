@@ -109,6 +109,23 @@ t:test("moving left from the left preview returns to Changes", function()
   t.assert_false(session:navigate_window("h"), "from Changes it stays native")
 end)
 
+t:test("refreshing a workspace updates Changes and History together", function()
+  diffview.repository(t)
+  local session = diffview.open_workspace(t)
+  local changes, history = 0, 0
+  t:patch_table(session.state, "request_refresh", function()
+    changes = changes + 1
+  end)
+  t:patch_table(require("era.m.diffview.view.commits.action"), "refresh", function(ctx)
+    t.assert_true(ctx == session.history, "the session's History")
+    history = history + 1
+  end)
+
+  session:refresh()
+  t.assert_eq(1, changes, "Changes")
+  t.assert_eq(1, history, "History")
+end)
+
 t:test("Git index events refresh Changes only when stale, and broader events always", function()
   diffview.repository(t)
   local session = diffview.open_workspace(t)
