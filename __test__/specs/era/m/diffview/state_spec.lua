@@ -1,37 +1,10 @@
-local harness = require("__test__.support.harness")
-
-local t = harness.new()
-
-local Observable = {}
-Observable.__index = Observable
-
----@param value                          any
----@return table
-function Observable.from_value(value)
-  return setmetatable({ value = value, disposed = false }, Observable)
-end
-
----@return any
-function Observable:snapshot()
-  return self.value
-end
-
----@param value                          any
----@return nil
-function Observable:next(value)
-  self.value = value
-end
-
----@return nil
-function Observable:dispose()
-  self.disposed = true
-end
+require("ark.bootstrap").setup()
+local t = require("__test__.support.harness").new()
+local CommitsState = require("era.m.diffview.view.commits.state").State
+local WorkspaceState = require("era.m.diffview.view.workspace.state").State
 
 t:test("commits content requests use latest-writer ownership and invalidate on dispose", function()
-  t:patch_global("stl", { c = { Observable = Observable } })
-  t:patch_table(package.loaded, "era.m.diffview.config", { COMMITS_PER_PAGE = 100 })
-  local State = assert(loadfile("lua/era/m/diffview/view/commits/state.lua"))()
-  local state = State.State.new(101, true)
+  local state = CommitsState.new(101, true)
 
   local first = state:begin_content_request()
   local second = state:begin_content_request()
@@ -44,10 +17,7 @@ t:test("commits content requests use latest-writer ownership and invalidate on d
 end)
 
 t:test("commits pagination separates requested and applied pages", function()
-  t:patch_global("stl", { c = { Observable = Observable } })
-  t:patch_table(package.loaded, "era.m.diffview.config", { COMMITS_PER_PAGE = 100 })
-  local State = assert(loadfile("lua/era/m/diffview/view/commits/state.lua"))()
-  local state = State.State.new(101, true)
+  local state = CommitsState.new(101, true)
 
   state:request_commits_page(3)
   t.assert_eq(3, state:get_commits_page(), "requested page")
@@ -74,18 +44,8 @@ local function populate_tree(owner, keys)
   require("__test__.support.treeview").publish(owner)
 end
 
----@return nil
-local function native_runtime()
-  t:patch_table(package.loaded, "era.m.diffview.config", { COMMITS_PER_PAGE = 100 })
-  local bootstrap = require("__test__.support.bootstrap")
-  bootstrap.with_native(t)
-  bootstrap.with_global(t, "stl", { c = { Observable = Observable } })
-end
-
 t:test("expanded commits keep directory collapse state independent", function()
-  native_runtime()
-  local State = assert(loadfile("lua/era/m/diffview/view/commits/state.lua"))()
-  local state = State.State.new(101, true)
+  local state = CommitsState.new(101, true)
   t:defer(function()
     state:dispose()
   end)
@@ -104,7 +64,7 @@ t:test("expanded commits keep directory collapse state independent", function()
 end)
 
 t:test("diffview context persists the untracked visibility default", function()
-  t:patch_global("stl", { c = { Observable = Observable } })
+  -- A fresh instance, so the case leaves the runtime's context alone.
   local context = assert(loadfile("lua/dot/context/workspace/diffview.lua"))()
 
   t.assert_true(context.defaults().flag_untracked, "default visibility")
@@ -118,13 +78,8 @@ t:test("diffview context persists the untracked visibility default", function()
 end)
 
 t:test("workspace and commits keep independent per-view diff fold policies", function()
-  t:patch_global("stl", { c = { Observable = Observable } })
-  t:patch_table(package.loaded, "era.m.diffview.config", { COMMITS_PER_PAGE = 100 })
-
-  local WorkspaceState = assert(loadfile("lua/era/m/diffview/view/workspace/state.lua"))()
-  local CommitsState = assert(loadfile("lua/era/m/diffview/view/commits/state.lua"))()
-  local workspace = WorkspaceState.State.new(101, false)
-  local commits = CommitsState.State.new(102, true)
+  local workspace = WorkspaceState.new(101, false)
+  local commits = CommitsState.new(102, true)
 
   t.assert_false(workspace:get_fold_unchanged(), "workspace expands from its default")
   t.assert_true(commits:get_fold_unchanged(), "commits folds from its default")
@@ -140,13 +95,11 @@ end)
 
 t:test("workspace state disposes its refresh owner and then ignores refreshes", function()
   local disposed = 0
-  t:patch_global("stl", { c = { Observable = Observable } })
-  local State = assert(loadfile("lua/era/m/diffview/view/workspace/state.lua"))()
-  local uninitialized = State.State.new(100, true)
+  local uninitialized = WorkspaceState.new(100, true)
   t.assert_false(pcall(uninitialized.request_refresh, uninitialized), "uninitialized refresh still rejected")
   uninitialized:dispose()
 
-  local state = State.State.new(101, true)
+  local state = WorkspaceState.new(101, true)
   state:set_refresh({
     dispose = function()
       disposed = disposed + 1
@@ -163,9 +116,7 @@ t:test("workspace state disposes its refresh owner and then ignores refreshes", 
 end)
 
 t:test("workspace keeps staged and unstaged tree state independent", function()
-  native_runtime()
-  local State = assert(loadfile("lua/era/m/diffview/view/workspace/state.lua"))()
-  local state = State.State.new(101, true)
+  local state = WorkspaceState.new(101, true)
   t:defer(function()
     state:dispose()
   end)
@@ -190,9 +141,7 @@ t:test("workspace keeps staged and unstaged tree state independent", function()
 end)
 
 t:test("workspace entries snapshot becomes applied only after commit", function()
-  t:patch_global("stl", { c = { Observable = Observable } })
-  local State = assert(loadfile("lua/era/m/diffview/view/workspace/state.lua"))()
-  local state = State.State.new(101, true)
+  local state = WorkspaceState.new(101, true)
 
   t.assert_false(state:is_entries_snapshot_applied(), "initial empty value is not applied")
   state:set_entries({})

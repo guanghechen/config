@@ -1,45 +1,21 @@
-local bootstrap = require("__test__.support.bootstrap")
-local harness = require("__test__.support.harness")
-
-local t = harness.new()
-
-local log_opts = nil ---@type { layout: integer|nil, path: string|nil }|nil
-local relative_args = nil ---@type { from: string, to: string }|nil
-local current = nil ---@type table|nil
-
-bootstrap.with_runtime(t, {
-  dot = {
-    path = {
-      workspace = function()
-        return [[C:\repo]]
-      end,
-    },
-  },
-  stl = {
-    os = {
-      path = {
-        relative = function(from, to)
-          relative_args = { from = from, to = to }
-          return "lua/era/m/im/wsl.lua"
-        end,
-      },
-    },
-    reporter = { warn = function() end },
-  },
-})
-
-t:patch_table(package.loaded, "era.m.diffview.session", {
-  current = function()
-    return current
-  end,
-  open_log = function(opts)
-    log_opts = opts
-  end,
-})
-
+require("ark.bootstrap").setup()
+local t = require("__test__.support.harness").new()
 local Fn = require("era.m.diffview.fn")
+local Session = require("era.m.diffview.session")
 
 t:test("open_file_history opens the log of the file's path relative to the workspace", function()
+  local log_opts = nil ---@type { layout: integer|nil, path: string|nil }|nil
+  local relative_args = nil ---@type { from: string, to: string }|nil
+  t:patch_table(dot.path, "workspace", function()
+    return [[C:\repo]]
+  end)
+  t:patch_table(stl.os.path, "relative", function(from, to)
+    relative_args = { from = from, to = to }
+    return "lua/era/m/im/wsl.lua"
+  end)
+  t:patch_table(Session, "open_log", function(opts)
+    log_opts = opts
+  end)
   local filepath = [[C:\repo\lua\era\m\im\wsl.lua]]
 
   Fn.open_file_history({ filepath = filepath, layout = 3 })
@@ -49,6 +25,10 @@ t:test("open_file_history opens the log of the file's path relative to the works
 end)
 
 t:test("entry points dispatch to the current tab's session and do nothing without one", function()
+  local current = nil ---@type table|nil
+  t:patch_table(Session, "current", function()
+    return current
+  end)
   local calls = {} ---@type string[]
   local session = {}
   for _, name in ipairs({ "close", "refresh", "reveal", "toggle_commits", "toggle_files" }) do
@@ -62,7 +42,6 @@ t:test("entry points dispatch to the current tab's session and do nothing withou
     return direction == "h"
   end
 
-  current = nil
   Fn.close()
   Fn.refresh()
   Fn.reveal()
@@ -84,7 +63,6 @@ t:test("entry points dispatch to the current tab's session and do nothing withou
     table.concat(calls, ","),
     "dispatch"
   )
-  current = nil
 end)
 
 t:run()

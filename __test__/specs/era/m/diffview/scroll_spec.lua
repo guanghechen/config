@@ -1,7 +1,6 @@
-local harness = require("__test__.support.harness")
-
-local t = harness.new()
-
+require("ark.bootstrap").setup()
+local t = require("__test__.support.harness").new()
+local diffview = require("__test__.support.diffview")
 local layout = require("era.m.diffview.layout")
 
 ---@param bufnr                         integer
@@ -99,86 +98,25 @@ t:test("mouse scroll keeps focus and routes through the hovered window", functio
   t.assert_eq(panel_topline, panel_view.topline, "no window under mouse")
 end)
 
-t:test("commits panel recreation installs mouse mappings", function()
-  local created_bufnrs = {} ---@type integer[]
-  local function create_buffer()
-    local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-    created_bufnrs[#created_bufnrs + 1] = bufnr
-    vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr })
-    return bufnr
-  end
+t:test("commits panes get mouse mappings each time they are created", function()
+  diffview.repository(t)
+  local session = diffview.open_log(t, { layout = 5 })
+  local view = require("era.m.diffview.view.commits.view")
+  local lyt = session.layout
 
-  t:patch_table(package.loaded, "era.m.diffview.config", {
-    COMMITS_WIDTH = 20,
-    FILETREE_WIDTH = 20,
-  })
-  t:patch_table(package.loaded, "era.m.diffview.pane.commits", {
-    apply_winopts = function() end,
-    create_buffer = create_buffer,
-    goto_last_child_or_sibling = function() end,
-    goto_parent_node = function() end,
-  })
-  t:patch_table(package.loaded, "era.m.diffview.pane.filetree", {
-    apply_winopts = function() end,
-    create_buffer = create_buffer,
-  })
-  t:patch_table(package.loaded, "era.m.diffview.pane.sbs", {})
-  local keymap = assert(loadfile("lua/era/m/diffview/view/commits/keymap.lua"))()
-  local action = { scroll_mouse = function() end }
-
-  local view = assert(loadfile("lua/era/m/diffview/view/commits/view.lua"))()
-  local anchor_winnr = vim.api.nvim_get_current_win() ---@type integer
-  local ctx = {
-    layout = {
-      tabnr = vim.api.nvim_get_current_tabpage(),
-      commits_winnr = nil,
-      commits_bufnr = nil,
-      filetree_winnr = nil,
-      filetree_bufnr = nil,
-      sbs_left_winnr = anchor_winnr,
-      sbs_right_winnr = nil,
-    },
-    state = {},
-  } ---@type era.m.diffview.view.commits.IContext
-  ctx.setup_commits = function()
-    keymap.setup_commits(ctx, action)
-  end
-  ctx.setup_filetree = function()
-    keymap.setup_filetree(ctx, action)
-  end
-
-  ---@diagnostic disable-next-line: invisible
-  t:defer(function()
-    if vim.api.nvim_win_is_valid(anchor_winnr) then
-      vim.api.nvim_set_current_win(anchor_winnr)
-    end
-    for _, winnr in ipairs({ ctx.layout.filetree_winnr, ctx.layout.commits_winnr }) do
-      if winnr and vim.api.nvim_win_is_valid(winnr) then
-        vim.api.nvim_win_close(winnr, true)
-      end
-    end
-    for _, bufnr in ipairs(created_bufnrs) do
-      if vim.api.nvim_buf_is_valid(bufnr) then
-        vim.api.nvim_buf_delete(bufnr, { force = true })
-      end
-    end
-  end)
-
-  view.show_commits(ctx)
-  local first_commits_bufnr = assert(ctx.layout.commits_bufnr) ---@type integer
+  local first_commits_bufnr = assert(lyt.commits_bufnr) ---@type integer
   t.assert_true(has_buffer_keymap(first_commits_bufnr, "<ScrollWheelDown>"), "initial commits mapping")
-  view.hide_commits(ctx.layout)
+  view.hide_commits(lyt)
   t.assert_false(vim.api.nvim_buf_is_valid(first_commits_bufnr), "hidden commits buffer wiped")
-  view.show_commits(ctx)
-  t.assert_true(has_buffer_keymap(assert(ctx.layout.commits_bufnr), "<ScrollWheelDown>"), "recreated commits mapping")
+  view.show_commits(session)
+  t.assert_true(has_buffer_keymap(assert(lyt.commits_bufnr), "<ScrollWheelDown>"), "recreated commits mapping")
 
-  view.show_filetree(ctx)
-  local first_filetree_bufnr = assert(ctx.layout.filetree_bufnr) ---@type integer
+  local first_filetree_bufnr = assert(lyt.filetree_bufnr) ---@type integer
   t.assert_true(has_buffer_keymap(first_filetree_bufnr, "<ScrollWheelDown>"), "initial filetree mapping")
-  view.hide_filetree(ctx.layout)
+  view.hide_filetree(lyt)
   t.assert_false(vim.api.nvim_buf_is_valid(first_filetree_bufnr), "hidden filetree buffer wiped")
-  view.show_filetree(ctx)
-  t.assert_true(has_buffer_keymap(assert(ctx.layout.filetree_bufnr), "<ScrollWheelDown>"), "recreated filetree mapping")
+  view.show_filetree(session)
+  t.assert_true(has_buffer_keymap(assert(lyt.filetree_bufnr), "<ScrollWheelDown>"), "recreated filetree mapping")
 end)
 
 t:run()

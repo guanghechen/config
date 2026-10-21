@@ -1,23 +1,6 @@
-local harness = require("__test__.support.harness")
-
-local t = harness.new()
-
-t:patch_table(package.loaded, "era.m.diffview.config", {
-  BUFOPTS_PANEL = {},
-  BUFOPTS_SBS = {},
-  TRACKED_WINOPTS = {},
-  WINOPTS_SBS = {
-    cursorbind = false,
-    diff = false,
-    foldcolumn = "0",
-    foldenable = true,
-    foldlevel = 0,
-    foldmethod = "manual",
-    scrollbind = false,
-  },
-})
-t:patch_table(package.loaded, "era.m.diffview.util", {})
-
+require("ark.bootstrap").setup()
+local t = require("__test__.support.harness").new()
+local diffview = require("__test__.support.diffview")
 local pane_sbs = require("era.m.diffview.pane.sbs")
 
 ---@param winnr                         integer
@@ -135,46 +118,25 @@ t:test("side-by-side fold policy is deterministic and preserves panel focus", fu
 end)
 
 t:test("fold actions separate the current view from the global default", function()
-  local default_fold_unchanged = true
+  local default = dot.context.diffview.flag_fold_unchanges
+  local initial = default:snapshot() ---@type boolean
+  t:defer(function()
+    default:next(initial)
+  end)
   local dirty_count = 0
-  t:patch_global("dot", {
-    context = {
-      diffview = {
-        flag_fold_unchanges = {
-          snapshot = function()
-            return default_fold_unchanged
-          end,
-          next = function(_, value)
-            default_fold_unchanged = value
-          end,
-        },
-      },
-    },
-    state = {
-      status = {
-        dirtier_tabline = {
-          mark_dirty = function()
-            dirty_count = dirty_count + 1
-          end,
-        },
-      },
-    },
-  })
+  t:patch_table(dot.state.status.dirtier_tabline, "mark_dirty", function()
+    dirty_count = dirty_count + 1
+  end)
+  local applied = {} ---@type boolean[]
+  t:patch_table(pane_sbs, "apply_fold_unchanged_pair", function(_, _, value)
+    applied[#applied + 1] = value
+  end)
 
-  local function verify(kind)
-    local applied = {} ---@type boolean[]
+  for _, kind in ipairs({ "workspace", "commits" }) do
+    default:next(true)
+    applied = {}
     local current = true
-    local pane = {
-      apply_fold_unchanged_pair = function(_, _, value)
-        applied[#applied + 1] = value
-      end,
-    }
-    t:patch_table(package.loaded, "era.m.diffview.pane.sbs", pane)
-    if kind == "workspace" then
-    else
-    end
-
-    local action = assert(loadfile("lua/era/m/diffview/view/" .. kind .. "/action.lua"))()
+    local action = require("era.m.diffview.view." .. kind .. ".action")
     local ctx = {
       layout = { sbs_left_winnr = 11, sbs_right_winnr = 12 },
       state = {
@@ -186,115 +148,28 @@ t:test("fold actions separate the current view from the global default", functio
 
     action.open_all_folds(ctx)
     t.assert_false(current, kind .. " current open")
-    t.assert_true(default_fold_unchanged, kind .. " open preserves default")
+    t.assert_true(default:snapshot(), kind .. " open preserves default")
     action.close_all_folds(ctx)
     t.assert_true(current, kind .. " current close")
-    t.assert_true(default_fold_unchanged, kind .. " close preserves default")
+    t.assert_true(default:snapshot(), kind .. " close preserves default")
     action.toggle_default_folds(ctx)
     t.assert_false(current, kind .. " default applied to current")
-    t.assert_false(default_fold_unchanged, kind .. " default toggled")
+    t.assert_false(default:snapshot(), kind .. " default toggled")
     t.assert_eq("false,true,false", table.concat(vim.tbl_map(tostring, applied), ","), kind .. " applied policies")
-
-    default_fold_unchanged = true
   end
-
-  verify("workspace")
-  verify("commits")
   t.assert_eq(2, dirty_count, "both defaults dirty the tabline")
 end)
 
 t:test("workspace status assigns fold default to flag 3 and untracked to flag 4", function()
-  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  local previous_filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
-  vim.api.nvim_set_option_value("filetype", "diffview-changes-test", { buf = bufnr })
-  ---@diagnostic disable-next-line: invisible
-  t:defer(function()
-    vim.api.nvim_set_option_value("filetype", previous_filetype, { buf = bufnr })
-  end)
+  diffview.repository(t)
+  local session = diffview.open_workspace(t)
 
-  t:patch_global("stl", {
-    icon = {
-      git = { Git = "G" },
-      symbols = {
-        flag_fold = "F",
-        flag_fold_empty_path = "E",
-        flag_list = "L",
-        flag_tree = "T",
-        flag_untracked = "U",
-      },
-    },
-    nvim = {
-      fn = {
-        btn = function(text)
-          return text
-        end,
-        txt = function(text)
-          return text
-        end,
-      },
-      win = {
-        is_float = function()
-          return false
-        end,
-      },
-    },
-  })
-  t:patch_global("dot", {
-    G = {
-      register_anonymous_fn = function()
-        return "dot.G.test"
-      end,
-    },
-    context = {
-      diffview = {
-        flag_fold_unchanges = {
-          snapshot = function()
-            return true
-          end,
-        },
-        flag_foldempty = {
-          snapshot = function()
-            return true
-          end,
-        },
-        flag_panel_viewtype = {
-          snapshot = function()
-            return "tree"
-          end,
-        },
-        flag_untracked = {
-          snapshot = function()
-            return true
-          end,
-        },
-      },
-    },
-  })
-  t:patch_table(package.loaded, "era.m.diffview.config", { FT = { CHANGES = "diffview-changes-test" } })
-  t:patch_table(package.loaded, "era.m.diffview.session", {
-    workspace = function()
-      return {
-        layout = {},
-        state = {
-          get_entries = function()
-            return {}
-          end,
-        },
-      }
-    end,
-  })
-  t:patch_table(package.loaded, "era.m.diffview.view.workspace.view", {
-    get_visible_entries = function(entries)
-      return entries
-    end,
-  })
-
-  local tabline = assert(loadfile("lua/era/m/diffview/view/workspace/tabline.lua"))()
+  local tabline = require("era.m.diffview.view.workspace.tabline")
   local component = tabline.status_component()
-  local context = { tabnr = vim.api.nvim_get_current_tabpage() }
+  local context = { tabnr = session.tabnr }
   local text = component.render(component.refresh(context), context, 120)
-  t.assert_true(text:find("F³", 1, true) ~= nil, "fold default flag")
-  t.assert_true(text:find("U⁴", 1, true) ~= nil, "untracked flag")
+  t.assert_true(text:find(stl.icon.symbols.flag_fold .. "³", 1, true) ~= nil, "fold default flag")
+  t.assert_true(text:find(stl.icon.symbols.flag_untracked .. "⁴", 1, true) ~= nil, "untracked flag")
 end)
 
 t:run()

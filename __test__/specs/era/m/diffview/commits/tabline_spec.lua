@@ -1,146 +1,41 @@
-local bootstrap = require("__test__.support.bootstrap")
-local harness = require("__test__.support.harness")
-
-local t = harness.new()
-local layout = nil ---@type era.m.diffview.view.commits.ILayout|nil
-
-local function observable(value)
-  return {
-    snapshot = function()
-      return value
-    end,
-    next = function(_, next_value)
-      value = next_value
-    end,
-  }
-end
-
-bootstrap.with_global(t, "stl", {
-  icon = {
-    git = { Git = "G" },
-    symbols = {
-      flag_fold = "F",
-      flag_fold_empty_path = "E",
-      flag_layout_1 = "L",
-      flag_layout_2 = "L",
-      flag_layout_3 = "L",
-      flag_layout_4 = "L",
-      flag_layout_5 = "L",
-      flag_list = "I",
-      flag_tree = "T",
-    },
-    ui = { Search = "S" },
-  },
-  nvim = {
-    fn = {
-      btn = function(text)
-        return text
-      end,
-      txt = function(text)
-        return text
-      end,
-    },
-    win = {
-      is_float = function()
-        return false
-      end,
-    },
-  },
-})
-bootstrap.with_global(t, "dot", {
-  G = {
-    register_anonymous_fn = function()
-      return "dot.G.test"
-    end,
-  },
-  context = {
-    diffview = {
-      flag_fold_unchanges = observable(true),
-      flag_foldempty = observable(true),
-      flag_panel_viewtype = observable("tree"),
-    },
-  },
-  state = {
-    status = {
-      dirtier_tabline = { mark_dirty = function() end },
-    },
-  },
-})
-
-local state = {
-  get_commits = function()
-    return {}
-  end,
-  get_commits_page = function()
-    return 1
-  end,
-  get_commits_page_count = function()
-    return 1
-  end,
-  get_commits_total = function()
-    return 12
-  end,
-  get_current_commit = function()
-    return nil
-  end,
-}
-
-t:patch_table(package.loaded, "era.m.diffview.config", { COMMITS_PER_PAGE = 100 })
-t:patch_table(package.loaded, "era.m.diffview.session", {
-  commits = function()
-    return { state = state, layout = layout }
-  end,
-})
-t:patch_table(package.loaded, "era.m.diffview.view.commits.view", {
-  render_commits = function() end,
-})
-t:patch_table(package.loaded, "era.m.diffview.pane.sbs", {
-  apply_fold_unchanged_pair = function() end,
-})
-
+require("ark.bootstrap").setup()
+local t = require("__test__.support.harness").new()
+local diffview = require("__test__.support.diffview")
 local tabline = require("era.m.diffview.view.commits.tabline")
 
-t:test("layout 3 renders status buttons against the left SBS pane", function()
-  local sbs_left_winnr = vim.api.nvim_get_current_win()
-  layout = {
-    tabnr = vim.api.nvim_get_current_tabpage(),
-    layout_type = 3,
-    commits_winnr = nil,
-    sbs_left_winnr = sbs_left_winnr,
-  }
+---The display width of statusline `text`.
+---@param text                          string
+---@return integer
+local function display_width(text)
+  return vim.api.nvim_eval_statusline(text, {}).width
+end
+
+t:test("layout 3 renders status buttons against the left side-by-side pane", function()
+  diffview.repository(t)
+  local session = diffview.open_log(t, { layout = 3 })
 
   local component = tabline.status_component()
-  local context = { tabnr = layout.tabnr }
+  local context = { tabnr = session.tabnr }
   local text = component.render(component.refresh(context), context, 120)
 
-  t.assert_true(text:find("L₃", 1, true) ~= nil, "layout button")
-  t.assert_true(text:find("F³", 1, true) ~= nil, "fold default button")
+  t.assert_true(text:find(stl.icon.symbols.flag_layout_3 .. "₃", 1, true) ~= nil, "layout button")
+  t.assert_true(text:find(stl.icon.symbols.flag_fold .. "³", 1, true) ~= nil, "fold default button")
 end)
 
-t:test("commits pane remains the preferred status width", function()
-  vim.cmd("tabnew")
-  local commits_winnr = vim.api.nvim_get_current_win()
-  vim.cmd("rightbelow vsplit")
-  local sbs_left_winnr = vim.api.nvim_get_current_win()
+t:test("the commits pane remains the preferred status width", function()
+  diffview.repository(t)
+  local session = diffview.open_log(t, { layout = 2 })
+  local commits_winnr = assert(session.layout.commits_winnr)
   vim.api.nvim_win_set_width(commits_winnr, 10)
 
-  layout = {
-    tabnr = vim.api.nvim_get_current_tabpage(),
-    layout_type = 2,
-    commits_winnr = commits_winnr,
-    sbs_left_winnr = sbs_left_winnr,
-  }
-
   local component = tabline.status_component()
-  local context = { tabnr = layout.tabnr }
+  local context = { tabnr = session.tabnr }
   local snapshot = component.refresh(context)
   local text = component.render(snapshot, context, 120)
-  local commits_width = vim.api.nvim_win_get_width(commits_winnr)
 
   t.assert_eq(commits_winnr, snapshot.winnr, "preferred pane")
-  t.assert_true(text:find("G", 1, true) ~= nil, "commit count remains visible")
-  t.assert_true(vim.api.nvim_strwidth(text) <= commits_width, "status width")
-  vim.cmd("tabclose!")
+  t.assert_true(text:find(stl.icon.git.Git, 1, true) ~= nil, "commit count remains visible")
+  t.assert_true(display_width(text) <= vim.api.nvim_win_get_width(commits_winnr), "status width")
 end)
 
 t:run()

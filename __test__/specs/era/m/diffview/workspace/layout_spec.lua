@@ -1,75 +1,30 @@
-local harness = require("__test__.support.harness")
-
-local t = harness.new()
-local null_bufnr = vim.api.nvim_create_buf(false, true)
-local requested_trees = {}
-local render_calls = {} ---@type table[]
-local metadata_widths = { insertion = 3, deletion = 2 }
-local panel_width = 40
-
-t:patch_global("dot", {
-  context = {
-    diffview = {
-      flag_untracked = {
-        snapshot = function()
-          return true
-        end,
-      },
-      panel_width = {
-        snapshot = function()
-          return panel_width
-        end,
-      },
-    },
-  },
-})
-
-t:patch_table(package.loaded, "era.m.diffview.config", { FILETREE_WIDTH = 40, COMMITS_HEIGHT = 12 })
-t:patch_table(package.loaded, "era.m.diffview.pane.changes", {
-  apply_to_buffer = function(bufnr, result)
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, result.lines)
-  end,
-  apply_winopts = function() end,
-  create_buffer = function(stage_type)
-    local bufnr = vim.api.nvim_create_buf(false, true)
-    vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr })
-    vim.b[bufnr].stage_type = stage_type
-    return bufnr
-  end,
-  measure_metadata = function()
-    return metadata_widths
-  end,
-  render = function(entries, opts)
-    render_calls[#render_calls + 1] = opts
-    local lines = {} ---@type string[]
-    for _, entry in ipairs(entries) do
-      if entry.stage_type == opts.stage_type then
-        lines[#lines + 1] = entry.filepath
-      end
-    end
-    return { lines = lines }
-  end,
-})
-t:patch_table(package.loaded, "era.m.diffview.pane.sbs", {
-  apply_sbs_winopts = function() end,
-  get_null_buffer = function()
-    return null_bufnr
-  end,
-  restore_winopts = function() end,
-})
-t:patch_table(package.loaded, "era.m.diffview.pane.commits", {
-  apply_winopts = function() end,
-  create_buffer = function()
-    local bufnr = vim.api.nvim_create_buf(false, true)
-    vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr })
-    return bufnr
-  end,
-})
-t:patch_table(package.loaded, "era.m.diffview.view.workspace.winline", {
-  render_changes = function() end,
-})
-
+require("ark.bootstrap").setup()
+local t = require("__test__.support.harness").new()
+local WorkspaceState = require("era.m.diffview.view.workspace.state").State
+local pane_changes = require("era.m.diffview.pane.changes")
 local view = require("era.m.diffview.view.workspace.view")
+
+---Sets the remembered Changes width for the rest of the case.
+---@param width                         integer
+---@return nil
+local function remember_panel_width(width)
+  local panel_width = dot.context.diffview.panel_width
+  local initial = panel_width:snapshot()
+  t:defer(function()
+    panel_width:next(initial)
+  end)
+  panel_width:next(width)
+end
+
+---Writes `lines` into a read-only panel buffer.
+---@param bufnr                         integer
+---@param lines                         string[]
+---@return nil
+local function fill(bufnr, lines)
+  vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+end
 
 ---@param lyt era.m.diffview.view.workspace.ILayout
 ---@param message string
@@ -120,8 +75,8 @@ t:test("layout creates staged above unstaged with independent buffers and focus"
 
     t.assert_true(staged.winnr ~= unstaged.winnr, "distinct windows")
     t.assert_true(staged.bufnr ~= unstaged.bufnr, "distinct buffers")
-    t.assert_eq("staged", vim.b[staged.bufnr].stage_type, "staged buffer")
-    t.assert_eq("unstaged", vim.b[unstaged.bufnr].stage_type, "unstaged buffer")
+    t.assert_eq("staged", pane_changes.get_stage_type(staged.bufnr), "staged buffer")
+    t.assert_eq("unstaged", pane_changes.get_stage_type(unstaged.bufnr), "unstaged buffer")
 
     local staged_row = vim.api.nvim_win_get_position(staged.winnr)[1]
     local unstaged_row = vim.api.nvim_win_get_position(unstaged.winnr)[1]
@@ -151,7 +106,7 @@ end)
 t:test("History toggles at the bottom and shares preview ownership", function()
   with_changes_layout(function(lyt)
     local history_bufnr = lyt.history.commits_bufnr
-    vim.api.nvim_buf_set_lines(lyt.changes.staged.bufnr, 0, -1, false, {
+    fill(lyt.changes.staged.bufnr, {
       "staged-1",
       "staged-2",
       "staged-3",
@@ -161,7 +116,7 @@ t:test("History toggles at the bottom and shares preview ownership", function()
       "staged-7",
       "staged-8",
     })
-    vim.api.nvim_buf_set_lines(lyt.changes.unstaged.bufnr, 0, -1, false, { "unstaged-header", "unstaged-1" })
+    fill(lyt.changes.unstaged.bufnr, { "unstaged-header", "unstaged-1" })
     view.hide_history(lyt)
     t.assert_nil(lyt.history.commits_winnr, "History hidden")
     t.assert_true(vim.api.nvim_buf_is_valid(history_bufnr), "History buffer preserved")
@@ -312,18 +267,29 @@ t:test("render shares metadata widths without changing balanced pane heights", f
       { filepath = "a.lua", stage_type = "staged", status = "M" },
       { filepath = "b.lua", stage_type = "unstaged", status = "M" },
     }
-    local state = {
-      get_tree = function(_, stage_type)
-        requested_trees[#requested_trees + 1] = stage_type
-        return {}
-      end,
-      get_entries = function()
-        return entries
-      end,
-    }
+    local state = WorkspaceState.new(lyt.tabnr or vim.api.nvim_get_current_tabpage(), true)
+    t:defer(function()
+      state:dispose()
+    end)
+    state:set_entries(entries)
+    local requested_trees = {} ---@type string[]
+    local get_tree = state.get_tree
+    t:patch_table(state, "get_tree", function(self, stage_type)
+      requested_trees[#requested_trees + 1] = stage_type
+      return get_tree(self, stage_type)
+    end)
+    local metadata_widths = { insertion = 3, deletion = 2 }
+    t:patch_table(pane_changes, "measure_metadata", function()
+      return metadata_widths
+    end)
+    local render_calls = {} ---@type table[]
+    local render = pane_changes.render
+    t:patch_table(pane_changes, "render", function(items, opts)
+      render_calls[#render_calls + 1] = opts
+      return render(items, opts)
+    end)
     local ctx = { layout = lyt, state = state }
 
-    render_calls = {}
     view.render_changes(ctx)
     t.assert_eq(2, #render_calls, "both panes rendered")
     t.assert_eq("staged", render_calls[1].stage_type, "staged render")
@@ -340,7 +306,7 @@ t:test("render shares metadata widths without changing balanced pane heights", f
     vim.api.nvim_win_set_height(staged_winnr, 2)
     view.render_changes(ctx)
     assert_changes_balanced(lyt, "render restores balanced Changes")
-    entries = { entries[2] }
+    state:set_entries({ entries[2] })
     view.render_changes(ctx)
     assert_changes_balanced(lyt, "content does not bias Changes heights")
     local rendered = #render_calls
@@ -349,14 +315,11 @@ t:test("render shares metadata widths without changing balanced pane heights", f
     assert_changes_balanced(lyt, "height-only drift corrected")
     t.assert_eq(rendered, #render_calls, "height sync does not rebuild pane buffers")
 
-    entries = {
-      { filepath = "a.lua", stage_type = "staged", status = "M" },
-      { filepath = "b.lua", stage_type = "unstaged", status = "M" },
-    }
+    state:set_entries(entries)
     view.render_changes(ctx)
     assert_changes_balanced(lyt, "refilled panes remain balanced")
 
-    entries = { entries[1] }
+    state:set_entries({ entries[1] })
     view.render_changes(ctx)
     assert_changes_balanced(lyt, "empty Unstaged does not change proportions")
   end)
@@ -366,10 +329,11 @@ t:test("hide and show recreate both wiped sibling buffers as one panel", functio
   local original_tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   vim.cmd.tabnew()
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  remember_panel_width(40)
   local lyt = view.__create_layout_full__(tabnr)
   local staged_bufnr = lyt.changes.staged.bufnr
   local unstaged_bufnr = lyt.changes.unstaged.bufnr
-  t.assert_eq(panel_width, vim.api.nvim_win_get_width(lyt.changes.staged.winnr), "initial panel width")
+  t.assert_eq(40, vim.api.nvim_win_get_width(lyt.changes.staged.winnr), "initial panel width")
 
   view.hide_changes(lyt)
   t.assert_nil(lyt.changes.staged.winnr, "staged hidden")
@@ -377,14 +341,14 @@ t:test("hide and show recreate both wiped sibling buffers as one panel", functio
   t.assert_false(vim.api.nvim_buf_is_valid(staged_bufnr), "staged buffer wiped")
   t.assert_false(vim.api.nvim_buf_is_valid(unstaged_bufnr), "unstaged buffer wiped")
 
-  panel_width = 32
+  dot.context.diffview.panel_width:next(32)
   view.show_changes(lyt)
   t.assert_true(vim.api.nvim_win_is_valid(lyt.changes.staged.winnr), "staged shown")
   t.assert_true(vim.api.nvim_win_is_valid(lyt.changes.unstaged.winnr), "unstaged shown")
   t.assert_true(vim.api.nvim_buf_is_valid(lyt.changes.staged.bufnr), "staged buffer recreated")
   t.assert_true(vim.api.nvim_buf_is_valid(lyt.changes.unstaged.bufnr), "unstaged buffer recreated")
   t.assert_true(lyt.changes.staged.bufnr ~= lyt.changes.unstaged.bufnr, "distinct recreated buffers")
-  t.assert_eq(panel_width, vim.api.nvim_win_get_width(lyt.changes.staged.winnr), "restored panel width")
+  t.assert_eq(32, vim.api.nvim_win_get_width(lyt.changes.staged.winnr), "restored panel width")
 
   view.destroy(lyt)
   t.assert_eq(original_tabnr, vim.api.nvim_get_current_tabpage(), "workspace tab closed")
