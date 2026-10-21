@@ -800,6 +800,8 @@ function M.fetch_commit_files(hash, token)
 
   local args = {
     "diff-tree",
+    -- The root commit has no parent to compare with; --root shows it as creating every file.
+    "--root",
     "--no-commit-id",
     "--name-status",
     "-r",
@@ -851,6 +853,8 @@ function M.__fetch_commit_numstat__(hash, files, token)
 
   local args = {
     "diff-tree",
+    -- The root commit has no parent to compare with; --root shows it as creating every file.
+    "--root",
     "--no-commit-id",
     "--numstat",
     "-r",
