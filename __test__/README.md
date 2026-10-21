@@ -22,7 +22,7 @@ __test__/
     treeview.lua           # native Treeview requests, ResultTree publishing, typed-ahead checks
     filetree.lua           # native Filetree runtime and filesystem fixtures
     explorer.lua           # composed Explorer panes, child UI start, native state and input helpers
-    cmp/                   # completion runtime, behavior editor and behavior traces
+    cmp/                   # completion runtime, embedded editor, behavior editor and behavior traces
     textobject.lua, git_files.lua, diffview_pane.lua, directory_picker.lua  # feature helpers
   specs/
     support/               # tests of the test infrastructure

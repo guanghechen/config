@@ -42,13 +42,13 @@ Emmet 验证完整/部分缩写、suffix alternative 和 UTF-16 前缀，默认�
 
 | 现象 | 生产入口 | 主要回归 |
 | --- | --- | --- |
-| 禁用补全吞键、mapping fallback 或排队输入乱序 | `keymap.lua`、`init.lua` | `input_spec.lua`、`behavior/*_spec.lua` |
-| 接受失败、UTF-16/import/overlap、snippet、undo 异常 | `edit.lua`、`snippet.lua`、`session.lua` | `edit_spec.lua`、`input_spec.lua` |
+| 禁用补全吞键、mapping fallback 或排队输入乱序 | `keymap.lua`、`init.lua` | `input/keys_spec.lua`、`behavior/*_spec.lua` |
+| 接受失败、UTF-16/import/overlap、snippet、undo 异常 | `edit.lua`、`snippet.lua`、`session.lua` | `edit_spec.lua`、`input/acceptance_spec.lua` |
 | Native preview 中续发 completion，附加编辑错位 | `session.lua` dispatch、`source/lsp.lua` | `request_spec.lua` |
 | `CompleteDone` 同步 hide/show 覆盖新状态 | `session.lua` 的恢复输入及其调用方 | `request_spec.lua` |
-| Reload、迟到 callback、取消或菜单重新出现 | context revision、session epoch、slot ownership | `session_spec.lua`、`source_spec.lua`、`input_spec.lua` |
-| 退格时重复请求、临时列表消失或缓存失效 | `init.lua`、`session.lua`、`source/lsp.lua` | `session_spec.lua`、`request_spec.lua`、`input_spec.lua` |
-| 字符串/路径准入、buffer fallback、动态目录结果 | `policy.lua`、`source/*` | `source_spec.lua`、`input_spec.lua` |
+| Reload、迟到 callback、取消或菜单重新出现 | context revision、session epoch、slot ownership | `session_spec.lua`、`source_spec.lua`、`input/lifecycle_spec.lua` |
+| 退格时重复请求、临时列表消失或缓存失效 | `init.lua`、`session.lua`、`source/lsp.lua` | `session_spec.lua`、`request_spec.lua`、`input/lifecycle_spec.lua` |
+| 字符串/路径准入、buffer fallback、动态目录结果 | `policy.lua`、`source/*` | `source_spec.lua`、`input/candidates_spec.lua` |
 | 候选缺失、顺序或 native snapshot 异常 | `item.lua`、`rank.lua`、`rust/yoz/src/completion/` | `rank_spec.lua`、`history_spec.lua`、Rust 单测 |
 | 文档、标签、窗口大小、滚动和位置 | `menu.lua`、`documentation.lua`、`signature.lua` | `window_spec.lua`、`viewport_spec.lua` |
 
