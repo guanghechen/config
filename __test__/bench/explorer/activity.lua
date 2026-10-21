@@ -174,14 +174,11 @@ local ok, result = xpcall(function()
       ]],
       { here .. "/runtime.lua", root, path, rows, variant }
     )
-    assert(
-      vim.wait(15000, function()
-        local status = ui:rpc("nvim_exec_lua", "return bench.status()", {})
-        assert(#status.errors == 0, vim.inspect(status.errors))
-        return status.done
-      end, 5),
-      "Widget did not open"
-    )
+    ui:wait_until(function()
+      local status = ui:rpc("nvim_exec_lua", "return bench.status()", {})
+      assert(#status.errors == 0, vim.inspect(status.errors))
+      return status.done
+    end, 15000, "Widget did not open", 5)
     ui:rpc("nvim_exec_lua", setup, { variant })
     vim.wait(300, function()
       return false
@@ -218,16 +215,13 @@ local ok, result = xpcall(function()
         { path, kind }
       )
       local record
-      assert(
-        vim.wait(45000, function()
-          local value =
-            ui:rpc("nvim_exec_lua", "return { result = bench.activity_result, error = bench.activity_error }", {})
-          assert(not value.error, value.error)
-          record = value.result
-          return record ~= nil
-        end, 25),
-        "copy timed out"
-      )
+      ui:wait_until(function()
+        local value =
+          ui:rpc("nvim_exec_lua", "return { result = bench.activity_result, error = bench.activity_error }", {})
+        assert(not value.error, value.error)
+        record = value.result
+        return record ~= nil
+      end, 45000, "copy timed out", 25)
       assert(#record.errors == 0 and not record.job_error, vim.inspect(record))
       local expected_bytes = kind == "jobs" and 256 * 1024 * 1024 or 4000
       assert(record.bytes == expected_bytes and record.successes == 1, vim.inspect(record))
@@ -294,20 +288,17 @@ local ok, result = xpcall(function()
           )
           error("watch did not catch up: " .. scenario .. " " .. sequence .. " " .. vim.inspect(state), 0)
         end
-        assert(
-          vim.wait(15000, function()
-            return ui:rpc(
-              "nvim_exec_lua",
-              [[
+        ui:wait_until(function()
+          return ui:rpc(
+            "nvim_exec_lua",
+            [[
             local rows = ...
             local session, view = bench.widget:context()
             return view:frame():header().row_count == rows and not session.data._native:is_busy() and not view._busy
           ]],
-              { rows }
-            )
-          end, 25),
-          "watch did not publish all rows"
-        )
+            { rows }
+          )
+        end, 15000, "watch did not publish all rows", 25)
         local record = ui:rpc("nvim_exec_lua", "return bench.finish()", {})
         assert(#record.errors == 0, vim.inspect(record.errors))
         record.trial, record.kind, record.changes, record.visible_ms = trial, scenario, sequence - first + 1, {}

@@ -130,9 +130,9 @@ end
 ---@return nil
 local function position(row)
   ui:rpc("nvim_exec_lua", "bench.reset_cursor(...)", { row })
-  assert(vim.wait(5000, function()
+  ui:wait_until(function()
     return ui:rpc("nvim_exec_lua", "return bench.cursor_ready(...)", { row })
-  end, 1))
+  end, 5000, nil, 1)
   ui:rpc("nvim_command", "redraw!")
   cursor_row = row
 end
@@ -188,12 +188,9 @@ local ok, result = xpcall(function()
     position(rows - count + 1)
     output.operations[#output.operations + 1] = measure("visual_selection", rows, nil, count)
     ui:rpc("nvim_exec_lua", "bench.clear_selection()", {})
-    assert(
-      vim.wait(10000, function()
-        return ui:rpc("nvim_exec_lua", "return bench.selection_cleared()", {})
-      end, 1),
-      "selection reset did not finish its redraw"
-    )
+    ui:wait_until(function()
+      return ui:rpc("nvim_exec_lua", "return bench.selection_cleared()", {})
+    end, 10000, "selection reset did not finish its redraw", 1)
   end
   position(1)
   for _ = 1, math.min(3, repeats) do

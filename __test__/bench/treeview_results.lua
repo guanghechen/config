@@ -47,32 +47,29 @@ local ok, result = xpcall(function()
   )
   local ready
   local deadline = vim.uv.hrtime() + 60000000000
-  assert(
-    vim.wait(60000, function()
-      if vim.uv.hrtime() >= deadline then
-        error(
-          "initial publication stalled: "
-            .. vim.inspect(
-              ui:rpc(
-                "nvim_exec_lua",
-                "return {errors=bench.errors, busy=bench.owner._busy, ready=bench.owner:is_current()}",
-                {}
-              )
+  ui:wait_until(function()
+    if vim.uv.hrtime() >= deadline then
+      error(
+        "initial publication stalled: "
+          .. vim.inspect(
+            ui:rpc(
+              "nvim_exec_lua",
+              "return {errors=bench.errors, busy=bench.owner._busy, ready=bench.owner:is_current()}",
+              {}
             )
-        )
-      end
-      ready = ui:rpc(
-        "nvim_exec_lua",
-        [[
+          )
+      )
+    end
+    ready = ui:rpc(
+      "nvim_exec_lua",
+      [[
       if not bench.owner:is_current() or not bench.published then return false end
       return { started = bench.started, produced = bench.produced, published = bench.published, rows = bench.owner:linecount() }
     ]],
-        {}
-      )
-      return ready and ui.last_flush and ui.last_flush >= ready.published
-    end, 1),
-    "initial result did not flush"
-  )
+      {}
+    )
+    return ready and ui.last_flush and ui.last_flush >= ready.published
+  end, 60000, "initial result did not flush", 1)
   local initial = ui.last_flush
   ui:rpc("nvim_exec_lua", "bench.writes = 0", {})
   local samples, confirmations = {}, {}
@@ -90,12 +87,11 @@ local ok, result = xpcall(function()
     )
     local published, first_flush
     deadline = vim.uv.hrtime() + 10000000000
-    assert(
-      vim.wait(10000, function()
-        if vim.uv.hrtime() >= deadline then
-          error("cursor publication stalled: " .. vim.inspect(ui:rpc(
-            "nvim_exec_lua",
-            [[
+    ui:wait_until(function()
+      if vim.uv.hrtime() >= deadline then
+        error("cursor publication stalled: " .. vim.inspect(ui:rpc(
+          "nvim_exec_lua",
+          [[
           local status = bench.owner.view:status()
           local latest = bench.owner.state:snapshot():header()
           return { row = bench.row, published = bench.published, errors = bench.errors,
@@ -103,17 +99,15 @@ local ok, result = xpcall(function()
             preparing = status.preparing, error = status.error, future = bench.cursor_future:get_result() and bench.cursor_future:get_result().kind,
             cursor = vim.api.nvim_win_get_cursor(bench.owner.view.winnr), mode = vim.api.nvim_get_mode().mode }
         ]],
-            {}
-          )))
-        end
-        published = ui:rpc("nvim_exec_lua", "return bench.row == ... and bench.published or false", { row })
-        if ui.last_flush and ui.last_flush >= started then
-          first_flush = first_flush or ui.last_flush
-        end
-        return published and first_flush ~= nil
-      end, 1),
-      "cursor frame did not flush"
-    )
+          {}
+        )))
+      end
+      published = ui:rpc("nvim_exec_lua", "return bench.row == ... and bench.published or false", { row })
+      if ui.last_flush and ui.last_flush >= started then
+        first_flush = first_flush or ui.last_flush
+      end
+      return published and first_flush ~= nil
+    end, 10000, "cursor frame did not flush", 1)
     samples[#samples + 1] = (first_flush - started) / 1e6
     confirmations[#confirmations + 1] = (published - started) / 1e6
   end
@@ -138,12 +132,9 @@ local ok, result = xpcall(function()
   ]],
     {}
   )
-  assert(
-    vim.wait(10000, function()
-      return ui:rpc("nvim_exec_lua", "return bench.selection_ready:is_done()", {})
-    end, 1),
-    "selection did not publish"
-  )
+  ui:wait_until(function()
+    return ui:rpc("nvim_exec_lua", "return bench.selection_ready:is_done()", {})
+  end, 10000, "selection did not publish", 1)
   local selection = ui:rpc(
     "nvim_exec_lua",
     [[

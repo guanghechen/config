@@ -231,11 +231,10 @@ local ok, result = xpcall(function()
         { kind, index, count, height }
       )
       local timing
-      assert(
-        vim.wait(30000, function()
-          timing = ui:rpc(
-            "nvim_exec_lua",
-            [=[
+      ui:wait_until(function()
+        timing = ui:rpc(
+          "nvim_exec_lua",
+          [=[
           assert(#errors == 0, table.concat(errors,"\n"))
           if pending.publication and view:frame():id() ~= pending.frame
             and view:frame():header().cursor_row == pending.row and not view._busy and not view._latest
@@ -244,13 +243,11 @@ local ok, result = xpcall(function()
             return {pending.started,pending.publication,decoration_ms,path_update_ms,counts}
           end
         ]=],
-            {}
-          )
-          -- Cursor-only publication may acknowledge a frame after its identical pixels have already flushed.
-          return timing and ui.last_flush and ui.last_flush >= timing[1]
-        end, 1),
-        "cursor did not reach UI flush"
-      )
+          {}
+        )
+        -- Cursor-only publication may acknowledge a frame after its identical pixels have already flushed.
+        return timing and ui.last_flush and ui.last_flush >= timing[1]
+      end, 30000, "cursor did not reach UI flush", 1)
       if index > 30 then
         flush[#flush + 1] = (ui.last_flush - timing[1]) / 1000000
         publication[#publication + 1] = (timing[2] - timing[1]) / 1000000

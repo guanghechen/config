@@ -15,23 +15,20 @@ local ui = require("__test__.support.ui").new({ timeout_ms = 60000 })
 ---@return number
 local function flushed(expected, started)
   local published
-  assert(
-    vim.wait(60000, function()
-      local status = ui:rpc(
-        "nvim_exec_lua",
-        "return {rows=bench.owner:linecount(), published=bench.published, errors=bench.errors}",
-        {}
-      )
-      assert(#status.errors == 0, vim.inspect(status.errors))
-      published = status.published
-      return status.rows == expected
-        and published
-        and published >= started
-        and ui.last_flush
-        and ui.last_flush >= published
-    end, 1),
-    "Diffview frame did not flush"
-  )
+  ui:wait_until(function()
+    local status = ui:rpc(
+      "nvim_exec_lua",
+      "return {rows=bench.owner:linecount(), published=bench.published, errors=bench.errors}",
+      {}
+    )
+    assert(#status.errors == 0, vim.inspect(status.errors))
+    published = status.published
+    return status.rows == expected
+      and published
+      and published >= started
+      and ui.last_flush
+      and ui.last_flush >= published
+  end, 60000, "Diffview frame did not flush", 1)
   return (ui.last_flush - started) / 1e6
 end
 

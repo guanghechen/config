@@ -23,10 +23,26 @@ end)
 
 t:test("polling stops when the remote condition becomes true", function()
   local ui = child()
-  ui:wait_until(function()
-    return ui:lua("poll_count = (poll_count or 0) + 1; return poll_count == 3")
+  local value = ui:wait_until(function()
+    return ui:lua("poll_count = (poll_count or 0) + 1; return poll_count == 3 and 'ready'")
   end, 1000)
   t.assert_eq(3, ui:lua("return poll_count"), "no further polling after success")
+  t.assert_eq("ready", value, "the predicate's value")
+end)
+
+t:test("a message from the child ends the wait between polls", function()
+  local ui = child()
+  local notified = false
+  ui.on_notification = function(method)
+    notified = notified or method == "ready"
+  end
+  ui:lua("vim.defer_fn(function() vim.rpcnotify(0, 'ready') end, 50)")
+  local start = vim.uv.hrtime()
+  ui:wait_until(function()
+    return notified
+  end, 120000, "notification", 60000)
+  -- Without waking on messages the wait would sleep through its 60 s interval.
+  t.assert_true((vim.uv.hrtime() - start) / 1e6 < 30000, "the notification wakes the wait")
 end)
 
 t:test("notifications reach the child and start prepares the checkout runtime", function()

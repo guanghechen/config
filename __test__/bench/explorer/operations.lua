@@ -95,21 +95,18 @@ local ok, result = xpcall(function()
       prepare("collapse", entries)
     end
     -- Loaded children can advance selection stamps after the expected rows appear.
-    assert(
-      vim.wait(30000, function()
-        return ui:rpc(
-          "nvim_exec_lua",
-          [[
+    ui:wait_until(function()
+      return ui:rpc(
+        "nvim_exec_lua",
+        [[
             if not bench.ready() then return false end
             if bench.implementation ~= "native" then return true end
             return bench.current_view():frame():header().selection_revision
               == bench.widget._session.state:status().revisions.selection
           ]],
-          {}
-        )
-      end, 5),
-      "copy source selection did not settle"
-    )
+        {}
+      )
+    end, 30000, "copy source selection did not settle", 5)
   end
   local output = ui:rpc(
     "nvim_exec_lua",
@@ -193,12 +190,9 @@ local ok, result = xpcall(function()
   if options.destination_browse then
     assert(implementation == "native" and not options.memory_stages)
     ui:rpc("nvim_exec_lua", "bench.reset_cursor(2)", {})
-    assert(
-      vim.wait(5000, function()
-        return ui:rpc("nvim_exec_lua", "return bench.cursor_ready(2)", {})
-      end, 1),
-      "destination cursor did not settle"
-    )
+    ui:wait_until(function()
+      return ui:rpc("nvim_exec_lua", "return bench.cursor_ready(2)", {})
+    end, 5000, "destination cursor did not settle", 1)
     ui:rpc("nvim_command", "redraw!")
     active = { browse = options.destination_browse }
     ui:rpc("nvim_exec_lua", "bench.browse_destination(...)", { options.destination_browse })

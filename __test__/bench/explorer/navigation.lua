@@ -25,16 +25,15 @@ end
 ---@return nil
 local function expect_cursor(grid, path)
   local next_check = 0
-  assert(
-    vim.wait(10000, function()
-      local now = vim.uv.hrtime()
-      if now < next_check then
-        return false
-      end
-      next_check = now + 20000000
-      local ready = ui:rpc(
-        "nvim_exec_lua",
-        [[
+  ui:wait_until(function()
+    local now = vim.uv.hrtime()
+    if now < next_check then
+      return false
+    end
+    next_check = now + 20000000
+    local ready = ui:rpc(
+      "nvim_exec_lua",
+      [[
       local path = ...
       local session, view = bench.widget:context()
       assert(#bench.errors == 0, vim.inspect(bench.errors))
@@ -42,13 +41,11 @@ local function expect_cursor(grid, path)
         and view:frame():header().cursor_row == vim.api.nvim_win_get_cursor(view.winnr)[1]
         and not view._busy and not session.data._native:is_busy()
     ]],
-        { path }
-      )
-      local target = grid:find(vim.fs.basename(path))
-      return ready and target and grid.cursor and grid.cursor[1] == target.grid and grid.cursor[2] == target.row
-    end, 10),
-    "navigation did not reach its visible target: " .. path
-  )
+      { path }
+    )
+    local target = grid:find(vim.fs.basename(path))
+    return ready and target and grid.cursor and grid.cursor[1] == target.grid and grid.cursor[2] == target.row
+  end, 10000, "navigation did not reach its visible target: " .. path, 10)
 end
 
 local ok, result = xpcall(function()

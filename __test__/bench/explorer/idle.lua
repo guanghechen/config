@@ -36,14 +36,11 @@ local ok, result = xpcall(function()
       ]],
         { here .. "/runtime.lua", checkout, directory, implementation }
       )
-      assert(
-        vim.wait(10000, function()
-          local status = ui:rpc("nvim_exec_lua", "return bench.status()", {})
-          assert(#status.errors == 0, vim.inspect(status.errors))
-          return status.done
-        end, 5),
-        "Widget did not open"
-      )
+      ui:wait_until(function()
+        local status = ui:rpc("nvim_exec_lua", "return bench.status()", {})
+        assert(#status.errors == 0, vim.inspect(status.errors))
+        return status.done
+      end, 10000, "Widget did not open", 5)
       ui:rpc("nvim_exec_lua", "bench.timer:stop(); bench.timer:close(); bench.timer = nil", {})
       for _, phase in ipairs({ "visible", "hidden", "disposed" }) do
         ui:rpc(

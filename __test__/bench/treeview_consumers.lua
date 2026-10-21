@@ -23,16 +23,13 @@ local ok, result = xpcall(function()
   for iteration = 1, samples + 5 do
     ui:rpc("nvim_exec_lua", "consumer_bench.start(...)", { iteration })
     local times, first_flush
-    assert(
-      vim.wait(30000, function()
-        times = ui:rpc("nvim_exec_lua", "return consumer_bench.poll()", {})
-        if times.first and ui.last_flush and ui.last_flush >= times.first then
-          first_flush = first_flush or ui.last_flush
-        end
-        return times.published and ui.last_flush and ui.last_flush >= times.published
-      end, 1),
-      "consumer frame did not flush"
-    )
+    ui:wait_until(function()
+      times = ui:rpc("nvim_exec_lua", "return consumer_bench.poll()", {})
+      if times.first and ui.last_flush and ui.last_flush >= times.first then
+        first_flush = first_flush or ui.last_flush
+      end
+      return times.published and ui.last_flush and ui.last_flush >= times.published
+    end, 30000, "consumer frame did not flush", 1)
     if iteration > 5 then
       rows[#rows + 1] = {
         first_flush_ms = (first_flush - times.started) / 1e6,

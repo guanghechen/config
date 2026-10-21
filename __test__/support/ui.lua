@@ -22,6 +22,7 @@ local ROOT = vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(source))) ---@type str
 ---@class __test__.support.UI
 ---@field stderr                        string
 ---@field redraws                       integer
+---@field received                      integer Messages decoded from the child, of any kind.
 ---@field last_flush                    ?integer
 ---@field exit_code                     ?integer
 ---@field on_redraw                     ?fun(events: table[]): nil
@@ -38,6 +39,7 @@ function M.new(options)
     _timeout_ms = options and options.timeout_ms or 10000,
     stderr = "",
     redraws = 0,
+    received = 0,
   }, M)
   local args = { "--embed", "--headless", "-u", options and options.init or "NONE", "-i", "NONE", "-n" }
   if options and options.args then
@@ -65,6 +67,7 @@ function M.new(options)
       local message, next_byte = unpacker(data, at)
       at = next_byte
       if message then
+        self.received = self.received + 1
         if message[1] == 1 then
           self._responses[message[2]] = message
         elseif message[1] == 2 and message[2] == "redraw" then
@@ -157,19 +160,30 @@ function M:start(options)
   )
 end
 
----Polls `predicate` until it holds. Unlike `vim.wait`, the predicate may make RPC requests: a request waits on
----the event loop itself, and inside a `vim.wait` callback that keeps the outer wait from ever timing out.
+---Polls `predicate` until it returns a truthy value, and returns that value. The predicate runs outside
+---`vim.wait`, so it may make RPC requests: a request waits on the event loop itself, and inside a `vim.wait`
+---callback that keeps the outer wait from ever timing out. Between polls the wait wakes on any message from the
+---child, or after `interval_ms` (20 by default); a timed caller passes a small interval and reads `last_flush`.
 ---@param predicate                     fun(): any
 ---@param timeout_ms                    integer
 ---@param msg                           ?string
----@return nil
-function M:wait_until(predicate, timeout_ms, msg)
+---@param interval_ms                   ?integer
+---@return any
+function M:wait_until(predicate, timeout_ms, msg, interval_ms)
   local deadline = vim.uv.hrtime() + timeout_ms * 1e6
-  while not predicate() do
-    if vim.uv.hrtime() >= deadline then
+  while true do
+    local value = predicate()
+    if value then
+      return value
+    end
+    local left_ms = (deadline - vim.uv.hrtime()) / 1e6
+    if left_ms <= 0 then
       error(string.format("%s within %d ms%s", msg or "condition was not met", timeout_ms, self.stderr), 2)
     end
-    vim.wait(20)
+    local seen = self.received
+    vim.wait(math.min(interval_ms or 20, left_ms), function()
+      return self.received ~= seen
+    end, 1)
   end
 end
 

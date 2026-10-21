@@ -17,7 +17,7 @@ local directory, ui, grid
 ---@param message                       string
 ---@return nil
 local function until_(predicate, message)
-  assert(vim.wait(30000, predicate, 5), message)
+  ui:wait_until(predicate, 30000, message, 5)
 end
 
 ---@param code                          string

@@ -71,7 +71,7 @@ local ok, result = xpcall(function()
     ui:rpc("nvim_exec_lua", "pending = {name = ..., started = vim.uv.hrtime()}", { "item-" .. index })
     assert(vim.uv.fs_rename(directory .. "/item-" .. (index - 1), directory .. "/item-" .. index))
     local deadline = vim.uv.hrtime() + 10000000000
-    assert(vim.wait(10000, function()
+    ui:wait_until(function()
       assert(vim.uv.hrtime() < deadline, "watch measurement timed out")
       local times =
         ui:rpc("nvim_exec_lua", "return {pending.started, pending.source or false, pending.published or false}", {})
@@ -81,7 +81,7 @@ local ok, result = xpcall(function()
         return true
       end
       return false
-    end, 1))
+    end, 10000, nil, 1)
   end
   local released = ui:rpc(
     "nvim_exec_lua",

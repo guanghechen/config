@@ -186,18 +186,15 @@ local ok, result = xpcall(function()
       ]],
         { here .. "/runtime.lua", root, directory, entries }
       )
-      assert(
-        vim.wait(30000, function()
-          return ui:rpc("nvim_exec_lua", "return bench.phase and bench.phase.done ~= nil", {})
-        end, 20),
-        "initial root did not settle"
-      )
+      ui:wait_until(function()
+        return ui:rpc("nvim_exec_lua", "return bench.phase and bench.phase.done ~= nil", {})
+      end, 30000, "initial root did not settle", 20)
       ui:rpc("nvim_exec_lua", setup, {})
       for _, phase in ipairs({ "cold", "warm" }) do
         ui:rpc("nvim_exec_lua", "bench.reset_cursor(1)", {})
-        assert(vim.wait(10000, function()
+        ui:wait_until(function()
           return ui:rpc("nvim_exec_lua", "return bench.cursor_ready(1)", {})
-        end, 10))
+        end, 10000, nil, 10)
         active = {}
         ui:rpc("nvim_exec_lua", "bench.loading_begin(...)", { mode, phase, entries })
         local sequence = ui._sequence

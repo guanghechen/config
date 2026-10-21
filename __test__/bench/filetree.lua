@@ -94,30 +94,27 @@ local ok, result = xpcall(function()
       { directory, mode }
     )
     local first_at, done
-    assert(
-      vim.wait(30000, function()
-        local times = ui:rpc(
-          "nvim_exec_lua",
-          [[
+    ui:wait_until(function()
+      local times = ui:rpc(
+        "nvim_exec_lua",
+        [[
         if #bench_errors > 0 then error(table.concat(bench_errors, "\n")) end
         return { bench_pending.started, bench_pending.first or false, bench_pending.complete or false }
       ]],
-          {}
-        )
-        if times[2] and not first_at and ui.last_flush and ui.last_flush >= times[2] then
-          first_at = true
-          first[#first + 1] = (times[2] - times[1]) / 1000000
-          first_flush[#first_flush + 1] = (ui.last_flush - times[1]) / 1000000
-        end
-        if times[3] and ui.last_flush and ui.last_flush >= times[3] then
-          complete[#complete + 1] = (times[3] - times[1]) / 1000000
-          complete_flush[#complete_flush + 1] = (ui.last_flush - times[1]) / 1000000
-          done = true
-        end
-        return done
-      end, 1),
-      "Filetree did not finish and flush"
-    )
+        {}
+      )
+      if times[2] and not first_at and ui.last_flush and ui.last_flush >= times[2] then
+        first_at = true
+        first[#first + 1] = (times[2] - times[1]) / 1000000
+        first_flush[#first_flush + 1] = (ui.last_flush - times[1]) / 1000000
+      end
+      if times[3] and ui.last_flush and ui.last_flush >= times[3] then
+        complete[#complete + 1] = (times[3] - times[1]) / 1000000
+        complete_flush[#complete_flush + 1] = (ui.last_flush - times[1]) / 1000000
+        done = true
+      end
+      return done
+    end, 30000, "Filetree did not finish and flush", 1)
   end
   local annotation_metrics
   if annotations then
@@ -164,24 +161,21 @@ local ok, result = xpcall(function()
         { directory, index }
       )
       local deadline = vim.uv.hrtime() + 10000000000
-      assert(
-        vim.wait(10000, function()
-          assert(vim.uv.hrtime() < deadline, "Filetree annotations did not flush")
-          local times = ui:rpc(
-            "nvim_exec_lua",
-            [[
+      ui:wait_until(function()
+        assert(vim.uv.hrtime() < deadline, "Filetree annotations did not flush")
+        local times = ui:rpc(
+          "nvim_exec_lua",
+          [[
           if #bench_errors > 0 then error(table.concat(bench_errors, "\n")) end
           return { bench_annotation.started, bench_annotation.published or false }
         ]],
-            {}
-          )
-          if times[2] and ui.last_flush and ui.last_flush >= times[2] then
-            updates[#updates + 1] = (ui.last_flush - times[1]) / 1000000
-            return true
-          end
-        end, 1),
-        "Filetree annotations did not flush"
-      )
+          {}
+        )
+        if times[2] and ui.last_flush and ui.last_flush >= times[2] then
+          updates[#updates + 1] = (ui.last_flush - times[1]) / 1000000
+          return true
+        end
+      end, 10000, "Filetree annotations did not flush", 1)
     end
     annotation_metrics = {
       viewport48 = distribution(viewport),

@@ -120,23 +120,20 @@ local ok, result = xpcall(function()
         { kind, index }
       )
       local times
-      assert(
-        vim.wait(10000, function()
-          times = ui:rpc(
-            "nvim_exec_lua",
-            [[
+      ui:wait_until(function()
+        times = ui:rpc(
+          "nvim_exec_lua",
+          [[
           if #bench_errors > 0 then error(table.concat(bench_errors, "\n")) end
           local pending = bench_pending
           if pending.expected and pending.publication and bench_state._native:applicable(pending.publication.frame, pending.expected) then
             return { pending.started, pending.publication.at, pending.projected, pending.planned, pending.writing }
           end
         ]],
-            {}
-          )
-          return times and ui.last_flush and ui.last_flush >= times[2]
-        end, 1),
-        "frame did not flush"
-      )
+          {}
+        )
+        return times and ui.last_flush and ui.last_flush >= times[2]
+      end, 10000, "frame did not flush", 1)
       publication[#publication + 1] = (times[2] - times[1]) / 1000000
       flush[#flush + 1] = (ui.last_flush - times[1]) / 1000000
       if times[5] and times[4] and times[3] then
