@@ -7,7 +7,7 @@ local M = {}
 
 ---@return table
 local function resources()
-  return { usage = vim.uv.getrusage(), rss_kib = Data.rss_kib(), lua_kib = collectgarbage("count") }
+  return { usage = vim.uv.getrusage(), process_memory_bytes = Data.process_memory_bytes(), lua_heap_bytes = collectgarbage("count") * 1024 }
 end
 
 ---@param line                          string

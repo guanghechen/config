@@ -43,13 +43,13 @@ function M.run(options)
           items = Lsp.response(context, client, raw).items
           return items
         end,
-      }, options.samples)
+      }, options.iterations)
       local prepare = Data.measure({
         prepare = function()
           groups = Rank.prepare(items)
           return groups
         end,
-      }, options.samples)
+      }, options.iterations)
       result.construction[#result.construction + 1] = {
         corpus = corpus,
         candidates = count,
@@ -77,7 +77,7 @@ function M.run(options)
             fuzzy_packed = function()
               return matcher:query_packed(query)
             end,
-          }, options.samples)
+          }, options.iterations)
           local ranked = Rank.filter(current, groups, active_history)
           result.queries[#result.queries + 1] = {
             corpus = corpus,

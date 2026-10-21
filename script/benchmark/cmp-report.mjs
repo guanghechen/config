@@ -144,7 +144,8 @@ export function measureLoad(testCase, trace) {
   result.heartbeat_gap = trace.heartbeat_gaps_ms
   result.first_current_menu = current.length ? [(current[0].time_ns - trace.sent[0].sent_ns) / 1e6] : []
   for (const state of ["before", "after", "after_gc"]) {
-    for (const kind of ["rss", "lua"]) result[`${state}_${kind}_mib`] = [trace[state][`${kind}_kib`] / 1024]
+    result[`${state}_process_memory_mib`] = [trace[state].process_memory_bytes / 1048576]
+    result[`${state}_lua_heap_mib`] = [trace[state].lua_heap_bytes / 1048576]
   }
   for (const name of ["minflt", "majflt", "nvcsw", "nivcsw"]) result[name] = [after[name] - before[name]]
   result.response_timer_slip = requests.map(
@@ -192,12 +193,12 @@ const loadResources = [
   "visible_menu_calls",
   "peak_inflight",
   "full_gc_ms",
-  "before_rss_mib",
-  "after_rss_mib",
-  "after_gc_rss_mib",
-  "after_gc_lua_mib",
-  "before_lua_mib",
-  "after_lua_mib",
+  "before_process_memory_mib",
+  "after_process_memory_mib",
+  "after_gc_process_memory_mib",
+  "after_gc_lua_heap_mib",
+  "before_lua_heap_mib",
+  "after_lua_heap_mib",
   "lifetime_maxrss_mib",
 ]
 const loadTotals = [
@@ -241,13 +242,13 @@ export function collectRuns(folders) {
     assert(metadata, `${folder}: metadata.json is missing`)
     if (folders.length > 1) {
       assert(
-        metadata.completion_lua_sha256 && metadata.native_sha256,
+        metadata.completion_lua_sha256 && metadata.native_artifact_sha256,
         `${folder}: source/binary identity is required for pooling`,
       )
     }
     for (const [name, hash] of Object.entries({
       lua: metadata.completion_lua_sha256,
-      native: metadata.native_sha256,
+      native: metadata.native_artifact_sha256,
     })) {
       if (hash === undefined) continue
       assert(
@@ -297,7 +298,7 @@ export function collectRuns(folders) {
         for (const row of data.construction) {
           const scenario = `${row.corpus}/${row.candidates}`
           for (const [metric, values] of Object.entries({ normalize: row.normalize, prepare: row.prepare })) {
-            add("ranking construction", scenario, "era", metric, values.samples, "ms", { corpus: row.sha256 })
+            add("ranking construction", scenario, "era", metric, values.values, "ms", { corpus: row.sha256 })
           }
         }
         for (const row of data.queries) {
@@ -306,7 +307,7 @@ export function collectRuns(folders) {
             (entry) => entry.corpus === row.corpus && entry.candidates === row.candidates,
           )
           for (const [metric, values] of Object.entries(row.timings)) {
-            add(phase, scenario, "era", metric, values.samples, "ms", { corpus: corpus?.sha256 })
+            add(phase, scenario, "era", metric, values.values, "ms", { corpus: corpus?.sha256 })
           }
           outcome(scenario, "returned candidates", row.count)
           outcome(scenario, "ordered ID/score fingerprint", row.fingerprint)
@@ -316,7 +317,7 @@ export function collectRuns(folders) {
         }
       } else if (phase === "ui") {
         for (const row of data.cases) {
-          for (const sample of row.samples) {
+          for (const sample of row.iterations) {
             for (const step of sample.steps) {
               const scenario = `${row.scenario}/${JSON.stringify(step.query)}`
               for (const [metric, value] of Object.entries({
@@ -338,7 +339,7 @@ export function collectRuns(folders) {
         for (const row of data.cases) {
           const scenario = `${row.scenario.name}/${history}`
           const workload = { scenario: row.scenario, plan: row.plan, heartbeat: data.heartbeat_period_ms }
-          for (const sample of row.samples) {
+          for (const sample of row.iterations) {
             const measured = measureLoad(row, sample)
             for (const metric of loadTimings)
               add("load latency", scenario, row.engine, metric, measured[metric], "ms", workload)
@@ -435,7 +436,7 @@ export function renderReport(before, after) {
   output +=
     "Load key percentiles pool correlated keys; resource samples describe bursts. CPU includes the editor and observer.\n"
   output +=
-    "RSS includes prebuilt server payloads. Explicit GC is outside the timed burst. UI flush excludes the compositor.\n"
+    "Process memory includes prebuilt server payloads. Explicit GC is outside the timed burst. UI flush excludes the compositor.\n"
   output +=
     "Publication coverage and final_query_lag describe menu events, not candidate correctness. Rank scores may change with history age.\n"
   output += "Cells show median / p95 [N], event totals, or weighted rates."
@@ -451,7 +452,7 @@ export function renderReport(before, after) {
           after ? (index ? "after" : "before") : "run",
           folder,
           metadata.completion_lua_sha256 ?? "unknown",
-          metadata.native_sha256 ?? "unknown",
+          metadata.native_artifact_sha256 ?? "unknown",
         ]),
       ),
   )

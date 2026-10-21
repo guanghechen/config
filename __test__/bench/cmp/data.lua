@@ -73,31 +73,27 @@ end
 ---@param values                        number[]
 ---@return table
 function M.stats(values)
-  return {
-    median = Stats.median(values),
-    p95 = Stats.percentile(values, 0.95),
-    min = Stats.percentile(values, 0),
-    max = Stats.percentile(values, 1),
-    samples = values,
-  }
+  local summary = Stats.summary(values) or {}
+  summary.values = values
+  return summary
 end
 
----@return number
-function M.rss_kib()
-  return vim.uv.resident_set_memory() / 1024
+---@return integer
+function M.process_memory_bytes()
+  return vim.uv.resident_set_memory()
 end
 
 ---@param functions                     table<string, fun(): any>
----@param samples                       integer
+---@param iterations                    integer
 ---@return table
-function M.measure(functions, samples)
+function M.measure(functions, iterations)
   local names = vim.tbl_keys(functions)
   table.sort(names)
   local values, outputs = {}, {}
   for _, name in ipairs(names) do
     values[name] = {}
   end
-  for sample = 1, samples + 5 do
+  for sample = 1, iterations + 5 do
     collectgarbage("collect")
     for step = 1, #names do
       local name = names[(step + sample - 2) % #names + 1]

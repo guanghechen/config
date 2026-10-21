@@ -173,14 +173,14 @@ function M.run(options)
           vim.tbl_extend("force", options, scenario, { engine = engine })
         )
         local samples = {}
-        for sample = 1, options.samples + 5 do
+        for sample = 1, options.iterations + 5 do
           sample_index = sample
           local trace = burst(ui, recorder, scenario, plan)
           if sample > 5 then
             samples[#samples + 1] = trace
           end
         end
-        result.cases[#result.cases + 1] = { scenario = scenario, engine = engine, plan = plan, samples = samples }
+        result.cases[#result.cases + 1] = { scenario = scenario, engine = engine, plan = plan, iterations = samples }
         vim.fn.writefile({ vim.json.encode(result) }, options.output .. "/load.partial.json")
       end, debug.traceback)
       if not ok then

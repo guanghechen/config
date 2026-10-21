@@ -20,7 +20,7 @@ function run(root, name, data, metadata = {}, compressed = false) {
   const files = {
     metadata: {
       completion_lua_sha256: "lua-v1",
-      native_sha256: "native-v1",
+      native_artifact_sha256: "native-v1",
       benchmark_lua_sha256: "bench-v1",
       cpu: "test",
       ...metadata,
@@ -37,7 +37,7 @@ function run(root, name, data, metadata = {}, compressed = false) {
 function ranking(samples, fingerprint = "order-v1") {
   return {
     construction: [
-      { corpus: "identifiers", candidates: 10, sha256: "corpus-v1", normalize: { samples }, prepare: { samples } },
+      { corpus: "identifiers", candidates: 10, sha256: "corpus-v1", normalize: { values: samples }, prepare: { values: samples } },
     ],
     queries: [
       {
@@ -47,7 +47,7 @@ function ranking(samples, fingerprint = "order-v1") {
         history: "off",
         count: 2,
         fingerprint,
-        timings: { rank: { samples }, fuzzy_packed: { samples, bytes: 16 } },
+        timings: { rank: { values: samples }, fuzzy_packed: { values: samples, bytes: 16 } },
       },
     ],
   }
@@ -55,8 +55,8 @@ function ranking(samples, fingerprint = "order-v1") {
 
 function loadCase() {
   const resource = (usec, rss) => ({
-    rss_kib: rss,
-    lua_kib: 1024,
+    process_memory_bytes: rss * 1024,
+    lua_heap_bytes: 1024 * 1024,
     usage: {
       utime: { sec: 0, usec },
       stime: { sec: 0, usec: usec / 2 },
@@ -71,7 +71,7 @@ function loadCase() {
     engine: "era",
     scenario: { name: "warm_test", count: 10, interval_ms: 10, seed: "g" },
     plan: ["ge", "get", "ge"].map((query, index) => ({ query, offset_ms: index * 10 })),
-    samples: [
+    iterations: [
       {
         keys: [2, 12, 22].map((ms) => ({ time_ns: ms * 1e6 })),
         sent: [0, 10, 20].map((ms) => ({ scheduled_ns: ms * 1e6, sent_ns: (ms + 1) * 1e6 })),
@@ -166,7 +166,7 @@ test("partial JSON and gzip runs pool raw samples of the same implementation", (
 test("pooling rejects duplicate directories, different builds and different sampling conditions", (t) => {
   const root = directory(t)
   const first = run(root, "first", { ranking: ranking([1]) })
-  const changed = run(root, "changed", { ranking: ranking([2]) }, { native_sha256: "native-v2" })
+  const changed = run(root, "changed", { ranking: ranking([2]) }, { native_artifact_sha256: "native-v2" })
   const differentHost = run(root, "host", { ranking: ranking([2]) }, { cpu: "other" })
   assert.throws(() => collectRuns([first, first]), /same run/)
   assert.throws(() => collectRuns([first, changed]), /different native implementations/)
@@ -178,7 +178,7 @@ test("before/after comparison reports deliberate ranking changes while rejecting
   const before = collectRuns([run(root, "before", { ranking: ranking([1, 2, 3]) })])
   const changed = ranking([3, 4, 5], "order-v2")
   changed.queries[0].count = 3
-  const after = collectRuns([run(root, "after", { ranking: changed }, { native_sha256: "native-v2" })])
+  const after = collectRuns([run(root, "after", { ranking: changed }, { native_artifact_sha256: "native-v2" })])
   const report = renderReport(before, after)
   assert.match(report, /order-v1 \| order-v2 \| changed/)
   assert.match(report, /returned candidates \| 2 \| 3 \| changed/)
@@ -202,14 +202,14 @@ test("before/after comparison rejects different hosts and measurement code", (t)
 
 test("load metrics measure offered input and count a menu only when it renders the current query", () => {
   const fixture = loadCase()
-  const trace = fixture.samples[0]
+  const trace = fixture.iterations[0]
   const measured = measureLoad(fixture, trace)
   assert.deepEqual(measured.dispatch, [1, 1, 1])
   assert.deepEqual(measured.menu, [5])
   assert.deepEqual(measured.menu_count, [1])
   assert.deepEqual(measured.line_flush, [6])
   assert.deepEqual(measured.cpu_per_key, [5])
-  assert.deepEqual(measured.after_gc_rss_mib, [3])
+  assert.deepEqual(measured.after_gc_process_memory_mib, [3])
   assert.deepEqual(measured.max_heartbeat_gap, [18])
   assert.deepEqual(measured.stale_context, [1])
   assert.deepEqual(measured.final_query_lag, [0])
@@ -234,7 +234,7 @@ test("event-query lag is reported separately from correctness and changed load p
 
 test("load validation rejects queued request positions beyond the current UTF-16 line", () => {
   const fixture = loadCase()
-  const trace = fixture.samples[0]
+  const trace = fixture.iterations[0]
   trace.requests[0].character = 2
   assert.throws(() => measureLoad(fixture, trace), /request position/)
   trace.requests[0].query = "😀g"
@@ -246,7 +246,7 @@ test("load validation rejects queued request positions beyond the current UTF-16
 
 test("lost input and undrained responses fail validation", () => {
   const fixture = loadCase()
-  const trace = fixture.samples[0]
+  const trace = fixture.iterations[0]
   trace.final_line = "lost"
   assert.throws(() => measureLoad(fixture, trace), /lost or reordered/)
   trace.final_line = "ge"
@@ -257,7 +257,7 @@ test("lost input and undrained responses fail validation", () => {
 test("CLI reports ownership failures with a nonzero exit and does not require all phases", (t) => {
   const root = directory(t)
   const fixture = loadCase()
-  fixture.samples[0].requests[0].cancelled_inflight = true
+  fixture.iterations[0].requests[0].cancelled_inflight = true
   const folder = run(root, "load", { load: { cases: [fixture], heartbeat_period_ms: 2 } })
   const result = spawnSync(process.execPath, [new URL("../../script/benchmark/cmp-report.mjs", import.meta.url).pathname, folder], {
     encoding: "utf8",

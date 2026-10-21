@@ -54,15 +54,15 @@ dofile(root .. '/__test__/bench/cmp.lua')
     return JSON.parse(readFileSync(join(output, "metadata.json"), "utf8"))
   }
   const before = metadata("first")
-  assert.match(before.native_sha256, /^[a-f0-9]{64}$/)
+  assert.match(before.native_artifact_sha256, /^[a-f0-9]{64}$/)
   writeFileSync(join(baseline, library), "rebuilt era native fixture")
   const rebuilt = metadata("second")
-  assert.notEqual(rebuilt.native_sha256, before.native_sha256)
+  assert.notEqual(rebuilt.native_artifact_sha256, before.native_artifact_sha256)
   assert.equal(rebuilt.completion_lua_sha256, before.completion_lua_sha256)
   writeFileSync(join(baseline, "lua/era/keystroke/cmp/init.lua"), "return { changed = true }\n")
   const edited = metadata("third")
   assert.notEqual(edited.completion_lua_sha256, rebuilt.completion_lua_sha256)
-  assert.equal(edited.native_sha256, rebuilt.native_sha256)
+  assert.equal(edited.native_artifact_sha256, rebuilt.native_artifact_sha256)
 })
 
 test("load CLI rejects a filter that matches no scenario", (t) => {

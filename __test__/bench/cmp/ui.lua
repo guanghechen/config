@@ -63,7 +63,7 @@ function M.run(options)
       local setup =
         ui:lua("return require('__test__.bench.cmp.editor').setup(...)", vim.tbl_extend("force", options, scenario))
       local samples, cold = {}, nil
-      for sample = 1, options.samples + 5 do
+      for sample = 1, options.iterations + 5 do
         ui:rpc("nvim_input", "<Esc>")
         ui:wait_until(function()
           return ui:rpc("nvim_get_mode").mode == "n"
@@ -88,8 +88,8 @@ function M.run(options)
           measured.requests = state.active.requests
           measured.renders = state.active.renders
           measured.query = query
-          measured.rss_kib = state.rss_kib
-          measured.lua_kib = state.lua_kib
+          measured.process_memory_bytes = state.process_memory_bytes
+          measured.lua_heap_bytes = state.lua_heap_bytes
           steps[#steps + 1] = measured
           -- Allow the delayed second source to finish before measuring the next keystroke.
           if scenario.delays ~= nil then
@@ -171,7 +171,7 @@ function M.run(options)
         engine = "era",
         setup = setup,
         summary = summary,
-        samples = samples,
+        iterations = samples,
         cold = cold,
       }
       vim.fn.writefile({ vim.json.encode(result) }, options.output .. "/ui.partial.json")

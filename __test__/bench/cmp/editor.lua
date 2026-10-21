@@ -136,7 +136,7 @@ function M.setup(options)
     end
     return result
   end
-  return { setup_ms = (vim.uv.hrtime() - start) / 1e6, rss_kib = Data.rss_kib(), lua_kib = collectgarbage("count") }
+  return { setup_ms = (vim.uv.hrtime() - start) / 1e6, process_memory_bytes = Data.process_memory_bytes(), lua_heap_bytes = collectgarbage("count") * 1024 }
 end
 
 ---@param line                          string
@@ -200,8 +200,8 @@ function M.snapshot()
     requests = M.requests,
     line = vim.api.nvim_get_current_line(),
     errmsg = vim.v.errmsg,
-    rss_kib = Data.rss_kib(),
-    lua_kib = collectgarbage("count"),
+    process_memory_bytes = Data.process_memory_bytes(),
+    lua_heap_bytes = collectgarbage("count") * 1024,
     notices = M.notices,
     mode = vim.api.nvim_get_mode().mode,
   }
