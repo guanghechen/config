@@ -101,7 +101,7 @@ t:test("staging the last visible file follows it to Staged when only collapsed d
   diffview.cursor_on(session, "unstaged", "hidden")
   action.toggle_collapse(session)
   t.wait_until(function()
-    return not pcall(diffview.cursor_on, session, "unstaged", "hidden/inside.lua")
+    return diffview.row(session, "unstaged", "hidden/inside.lua") == nil
   end, 5000, "hidden/ collapsed")
 
   select(session, "unstaged", "root.lua")

@@ -201,23 +201,53 @@ function M.count_refreshes(t, state)
   return count
 end
 
+---The row of `path`, a file or a directory, in the Changes pane of `stage_type`; nil when the pane does not show it.
+---@param session                       era.m.diffview.WorkspaceSession
+---@param stage_type                    "staged"|"unstaged"
+---@param path                          string
+---@return integer|nil
+function M.row(session, stage_type, path)
+  local pane_changes = require("era.m.diffview.pane.changes")
+  local bufnr = session.layout.changes[stage_type].bufnr
+  if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
+    return nil
+  end
+  for lnum = 1, vim.api.nvim_buf_line_count(bufnr) do
+    local item = pane_changes.get_item_at_line(bufnr, lnum)
+    if item and ((item.entry and item.entry.filepath == path) or (item.type == "directory" and item.uuid == path)) then
+      return lnum
+    end
+  end
+end
+
 ---Focuses the Changes pane of `stage_type` and puts the cursor on the row of `path`, a file or a directory.
 ---@param session                       era.m.diffview.WorkspaceSession
 ---@param stage_type                    "staged"|"unstaged"
 ---@param path                          string
 ---@return nil
 function M.cursor_on(session, stage_type, path)
-  local pane_changes = require("era.m.diffview.pane.changes")
-  local pane = session.layout.changes[stage_type]
-  vim.api.nvim_set_current_win(pane.winnr)
-  for lnum = 1, vim.api.nvim_buf_line_count(pane.bufnr) do
-    local item = pane_changes.get_item_at_line(pane.bufnr, lnum)
-    if item and ((item.entry and item.entry.filepath == path) or (item.type == "directory" and item.uuid == path)) then
-      vim.api.nvim_win_set_cursor(pane.winnr, { lnum, 0 })
-      return
-    end
+  local lnum = M.row(session, stage_type, path)
+  if not lnum then
+    error(string.format("no %s row for %s", stage_type, path), 2)
   end
-  error(string.format("no %s row for %s", stage_type, path), 2)
+  local winnr = session.layout.changes[stage_type].winnr
+  vim.api.nvim_set_current_win(winnr)
+  vim.api.nvim_win_set_cursor(winnr, { lnum, 0 })
+end
+
+---Collapses `dir` in the Changes pane of `stage_type` and waits until the pane no longer shows `inside`, a path
+---under it.
+---@param t                             __test__.support.Harness
+---@param session                       era.m.diffview.WorkspaceSession
+---@param stage_type                    "staged"|"unstaged"
+---@param dir                           string
+---@param inside                        string
+---@return nil
+function M.collapse(t, session, stage_type, dir, inside)
+  session.state:collapse_dir(stage_type, dir)
+  t.wait_until(function()
+    return M.row(session, stage_type, inside) == nil
+  end, 5000, dir .. " collapsed")
 end
 
 ---Opens the workspace session and waits until History has rendered and the first refresh has applied, selecting the

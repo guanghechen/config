@@ -1,101 +1,13 @@
 -- cspell:ignore unchanges worktree
 
-local bootstrap = require("__test__.support.bootstrap")
-local Future = require("stl.c.future")
-local harness = require("__test__.support.harness")
-local staging = require("era.m.git.staging")
-
-local t = harness.new()
+require("ark.bootstrap").setup()
+local t = require("__test__.support.harness").new()
+local diffview = require("__test__.support.diffview")
 local git = require("__test__.support.git")
-local show_untracked = true
-
-bootstrap.with_global(t, "stl", {
-  async = require("stl.async"),
-  c = { Future = Future },
-  e = { TabTypeEnum = { DIFFVIEW_COMMITS = 1, DIFFVIEW_WORKSPACE = 2 } },
-  env = { PATH_SEP = "/" },
-  nvim = { buf = {
-    locate_bufnr = function()
-      return nil
-    end,
-  } },
-  reporter = {
-    error = function() end,
-  },
-})
-bootstrap.with_global(t, "yoz", {
-  canonical_path = {
-    to_os_path = function(filepath)
-      return filepath
-    end,
-  },
-})
-bootstrap.with_global(t, "dot", {
-  context = {
-    diffview = {
-      flag_untracked = {
-        snapshot = function()
-          return show_untracked
-        end,
-      },
-      flag_fold_unchanges = {
-        snapshot = function()
-          return false
-        end,
-      },
-    },
-  },
-  path = {
-    join = function(...)
-      return table.concat({ ... }, "/")
-    end,
-    workspace = function()
-      return "/repo"
-    end,
-  },
-})
-bootstrap.with_global(t, "era", {
-  m = {
-    git = { staging = staging },
-  },
-})
-
-local config = {
-  BUFOPTS_PANEL = {},
-  BUFOPTS_SBS = {},
-  FT = { SBS = "diffview-test" },
-  TRACKED_WINOPTS = {},
-  WINOPTS_SBS = {
-    cursorbind = true,
-    diff = true,
-    foldcolumn = "0",
-    foldenable = true,
-    foldlevel = 0,
-    foldmethod = "diff",
-    scrollbind = true,
-  },
-}
-t:patch_table(package.loaded, "era.m.diffview.config", config)
-t:patch_table(package.loaded, "era.m.diffview.util", {
-  gen_index_bufname = function(filepath)
-    return "index:" .. filepath
-  end,
-  gen_old_bufname = function(filepath, ref)
-    return ref .. ":" .. filepath
-  end,
-  head_object = function(filepath)
-    return "HEAD:" .. filepath
-  end,
-  index_stage_object = function(filepath, stage)
-    return string.format(":%d:%s", stage, filepath)
-  end,
-  staged_object = function(filepath)
-    return ":./" .. filepath
-  end,
-  workspace_path = function(filepath)
-    return "/repo/" .. filepath
-  end,
-})
+local staging = require("era.m.git.staging")
+local pane_sbs = require("era.m.diffview.pane.sbs")
+local view = require("era.m.diffview.view.workspace.view")
+local Future = stl.c.Future
 
 ---@param predicate                     fun(): boolean
 local function wait(predicate)
@@ -124,18 +36,22 @@ local function close_windows(left_winnr, right_winnr)
 end
 
 t:test("workspace visibility filters untracked files without mutating the snapshot", function()
-  local view = assert(loadfile("lua/era/m/diffview/view/workspace/view.lua"))()
   local tracked = { filepath = "tracked.lua", stage_type = "unstaged", status = "M" }
   local untracked = { filepath = "untracked.lua", stage_type = "unstaged", status = "?" }
   local entries = { tracked, untracked }
+  local flag_untracked = dot.context.diffview.flag_untracked
+  local initial = flag_untracked:snapshot() ---@type boolean
+  t:defer(function()
+    flag_untracked:next(initial)
+  end)
 
-  show_untracked = false
+  flag_untracked:next(false)
   local visible = view.get_visible_entries(entries)
   t.assert_eq(1, #visible, "filtered count")
   t.assert_eq(tracked, visible[1], "tracked entry retained")
   t.assert_eq(2, #entries, "source snapshot retained")
 
-  show_untracked = true
+  flag_untracked:next(true)
   t.assert_eq(entries, view.get_visible_entries(entries), "visible projection reuses the complete snapshot")
 end)
 
@@ -143,19 +59,16 @@ t:test("workspace preview generation makes the latest request the sole writer", 
   local requests = {} ---@type era.m.diffview.pane.sbs.IOpenDiffOpts[]
   local clear_is_current = nil ---@type (fun(): boolean)|nil
   local fold_unchanged = false
-  t:patch_table(package.loaded, "era.m.diffview.pane.sbs", {
-    clear = function(_, _, opts)
-      clear_is_current = opts.is_current
-    end,
-    open_diff_entry = function(opts)
-      requests[#requests + 1] = opts
-    end,
-  })
+  t:patch_table(pane_sbs, "clear", function(_, _, opts)
+    clear_is_current = opts.is_current
+  end)
+  t:patch_table(pane_sbs, "open_diff_entry", function(opts)
+    requests[#requests + 1] = opts
+  end)
 
-  local view = assert(loadfile("lua/era/m/diffview/view/workspace/view.lua"))()
   local left_winnr, right_winnr = create_windows()
   local disposed = false
-  local ctx = require("__test__.support.diffview").workspace_context({
+  local ctx = diffview.workspace_context({
     layout = {
       tabnr = vim.api.nvim_get_current_tabpage(),
       layout_type = 1,
@@ -196,7 +109,7 @@ t:test("workspace preview generation makes the latest request the sole writer", 
 end)
 
 t:test("matching refresh preserves view without resetting diff folds", function()
-  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+  local pane = pane_sbs
   local left_winnr, right_winnr = create_windows()
   local left_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
   local right_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
@@ -247,16 +160,12 @@ t:test("matching refresh preserves view without resetting diff folds", function(
 end)
 
 t:test("unchanged staged preview skips view capture and diff refresh", function()
-  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+  local pane = pane_sbs
   local left_winnr, right_winnr = create_windows()
   local applied_opts = nil ---@type era.m.diffview.pane.sbs.IApplyBuffersOpts|nil
   local view_captures = 0 ---@type integer
   local loads = 0 ---@type integer
 
-  t:patch_table(stl.nvim.buf, "locate_bufnr", function(name)
-    local bufnr = vim.fn.bufnr(name) ---@type integer
-    return bufnr ~= -1 and bufnr or nil
-  end)
   t:patch_table(vim.fn, "winsaveview", function()
     view_captures = view_captures + 1
     return {}
@@ -267,9 +176,9 @@ t:test("unchanged staged preview skips view capture and diff refresh", function(
       return true, false
     end,
   }
-  pane.__apply_buffers__ = function(_, _, _, _, opts)
+  t:patch_table(pane, "__apply_buffers__", function(_, _, _, _, opts)
     applied_opts = opts
-  end
+  end)
 
   pane.open_diff_entry({
     left_winnr = left_winnr,
@@ -286,17 +195,14 @@ t:test("unchanged staged preview skips view capture and diff refresh", function(
 end)
 
 t:test("changed staged or mutable unstaged preview retains diff refresh", function()
-  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+  diffview.workspace(t, t:tempdir())
+  local pane = pane_sbs
   local left_winnr, right_winnr = create_windows()
   local applied = {} ---@type era.m.diffview.pane.sbs.IApplyBuffersOpts[]
   local view_captures = 0 ---@type integer
   local load_count = 0 ---@type integer
   local mutable_phase = false ---@type boolean
 
-  t:patch_table(stl.nvim.buf, "locate_bufnr", function(name)
-    local bufnr = vim.fn.bufnr(name) ---@type integer
-    return bufnr ~= -1 and bufnr or nil
-  end)
   t:patch_table(vim.fn, "winsaveview", function()
     view_captures = view_captures + 1
     return {}
@@ -314,9 +220,9 @@ t:test("changed staged or mutable unstaged preview retains diff refresh", functi
       return true, changed
     end,
   }
-  pane.__apply_buffers__ = function(_, _, _, _, opts)
+  t:patch_table(pane, "__apply_buffers__", function(_, _, _, _, opts)
     applied[#applied + 1] = opts
-  end
+  end)
 
   pane.open_diff_entry({
     left_winnr = left_winnr,
@@ -343,7 +249,7 @@ t:test("changed staged or mutable unstaged preview retains diff refresh", functi
 end)
 
 t:test("unchanged matching buffers skip scheduled diff work only while identity matches", function()
-  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+  local pane = pane_sbs
   local left_winnr, right_winnr = create_windows()
   local left_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
   local right_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
@@ -382,28 +288,28 @@ t:test("unchanged matching buffers skip scheduled diff work only while identity 
 end)
 
 t:test("workspace preview routes status snapshot identities for every file shape", function()
-  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+  local pane = pane_sbs
   local calls = {} ---@type { object: string, object_name: string|nil }[]
   local next_bufnr = 0
-  pane.create_sbs_buffer = function()
+  t:patch_table(pane, "create_sbs_buffer", function()
     next_bufnr = next_bufnr + 1
     return next_bufnr
-  end
-  pane.get_null_buffer = function()
+  end)
+  t:patch_table(pane, "get_null_buffer", function()
     next_bufnr = next_bufnr + 1
     return next_bufnr
-  end
-  pane.find_or_create_local_buffer = function()
+  end)
+  t:patch_table(pane, "find_or_create_local_buffer", function()
     next_bufnr = next_bufnr + 1
     return next_bufnr
-  end
+  end)
   local loader = {
     load = function(_, object, _, opts)
       calls[#calls + 1] = { object = object, object_name = opts.object_name }
       return true
     end,
   }
-  pane.__apply_buffers__ = function() end
+  t:patch_table(pane, "__apply_buffers__", function() end)
 
   ---@param entry                      era.m.diffview.IFileEntry
   ---@return { object: string, object_name: string|nil }[]
@@ -475,15 +381,15 @@ t:test("workspace preview routes status snapshot identities for every file shape
 end)
 
 t:test("staged preview starts both immutable loads before publishing", function()
-  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+  local pane = pane_sbs
   local left_gate, release_left = Future.new_with_resolver()
   local started = {} ---@type string[]
   local applied = 0 ---@type integer
   local next_bufnr = 0 ---@type integer
-  pane.create_sbs_buffer = function()
+  t:patch_table(pane, "create_sbs_buffer", function()
     next_bufnr = next_bufnr + 1
     return next_bufnr
-  end
+  end)
   local loader = {
     load = function(_, object)
       started[#started + 1] = object
@@ -493,9 +399,9 @@ t:test("staged preview starts both immutable loads before publishing", function(
       return true, true
     end,
   }
-  pane.__apply_buffers__ = function()
+  t:patch_table(pane, "__apply_buffers__", function()
     applied = applied + 1
-  end
+  end)
 
   stl.async.run(function()
     pane.open_diff_entry({
@@ -518,17 +424,17 @@ t:test("staged preview starts both immutable loads before publishing", function(
 end)
 
 t:test("stale staged pair cannot publish after both loads settle", function()
-  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+  local pane = pane_sbs
   local left_gate, release_left = Future.new_with_resolver()
   local right_gate, release_right = Future.new_with_resolver()
   local current = true ---@type boolean
   local done = false ---@type boolean
   local applied = 0 ---@type integer
   local next_bufnr = 0 ---@type integer
-  pane.create_sbs_buffer = function()
+  t:patch_table(pane, "create_sbs_buffer", function()
     next_bufnr = next_bufnr + 1
     return next_bufnr
-  end
+  end)
   local loader = {
     load = function(_, object)
       if object == "HEAD:f.txt" then
@@ -539,9 +445,9 @@ t:test("stale staged pair cannot publish after both loads settle", function()
       return true, true
     end,
   }
-  pane.__apply_buffers__ = function()
+  t:patch_table(pane, "__apply_buffers__", function()
     applied = applied + 1
-  end
+  end)
 
   stl.async.run(function()
     pane.open_diff_entry({
@@ -566,15 +472,15 @@ t:test("stale staged pair cannot publish after both loads settle", function()
 end)
 
 t:test("staged pair drains its sibling before propagating a load exception", function()
-  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+  local pane = pane_sbs
   local right_gate, release_right = Future.new_with_resolver()
   local outcome = nil ---@type { ok: boolean, err: string }|nil
   local applied = 0 ---@type integer
   local next_bufnr = 0 ---@type integer
-  pane.create_sbs_buffer = function()
+  t:patch_table(pane, "create_sbs_buffer", function()
     next_bufnr = next_bufnr + 1
     return next_bufnr
-  end
+  end)
   local loader = {
     load = function(_, object)
       if object == "HEAD:f.txt" then
@@ -584,9 +490,9 @@ t:test("staged pair drains its sibling before propagating a load exception", fun
       return true, true
     end,
   }
-  pane.__apply_buffers__ = function()
+  t:patch_table(pane, "__apply_buffers__", function()
     applied = applied + 1
-  end
+  end)
 
   stl.async.run(function()
     local ok, err = xpcall(function()
@@ -647,19 +553,10 @@ t:test("real staged preview reuses captured identities without resolver processe
     return future
   end
 
-  t:patch_table(dot.path, "workspace", function()
-    return repo
-  end)
-  t:patch_table(package.loaded["era.m.diffview.util"], "workspace_path", function(filepath)
-    return repo .. "/" .. filepath
-  end)
-  t:patch_table(stl.nvim.buf, "locate_bufnr", function(name)
-    local bufnr = vim.fn.bufnr(name) ---@type integer
-    return bufnr ~= -1 and bufnr or nil
-  end)
+  repo = diffview.workspace(t, repo)
   local loader = require("era.m.diffview.content").Loader.new(production_info)
 
-  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+  local pane = pane_sbs
   local left_winnr, right_winnr = create_windows()
   ---@type era.m.diffview.IFileEntry
   local entry = {
@@ -706,23 +603,23 @@ t:test("real staged preview reuses captured identities without resolver processe
 end)
 
 t:test("parallel preview does not publish buffers after either Git content load fails", function()
-  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+  local pane = pane_sbs
   local objects = {} ---@type string[]
   local applied = 0
   local next_bufnr = 0
-  pane.create_sbs_buffer = function()
+  t:patch_table(pane, "create_sbs_buffer", function()
     next_bufnr = next_bufnr + 1
     return next_bufnr
-  end
+  end)
   local loader = {
     load = function(_, object)
       objects[#objects + 1] = object
       return false
     end,
   }
-  pane.__apply_buffers__ = function()
+  t:patch_table(pane, "__apply_buffers__", function()
     applied = applied + 1
-  end
+  end)
 
   pane.open_diff_entry({
     left_winnr = -1,
@@ -751,19 +648,14 @@ t:test("conflict preview compares ours with the working tree", function()
   git.run(repo, { "checkout", "-q", "main" })
   t.assert_eq(1, git.system(repo, { "merge", "theirs" }).code, "merge conflict")
 
-  t:patch_table(dot.path, "workspace", function()
-    return repo
-  end)
-  t:patch_table(package.loaded["era.m.diffview.util"], "workspace_path", function(filepath)
-    return repo .. "/" .. filepath
-  end)
+  repo = diffview.workspace(t, repo)
   local loader = require("era.m.diffview.content").Loader.new(require("stl.git.info"))
 
-  local pane = assert(loadfile("lua/era/m/diffview/pane/sbs.lua"))()
+  local pane = pane_sbs
   local applied = nil ---@type integer[]|nil
-  pane.__apply_buffers__ = function(_, _, left_bufnr, right_bufnr)
+  t:patch_table(pane, "__apply_buffers__", function(_, _, left_bufnr, right_bufnr)
     applied = { left_bufnr, right_bufnr }
-  end
+  end)
 
   local done = false
   stl.async.run(function()
