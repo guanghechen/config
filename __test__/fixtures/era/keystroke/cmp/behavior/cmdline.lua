@@ -3,7 +3,8 @@ local __module_name__ = "__test__.fixtures.era.keystroke.cmp.behavior.cmdline" -
 
 -- Completion behavior cases: payload, keys and the state each step must reach. The expectations were checked
 -- against the frozen Blink 1.10.2 configuration during the migration; cases only the removed differential runner
--- covered had theirs recorded from Era when it was removed.
+-- covered were recorded from Era and later reviewed against the completion design, plain Neovim for native keys and
+-- Blink's preview prefix. Only listed fields are compared, so a state that must be off is listed as false.
 
 return {
   {

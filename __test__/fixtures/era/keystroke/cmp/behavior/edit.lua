@@ -3,7 +3,8 @@ local __module_name__ = "__test__.fixtures.era.keystroke.cmp.behavior.edit" ---@
 
 -- Completion behavior cases: payload, keys and the state each step must reach. The expectations were checked
 -- against the frozen Blink 1.10.2 configuration during the migration; cases only the removed differential runner
--- covered had theirs recorded from Era when it was removed.
+-- covered were recorded from Era and later reviewed against the completion design, plain Neovim for native keys and
+-- Blink's preview prefix. Only listed fields are compared, so a state that must be off is listed as false.
 
 local AUTO_IMPORT = "import { foobar } from './lib';"
 
@@ -258,6 +259,7 @@ return {
         cursor = { 1, 2 },
         mode = "i",
         snippet = false,
+        documentation = false,
       },
       {
         menu = true,
@@ -269,7 +271,7 @@ return {
         snippet = false,
         documentation = true,
       },
-      { menu = false, lines = { "al" }, cursor = { 1, 2 }, mode = "i", snippet = false },
+      { menu = false, lines = { "al" }, cursor = { 1, 2 }, mode = "i", snippet = false, documentation = false },
     },
   },
   {
@@ -298,7 +300,7 @@ return {
     steps = { "idemo(", "<C-p>", "<C-p>" },
     expect = {
       { menu = false, lines = { "demo(" }, cursor = { 1, 5 }, mode = "i", snippet = false, signature = true },
-      { menu = false, lines = { "demo(" }, cursor = { 1, 5 }, mode = "i", snippet = false },
+      { menu = false, lines = { "demo(" }, cursor = { 1, 5 }, mode = "i", snippet = false, signature = false },
       { menu = false, lines = { "demo(" }, cursor = { 1, 5 }, mode = "i", snippet = false, signature = true },
     },
   },
@@ -520,7 +522,7 @@ return {
         snippet = false,
         documentation = true,
       },
-      { menu = false, lines = { "ca" }, cursor = { 1, 2 }, mode = "i", snippet = false },
+      { menu = false, lines = { "ca" }, cursor = { 1, 2 }, mode = "i", snippet = false, documentation = false },
     },
   },
   {

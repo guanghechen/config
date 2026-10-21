@@ -3,7 +3,8 @@ local __module_name__ = "__test__.fixtures.era.keystroke.cmp.behavior.insert" --
 
 -- Completion behavior cases: payload, keys and the state each step must reach. The expectations were checked
 -- against the frozen Blink 1.10.2 configuration during the migration; cases only the removed differential runner
--- covered had theirs recorded from Era when it was removed.
+-- covered were recorded from Era and later reviewed against the completion design, plain Neovim for native keys and
+-- Blink's preview prefix. Only listed fields are compared, so a state that must be off is listed as false.
 
 return {
   {
@@ -400,6 +401,7 @@ return {
         cursor = { 1, 2 },
         mode = "i",
         snippet = false,
+        inline_calls = 0,
       },
       {
         menu = true,
@@ -409,6 +411,7 @@ return {
         cursor = { 1, 2 },
         mode = "i",
         snippet = false,
+        inline_calls = 1,
       },
       {
         menu = true,
@@ -418,6 +421,7 @@ return {
         cursor = { 1, 2 },
         mode = "i",
         snippet = false,
+        inline_calls = 2,
       },
       {
         menu = true,
@@ -427,6 +431,7 @@ return {
         cursor = { 1, 6 },
         mode = "i",
         snippet = false,
+        inline_calls = 2,
       },
     },
   },

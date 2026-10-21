@@ -22,7 +22,9 @@ source fallback、排序与 native UI。Rust 单测验证 fuzzy、scalar/SIMD �
 行为用例位于 `__test__/fixtures/era/keystroke/cmp/behavior/`，按插入、编辑与 snippet、命令行分为
 `insert.lua`、`edit.lua`、`cmdline.lua`；每个用例给出 payload、按键和每步应达到的状态，由
 `__test__/specs/era/keystroke/cmp/behavior/` 下对应的 spec 在真实 UI 中逐步验证。这些期望在迁移时对照
-冻结的 Blink 1.10.2 配置确认；只由已移除的差分 runner 覆盖的用例，期望取自移除时 Era 的实际行为。
+冻结的 Blink 1.10.2 配置确认；只由已移除的差分 runner 覆盖的用例，期望取自移除时 Era 的实际行为，
+随后已对照 completion 设计、原生 Neovim 的按键语义与 Blink 的 preview 前缀复核。
+每步只比较写出的字段，需要验证的关闭状态（如 `documentation = false`）必须显式写出。
 
 ## 真实语言服务器
 

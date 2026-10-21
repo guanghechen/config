@@ -24,6 +24,8 @@ VSCode、Yozvim、Yuivim 继续由 host 管理补全。核心在第一次使用�
   deprecated label 只叠加删除线等文字装饰，继承原生菜单的匹配色和选中背景。
   `nvim_select_popupmenu_item()` 在后续输入循环执行；`CompleteChanged` 确认选择。
   Native prefix preview 不删除光标后的 suffix；snippet 使用 native parser 提取静态插入前缀，展示 label 独立保留。
+  Snippet preview 只取首行，截至第一个空白、`=`、括号或引号之前；以括号或引号开头时保留首个配对组。
+  该规则沿用 Blink 1.10.2 的 preview 前缀，随后键入 `(` 等字符不会与预览重复。
   只为已展示候选缓存静态前缀，不在收集或绘制时求值动态变量；动态前缀使用 label 的前缀，最终接受仍应用完整 LSP edit plan。
   `on_bytes` 追踪 native prefix 的实际范围，范围外编辑同步取消排队的插入。
   接受按键直接关闭菜单、确认 owner 并恢复 prefix preview，随后执行编辑事务；已 resolve 的候选先于排队输入写入。
