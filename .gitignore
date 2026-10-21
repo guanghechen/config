@@ -1,6 +1,7 @@
 /.last-cleanup
 /.claude.json*
 /.claude*.json*
+/daemon.*
 /CLAUDE.md
 
 
@@ -9,8 +10,10 @@ history.jsonl
 stats-cache.json
 
 /backups/
+/daemon/
 /ide/
 /image-cache/
+/jobs/
 /sessions/
 /skills/.system
 /skills/kit-*
