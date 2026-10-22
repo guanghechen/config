@@ -16,7 +16,7 @@ assert(
   "usage: nvim -l __test__/bench/treeview.lua [tree|ancestry] [processes]"
 )
 local ITERATIONS = 100
-local KINDS = { "text", "text_filtered", "selection", "filter" }
+local KINDS = { "text", "text_filtered", "selection", "filter", "ranked" }
 
 ---Appends the milliseconds from `from` to `to` to `metrics[name]` when the sample reached both points.
 ---@param metrics                       table<string, number[]>
@@ -84,6 +84,21 @@ local function measure(ui)
     bench_display = { pattern = "", mode = mode == "ancestry" and "list" or "tree", list_text = mode == "ancestry" and "ancestry" or "label" }
     bench_state = await(bench_data:create_state(mode == "ancestry" and { kind = "forest", nodes = { id } } or { kind = "children_of", node = id }, bench_display))
     bench_view = treeview.attach(bench_state, { keymaps = false })
+    -- Pickers filter with ranked node ids from a fuzzy corpus. Equal match scores leave the rank to the
+    -- weights, which interleave the source order as frecency does.
+    local corpus = yoz.fuzzy.new_corpus({ scheme = "path" })
+    local texts, keys, weights = {}, {}, {}
+    for i = 0, 49999 do
+      texts[i + 1], keys[i + 1] = string.format("node-%05d", i) .. string.rep("x", 86), "n" .. i
+      weights[i + 1] = string.char(i * 37 % 101)
+    end
+    corpus:append(texts, keys)
+    corpus:set_weights(table.concat(weights))
+    bench_ranked = {}
+    for name, pattern in pairs({ narrow = "node-000", wide = "node-" }) do
+      bench_ranked[name] = corpus:query({ pattern = pattern, fuzzy = false, weight = 100 }):ids(bench_data:source())
+    end
+    assert(bench_ranked.narrow:len() == 100 and bench_ranked.wide:len() == 50000)
     assert(vim.wait(10000, function() return bench_view:frame() ~= nil end))
     function bench_set_pattern(pattern)
       bench_display = vim.tbl_extend("force", bench_display, { pattern = pattern })
@@ -115,7 +130,10 @@ local function measure(ui)
     end
     for index = 1, ITERATIONS do
       -- Filter inputs alternate between narrowing to 100 matches and widening back to all 50,000 rows.
-      local path = kind == "filter" and (index % 2 == 1 and "filter_narrow" or "filter_widen") or kind
+      local path = kind
+      if kind == "filter" or kind == "ranked" then
+        path = kind .. (index % 2 == 1 and "_narrow" or "_widen")
+      end
       samples[path] = samples[path] or {}
       if kind == "text" or kind == "text_filtered" then
         -- Let the 8 ms pacing of data-only publications lapse, so each update is measured on its own.
@@ -131,8 +149,10 @@ local function measure(ui)
           future = bench_data:batch({ { kind = "update", node = "n20", label = string.format("node-%05d", index) .. string.rep("y", 86) } })
         elseif kind == "selection" then
           future = bench_state:toggle_node({ bench_data:source():id("n20") }, false, bench_view:frame())
-        else
+        elseif kind == "filter" then
           future = bench_state:set_display(vim.tbl_extend("force", bench_display, { pattern = index % 2 == 1 and "node-000" or "node-" }))
+        else
+          future = bench_state:set_display(vim.tbl_extend("force", bench_display, { pattern = "", filter = index % 2 == 1 and bench_ranked.narrow or bench_ranked.wide }))
         end
         future:finally(function(ok, result)
           if not ok or result.kind ~= "Applied" then bench_errors[#bench_errors + 1] = vim.inspect(result); return end

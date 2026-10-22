@@ -228,12 +228,16 @@ struct Observer {
 
 impl Observer {
     fn new(data: &DataHandle, job: Job, cancel_on_item: bool) -> Self {
-        let statuses = Arc::new(Mutex::new(Vec::new()));
+        let statuses = Arc::new(Mutex::new(Vec::<JobStatus>::new()));
         let (observed, recorded) = (job.clone(), statuses.clone());
         let cancelled = AtomicBool::new(false);
         let listening = listen(data, move || {
             let mut statuses = recorded.lock().unwrap();
-            let status = observed.status();
+            // The data owner also wakes for its own work; record job publications, as consumers do.
+            let Some(status) = observed.status_since(statuses.last().map(|status| status.revision))
+            else {
+                return;
+            };
             let cancel = cancel_on_item && status.processed > 0 && !status.terminal;
             statuses.push(status);
             drop(statuses);

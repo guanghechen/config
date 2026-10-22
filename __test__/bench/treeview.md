@@ -16,30 +16,37 @@ Grouped List、watch 扫描、Visual 聚合）保留原记录，它们按旧格�
 ## 合成投影：`treeview.lua`
 
 `nvim -l __test__/bench/treeview.lua [tree|ancestry] [processes]`，使用 release library、附着 UI 与自然 GC；
-每个进程是新的子 Neovim，统计量合并全部进程的样本。脚本覆盖无过滤与过滤态的单行更新、selection 与 filter，
-filter 以 `set_display` 在收窄与放宽之间交替，计时不含 consumer 输入 debounce。只改数据的连续发布受
+每个进程是新的子 Neovim，统计量合并全部进程的样本。脚本覆盖无过滤与过滤态的单行更新、selection、按 pattern 的
+filter，以及 Picker 式的名次 filter：Yoz Fuzzy corpus 的 `Result:ids` 直接交给 SetDisplay。filter 以 `set_display`
+在收窄与放宽之间交替，计时不含 consumer 输入 debounce 与 corpus 查询。只改数据的连续发布受
 [8 ms 发布节奏](../../spec/design/treeview/render.md#发布节奏)约束，脚本在两次单行更新之间留出该窗口，测量孤立的一次变化。
 
 2026-10-22：50,001 个 source 节点、50,000 行投影、96-byte label、80×48 UI，每行一个高亮组和右对齐文本；
-过滤态 pattern 为 `node-`（匹配全部行），filter 在 `node-000`（100 行）与 `node-`（50,000 行）之间切换。
-每条路径每进程 100 次（filter 收窄、放宽各 50 次），5 个进程。以下为 median / p95（ms），发布段从 Lua 请求 RenderPlan
+过滤态 pattern 为 `node-`（匹配全部行），filter 在 `node-000`（100 行）与 `node-`（50,000 行）之间切换；名次 filter
+取同样两组匹配，由 frecency 式权重交错 source 顺序：Ancestry 的 List 按名次排列，Tree 保持 source 顺序。
+每条路径每进程 100 次（收窄、放宽各 50 次），5 个进程。以下为 median / p95（ms），发布段从 Lua 请求 RenderPlan
 到 UI flush：
 
-| 路径                    | Tree 输入到 flush |   Tree 发布段 | Ancestry 输入到 flush | Ancestry 发布段 |
-| ----------------------- | ----------------: | ------------: | --------------------: | --------------: |
-| 单行更新，无过滤        |       1.99 / 4.36 |   1.69 / 3.91 |           1.45 / 2.55 |     1.16 / 2.16 |
-| 单行更新，过滤态        |       2.11 / 4.55 |   1.84 / 4.01 |           1.82 / 4.44 |     1.54 / 4.02 |
-| Selection               |       2.34 / 3.79 |   0.64 / 1.40 |           2.38 / 3.30 |     0.62 / 1.35 |
-| Filter 收窄到 100 行    |       7.89 / 9.45 |   3.28 / 4.77 |          9.99 / 12.10 |     3.33 / 5.22 |
-| Filter 放宽到 50,000 行 |     30.76 / 36.20 | 24.11 / 29.27 |         31.87 / 40.22 |   24.03 / 32.19 |
+| 路径                         | Tree 输入到 flush |   Tree 发布段 | Ancestry 输入到 flush | Ancestry 发布段 |
+| ---------------------------- | ----------------: | ------------: | --------------------: | --------------: |
+| 单行更新，无过滤             |       0.98 / 2.31 |   0.84 / 2.06 |           0.88 / 2.06 |     0.71 / 1.76 |
+| 单行更新，过滤态             |       1.26 / 3.11 |   1.11 / 2.84 |           1.47 / 3.17 |     1.28 / 2.87 |
+| Selection                    |       2.29 / 3.31 |   0.63 / 1.30 |           2.22 / 3.09 |     0.58 / 1.19 |
+| Filter 收窄到 100 行         |       7.87 / 9.24 |   3.29 / 4.54 |          9.82 / 10.98 |     3.25 / 4.25 |
+| Filter 放宽到 50,000 行      |     29.80 / 34.44 | 23.26 / 28.19 |         30.74 / 35.04 |   23.24 / 27.13 |
+| 名次 filter 收窄到 100 行    |       7.07 / 8.15 |   3.24 / 4.33 |           8.72 / 9.22 |     3.00 / 3.32 |
+| 名次 filter 放宽到 50,000 行 |     29.36 / 35.15 | 23.09 / 28.95 |         41.03 / 45.74 |   27.00 / 31.27 |
 
 - 与[性能契约](../../spec/design/treeview/performance.md#延迟口径与目标)的对应：发布段即 render 的 Lua 发布加 redraw，
   对应“常见局部发布及当前窗口 redraw”（p95 ≤ 8 ms）；单行更新与 Selection 的输入到 flush 对应“已加载数据上的
   局部交互到 Frame flush”（p95 ≤ 16 ms）；filter 的输入到 flush 对应 50,000 驻留候选的 filter/sort 目标（p95 ≤ 50 ms）。
-- 放宽到 50,000 行各进程 p95：Tree 34.1–39.4 ms，Ancestry 34.1–45.1 ms。同日优化前为 Tree 45.45 / Ancestry 53.35 ms
-  （合并 p95，各进程最高 63.2 ms），输入到 Lua 观察到投影由 12.4 / 15.9 ms 降到 6.68 / 7.74 ms（median），见下文 Rust 测量。
-  其余主要是 Lua staging（Ancestry median 19.36 / p95 26.07 ms），即逐行导出 50,000 行正文及其 GC。
+- 按 pattern 放宽到 50,000 行各进程 p95：Tree 32.4–37.9 ms，Ancestry 32.9–36.4 ms。同日优化前为 Tree 45.45 /
+  Ancestry 53.35 ms（合并 p95，各进程最高 63.2 ms），输入到 Lua 观察到投影由 12.4 / 15.9 ms 降到 6.49 / 7.54 ms（median），
+  见下文 Rust 测量。其余主要是 Lua staging（Ancestry median 18.70 / p95 22.10 ms），即逐行导出 50,000 行正文及其 GC。
   等待轮询从 1 ms 放宽到 20 ms 的同日对照显示，测量 RPC 的影响在进程间波动之内。
+- 名次 filter 放宽是 Picker 的 List 场景，也是这里最慢的路径：Ancestry 各进程 p95 44.0–50.5 ms，投影 14.01 ms、
+  staging 22.22 ms（median）。比按 pattern 放宽多出的时间来自按名次随机访问节点，构建并导出 ancestry 文本；
+  Tree 保持 source 顺序，与按 pattern 放宽相当。
 - 旧记录的单行更新为 9.161 / 11.469 ms，其中“输入到投影完成”的 8.374 ms 实为连续更新落在发布节奏内的等待：
   同日去掉间隔的对照复现了 9.24 ms，节奏等待占 8.43 ms；孤立更新时输入到 Lua 观察到投影的 median 为 0.19 ms。
 - 全局 sort、压缩链拆合、排序视图单项插入与宽目录 selected-only 变化已没有驱动，旧记录见 git 历史。
