@@ -15,25 +15,32 @@ Grouped List、watch 扫描、Visual 聚合）保留原记录，它们按旧格�
 
 ## 合成投影：`treeview.lua`
 
-`nvim -l __test__/bench/treeview.lua [tree|ancestry]`，使用 release library、附着 UI 与自然 GC；
-当前脚本覆盖 text、selection 与 filter 三条路径，filter 以 `set_display` 切换 pattern，计时不含 consumer 输入 debounce。
+`nvim -l __test__/bench/treeview.lua [tree|ancestry] [processes]`，使用 release library、附着 UI 与自然 GC；
+每个进程是新的子 Neovim，统计量合并全部进程的样本。脚本覆盖无过滤与过滤态的单行更新、selection 与 filter，
+filter 以 `set_display` 在收窄与放宽之间交替，计时不含 consumer 输入 debounce。只改数据的连续发布受
+[8 ms 发布节奏](../../spec/design/treeview/render.md#发布节奏)约束，脚本在两次单行更新之间留出该窗口，测量孤立的一次变化。
 
-2026-10-21：50,001 个 source 节点、50,000 行投影、96-byte label、80×48 UI，每行一个高亮组和右对齐文本；
-display 始终带过滤 pattern `node-`。单行更新、Selection、filter 各 100 次，单进程。
-以下为输入到适用 frame 的 UI flush 延迟（ms）：
+2026-10-22：50,001 个 source 节点、50,000 行投影、96-byte label、80×48 UI，每行一个高亮组和右对齐文本；
+过滤态 pattern 为 `node-`（匹配全部行），filter 在 `node-000`（100 行）与 `node-`（50,000 行）之间切换。
+每条路径每进程 100 次（filter 收窄、放宽各 50 次），5 个进程。以下为 median / p95（ms），发布段从 Lua 请求 RenderPlan
+到 UI flush：
 
-| 路径        | Tree median | Tree p95 | Ancestry median | Ancestry p95 |
-| ----------- | ----------: | -------: | --------------: | -----------: |
-| 单行更新    |       9.161 |   11.469 |           9.334 |       11.992 |
-| Selection   |       2.381 |    3.103 |           2.337 |        4.613 |
-| 全局 filter |      23.891 |   48.659 |          24.135 |       41.720 |
+| 路径                    | Tree 输入到 flush |   Tree 发布段 | Ancestry 输入到 flush | Ancestry 发布段 |
+| ----------------------- | ----------------: | ------------: | --------------------: | --------------: |
+| 单行更新，无过滤        |       1.11 / 3.20 |   0.91 / 2.92 |           1.40 / 2.58 |     1.17 / 2.06 |
+| 单行更新，过滤态        |       1.90 / 4.24 |   1.61 / 3.93 |           1.86 / 4.08 |     1.55 / 3.57 |
+| Selection               |       2.29 / 3.61 |   0.63 / 1.43 |           2.32 / 4.08 |     0.61 / 1.39 |
+| Filter 收窄到 100 行    |      9.29 / 11.43 |   3.38 / 4.92 |         11.30 / 12.95 |     3.34 / 4.57 |
+| Filter 放宽到 50,000 行 |     36.03 / 45.45 | 23.54 / 30.38 |         40.20 / 53.35 |   24.25 / 36.86 |
 
-- 与[性能契约](../../spec/design/treeview/performance.md#延迟口径与目标)的对应：Selection 对应
-  “局部交互到 Frame flush”（p95 ≤ 16 ms）；全局 filter 对应 50,000 驻留候选的 filter/sort 目标（p95 ≤ 50 ms）。
-  单行更新在过滤态下运行，其中输入到投影完成占 8.374 ms（median），plan、staging 与发布刷新合计不足 1 ms；
-  它与“常见局部发布及当前窗口 redraw”（p95 ≤ 8 ms）不是同一口径，无过滤的单行更新没有驱动。
-  同日改动前用同一脚本测得 9.059 / 10.056 ms，本轮改动没有使它变化。
-- 全局 filter 的 p95 在同日三次单进程运行间为 38.4–48.7 ms，100 个样本不足以支持稳定的尾延迟结论。
+- 与[性能契约](../../spec/design/treeview/performance.md#延迟口径与目标)的对应：发布段即 render 的 Lua 发布加 redraw，
+  对应“常见局部发布及当前窗口 redraw”（p95 ≤ 8 ms）；单行更新与 Selection 的输入到 flush 对应“已加载数据上的
+  局部交互到 Frame flush”（p95 ≤ 16 ms）；filter 的输入到 flush 对应 50,000 驻留候选的 filter/sort 目标（p95 ≤ 50 ms）。
+- 放宽到 50,000 行没有稳定达到 50 ms：Ancestry 合并 p95 为 53.35 ms，各进程 p95 为 41.3–63.2 ms；Tree 合并 45.45 ms，
+  各进程 37.9–51.1 ms。尾部主要在 Lua staging（Ancestry median 19.34 / p95 31.30 ms），其次是输入到 Lua 观察到投影
+  （15.95 / 17.70 ms）。同日把等待轮询从 1 ms 放宽到 20 ms 复测 Ancestry，p95 为 49.71 ms，测量 RPC 的影响在进程间波动之内。
+- 旧记录的单行更新为 9.161 / 11.469 ms，其中“输入到投影完成”的 8.374 ms 实为连续更新落在发布节奏内的等待：
+  同日去掉间隔的对照复现了 9.24 ms，节奏等待占 8.43 ms；孤立更新时输入到 Lua 观察到投影的 median 为 0.19 ms。
 - 全局 sort、压缩链拆合、排序视图单项插入与宽目录 selected-only 变化已没有驱动，旧记录见 git 历史。
 
 ## Rust 测量测试：`ux::treeview::perf_tests`
