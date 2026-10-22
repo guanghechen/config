@@ -13,7 +13,26 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 const LIMIT: usize = 50;
+const QUIET: Duration = Duration::from_millis(30);
 const MERGE: Duration = Duration::from_millis(150);
+
+/** When changed nodes are next due: an explicit deadline, or the moment the merging events settle. */
+fn next_due(due: Option<Instant>, merging: Option<(Instant, Instant)>) -> Option<Instant> {
+    due.into_iter()
+        .chain(merging.map(|(_, settled)| settled))
+        .min()
+}
+
+/** When merging changes settle: QUIET after their latest event, at most MERGE after the first. Changes that start
+within MERGE of the previous merged re-read continue that activity and merge for the whole MERGE. */
+fn settled(first: Instant, latest: Instant, merged: Option<Instant>) -> Instant {
+    let quiet = if merged.is_some_and(|at| first < at + MERGE) {
+        MERGE
+    } else {
+        QUIET
+    };
+    (latest + quiet).min(first + MERGE)
+}
 
 #[derive(Clone)]
 struct Target {
@@ -359,6 +378,8 @@ fn run(shared: &Arc<Shared>, dirty: Dirty, data: &WeakDataHandle) -> Result<()> 
     let mut _routing_memory = Charge::new(0);
     let mut changed = BTreeSet::new();
     let mut due = None;
+    let mut merging: Option<(Instant, Instant)> = None;
+    let mut merged: Option<Instant> = None;
     let mut pending: Option<(Ticket, Arc<[NodeId]>)> = None;
     let mut delivery_error = None;
     let mut limited = false;
@@ -452,14 +473,13 @@ fn run(shared: &Arc<Shared>, dirty: Dirty, data: &WeakDataHandle) -> Result<()> 
                     changed.extend(nodes.iter().copied());
                 }
             }
-            due.get_or_insert_with(|| {
-                Instant::now()
-                    + if report.is_some() {
-                        Duration::ZERO
-                    } else {
-                        MERGE
-                    }
-            });
+            let now = Instant::now();
+            if report.is_some() {
+                due.get_or_insert(now);
+            } else {
+                let first = merging.map_or(now, |(first, _)| first);
+                merging = Some((first, settled(first, now, merged)));
+            }
         }
         if let Some((ticket, nodes)) = &pending
             && let Some(outcome) = ticket.poll()
@@ -485,10 +505,17 @@ fn run(shared: &Arc<Shared>, dirty: Dirty, data: &WeakDataHandle) -> Result<()> 
             }
             pending = None;
         }
-        if backend.ready() && pending.is_none() && due.is_some_and(|due| due <= Instant::now()) {
+        if backend.ready()
+            && pending.is_none()
+            && next_due(due, merging).is_some_and(|due| due <= Instant::now())
+        {
             let Some(data) = data.upgrade() else { break };
             let nodes: Arc<[_]> = (0..512).filter_map(|_| changed.pop_first()).collect();
             if !nodes.is_empty() {
+                /* Registration and retry re-reads are not filesystem activity. */
+                if merging.is_some() {
+                    merged = Some(Instant::now());
+                }
                 pending = Some((
                     data.submit(Action::Native(Box::new(Dirtied {
                         nodes: nodes.clone(),
@@ -498,6 +525,7 @@ fn run(shared: &Arc<Shared>, dirty: Dirty, data: &WeakDataHandle) -> Result<()> 
                 ));
             }
             due = (!changed.is_empty()).then(Instant::now);
+            merging = None;
         }
         if backend.ready()
             && let Some(error) = report.take()
@@ -514,7 +542,7 @@ fn run(shared: &Arc<Shared>, dirty: Dirty, data: &WeakDataHandle) -> Result<()> 
         .then_some(Duration::from_millis(10));
         if ready
             && pending.is_none()
-            && let Some(due) = due
+            && let Some(due) = next_due(due, merging)
         {
             let remaining = due.saturating_duration_since(Instant::now());
             timeout = Some(timeout.map_or(remaining, |timeout| timeout.min(remaining)));

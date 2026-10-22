@@ -261,7 +261,9 @@ Treeview owner 分配 NodeId。一个物理资源经 hardlink/symlink 出现在�
   超限时优先入口和当前可见展开目录，其余按最近需求顺序分配；未覆盖目录需要手动/后续重读。
 - FSEvents 普通文件事件只匹配 Trie 中的精确目录及其父目录，不能以 workspace 祖先命中来刷新所有后代。
   目录 create/remove/rename 和 `MustScanSubDirs` 使对应子树内的兴趣失效；历史丢失、根移动或卷变化使已覆盖兴趣全部失效。
-  事件合并窗口仍为 150 ms，每批最多向 owner 交付 512 个 dirty NodeId，目录读取沿用现有并发与排队预算。
+  变化在事件静默 30 ms 后交付，自首个事件起最多等待 150 ms。距上次合并重读不足 150 ms 就开始的变化视为持续活动，
+  合并满 150 ms；注册与重试引起的重读不算活动。孤立变化因此尽快显示，持续变化每 150 ms 至多重读一批。
+  每批最多向 owner 交付 512 个 dirty NodeId，目录读取沿用现有并发与排队预算。
 - `watch_status().roots` 表示实际 OS 监听根数，`directories` 表示已覆盖的物理目录兴趣数，
   `covered` 是这些兴趣关联的逻辑 occurrence NodeId 集合。仅用于订阅的根不计入 `directories`。
   Linux 仅匹配入口名称的父目录辅助监听也不计入 `directories`，仍计入实际 `roots`。
@@ -284,7 +286,7 @@ Treeview owner 分配 NodeId。一个物理资源经 hardlink/symlink 出现在�
   普通任务 effects 保留各自交付，不按 source/watch 的最新版本策略丢弃。
 - Linux watch controller 同时等待 inotify 与 eventfd；订阅变更、关闭及停止写入 eventfd，
   事件在进入等待前发生也不会丢失。沿用一个控制线程，空闲时不做 10 ms 周期轮询。
-  macOS FSEvents callback 唤醒 watch controller，两者仅在 150 ms 合并 deadline 或待完成工作需要检查时定时等待；
+  macOS FSEvents callback 唤醒 watch controller，两者仅在合并 deadline 或待完成工作需要检查时定时等待；
   没有事件时休眠。Windows backend 仍使用原有有界轮询读取平台事件。
   任务仍可在没有 view 时发布结果；同一 source revision 不重复发送 publication acknowledgement。
 - Symlink 浏览按每条逻辑祖先链的目标目录 identity 检测循环，允许非祖先方向的别名访问。
@@ -560,7 +562,7 @@ Treeview 的 cleanup context、成功项清理、授权更新与 Job discovery �
 | 全进程文件任务数                                  | 16，包括排队与等待确认任务                                         |
 | 文件 copy 流式 buffer                             | 每个 Job 最多 1 MiB，按需分配并复用                                |
 | 单 data OS 监听根数                               | 50；macOS 根递归覆盖，Linux/Windows 每目录一个                     |
-| Watch 合并窗口 / 单批 dirty NodeId                | 150 ms / 512                                                       |
+| Watch 合并静默 / 上限 / 单批 dirty NodeId         | 30 ms / 150 ms / 512                                               |
 
 - Dirty/interest 集合按 source NodeId 去重，受 source 容量约束，不无限保留已删除路径。
   错误信息与任务结果包含 bytes 上限，超限报告 ResourceLimit；不以无限字符串或日志旁路预算。
@@ -583,7 +585,7 @@ Treeview 的 cleanup context、成功项清理、授权更新与 Job discovery �
   可让出的 Lua 主线程准备每片以 2 ms 为预算，目录 metadata 不进入主线程。
 - 本地 SSD、缓存预热、50k entries 的宽目录：首批 512 项 flush p95 ≤100 ms，完整首轮 p95 ≤2 s；
   同时报告枚举/stat、对齐、projection、staging 和 UI flush。慢 filesystem 的 IO 单独报告，不删掉完整延迟。
-- 真实 watch 单项变化分别记录 OS 通知、150 ms 合并等待、IO、owner 和 UI；已有 dirty 数据就绪后
+- 真实 watch 单项变化分别记录 OS 通知、合并等待、IO、owner 和 UI；已有 dirty 数据就绪后
   局部发布 p95 ≤16 ms。不能将刻意的合并等待从“文件变化到显示”总延迟中隐藏。
 - 50k / 200k source、单目录 50k entries、至少三个不同 roots/modes 的 states、旧 frame 保留，
   验证 basename rename、目录 rename/reparent、局部插删与 metadata 更新。

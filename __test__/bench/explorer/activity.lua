@@ -249,6 +249,10 @@ local ok, result = xpcall(function()
         ui:rpc("nvim_exec_lua", "bench.begin()", {})
         if scenario == "isolated" then
           for _ = 1, 20 do
+            -- Isolate each rename: a change within 150 ms of the previous re-read continues that activity.
+            vim.wait(200, function()
+              return false
+            end, 5)
             local change = rename()
             assert(
               vim.wait(10000, function()
@@ -326,7 +330,7 @@ local ok, result = xpcall(function()
     memory_measurement = Metrics.memory_description(),
     current = root,
     variant = variant,
-    conditions = "Actual Widget, 110x40 UI, release native module, fresh process per trial; Git/LSP collection disabled. Jobs copy either a 256 MiB sparse file or a directory with 1000 four-byte files; filesystem caches are warm. Watch uses 1000 initial files plus a stable cursor anchor and a visible rename marker, 20 isolated renames, 80 creations/renames 20 ms apart, and a burst of 500 creations. A 5 ms latency timer and parent RPC observation are included in CPU. CPU is percent of one core; main-thread CPU is available on macOS. The final tick-to-completion interval is included in the maximum gap. Continuous events may be coalesced; visible_ms contains only displayed versions, while final_change_ms measures catch-up. Watch phases run in the stated order.",
+    conditions = "Actual Widget, 110x40 UI, release native module, fresh process per trial; Git/LSP collection disabled. Jobs copy either a 256 MiB sparse file or a directory with 1000 four-byte files; filesystem caches are warm. Watch uses 1000 initial files plus a stable cursor anchor and a visible rename marker, 20 isolated renames each after 200 ms without changes, 80 creations/renames 20 ms apart, and a burst of 500 creations. A 5 ms latency timer and parent RPC observation are included in CPU. CPU is percent of one core; main-thread CPU is available on macOS. The final tick-to-completion interval is included in the maximum gap. Continuous events may be coalesced; visible_ms contains only displayed versions, while final_change_ms measures catch-up. Watch phases run in the stated order.",
   }
 end, debug.traceback)
 if ui then

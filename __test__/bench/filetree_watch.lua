@@ -58,6 +58,8 @@ local ok, result = xpcall(function()
   )
   local changes, publications = {}, {}
   for index = 1, iterations do
+    -- Isolate each rename: a change within 150 ms of the previous re-read continues that activity.
+    vim.wait(200)
     ui:rpc("nvim_exec_lua", "pending = {name = ..., started = vim.uv.hrtime()}", { "item-" .. index })
     assert(vim.uv.fs_rename(directory .. "/item-" .. (index - 1), directory .. "/item-" .. index))
     local deadline = vim.uv.hrtime() + 10000000000
@@ -94,5 +96,5 @@ ui:close()
 vim.fn.delete(directory, "rf")
 assert(ok, result)
 io.stdout:write(vim.json.encode(result), "\n")
-local conditions = { iterations = iterations, merge_window_ms = 150, ui = { 80, 24 } }
+local conditions = { iterations = iterations, idle_before_change_ms = 200, ui = { 80, 24 } }
 io.stdout:write("results: ", Record.write("filetree_watch", { conditions = conditions, results = result }), "\n")

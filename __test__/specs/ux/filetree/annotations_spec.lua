@@ -28,7 +28,7 @@ t:test("diagnostics decorate a stable frame and clear by namespace without editi
     else
       stable, stable_frame = nil, nil
     end
-    -- Initial watch events can refresh the source after the 150 ms coalescing window.
+    -- Initial watch events can still refresh the source within the 150 ms watch merge limit.
     return stable and vim.uv.hrtime() - stable >= 250000000
   end, 10000)
   local frame = view:frame()

@@ -451,7 +451,8 @@ fn t_native_watch_coalesces_changes_and_releases_when_view_detaches() {
         fs::write(dir.path().join(name), b"x").unwrap();
     }
     eventually(|| data.source().node(data.root()).unwrap().child_count() == 3);
-    assert!(start.elapsed() >= Duration::from_millis(130));
+    /* The burst waits for its events to settle before one re-read. */
+    assert!(start.elapsed() >= Duration::from_millis(25));
     watching(&data, data.root());
     let a = child(&data, data.root(), "a");
     fs::rename(dir.path().join("a"), dir.path().join("renamed")).unwrap();
@@ -464,6 +465,80 @@ fn t_native_watch_coalesces_changes_and_releases_when_view_detaches() {
     let _view = state.attach().unwrap();
     eventually(|| data.source().node(data.root()).unwrap().child_count() == 4);
     watching(&data, data.root());
+}
+
+#[cfg(any(target_os = "macos", target_os = "linux", windows))]
+#[test]
+fn t_native_watch_publishes_continuous_changes_within_the_merge_limit() {
+    let dir = TempDir::new();
+    let data = request(Filetree::open(dir.path().to_path_buf()));
+    let state = state(&data, Mode::Tree);
+    let _view = state.attach().unwrap();
+    watching(&data, data.root());
+    /* Changes every 10 ms never settle; the first of them still publish within the merge limit. */
+    let start = Instant::now();
+    let mut first_visible = None;
+    let mut written = 0;
+    while start.elapsed() < Duration::from_millis(600) {
+        fs::write(dir.path().join(format!("file-{written:03}")), b"x").unwrap();
+        written += 1;
+        if first_visible.is_none() && data.source().node(data.root()).unwrap().child_count() > 0 {
+            first_visible = Some(start.elapsed());
+        }
+        std::thread::sleep(Duration::from_millis(10));
+    }
+    let first_visible = first_visible.expect("changes published while they continued");
+    assert!(
+        first_visible < Duration::from_millis(400),
+        "{first_visible:?}"
+    );
+    eventually(|| data.source().node(data.root()).unwrap().child_count() == written);
+}
+
+#[cfg(any(target_os = "macos", target_os = "linux", windows))]
+#[test]
+fn t_native_watch_spaces_re_reads_under_periodic_changes() {
+    let dir = TempDir::new();
+    let data = request(Filetree::open(dir.path().to_path_buf()));
+    let state = state(&data, Mode::Tree);
+    let _view = state.attach().unwrap();
+    watching(&data, data.root());
+    /* Changes 50 ms apart settle between events, yet after the first re-read they merge for the whole window. */
+    let start = Instant::now();
+    let (mut revision, mut revisions, mut written) = (data.source().revision(), 0, 0);
+    while start.elapsed() < Duration::from_millis(1000) {
+        if start.elapsed() >= Duration::from_millis(50 * written as u64) {
+            fs::write(dir.path().join(format!("file-{written:03}")), b"x").unwrap();
+            written += 1;
+        }
+        if data.source().revision() != revision {
+            revision = data.source().revision();
+            revisions += 1;
+        }
+        std::thread::sleep(Duration::from_millis(1));
+    }
+    assert!(
+        revisions <= 10,
+        "{revisions} re-reads for {written} changes"
+    );
+    eventually(|| data.source().node(data.root()).unwrap().child_count() == written);
+}
+
+#[test]
+fn t_watch_changes_settle_quietly_unless_activity_continues() {
+    let ms = Duration::from_millis;
+    let first = Instant::now() + ms(1000);
+    /* Changes settle QUIET after their latest event, at most MERGE after the first. */
+    assert_eq!(settled(first, first, None), first + QUIET);
+    assert_eq!(settled(first, first + ms(20), None), first + ms(20) + QUIET);
+    assert_eq!(settled(first, first + ms(140), None), first + MERGE);
+    assert_eq!(settled(first, first, Some(first - MERGE)), first + QUIET);
+    /* Changes that start within MERGE of the previous merged re-read merge for the whole window. */
+    assert_eq!(settled(first, first, Some(first - ms(100))), first + MERGE);
+    assert_eq!(
+        settled(first, first + ms(140), Some(first - ms(1))),
+        first + MERGE
+    );
 }
 
 #[cfg(any(target_os = "macos", target_os = "linux"))]
