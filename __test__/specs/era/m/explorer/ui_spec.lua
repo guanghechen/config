@@ -36,7 +36,7 @@ t:test("cursor movement and unchanged refresh preserve colors without recalculat
     widget = require("era.m.explorer.widget").new({name="cursor-test",root=path})
     widget:focus()
     assert(vim.wait(10000,function()
-      local view = widget._views[vim.api.nvim_get_current_tabpage()]
+      local _, _, view = pcall(widget.context, widget)
       return view and view:frame() and view:frame():header().row_count == 20
     end,1))
     session, view = widget:context()
@@ -148,9 +148,9 @@ t:test("purpose changes repaint all selection markers even when row data is reus
     widget = require("era.m.explorer.widget").new({name="purpose-markers",root=path})
     widget:focus()
     assert(vim.wait(10000, function()
-      local current = widget._views[vim.api.nvim_get_current_tabpage()]
+      local _, current_session, current = pcall(widget.context, widget)
       return current and current:frame() and current:frame():header().row_count == 2
-        and not current._busy and not current._latest and not widget._session.data:native():is_busy()
+        and not current._busy and not current._latest and not current_session.data:native():is_busy()
     end))
     session, view = widget:context()
     ---@param future                    stl.c.Future
@@ -162,10 +162,10 @@ t:test("purpose changes repaint all selection markers even when row data is reus
       assert(result.kind ~= "Rejected", vim.inspect(result))
       return result
     end
-    await(widget._action:mark("copy"))
+    await(widget:action():mark("copy"))
     await(view:set_cursor(2))
     assert(vim.wait(10000, function() return view:frame():header().cursor_row == 2 and not view._busy end))
-    await(widget._action:mark("copy"))
+    await(widget:action():mark("copy"))
     assert(vim.wait(10000, function()
       return session:mode(view:frame()) == "copy" and view:frame():rows(1, 2).marked[2] and not view._busy
     end))
@@ -186,10 +186,10 @@ t:test("purpose changes repaint all selection markers even when row data is reus
       local mode = ...
       local original = view:frame()
       if mode == "cancel" then
-        await(widget._action:cancel_transfer_or_clear_selection())
+        await(widget:action():cancel_transfer_or_clear_selection())
         mode = "select"
       else
-        await(widget._action:mark(mode))
+        await(widget:action():mark(mode))
       end
       assert(vim.wait(10000, function()
         return session:mode(view:frame()) == mode and not view._busy and not view._latest
@@ -291,14 +291,14 @@ t:test("fold keys coexist with which-key and publish names and status together",
       bind(widget, view)
     end
     widget = require("era.m.explorer.widget").new({ name = "fold-test", root = path })
-    local navigate = widget._action.navigate
-    widget._action.navigate = function(self, direction)
+    local navigate = widget:action().navigate
+    widget:action().navigate = function(self, direction)
       navigations = navigations + 1
       return navigate(self, direction)
     end
     widget:focus()
     assert(vim.wait(10000, function()
-      local current = widget._views[vim.api.nvim_get_current_tabpage()]
+      local _, _, current = pcall(widget.context, widget)
       return current and current:frame() and current:frame():header().row_count == 3
     end))
     session, view = widget:context()
@@ -550,7 +550,7 @@ t:test("real UI subscribes to diagnostics and Git ignore with independent name a
     })
     widget:focus()
     assert(vim.wait(10000, function()
-      local view = widget._views[vim.api.nvim_get_current_tabpage()]
+      local _, _, view = pcall(widget.context, widget)
       return view and view:frame() and view:frame():header().row_count == 2
     end))
     session, view = widget:context()
@@ -660,7 +660,7 @@ t:test("real UI subscribes to diagnostics and Git ignore with independent name a
     )
   end, 10000)
   for _, expanded in ipairs({ true, false, true }) do
-    ui:lua("widget._action:activate()")
+    ui:lua("widget:action():activate()")
     ui:wait_until(function()
       ui:rpc("nvim_command", "redraw")
       return ui:lua(

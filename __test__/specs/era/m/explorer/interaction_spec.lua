@@ -37,7 +37,7 @@ t:test("Enter and l open the cursor while explicit open uses and preserves the l
   local widget = fixture.widget(path)
   local session, view = widget:context()
   local a = fixture.cursor(widget, path .. "/a")
-  await(widget._action:mark("copy"))
+  await(widget:action():mark("copy"))
   for _, step in ipairs({ { "l", "b" }, { "o<CR>", "a" }, { "<CR>", "b" } }) do
     widget:focus()
     fixture.cursor(widget, path .. "/b")
@@ -76,7 +76,7 @@ t:test("Visual oa exports its forward or backward range with or without existing
     local session, view = widget:context()
     local a = fixture.cursor(widget, path .. "/a")
     if marked then
-      await(widget._action:mark("copy"))
+      await(widget:action():mark("copy"))
     end
     fixture.cursor(widget, path .. (marked and "/c" or "/b"))
     vim.cmd.normal({ args = { vim.keycode(case.keys) }, bang = true })
@@ -112,7 +112,7 @@ t:test("Visual d captures its range before confirmation and preserves unrelated 
     local session = widget:context()
     local a = fixture.cursor(widget, path .. "/a")
     if marked then
-      await(widget._action:mark("cut"))
+      await(widget:action():mark("cut"))
     end
     fixture.cursor(widget, path .. (marked and "/c" or "/b"))
     vim.cmd.normal({ args = { vim.keycode(case.keys) }, bang = true })
@@ -153,7 +153,7 @@ t:test("Visual copy aliases, cut and toggle apply to their ranges and preserve u
     vim.cmd.normal({ args = { vim.keycode("<Esc>") }, bang = true })
   end)
   local a = fixture.cursor(widget, path .. "/a")
-  await(widget._action:mark("copy"))
+  await(widget:action():mark("copy"))
   for _, case in ipairs({
     { cursor = "b", keys = "v<C-v>j", action = "c", purpose = "copy", count = 3 },
     { cursor = "c", keys = "V<C-v>k", action = "x", purpose = "cut", count = 3 },
@@ -182,7 +182,7 @@ t:test("cancelling Visual delete preserves files and Normal d still consumes the
   local widget = fixture.widget(path)
   local session, view = widget:context()
   local a = fixture.cursor(widget, path .. "/a")
-  await(widget._action:mark("cut"))
+  await(widget:action():mark("cut"))
   fixture.cursor(widget, path .. "/b")
   vim.cmd.normal({ args = { "Vj" }, bang = true })
   t:patch_table(vim.ui, "input", function(options, done)
@@ -216,7 +216,7 @@ t:test("Visual AI and delete treat a directory with its visible child as one sub
   local widget = fixture.widget(path)
   local session, view = widget:context()
   local a = fixture.cursor(widget, path .. "/a")
-  await(widget._action:mark("copy"))
+  await(widget:action():mark("copy"))
   await(widget:reveal(path .. "/dir/file"))
   local child = await(session.data:resolve(path .. "/dir/file"))
   ---@return nil
@@ -266,7 +266,7 @@ for _, published in ipairs({ false, true }) do
     local widget = fixture.widget(path)
     local session, view = widget:context()
     local a = fixture.cursor(widget, path .. "/a")
-    await(widget._action:mark("copy"))
+    await(widget:action():mark("copy"))
     local b = fixture.cursor(widget, path .. "/b")
     t.wait_until(function()
       local frame = view:frame()
@@ -324,7 +324,7 @@ t:test("delete confirmation bounds named prompts and cancellation preserves all 
   local session, view = widget:context()
   fixture.cursor(widget, path .. "/a")
   vim.cmd.normal({ args = { "V6j" }, bang = true })
-  local marked = await(widget._action:mark("copy"))
+  local marked = await(widget:action():mark("copy"))
   t.wait_until(function()
     return session.state:native():applicable(view:frame(), marked.revisions.commit)
   end, 10000)
@@ -338,7 +338,7 @@ t:test("delete confirmation bounds named prompts and cancellation preserves all 
       prompt = options.prompt
       done(nil)
     end)
-    await(widget._action:delete())
+    await(widget:action():delete())
     t.assert_eq(
       (trash and "Trash " or "Permanently delete ") .. '7 items?\n"a"\n"b"\n"c"\n"d"\n"e"\nand 2 more',
       prompt

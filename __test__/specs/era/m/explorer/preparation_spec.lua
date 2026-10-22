@@ -28,7 +28,7 @@ t:test("direct transfers keep their captured source after unrelated browse mater
     local restore = t:patch_table(view, "frame", function()
       return frame
     end)
-    local future = widget._action:transfer(kind)
+    local future = widget:action():transfer(kind)
     restore()
     await(future)
     fixture.idle(widget)
@@ -40,8 +40,8 @@ end)
 
 t:test("read-only selection uses one snapshot across unrelated source updates", function()
   local widget, path = setup()
-  local session = widget._session
-  await(widget._action:mark("copy"))
+  local session = widget:context()
+  await(widget:action():mark("copy"))
   fixture.idle(widget)
   fixture.write(path .. "/branch/new")
   local changed = false
@@ -54,7 +54,7 @@ t:test("read-only selection uses one snapshot across unrelated source updates", 
   t:patch_table(era.fn, "select_copy_filepaths", function(options)
     captured = options.filepaths
   end)
-  await(widget._action:auxiliary("copy_path"))
+  await(widget:action():auxiliary("copy_path"))
   t.assert_true(changed)
   t.assert_same({ path .. "/a" }, captured)
   t.assert_false(session:busy())
@@ -64,7 +64,7 @@ t:test("direct transfers reject selection changes even after the selection becom
   local widget, path = setup()
   local session, view = widget:context()
   local frame = view:frame()
-  await(widget._action:mark("copy"))
+  await(widget:action():mark("copy"))
   await(session.state:clear_selection())
   local prompted = false
   t:patch_table(vim.ui, "input", function()
@@ -73,7 +73,7 @@ t:test("direct transfers reject selection changes even after the selection becom
   local restore = t:patch_table(view, "frame", function()
     return frame
   end)
-  local future = widget._action:transfer("cut")
+  local future = widget:action():transfer("cut")
   restore()
   t.wait_until(function()
     return future:is_done()
@@ -89,7 +89,7 @@ t:test("complete read-only selection coexists with an active job", function()
   local session, view = widget:context()
   fixture.write(path .. "/branch/a")
   local target = await(session.data:resolve(path .. "/branch"))
-  await(widget._action:mark("copy"))
+  await(widget:action():mark("copy"))
   local confirming = false
   t:patch_table(vim.ui, "input", function()
     confirming = true
@@ -102,7 +102,7 @@ t:test("complete read-only selection coexists with an active job", function()
   t:patch_table(era.fn, "select_copy_filepaths", function(options)
     captured = options.filepaths
   end)
-  await(widget._action:auxiliary("copy_path"))
+  await(widget:action():auxiliary("copy_path"))
   t.assert_same({ path .. "/a" }, captured)
   t.assert_true(session.job == job)
   t.assert_nil(session._preparation)
@@ -113,8 +113,8 @@ end)
 
 t:test("cancelling a complete inspection discards its late snapshot without a task", function()
   local widget = setup()
-  local session = widget._session
-  await(widget._action:mark("copy"))
+  local session = widget:context()
+  await(widget:action():mark("copy"))
   local pending, resolve = stl.c.Future.new_with_resolver()
   local waiting = false
   fixture.interject({ "Inspected" }, function()
@@ -125,7 +125,7 @@ t:test("cancelling a complete inspection discards its late snapshot without a ta
   t:patch_table(era.fn, "select_copy_filepaths", function(options)
     captured = options.filepaths
   end)
-  local future = widget._action:auxiliary("copy_path")
+  local future = widget:action():auxiliary("copy_path")
   t.wait_until(function()
     return waiting
   end, 10000)

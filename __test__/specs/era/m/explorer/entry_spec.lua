@@ -42,7 +42,7 @@ t:test("the default Explorer entry opens native panes and retains state across h
   entry.focus()
   await(widget._ready)
   t.wait_until(function()
-    local view = widget._views[vim.api.nvim_get_current_tabpage()]
+    local _, view = fixture.context(widget)
     return view and view:frame() and view:frame():header().row_count == 1
   end, 10000)
   local session, view = widget:context()
@@ -52,7 +52,7 @@ t:test("the default Explorer entry opens native panes and retains state across h
   t.assert_false(widget:isvisible())
   entry.reveal(path .. "/file")
   t.wait_until(function()
-    local current = widget._views[vim.api.nvim_get_current_tabpage()]
+    local _, current = fixture.context(widget)
     return current and current:frame() and current:frame():header().row_count == 1
   end, 10000)
   t.assert_eq(id, widget:context().state:snapshot():header().state_id)

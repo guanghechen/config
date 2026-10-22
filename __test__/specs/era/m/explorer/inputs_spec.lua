@@ -33,7 +33,7 @@ t:test("reopening a retained data source withdraws diagnostics cleared while uns
   local first = fixture.widget(path)
   vim.diagnostic.set(namespace, bufnr, { { lnum = 0, col = 0, message = "error", severity = 1 } })
   displayed(first, 1)
-  local data = first._session.data
+  local data = first:context().data
   first:dispose()
   vim.diagnostic.reset(namespace, bufnr)
   local second = fixture.widget(path, { data = data })
@@ -73,9 +73,9 @@ t:test("shared data publishes watch coverage to every session and reconnects aft
   local path = t:tempdir()
   fixture.write(path .. "/a")
   local first = fixture.widget(path)
-  local data = first._session.data
+  local data = first:context().data
   local second = fixture.widget(path, { data = data })
-  local one, two = first._session, second._session
+  local one, two = (first:context()), (second:context())
   t.assert_eq(one._subscriptions, two._subscriptions)
   -- Initial zero snapshots are separate reads; hide must be checked after actual coverage was published.
   t.wait_until(function()
@@ -99,7 +99,7 @@ t:test("shared data publishes watch coverage to every session and reconnects aft
   end, 10000)
   local third = fixture.widget(path, { data = data })
   t.wait_until(function()
-    return third._session.watch.directories > 0
+    return third:context().watch.directories > 0
   end, 10000)
 end)
 
@@ -108,7 +108,7 @@ t:test("Busy diagnostic and Git inputs are retried without another editor event"
   fixture.write(path .. "/a")
   local bufnr, namespace = diagnostic(path .. "/a")
   local widget = fixture.widget(path)
-  local session = widget._session
+  local session = widget:context()
   t.wait_until(function()
     return not session._subscriptions._running
   end, 10000)
@@ -140,7 +140,7 @@ t:test("disposing during ignore preload cannot publish a late Git input", functi
   local path = t:tempdir()
   fixture.write(path .. "/a")
   local widget = fixture.widget(path)
-  local session = widget._session
+  local session = widget:context()
   local controller, data = session._subscriptions, session.data
   t.wait_until(function()
     return not controller._running and not data:native():is_busy()
@@ -214,7 +214,7 @@ t:test("filesystem publications refresh Git without selection or annotation feed
   end, 10000, "Git annotations must not feed back into filesystem refresh")
   local revision = session.data:source():revision()
   before = refreshes
-  await(widget._action:mark("copy"))
+  await(widget:action():mark("copy"))
   local bufnr, namespace = diagnostic(path .. "/a")
   vim.diagnostic.set(namespace, bufnr, { { lnum = 0, col = 0, message = "error", severity = 1 } })
   displayed(widget, 1)
@@ -239,15 +239,15 @@ t:test("partial IO refreshes Git after the last pane and subscription are dispos
   local widget = fixture.widget(path)
   fixture.cursor(widget, path .. "/a")
   vim.cmd.normal({ args = { "Vj" }, bang = true })
-  await(widget._action:mark("copy"))
+  await(widget:action():mark("copy"))
   fixture.cursor(widget, path .. "/dest")
   local confirmation
   t:patch_table(vim.ui, "input", function(options, done)
     t.assert_eq("confirmation", options.inputtype)
     confirmation = done
   end)
-  local job = await(widget._action:operate({ kind = "paste" }))
-  local session = widget._session
+  local job = await(widget:action():operate({ kind = "paste" }))
+  local session = widget:context()
   t:defer(function()
     if session.job then
       job:cancel()

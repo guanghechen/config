@@ -64,11 +64,11 @@ local function run()
   widget:focus()
   await(widget._ready)
   await(widget:reveal(ignored))
-  local session = widget._session
+  local session = widget:context()
   local resource = await(session.data:resolve(ignored))
   assert(
     vim.wait(10000, function()
-      local view = widget._views[vim.api.nvim_get_current_tabpage()]
+      local _, _, view = pcall(widget.context, widget)
       if not view or not view:frame() then
         return false
       end

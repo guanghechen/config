@@ -64,7 +64,7 @@ t:test("ancestor rename preserves identity while invalidating full-path filetype
   local previous_row = view:frame():position(resource:node())
   t.assert_eq(stl.fileicon.get_filetype_icon("rust"), before.icons[previous_row][1])
   fixture.cursor(widget, path .. "/before")
-  await(widget._action:operate({ kind = "rename", name = "after" }))
+  await(widget:action():operate({ kind = "rename", name = "after" }))
   fixture.idle(widget)
   local current = await(session.data:resolve(path .. "/after/sample"))
   t.assert_eq(resource:node(), current:node(), "the cache must detect ancestor changes without a new leaf NodeId")
@@ -155,7 +155,7 @@ t:test("real scrolling and theme changes prepare icons outside redraw without re
       glyph, queries, drawn, empty_redraws = "A", 0, {}, 0
       stl.fileicon.get_file_icon = function()
         assert(not drawing, "filetype icons were resolved during redraw")
-        local view = widget and widget._views[vim.api.nvim_get_current_tabpage()]
+        local view = widget and select(3, pcall(widget.context, widget))
         if view and view:frame() and view:frame():header().row_count == 0 then
           empty_redraws = empty_redraws + 1
           vim.cmd.redraw()
@@ -174,7 +174,7 @@ t:test("real scrolling and theme changes prepare icons outside redraw without re
       widget = require("era.m.explorer.widget").new({ name = "viewport-icons", root = path })
       widget:focus()
       assert(vim.wait(10000, function()
-        local view = widget._views[vim.api.nvim_get_current_tabpage()]
+        local _, _, view = pcall(widget.context, widget)
         return view and view:frame() and view:frame():header().row_count == 0 and not view:status().preparing
       end, 1))
       for index = 1, 100 do
@@ -182,7 +182,7 @@ t:test("real scrolling and theme changes prepare icons outside redraw without re
       end
       widget:refresh()
       assert(vim.wait(10000, function()
-        local view = widget._views[vim.api.nvim_get_current_tabpage()]
+        local _, _, view = pcall(widget.context, widget)
         return view and view:frame() and view:frame():header().row_count == 100 and not view:status().preparing
       end, 1))
       session, view = widget:context()

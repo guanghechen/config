@@ -8,7 +8,7 @@ local t = fixture.t
 ---@return nil
 local function root_is(widget, path)
   t.wait_until(function()
-    return widget._session and widget:get_root_filepath() == path and next(widget._views) ~= nil
+    return fixture.context(widget) ~= nil and widget:get_root_filepath() == path
   end, 10000)
   fixture.idle(widget)
 end
@@ -33,8 +33,8 @@ t:test("cold focus_cwd keeps the constructor workspace as the gw destination", f
   entry.focus_cwd()
   local widget = entry.get_widget()
   root_is(widget, path .. "/sub")
-  t.assert_eq(path, widget._session.native:workspace_path())
-  fixture.await(widget._action:root("workspace"))
+  t.assert_eq(path, widget:context().native:workspace_path())
+  fixture.await(widget:action():root("workspace"))
   root_is(widget, path)
 end)
 
@@ -49,12 +49,12 @@ t:test("a missing constructor workspace does not block another root and can be r
   end)
   fixture.await(widget:set_root(target))
   root_is(widget, target)
-  t.assert_eq(workspace, widget._session.native:workspace_path())
-  t.assert_nil(widget._session.native:workspace())
+  t.assert_eq(workspace, widget:context().native:workspace_path())
+  t.assert_nil(widget:context().native:workspace())
   t.assert_eq(nil, widget._open_error)
   assert(vim.uv.fs_mkdir(workspace, 448))
   fixture.write(workspace .. "/restored")
-  fixture.await(widget._action:root("workspace"))
+  fixture.await(widget:action():root("workspace"))
   root_is(widget, workspace)
 end)
 
@@ -77,14 +77,14 @@ t:test("an observed workspace keeps its resolved path after obsolete parent comp
       widget:focus()
       fixture.await(widget._ready)
     end
-    local workspace = widget._session:root():path()
+    local workspace = widget:context():root():path()
     root_is(widget, workspace)
-    t.assert_true(widget._session.native:workspace() ~= nil)
-    t.assert_eq(workspace, widget._session.native:workspace_path())
+    t.assert_true(widget:context().native:workspace() ~= nil)
+    t.assert_eq(workspace, widget:context().native:workspace_path())
     fixture.await(widget:set_root(path .. "/other"))
     root_is(widget, path .. "/other")
     assert(vim.uv.fs_rmdir(path .. "/unused"))
-    fixture.await(widget._action:root("workspace"))
+    fixture.await(widget:action():root("workspace"))
     root_is(widget, workspace)
   end
 end)
@@ -114,14 +114,14 @@ t:test("cold child replacement retains a workspace observed through filesystem p
     end)
     fixture.await(widget:set_root(input .. "/sub"))
     root_is(widget, prefix .. "/workspace/sub")
-    t.assert_true(widget._session.native:workspace() ~= nil)
-    t.assert_eq(prefix .. "/workspace", widget._session.native:workspace_path())
+    t.assert_true(widget:context().native:workspace() ~= nil)
+    t.assert_eq(prefix .. "/workspace", widget:context().native:workspace_path())
     if linked then
       assert(vim.uv.fs_unlink(path .. "/unused"))
     else
       assert(vim.uv.fs_rmdir(path .. "/unused"))
     end
-    fixture.await(widget._action:root("workspace"))
+    fixture.await(widget:action():root("workspace"))
     root_is(widget, prefix .. "/workspace")
   end
 end)
@@ -143,8 +143,8 @@ t:test("parent traversal after a child symlink cannot rebind workspace to an ext
   end)
   fixture.await(widget:set_root(path .. "/workspace/link/../other"))
   root_is(widget, path .. "/outside/other")
-  t.assert_eq(path .. "/workspace", widget._session.native:workspace_path())
-  fixture.await(widget._action:root("workspace"))
+  t.assert_eq(path .. "/workspace", widget:context().native:workspace_path())
+  fixture.await(widget:action():root("workspace"))
   root_is(widget, path .. "/workspace")
 end)
 
@@ -175,7 +175,7 @@ t:test("replacement roots discard queued navigation and late opening completion"
     widget:set_root(path .. "/one")
     fixture.await(widget:set_root(path .. "/two"))
     root_is(widget, path .. "/two")
-    local session = widget._session
+    local session = widget:context()
     local navigation_calls = 0
     if success then
       local obsolete = fixture.await(open(path, widget:get_display(), nil, path))
@@ -192,7 +192,7 @@ t:test("replacement roots discard queued navigation and late opening completion"
     end
     fixture.await(reveal)
     t.assert_eq(0, navigation_calls, "obsolete opening must not receive queued navigation")
-    t.assert_eq(session, widget._session)
+    t.assert_eq(session, (widget:context()))
     t.assert_eq(path, session.native:workspace_path())
     t.assert_eq(nil, widget._open_error)
     root_is(widget, path .. "/two")
@@ -206,12 +206,12 @@ t:test("a shared-data workspace renamed after resolution retains its observed oc
   fixture.write(path .. "/child/file")
   local owner = fixture.widget(path)
   fixture.cursor(owner, path .. "/child")
-  local data = owner._session.data
+  local data = owner:context().data
   local create_state, moved = data.create_state, false
   t:patch_table(data, "create_state", function(self, root, display)
     if not moved then
       moved = true
-      fixture.await(owner._action:operate({ kind = "rename", name = "renamed" }))
+      fixture.await(owner:action():operate({ kind = "rename", name = "renamed" }))
       fixture.idle(owner)
       t.assert_true(vim.uv.fs_stat(path .. "/renamed") ~= nil)
     end
@@ -224,11 +224,11 @@ t:test("a shared-data workspace renamed after resolution retains its observed oc
   widget:focus()
   fixture.await(widget._ready)
   root_is(widget, path .. "/renamed")
-  t.assert_true(widget._session.native:workspace() ~= nil)
-  t.assert_eq(path .. "/renamed", widget._session.native:workspace_path())
+  t.assert_true(widget:context().native:workspace() ~= nil)
+  t.assert_eq(path .. "/renamed", widget:context().native:workspace_path())
   fixture.await(widget:set_root(path))
   root_is(widget, path)
-  fixture.await(widget._action:root("workspace"))
+  fixture.await(widget:action():root("workspace"))
   root_is(widget, path .. "/renamed")
 end)
 
@@ -239,28 +239,28 @@ t:test("custom roots and shared data fix their own workspace while a shared sess
     fixture.write(path .. "/" .. name .. "/file")
   end
   local owner = fixture.widget(path .. "/custom")
-  local shared = Widget.new({ name = "shared-workspace", root = path, session = owner._session })
+  local shared = Widget.new({ name = "shared-workspace", root = path, session = (owner:context()) })
   t:defer(function()
     shared:dispose()
   end)
   fixture.await(shared:set_root(path .. "/destination"))
   root_is(shared, path .. "/destination")
-  t.assert_eq(owner._session, shared._session)
-  t.assert_eq(path .. "/custom", shared._session.native:workspace_path())
+  t.assert_eq((owner:context()), (shared:context()))
+  t.assert_eq(path .. "/custom", shared:context().native:workspace_path())
 
   local independent = Widget.new({
     name = "independent-workspace",
     root = path .. "/independent",
-    data = owner._session.data,
+    data = owner:context().data,
   })
   t:defer(function()
     independent:dispose()
   end)
   fixture.await(independent:set_root(path .. "/destination"))
   root_is(independent, path .. "/destination")
-  t.assert_eq(path .. "/independent", independent._session.native:workspace_path())
-  t.assert_eq(path .. "/custom", owner._session.native:workspace_path())
-  fixture.await(independent._action:root("workspace"))
+  t.assert_eq(path .. "/independent", independent:context().native:workspace_path())
+  t.assert_eq(path .. "/custom", owner:context().native:workspace_path())
+  fixture.await(independent:action():root("workspace"))
   root_is(independent, path .. "/independent")
 end)
 
@@ -308,7 +308,7 @@ t:test("one failed opening reports once across views, display changes and reveal
   fixture.write(path .. "/file")
   fixture.await(widget:refresh())
   t.wait_until(function()
-    local view = widget._views[tabnr]
+    local _, view = fixture.context(widget)
     return view and view:frame() and view:frame():header().row_count == 1
   end, 10000)
   t.assert_eq(2, #reports)
@@ -346,7 +346,7 @@ t:test("late opening failures cannot report or reclaim a newer opening or dispos
     else
       fixture.await(widget:set_root(path))
       t.wait_until(function()
-        local view = widget._views[vim.api.nvim_get_current_tabpage()]
+        local _, view = fixture.context(widget)
         return view and view:frame()
       end, 10000)
     end

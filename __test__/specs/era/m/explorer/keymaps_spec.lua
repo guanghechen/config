@@ -147,8 +147,8 @@ t:test("a rejected mark is reported once and late replies do not reopen a dispos
   end, 10000)
   t.assert_eq(before + 1, #fixture.messages)
   await(task:unlock())
-  local first = widget._action:mark("select")
-  local second = widget._action:mark("select")
+  local first = widget:action():mark("select")
+  local second = widget:action():mark("select")
   widget:dispose()
   await(first)
   await(second)
@@ -199,7 +199,7 @@ t:test("double Escape cancels transfer before clearing selection and handles que
   widget:focus()
   for _, purpose in ipairs({ "copy", "cut" }) do
     local a = fixture.cursor(widget, path .. "/a")
-    await(widget._action:mark(purpose))
+    await(widget:action():mark(purpose))
     selected(widget, purpose, 1)
     local revision = view:frame():header().selection_revision
     fixture.cursor(widget, path .. "/b")
@@ -228,7 +228,7 @@ t:test("double Escape preserves a locked transfer instead of cancelling its task
   local widget = fixture.widget(path)
   local session = widget:context()
   fixture.cursor(widget, path .. "/a")
-  await(widget._action:mark("copy"))
+  await(widget:action():mark("copy"))
   selected(widget, "copy", 1)
   local task = await(session.state:lock_selection())
   t:defer(function()
@@ -252,7 +252,7 @@ t:test("accepting the copy default duplicates the cursor file and cut uses the s
   end)
   fixture.cursor(widget, path .. "/a.lua")
   selected(widget, nil, 0)
-  await(widget._action:transfer("copy"))
+  await(widget:action():transfer("copy"))
   fixture.idle(widget)
   t.assert_true(vim.uv.fs_stat(path .. "/a-copy.lua") ~= nil)
   t.assert_true(vim.uv.fs_stat(path .. "/a.lua") ~= nil)
@@ -261,7 +261,7 @@ t:test("accepting the copy default duplicates the cursor file and cut uses the s
   end)
   fixture.cursor(widget, path .. "/a.lua")
   selected(widget, nil, 0)
-  await(widget._action:transfer("cut"))
+  await(widget:action():transfer("cut"))
   fixture.idle(widget)
   t.assert_nil(vim.uv.fs_stat(path .. "/a.lua"))
   t.assert_true(vim.uv.fs_stat(path .. "/moved.lua") ~= nil)
@@ -288,7 +288,7 @@ t:test("a queued selection change cannot turn a cursor path operation into a sel
     prompted = true
     done(nil)
   end)
-  local future = widget._action:transfer("copy")
+  local future = widget:action():transfer("copy")
   t.wait_until(function()
     return future:is_done()
   end, 10000)
@@ -394,7 +394,7 @@ t:test("leader toggle wins over the Space menu with separately typed keys and af
     entry.focus()
     widget = entry.get_widget()
     assert(vim.wait(10000, function()
-      local current = widget._views[vim.api.nvim_get_current_tabpage()]
+      local _, _, current = pcall(widget.context, widget)
       return current and current:frame() and current:frame():header().row_count == 1
     end))
   ]=],
@@ -425,7 +425,7 @@ t:test("leader toggle wins over the Space menu with separately typed keys and af
       return ui:lua(
         [=[
         local expected = ...
-        local view = widget._views[vim.api.nvim_get_current_tabpage()]
+        local _, _, view = pcall(widget.context, widget)
         return toggles == expected and view and view:frame() and view:frame():header().row_count == 1
       ]=],
         cycle * 2

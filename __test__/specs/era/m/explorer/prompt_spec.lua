@@ -43,8 +43,9 @@ local function open_ui(names)
     widget = require("era.m.explorer.widget").new({ name = "compact-prompt", root = path })
     widget:focus()
     assert(vim.wait(10000, function()
-      session, view = widget._session, widget._views[vim.api.nvim_get_current_tabpage()]
-      return session and view and view:frame() and view:frame():header().row_count == count
+      local ok
+      ok, session, view = pcall(widget.context, widget)
+      return ok and view:frame() and view:frame():header().row_count == count
         and not session.data:native():is_busy() and session.state:native():applicable(view:frame())
     end, 1))
   ]],
@@ -100,7 +101,7 @@ end
 t:test("single-file deletion uses one input line with y, n, Escape and default No", function()
   local context = open_ui({ "b.rs" })
   for _, keys in ipairs({ "<CR>", "n", "<Esc>", "y" }) do
-    context.ui:lua("widget:focus(); deleting = widget._action:delete()")
+    context.ui:lua("widget:focus(); deleting = widget:action():delete()")
     local popup = dialog(context)
     t.assert_eq(1, popup.height)
     t.assert_true(popup.width <= 80)
@@ -118,7 +119,7 @@ t:test("multiple delete targets stay readable in a content-sized confirmation", 
   local names = { "customer-export-alpha.csv", "customer-export-beta.csv", "customer-export-gamma.csv" }
   local context = open_ui(names)
   context.ui:lua(
-    'vim.api.nvim_win_set_cursor(view.winnr, {1, 0}); vim.cmd.normal({args={"V2j"}, bang=true}); deleting = widget._action:delete()'
+    'vim.api.nvim_win_set_cursor(view.winnr, {1, 0}); vim.cmd.normal({args={"V2j"}, bang=true}); deleting = widget:action():delete()'
   )
   local popup = dialog(context)
   t.assert_eq(4, popup.height)
@@ -148,7 +149,7 @@ t:test("a long Unicode delete target wraps inside a bounded confirmation", funct
   local name = string.rep("界", 80) .. ".txt"
   local context = open_ui({ name })
   context.ui:rpc("nvim_ui_try_resize", 80, 24)
-  context.ui:lua("deleting = widget._action:delete()")
+  context.ui:lua("deleting = widget:action():delete()")
   local popup = dialog(context)
   t.assert_true(popup.width <= 76)
   t.assert_true(popup.height > 1 and popup.height <= 8)
@@ -163,7 +164,7 @@ t:test("overwrite shows source and target without a picker and defaults to Skip"
   local context = open_ui({ "a.txt", "b.txt" })
   for _, keys in ipairs({ "<CR>", "y" }) do
     context.ui:lua(
-      'local path = ...; copying = widget._action:operate({ kind = "copy_to_path", path = path .. "/b.txt"})',
+      'local path = ...; copying = widget:action():operate({ kind = "copy_to_path", path = path .. "/b.txt"})',
       context.path
     )
     local popup = dialog(context)
@@ -204,14 +205,14 @@ end)
 
 t:test("create input shows the current directory prefix and accepts normal append editing", function()
   local context = open_ui({ "folder/", "placeholder.txt" })
-  context.ui:lua("creating = widget._action:create(false)")
+  context.ui:lua("creating = widget:action():create(false)")
   local popup = dialog(context)
   t.assert_eq(1, popup.height)
   t.assert_eq("folder/", popup.lines[1])
   answer(context, "<CR>")
   t.assert_eq(nil, vim.uv.fs_stat(context.path .. "/folder/child.txt"))
 
-  context.ui:lua("creating = widget._action:create(false)")
+  context.ui:lua("creating = widget:action():create(false)")
   popup = dialog(context)
   t.assert_eq("folder/", popup.lines[1])
   context.ui:rpc("nvim_input", "Achild.txt<CR>")
@@ -227,7 +228,7 @@ end)
 
 t:test("a newline in the create parent keeps a usable input and the original directory target", function()
   local context = open_ui({ "a\nb/", "placeholder.txt" })
-  context.ui:lua("creating = widget._action:create(false)")
+  context.ui:lua("creating = widget:action():create(false)")
   local popup = dialog(context)
   t.assert_eq(1, popup.height)
   t.assert_eq("", popup.lines[1])

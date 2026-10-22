@@ -13,7 +13,7 @@ t:test("real panes use native Filetree, switch Tree/List, and preserve state acr
   t.assert_eq("explorer", vim.api.nvim_get_option_value("filetype", { buf = view.bufnr }))
   t.assert_eq("", vim.api.nvim_get_option_value("statuscolumn", { win = view.winnr }))
   fixture.cursor(widget, path .. "/a")
-  await(widget._action:mark("copy"))
+  await(widget:action():mark("copy"))
   t.wait_until(function()
     return session:mode(view:frame()) == "copy"
   end, 10000)
@@ -29,7 +29,7 @@ t:test("real panes use native Filetree, switch Tree/List, and preserve state acr
   t.assert_false(widget:isvisible())
   widget:focus()
   t.wait_until(function()
-    local current = widget._views[vim.api.nvim_get_current_tabpage()]
+    local _, current = fixture.context(widget)
     return current and current:frame() and current:frame():header().row_count == 3
   end, 10000)
   local _, reopened = widget:context()
@@ -49,7 +49,7 @@ t:test("reveal expands a nested file and root navigation retains selection", fun
   write(path .. "/a")
   local widget = fixture.widget(path)
   fixture.cursor(widget, path .. "/a")
-  await(widget._action:mark("cut"))
+  await(widget:action():mark("cut"))
   local revealed = await(widget:reveal(path .. "/sub/file"))
   t.assert_eq("Applied", revealed and revealed.kind, table.concat(fixture.messages, "\n"))
   local session, view = widget:context()
@@ -62,7 +62,7 @@ t:test("reveal expands a nested file and root navigation retains selection", fun
   t.wait_until(function()
     return session:root(view:frame()):path() == path .. "/sub"
   end, 10000)
-  await(widget._action:root("previous"))
+  await(widget:action():root("previous"))
   t.wait_until(function()
     return session:root(view:frame()):path() == path
   end, 10000)
@@ -73,14 +73,14 @@ t:test("shared data keeps independent states and subscriptions survive the first
   local path = t:tempdir()
   write(path .. "/a")
   local first = fixture.widget(path)
-  local shared = first._session.data
+  local shared = first:context().data
   fixture.cursor(first, path .. "/a")
-  await(first._action:mark("copy"))
+  await(first:action():mark("copy"))
   local second = fixture.widget(path, { data = shared })
   local session, view = second:context()
-  t.assert_true(session.state:snapshot():header().state_id ~= first._session.state:snapshot():header().state_id)
+  t.assert_true(session.state:snapshot():header().state_id ~= first:context().state:snapshot():header().state_id)
   t.assert_eq(nil, session:mode(view:frame()))
-  t.assert_eq(first._session._subscriptions, session._subscriptions)
+  t.assert_eq(first:context()._subscriptions, session._subscriptions)
   first:dispose()
   local bufnr = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_name(bufnr, path .. "/a")
@@ -116,7 +116,7 @@ t:test("reveal synchronizes display flags and later toggles preserve the reveale
   local widget = fixture.widget(path)
   widget:toggle_flag(4)
   t.wait_until(function()
-    return widget._session.state:display().show_hidden == false
+    return widget:context().state:display().show_hidden == false
   end, 10000)
   await(widget:reveal(path .. "/.hidden"))
   t.wait_until(function()
@@ -124,10 +124,10 @@ t:test("reveal synchronizes display flags and later toggles preserve the reveale
   end, 10000)
   widget:toggle_flag(2)
   t.wait_until(function()
-    return widget._session.state:display().mode == "list"
+    return widget:context().state:display().mode == "list"
   end, 10000)
-  t.assert_true(widget._session.state:display().show_hidden)
-  t.assert_eq("ancestry", widget._session.state:display().list_text)
+  t.assert_true(widget:context().state:display().show_hidden)
+  t.assert_eq("ancestry", widget:context().state:display().list_text)
   widget:toggle_flag(4)
   t.wait_until(function()
     return not widget:show_hidden() and not widget._display_scheduled
@@ -145,11 +145,11 @@ t:test("concurrent shared-session flag changes retain both partial updates", fun
   write(path .. "/a")
   write(path .. "/.hidden")
   local first = fixture.widget(path)
-  local second = fixture.widget(path, { session = first._session })
+  local second = fixture.widget(path, { session = (first:context()) })
   first:toggle_flag(2)
   second:toggle_flag(4)
   t.wait_until(function()
-    local display = first._session.state:display()
+    local display = first:context().state:display()
     return display.mode == "list"
       and not display.show_hidden
       and first:get_display().mode == "list"
@@ -165,7 +165,7 @@ t:test("sharing flag observables cannot turn native display acknowledgements int
     write(path .. "/a")
     local first = fixture.widget(path)
     local second = fixture.widget(path, {
-      session = first._session,
+      session = (first:context()),
       o_flag_selected = first._options[1],
       o_flag_viewtype = first._options[2],
       o_flag_foldempty = first._options[3],
@@ -193,16 +193,16 @@ t:test("a removed root can navigate to its parent and a recreated workspace", fu
   local widget = fixture.widget(path)
   assert(vim.uv.fs_rmdir(path))
   t.wait_until(function()
-    return widget._session._root_error == true
+    return widget:context()._root_error == true
   end, 10000)
-  await(widget._action:root("parent"))
+  await(widget:action():root("parent"))
   local session, view = widget:context()
   t.wait_until(function()
     local frame = view:frame()
     return frame:source():node(frame:header().root.node) ~= nil and session:root(frame):path() == base
   end, 10000)
   assert(vim.uv.fs_mkdir(path, 448))
-  await(widget._action:root("workspace"))
+  await(widget:action():root("workspace"))
   t.wait_until(function()
     return session:root(view:frame()):path() == path
   end, 10000)
@@ -243,16 +243,17 @@ t:test("hide and reopen release every Explorer buffer identity", function()
   end
   local widget = fixture.widget(path)
   for _ = 1, 10 do
+    local session = widget:context()
     widget:hide()
     t.wait_until(function()
-      return widget._session.data:watch_status().directories == 0
+      return session.data:watch_status().directories == 0
     end, 10000)
     for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
       t.assert_true(before[bufnr], "orphan buffer after hide: " .. vim.api.nvim_buf_get_name(bufnr))
     end
     widget:focus()
     t.wait_until(function()
-      local view = widget._views[vim.api.nvim_get_current_tabpage()]
+      local _, view = fixture.context(widget)
       return view and view:frame() and view:frame():header().row_count == 1
     end, 10000)
   end

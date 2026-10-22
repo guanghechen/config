@@ -5,7 +5,7 @@ local t, await, write = fixture.t, fixture.await, fixture.write
 ---@param mark                          string
 ---@return nil
 local function mark(widget, mark)
-  local result = await(widget._action:mark(mark))
+  local result = await(widget:action():mark(mark))
   local session, view = widget:context()
   if result.revisions then
     t.wait_until(function()
@@ -41,7 +41,7 @@ t:test("paste consumes selected sources and successful cleanup exits copy mode",
   fixture.cursor(widget, path .. "/a")
   mark(widget, "copy")
   fixture.cursor(widget, path .. "/dest")
-  await(widget._action:operate({ kind = "paste" }))
+  await(widget:action():operate({ kind = "paste" }))
   fixture.idle(widget)
   t.assert_true(vim.uv.fs_stat(path .. "/dest/a") ~= nil)
   t.assert_true(vim.uv.fs_stat(path .. "/a") ~= nil)
@@ -62,9 +62,9 @@ t:test("paste uses the committed purpose when cut is submitted before the frame 
   fixture.cursor(widget, path .. "/a")
   mark(widget, "copy")
   local frame = view:frame()
-  local changed = widget._action:mark("cut")
+  local changed = widget:action():mark("cut")
   vim.api.nvim_win_set_cursor(view.winnr, { frame:position(destination:node()), 0 })
-  local pasted = widget._action:operate({ kind = "paste" })
+  local pasted = widget:action():operate({ kind = "paste" })
   await(changed)
   await(pasted)
   fixture.idle(widget)
@@ -86,7 +86,7 @@ t:test("rename preserves a modified buffer and delete leaves that buffer alive",
   end)
   local widget = fixture.widget(path)
   fixture.cursor(widget, path .. "/a")
-  await(widget._action:operate({ kind = "rename", name = "renamed" }))
+  await(widget:action():operate({ kind = "rename", name = "renamed" }))
   fixture.idle(widget)
   t.assert_eq(vim.uv.fs_realpath(path .. "/renamed"), vim.api.nvim_buf_get_name(bufnr))
   t.assert_eq("unsaved content", vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)[1])
@@ -96,7 +96,7 @@ t:test("rename preserves a modified buffer and delete leaves that buffer alive",
     t.assert_eq("confirmation", options.inputtype)
     done("y")
   end)
-  await(widget._action:delete())
+  await(widget:action():delete())
   fixture.idle(widget)
   t.assert_eq(nil, vim.uv.fs_stat(path .. "/renamed"))
   t.assert_true(vim.api.nvim_buf_is_valid(bufnr))
@@ -109,7 +109,7 @@ t:test("accepting Rename's default preserves a native Unix name containing a bac
   end
   local path, name = t:tempdir(), "a\\b"
   local widget = fixture.widget(path)
-  await(widget._action:operate({ kind = "create", path = name }))
+  await(widget:action():operate({ kind = "create", path = name }))
   fixture.idle(widget)
   write(path .. "/" .. name)
   fixture.cursor(widget, path .. "/" .. name)
@@ -118,7 +118,7 @@ t:test("accepting Rename's default preserves a native Unix name containing a bac
     default = options.default
     done(default)
   end)
-  await(widget._action:operate({ kind = "rename" }))
+  await(widget:action():operate({ kind = "rename" }))
   fixture.idle(widget)
   t.assert_eq(name, default)
   t.assert_eq(nil, vim.uv.fs_stat(path .. "/b"))
@@ -141,16 +141,16 @@ t:test("a pending conflict survives closing the pane and cancellation preserves 
   t:patch_table(vim.ui, "input", function(_, done)
     confirmation = done
   end)
-  local job = await(widget._action:operate({ kind = "paste" }))
+  local job = await(widget:action():operate({ kind = "paste" }))
   t.wait_until(function()
     return confirmation ~= nil and job:status().confirmation ~= nil
   end, 10000)
-  local session = widget._session
+  local session = widget:context()
   widget:hide()
   t.assert_false(job:status().terminal)
   widget:focus()
   t.wait_until(function()
-    local view = widget._views[vim.api.nvim_get_current_tabpage()]
+    local _, view = fixture.context(widget)
     return view and view:frame()
   end, 10000)
   t.assert_true(session.state:status().locked)
@@ -171,7 +171,7 @@ t:test("new relative file creates parents, reveals it, and opens in a source win
     done("notes/todo")
   end)
   local widget = fixture.widget(path)
-  await(widget._action:create(false))
+  await(widget:action():create(false))
   fixture.idle(widget)
   t.wait_until(function()
     return vim.api.nvim_buf_get_name(vim.api.nvim_win_get_buf(target)) == vim.uv.fs_realpath(path .. "/notes/todo")
@@ -193,7 +193,7 @@ t:test("creation through a directory link reveals the created logical occurrence
   end)
   local widget = fixture.widget(path)
   fixture.cursor(widget, path .. "/alias")
-  await(widget._action:create(false))
+  await(widget:action():create(false))
   fixture.idle(widget)
   t.wait_until(function()
     return vim.api.nvim_buf_get_name(vim.api.nvim_win_get_buf(target))
@@ -214,7 +214,7 @@ t:test("editing the create directory prefix chooses a path under the captured di
     t.assert_eq("folder/", options.default)
     done("other/new.txt")
   end)
-  await(widget._action:create(false))
+  await(widget:action():create(false))
   fixture.idle(widget)
   t.assert_true(vim.uv.fs_stat(path .. "/other/new.txt") ~= nil)
   t.assert_eq(nil, vim.uv.fs_stat(path .. "/folder/other/new.txt"))
@@ -223,7 +223,7 @@ end)
 t:test("create prefixes respect native root separators and preserve the captured directory", function()
   local Session = require("era.m.explorer.session")
   local Jobs = require("era.m.explorer.jobs")
-  local state = fixture.widget(t:tempdir())._session.state
+  local state = fixture.widget(t:tempdir()):context().state
   for _, case in ipairs({
     { windows = true, root = "C:\\", destination = "C:\\foo", default = "foo/" },
     { windows = true, root = "C:\\", destination = "C:\\", default = "" },
@@ -301,7 +301,7 @@ t:test("an unchanged create prefix cannot retarget a replaced destination direct
     t.assert_eq("folder/", options.default)
     answer = done
   end)
-  local creating = widget._action:create(false)
+  local creating = widget:action():create(false)
   t.wait_until(function()
     return answer ~= nil
   end, 10000)
@@ -414,7 +414,7 @@ t:test("open captures its input before asynchronous selection inspection and pre
   local session, view = widget:context()
   local other = await(session.data:resolve(path .. "/b"))
   fixture.cursor(widget, path .. "/a")
-  local opening = widget._action:open()
+  local opening = widget:action():open()
   vim.api.nvim_win_set_cursor(view.winnr, { view:frame():position(other:node()), 0 })
   await(opening)
   t.assert_eq(vim.uv.fs_realpath(path .. "/a"), vim.api.nvim_buf_get_name(vim.api.nvim_win_get_buf(target)))
@@ -424,7 +424,7 @@ t:test("open captures its input before asynchronous selection inspection and pre
   t:patch_table(dot.win, "pick_sourcefile", function()
     return nil
   end)
-  await(widget._action:open())
+  await(widget:action():open())
   t.assert_eq(view.winnr, vim.api.nvim_get_current_win())
   t.assert_eq("copy", session:mode())
 end)
@@ -478,7 +478,7 @@ t:test("rename applies LSP edits before IO and notifies only after a successful 
   end)
   local widget = fixture.widget(path)
   fixture.cursor(widget, path .. "/a.lua")
-  await(widget._action:operate({ kind = "rename", name = "renamed.lua" }))
+  await(widget:action():operate({ kind = "rename", name = "renamed.lua" }))
   fixture.idle(widget)
   t.assert_eq(1, before)
   t.assert_eq(1, after)
@@ -491,7 +491,7 @@ t:test("rename applies LSP edits before IO and notifies only after a successful 
     t.assert_true(options.prompt:find("exists.lua", 1, true) ~= nil)
     done("n")
   end)
-  await(widget._action:operate({ kind = "rename", name = "exists.lua" }))
+  await(widget:action():operate({ kind = "rename", name = "exists.lua" }))
   fixture.idle(widget)
   t.assert_eq(1, before)
   t.assert_eq(1, after)
@@ -525,9 +525,9 @@ t:test("trash configuration uses the platform tool and tool failure preserves th
   write(path .. "/a")
   local widget = fixture.widget(path)
   fixture.cursor(widget, path .. "/a")
-  await(widget._action:delete())
+  await(widget:action():delete())
   fixture.idle(widget)
-  t.assert_eq(nil, vim.uv.fs_stat(path .. "/a"), vim.inspect(widget._session.results))
+  t.assert_eq(nil, vim.uv.fs_stat(path .. "/a"), vim.inspect(widget:context().results))
   t.assert_true(vim.uv.fs_stat(recycled .. "/a") ~= nil)
   vim.fn.writefile(
     { "#!/usr/bin/env python3", "import sys", 'sys.stderr.buffer.write(b"\\xff" * 4096)', "sys.exit(7)" },
@@ -536,18 +536,18 @@ t:test("trash configuration uses the platform tool and tool failure preserves th
   write(path .. "/keep")
   await(widget:refresh())
   fixture.cursor(widget, path .. "/keep")
-  await(widget._action:delete())
+  await(widget:action():delete())
   fixture.idle(widget)
   t.assert_true(vim.uv.fs_stat(path .. "/keep") ~= nil)
-  t.assert_eq(1, widget._session._counts.failed)
-  t.assert_true(#widget._session.results[1].error.message < 4096)
+  t.assert_eq(1, widget:context()._counts.failed)
+  t.assert_true(#widget:context().results[1].error.message < 4096)
 end)
 
 t:test("copy and move to a complete path create parents and keep rename within the current parent", function()
   local path = t:tempdir()
   write(path .. "/a")
   local widget = fixture.widget(path)
-  local data = widget._session.data
+  local data = widget:context().data
   local resolve = data.resolve
   t:patch_table(data, "resolve", function(self, filepath)
     return resolve(self, filepath):map(function(value)
@@ -558,12 +558,12 @@ t:test("copy and move to a complete path create parents and keep rename within t
     end)
   end)
   fixture.cursor(widget, path .. "/a")
-  await(widget._action:operate({ kind = "copy_to_path", path = path .. "/new/nested/duplicate" }))
+  await(widget:action():operate({ kind = "copy_to_path", path = path .. "/new/nested/duplicate" }))
   fixture.idle(widget)
   t.assert_true(vim.uv.fs_stat(path .. "/a") ~= nil)
   t.assert_true(vim.uv.fs_stat(path .. "/new/nested/duplicate") ~= nil)
   fixture.cursor(widget, path .. "/a")
-  await(widget._action:operate({ kind = "move_to_path", path = path .. "/moved/renamed" }))
+  await(widget:action():operate({ kind = "move_to_path", path = path .. "/moved/renamed" }))
   fixture.idle(widget)
   t.assert_eq(nil, vim.uv.fs_stat(path .. "/a"))
   t.assert_true(vim.uv.fs_stat(path .. "/moved/renamed") ~= nil)
@@ -573,7 +573,7 @@ t:test("copy and move to a complete path create parents and keep rename within t
     t.assert_eq("renamed", options.default)
     done("final")
   end)
-  await(widget._action:operate({ kind = "rename" }))
+  await(widget:action():operate({ kind = "rename" }))
   fixture.idle(widget)
   t.assert_true(vim.uv.fs_stat(path .. "/moved/final") ~= nil)
 end)
@@ -583,7 +583,7 @@ t:test("a non-missing resolve error cannot authorize creating parents through it
   write(path .. "/a")
   local widget = fixture.widget(path)
   fixture.cursor(widget, path .. "/a")
-  local data = widget._session.data
+  local data = widget:context().data
   local resolve = data.resolve
   t:patch_table(data, "resolve", function(self, filepath)
     if filepath == path .. "/blocked" then
@@ -594,7 +594,7 @@ t:test("a non-missing resolve error cannot authorize creating parents through it
     end
     return resolve(self, filepath)
   end)
-  local operation = widget._action:operate({ kind = "copy_to_path", path = path .. "/blocked/copied" })
+  local operation = widget:action():operate({ kind = "copy_to_path", path = path .. "/blocked/copied" })
   t.wait_until(function()
     return operation:is_done()
   end, 10000)
@@ -613,7 +613,7 @@ t:test("copy to an alias inside the source is rejected before creating missing p
   assert(vim.uv.fs_symlink("source", path .. "/alias"))
   local widget = fixture.widget(path)
   fixture.cursor(widget, path .. "/source")
-  local operation = widget._action:operate({ kind = "copy_to_path", path = path .. "/alias/created/copy" })
+  local operation = widget:action():operate({ kind = "copy_to_path", path = path .. "/alias/created/copy" })
   t.wait_until(function()
     return operation:is_done()
   end, 10000)
@@ -642,7 +642,7 @@ t:test("an unrelated non-UTF8 buffer does not interrupt successful move synchron
   end)
   local widget = fixture.widget(path)
   fixture.cursor(widget, path .. "/a")
-  await(widget._action:operate({ kind = "rename", name = "b" }))
+  await(widget:action():operate({ kind = "rename", name = "b" }))
   fixture.idle(widget)
   t.assert_eq(vim.uv.fs_realpath(path .. "/b"), vim.api.nvim_buf_get_name(normal))
   t.assert_eq("unsaved", vim.api.nvim_buf_get_lines(normal, 0, 1, false)[1])
@@ -667,7 +667,7 @@ t:test("directory prompts lock and capture the source before cursor or filesyste
     t:patch_table(vim.ui, "input", function(_, done)
       answer = done
     end)
-    widget._action:menu()
+    widget:action():menu()
     t.wait_until(function()
       return answer ~= nil
     end, 10000)

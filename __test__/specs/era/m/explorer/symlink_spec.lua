@@ -167,7 +167,7 @@ t:test("real UI separates file icons from right-aligned links and preserves Git 
     widget = require("era.m.explorer.widget").new({ name = "symlink-ui", root = path })
     widget:focus()
     assert(vim.wait(10000, function()
-      local current = widget._views[vim.api.nvim_get_current_tabpage()]
+      local _, _, current = pcall(widget.context, widget)
       return current and current:frame() and current:frame():header().row_count == 6
     end))
     session, view = widget:context()

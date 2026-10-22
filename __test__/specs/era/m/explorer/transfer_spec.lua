@@ -37,7 +37,7 @@ for _, case in ipairs({
     t:patch_table(vim.ui, "input", function(_, done)
       done(target)
     end)
-    await(widget._action:transfer(mark))
+    await(widget:action():transfer(mark))
     followed(widget, target)
     t.assert_eq(destination, widget:get_root_filepath())
     t.assert_true(vim.uv.fs_stat(target) ~= nil)
@@ -55,7 +55,7 @@ t:test("a copied directory follows its root after more than 128 descendant resul
   local widget = fixture.widget(path)
   local session = widget:context()
   fixture.cursor(widget, path .. "/source")
-  await(widget._action:operate({ kind = "copy_to_path", path = path .. "/copied" }))
+  await(widget:action():operate({ kind = "copy_to_path", path = path .. "/copied" }))
   followed(widget, path .. "/copied")
   t.assert_eq(path .. "/copied", session.results[#session.results].target)
   for index = 1, 140 do
@@ -70,7 +70,7 @@ t:test("Space path actions follow a single selected source and expand a nested t
     fixture.write(path .. "/other")
     local widget = fixture.widget(path)
     fixture.cursor(widget, path .. "/source")
-    await(widget._action:mark("select"))
+    await(widget:action():mark("select"))
     fixture.cursor(widget, path .. "/other")
     t:patch_table(vim.ui, "select", function(_, _, done)
       done(choice)
@@ -78,7 +78,7 @@ t:test("Space path actions follow a single selected source and expand a nested t
     t:patch_table(vim.ui, "input", function(_, done)
       done(path .. "/nested/target")
     end)
-    widget._action:menu()
+    widget:action():menu()
     followed(widget, path .. "/nested/target")
     t.assert_true(vim.uv.fs_stat(path .. "/other") ~= nil)
     t.assert_eq(path, widget:get_root_filepath())
@@ -101,7 +101,7 @@ for _, intent in ipairs({ "cursor", "root", "focus" }) do
     t:patch_table(vim.ui, "input", function(_, done)
       answer = done
     end)
-    local operation = widget._action:transfer("copy")
+    local operation = widget:action():transfer("copy")
     t.wait_until(function()
       return answer ~= nil
     end, 10000)
@@ -199,7 +199,7 @@ for _, intent in ipairs({
       end
       return pending
     end)
-    await(widget._action:operate({ kind = "copy_to_path", path = target }))
+    await(widget:action():operate({ kind = "copy_to_path", path = target }))
     t.wait_until(function()
       return captured ~= nil
     end, 10000)
@@ -241,7 +241,7 @@ for _, intent in ipairs({
     elseif intent == "disabled_compress" then
       widget:toggle_flag(3)
     elseif intent == "fold" then
-      await(widget._action:collapse_all())
+      await(widget:action():collapse_all())
     elseif intent == "native_fold" then
       local resource = await(data:resolve(path .. "/directory"))
       await(session:fold(view:frame(), resource:node(), "toggle"))
@@ -295,7 +295,7 @@ t:test("cancelled preparation, failed admission and skipped overwrite do not fol
     elseif outcome == "skipped" then
       request.path = path .. "/existing"
     end
-    local operation = widget._action:operate(request)
+    local operation = widget:action():operate(request)
     local ok = pcall(await, operation)
     fixture.idle(widget)
     if outcome == "failed" then
@@ -324,7 +324,7 @@ t:test("partial directory copies leave navigation on the source and retain the s
   t:patch_table(vim.ui, "input", function(_, done)
     done("n")
   end)
-  await(widget._action:operate({ kind = "copy_to_path", path = path .. "/target" }))
+  await(widget:action():operate({ kind = "copy_to_path", path = path .. "/target" }))
   fixture.idle(widget)
   t.assert_true(session._counts.skipped > 0)
   t.assert_true(vim.uv.fs_stat(path .. "/target/accepted") ~= nil)
@@ -342,7 +342,7 @@ t:test("cancelling a running overwrite ignores its late answer and releases foll
   t:patch_table(vim.ui, "input", function(_, done)
     answer = done
   end)
-  await(widget._action:operate({ kind = "copy_to_path", path = path .. "/existing" }))
+  await(widget:action():operate({ kind = "copy_to_path", path = path .. "/existing" }))
   t.wait_until(function()
     return answer ~= nil
   end, 10000)
@@ -364,7 +364,7 @@ t:test("an existing completion callback runs after unlock and can replace follow
   fixture.cursor(widget, path .. "/source")
   local completed = 0
   local other = await(session.data:resolve(path .. "/other"))
-  await(widget._action:operate({
+  await(widget:action():operate({
     kind = "copy_to_path",
     path = path .. "/copied",
     on_complete = function(status, results)
@@ -411,7 +411,7 @@ t:test("pending annotation and queued parent navigation outrank a late transfer 
     end
     return pending
   end)
-  await(widget._action:operate({ kind = "copy_to_path", path = target }))
+  await(widget:action():operate({ kind = "copy_to_path", path = target }))
   t.wait_until(function()
     return captured ~= nil
   end, 10000)
@@ -424,8 +424,8 @@ t:test("pending annotation and queued parent navigation outrank a late transfer 
     queried = true
     return query
   end)
-  local annotation = widget._action:annotation("error", true)
-  local navigating = widget._action:root("parent")
+  local annotation = widget:action():annotation("error", true)
+  local navigating = widget:action():root("parent")
   t.wait_until(function()
     return queried
   end, 10000)

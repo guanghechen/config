@@ -8,7 +8,7 @@ local M = {}
 ---@param view                          ux.filetree.View
 ---@return nil
 function M.bind(widget, view)
-  local action = widget._action
+  local action = widget:action()
   ---@param method                      string
   ---@param ...                         any
   ---@return nil

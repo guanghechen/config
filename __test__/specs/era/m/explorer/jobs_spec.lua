@@ -33,7 +33,7 @@ t:test("a hidden Job drains its complete result backlog before releasing the ses
   }))
   widget:hide()
   t.wait_until(function()
-    return next(widget._views) == nil
+    return next(session.views) == nil
   end, 5000)
   -- Hold Lua while native IO completes, leaving more than one result page to deliver.
   local deadline = vim.uv.hrtime() + 10000000000
@@ -89,7 +89,7 @@ t:test("early failures and skips survive the successful tail and remain availabl
   t:patch_table(vim.ui, "select", function(_, _, done)
     done("Last results")
   end)
-  widget._action:menu()
+  widget:action():menu()
   t.assert_true(message:find("file-001", 1, true) ~= nil)
   t.assert_true(message:find(session.issues[1].error.message, 1, true) ~= nil)
   t.assert_nil(session.job)
@@ -131,7 +131,7 @@ for _, deep in ipairs({ false, true }) do
       return session.data:watch_status().roots == 0 and not session.data:native():is_busy()
     end, 10000)
     await(session:operate(view, { kind = "copy", target = target }))
-    fixture.idle(widget)
+    fixture.settle(session)
     t.assert_eq(520, session._counts.failed)
     t.assert_eq(520, #session.issues + session.issues_omitted)
     t.assert_true(session._issue_bytes <= 1024 * 1024)
@@ -149,7 +149,7 @@ for _, deep in ipairs({ false, true }) do
     end)
     widget:focus()
     fixture.idle(widget)
-    widget._action:menu()
+    widget:action():menu()
     t.assert_true(message:find(session.issues_omitted .. " additional issues omitted", 1, true) ~= nil)
   end)
 end

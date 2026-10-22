@@ -10,7 +10,7 @@ t:test("typed parent navigation consumes every intent before the view catches up
   local widget = fixture.widget(path .. "/one/two/three")
   vim.api.nvim_feedkeys(vim.keycode("<BS><BS><BS>"), "xt", false)
   t.wait_until(function()
-    return widget:get_root_filepath() == path and widget._action._navigation == nil
+    return widget:get_root_filepath() == path and widget:action()._navigation == nil
   end, 10000)
 end)
 
@@ -35,13 +35,13 @@ t:test("fold input preserves parent steps queued behind a pending navigation", f
       end)
     end)
   end)
-  local first = widget._action:root("parent")
-  local second = widget._action:root("parent")
+  local first = widget:action():root("parent")
+  local second = widget:action():root("parent")
   t.wait_until(function()
     return applied
   end, 10000)
   fixture.idle(widget)
-  await(widget._action:collapse())
+  await(widget:action():collapse())
   release(true)
   await(first)
   t.assert_eq("Applied", await(second).kind)
@@ -83,7 +83,7 @@ t:test("typed annotation navigation preserves repeated steps in both directions"
   for _, case in ipairs({ { "]e]e", "c" }, { "[e[e", "d" } }) do
     vim.api.nvim_feedkeys(case[1], "xt", false)
     t.wait_until(function()
-      return widget:get_cursor_filepath() == path .. "/" .. case[2] and widget._action._navigation == nil
+      return widget:get_cursor_filepath() == path .. "/" .. case[2] and widget:action()._navigation == nil
     end, 10000)
   end
 end)
@@ -97,14 +97,14 @@ t:test("new cursor input and closing a pane discard delayed annotation steps", f
     local widget = fixture.widget(path)
     fixture.cursor(widget, path .. "/a")
     local complete, queries = nil, 0
-    t:patch_table(widget._session.data, "next_annotation", function()
+    t:patch_table(widget:context().data, "next_annotation", function()
       queries = queries + 1
       return Future.new(function(resolve)
         complete = resolve
       end)
     end)
-    local first = widget._action:annotation("error", true)
-    local second = widget._action:annotation("error", true)
+    local first = widget:action():annotation("error", true)
+    local second = widget:action():annotation("error", true)
     t.wait_until(function()
       return complete ~= nil
     end, 10000)
@@ -158,7 +158,7 @@ t:test("read-only navigation reobserves a path after overlapping publications", 
   fixture.write(path .. "/a")
   fixture.write(path .. "/b")
   local widget = fixture.widget(path)
-  local session = widget._session
+  local session = widget:context()
   local resolve = session.data.resolve
   local attempts = 0
   t:patch_table(session.data, "resolve", function(data, target)
@@ -182,7 +182,7 @@ t:test("superseded or disposed navigation cannot retry a delayed stale observati
     fixture.write(path .. "/a")
     fixture.write(path .. "/b")
     local widget = fixture.widget(path)
-    local session = widget._session
+    local session = widget:context()
     local resolve = session.data.resolve
     local deliver, attempts = nil, 0
     t:patch_table(session.data, "resolve", function(data, target)
@@ -219,7 +219,7 @@ t:test("navigation bounds stale retries and preserves other resolve failures", f
     local path = t:tempdir()
     fixture.write(path .. "/a")
     local widget = fixture.widget(path)
-    local session = widget._session
+    local session = widget:context()
     local attempts = 0
     t:patch_table(session.data, "resolve", function()
       attempts = attempts + 1

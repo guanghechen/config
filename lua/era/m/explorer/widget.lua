@@ -238,6 +238,12 @@ function M:toggle_flag(index)
   self._options[index]:next(value, { silent = true })
 end
 
+---The actions every view of this Explorer runs, so they share one navigation order.
+---@return era.m.explorer.Action
+function M:action()
+  return self._action
+end
+
 ---@return era.m.explorer.Session, ux.filetree.View
 function M:context()
   local view = self:get_winnr() and self._views[vim.api.nvim_get_current_tabpage()]

@@ -32,7 +32,7 @@ local function setup_open()
     remembered_winnr = source_winnr,
     old_entries = 0,
     focused_bufnrs = {},
-    action = widget._action,
+    action = widget:action(),
   }
   t:patch_table(dot.tab, "retrieve_winnr_sourcefile", function()
     return fixture.remembered_winnr

@@ -128,7 +128,7 @@ t:test("failed initial open remains closable and refresh retries after the direc
   write(path .. "/file")
   await(widget:refresh())
   t.wait_until(function()
-    local view = widget._views[vim.api.nvim_get_current_tabpage()]
+    local _, view = fixture.context(widget)
     return view and view:frame() and view:frame():header().row_count == 1
   end, 10000)
   t.assert_true(widget._open_error == nil)
@@ -349,7 +349,7 @@ t:test("replacing an Explorer buffer releases its window and late cleanup preser
   local reopened = widget:focus()
   t.assert_true(reopened ~= winnr)
   t.wait_until(function()
-    local current = widget._views[vim.api.nvim_get_current_tabpage()]
+    local _, current = fixture.context(widget)
     return current and current:frame()
   end, 10000)
   view:detach()
@@ -401,7 +401,7 @@ t:test("a replaced loading placeholder cannot be claimed by a late attach", func
   local reopened = widget:focus()
   resolve(session)
   t.wait_until(function()
-    local view = widget._views[vim.api.nvim_get_current_tabpage()]
+    local _, view = fixture.context(widget)
     return view and view:frame()
   end, 10000)
   t.assert_eq(bufnr, vim.api.nvim_win_get_buf(winnr))

@@ -82,10 +82,22 @@ function M.new()
     end)
     widget:focus()
     t.wait_until(function()
-      local view = widget._views[vim.api.nvim_get_current_tabpage()]
-      return published(view) and not widget._session.data:native():is_busy()
+      local session, view = fixture.context(widget)
+      return published(view) and not session.data:native():is_busy()
     end, 10000)
     return widget
+  end
+
+  ---The current tab's session and view, as `widget:context()` returns them, or nothing while the Explorer is still
+  ---opening there.
+  ---@param widget                      era.m.explorer.Widget
+  ---@return era.m.explorer.Session|nil
+  ---@return ux.filetree.View|nil
+  function fixture.context(widget)
+    local ok, session, view = pcall(widget.context, widget)
+    if ok then
+      return session, view
+    end
   end
 
   ---@param widget                      era.m.explorer.Widget
@@ -101,13 +113,14 @@ function M.new()
     return resource
   end
 
-  ---@param widget                      era.m.explorer.Widget
+  ---Waits until `session` has no preparation, Job, lock or native read in flight and each of its open views shows its
+  ---latest frame. A hidden Explorer has no context, so tests that hide it settle the session they captured.
+  ---@param session                     era.m.explorer.Session
   ---@return nil
-  function fixture.idle(widget)
+  function fixture.settle(session)
     t.wait_until(function()
-      local session = widget._session
       -- Native reads may finish while the latest source frame is still paced.
-      for _, view in pairs(widget._views) do
+      for view in pairs(session.views) do
         if not view._closed and not published(view) then
           return false
         end
@@ -118,6 +131,19 @@ function M.new()
         and not session.data:native():is_busy()
     end, 10000)
   end
+
+  ---Waits until the Explorer is open in the current tab and its session has settled.
+  ---@param widget                      era.m.explorer.Widget
+  ---@return nil
+  function fixture.idle(widget)
+    local session ---@type era.m.explorer.Session|nil
+    t.wait_until(function()
+      session = fixture.context(widget)
+      return session ~= nil
+    end, 10000)
+    fixture.settle(assert(session))
+  end
+
   ---Runs `interject` once inside Explorer's await, right after the first reply whose kind is one of `kinds`. The
   ---awaiting operation resumes when `interject` returns, so awaiting in it holds the operation at that reply.
   ---@param kinds                       string[]

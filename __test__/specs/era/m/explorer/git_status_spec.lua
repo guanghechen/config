@@ -84,7 +84,7 @@ t:test("real Git queries and OS watch update staged, modified, untracked and ign
   end, 10000)
 
   fixture.cursor(widget, path .. "/a.lua")
-  await(widget._action:operate({ kind = "rename", name = "moved.lua" }))
+  await(widget:action():operate({ kind = "rename", name = "moved.lua" }))
   fixture.idle(widget)
   t.wait_until(function()
     local moved = annotation(widget, "moved.lua")

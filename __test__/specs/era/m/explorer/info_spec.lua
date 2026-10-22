@@ -26,13 +26,13 @@ t:test("File Info displays the cursor file while preserving an unrelated copy se
   local session, view = widget:context()
   fixture.cursor(widget, path .. "/a")
   vim.cmd.normal({ args = { "Vj" }, bang = true })
-  local marked = await(widget._action:mark("copy"))
+  local marked = await(widget:action():mark("copy"))
   t.wait_until(function()
     return session.state:native():applicable(view:frame(), marked.revisions.commit)
   end, 10000)
   fixture.cursor(widget, path .. "/c")
   local panels = capture_panels()
-  await(widget._action:auxiliary("info"))
+  await(widget:action():auxiliary("info"))
   t.assert_eq(1, #panels)
   local panel = panels[1]
   t.assert_true(panel:isvisible())
@@ -60,12 +60,12 @@ t:test("File Info captures its target and ignores a superseded request after its
     return future
   end)
   local panels = capture_panels()
-  local first = widget._action:auxiliary("info")
+  local first = widget:action():auxiliary("info")
   t.wait_until(function()
     return #pending == 1
   end, 10000)
   fixture.cursor(widget, path .. "/b")
-  local second = widget._action:auxiliary("info")
+  local second = widget:action():auxiliary("info")
   t.wait_until(function()
     return #pending == 2
   end, 10000)
@@ -96,7 +96,7 @@ t:test("a delayed File Info request preserves its cursor target and respects los
       return waiting
     end)
     local panels = capture_panels()
-    local future = widget._action:auxiliary("info")
+    local future = widget:action():auxiliary("info")
     fixture.cursor(widget, path .. "/b")
     if leave then
       vim.api.nvim_set_current_win(source_winnr)
@@ -127,7 +127,7 @@ t:test("leaving and returning permanently invalidates pending File Info, includi
     end)
     local before = #vim.api.nvim_get_autocmds({ buf = view.bufnr, event = { "WinLeave", "BufLeave" } })
     local panels = capture_panels()
-    local future = widget._action:auxiliary("info")
+    local future = widget:action():auxiliary("info")
     vim.api.nvim_set_current_win(source_winnr)
     vim.api.nvim_set_current_win(view.winnr)
     resolve(
