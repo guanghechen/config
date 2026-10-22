@@ -349,6 +349,61 @@ local function publish(view, plan, header, staging, guard)
   end
 end
 
+---@class ux.treeview.surface.IStaging
+---@field view                          ux.treeview.View
+---@field plan                          yoz.ux.treeview.RenderPlan
+---@field guard                         table
+---@field header                        table
+---@field staging                       string[][]
+---@field index                         integer
+---@field row                           integer|nil
+
+local find, sub = string.find, string.sub
+
+-- Staging is one function for all publications: a compiled loop can keep the closure it was recorded in, and a
+-- closure per publication would keep its view alive after detach.
+---@param job                           ux.treeview.surface.IStaging
+---@return nil
+local function stage(job)
+  local view, guard, header = job.view, job.guard, job.header
+  if view._closed or view._epoch ~= guard.epoch or view._render_guard ~= guard then
+    return
+  end
+  local started = vim.uv.hrtime()
+  while job.index <= #header.splices do
+    local splice = header.splices[job.index]
+    local row = job.row or splice[3]
+    if row == splice[4] then
+      job.index, job.row = job.index + 1, nil
+    else
+      local text, next_row = job.plan:text(row, math.min(row + 512, splice[4]), 64 * 1024)
+      if next_row == row then
+        error("Treeview text transfer made no progress")
+      end
+      -- Each row ends with "\n", and display text holds no line breaks.
+      local lines, at = job.staging[job.index], 1
+      local count = #lines
+      while at <= #text do
+        local stop = find(text, "\n", at, true)
+        count = count + 1
+        lines[count] = sub(text, at, stop - 1)
+        at = stop + 1
+      end
+      job.row = next_row
+    end
+    if vim.uv.hrtime() - started >= 2 * 1000 * 1000 then
+      vim.schedule(function()
+        local ok, error = pcall(stage, job)
+        if not ok then
+          M.fail(view, error, false)
+        end
+      end)
+      return
+    end
+  end
+  publish(view, job.plan, header, job.staging, guard)
+end
+
 ---@param view                          ux.treeview.View
 ---@param plan                          yoz.ux.treeview.RenderPlan
 ---@param guard                         table
@@ -358,52 +413,11 @@ local function prepare(view, plan, guard)
   if header.text_bytes > 64 * 1024 * 1024 then
     error("Treeview staging exceeded 64 MiB")
   end
-  local find, sub = string.find, string.sub
   local staging = {}
-  local index, row = 1, nil
   for at = 1, #header.splices do
     staging[at] = {}
   end
-  local step
-  ---@return nil
-  step = function()
-    if view._closed or view._epoch ~= guard.epoch or view._render_guard ~= guard then
-      return
-    end
-    local started = vim.uv.hrtime()
-    while index <= #header.splices do
-      local splice = header.splices[index]
-      row = row or splice[3]
-      if row == splice[4] then
-        index, row = index + 1, nil
-      else
-        local text, next_row = plan:text(row, math.min(row + 512, splice[4]), 64 * 1024)
-        if next_row == row then
-          error("Treeview text transfer made no progress")
-        end
-        -- Each row ends with "\n", and display text holds no line breaks.
-        local lines, count, at = staging[index], #staging[index], 1
-        while at <= #text do
-          local stop = find(text, "\n", at, true)
-          count = count + 1
-          lines[count] = sub(text, at, stop - 1)
-          at = stop + 1
-        end
-        row = next_row
-      end
-      if vim.uv.hrtime() - started >= 2 * 1000 * 1000 then
-        vim.schedule(function()
-          local ok, error = pcall(step)
-          if not ok then
-            M.fail(view, error, false)
-          end
-        end)
-        return
-      end
-    end
-    publish(view, plan, header, staging, guard)
-  end
-  step()
+  stage({ view = view, plan = plan, guard = guard, header = header, staging = staging, index = 1 })
 end
 
 ---@param view                          ux.treeview.View
