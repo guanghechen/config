@@ -171,7 +171,8 @@ Preflight 失败时不改 live buffer。若实际 API 在已有写入后失败�
 - 原节点再次可见不自动跳回；加载结果不恢复旧 cursor，也不触发打开 callback。
 
 Surface 发布时，Normal 模式把窗口 cursor 移到目标 Frame 的 cursor 行，byte column 沿用原值并钳位到目标行合法的
-UTF-8 边界；顶端行按原 topline 的 NodeId 在新 Frame 中定位。Visual 模式恢复两个端点，规则见 [visual](visual.md)。
+UTF-8 边界；顶端行按原 topline 的 NodeId 在新 Frame 中定位，定位结果使 cursor 落在窗口外时，按 Neovim 对当前窗口的
+滚动规则让 cursor 可见，非当前窗口（如 Picker 输入期间的结果窗口）同样适用。Visual 模式恢复两个端点，规则见 [visual](visual.md)。
 
 View 记录实际恢复或观察到的 cursor 坐标；坐标未变的重复、迟到 `CursorMoved` 不提交新导航，不能用旧 Frame
 覆盖已完成但尚未显示的 native cursor。真实位置变化按实际显示的 Frame 提交 SetCursor，不等待待发布 snapshot。

@@ -74,6 +74,11 @@ local function restore(view, saved)
     end
     vim.api.nvim_win_set_cursor(view.winnr, cursor)
     vim.fn.winrestview(saved.window)
+    -- A topline anchored to a moved node can leave the cursor outside the window, and Neovim scrolls only the
+    -- current window back to its cursor; bring it into view here as well.
+    if cursor[1] < vim.fn.line("w0") or cursor[1] > vim.fn.line("w$") then
+      vim.api.nvim_win_set_cursor(view.winnr, cursor)
+    end
   end)
   view._observed_cursor = vim.api.nvim_win_get_cursor(view.winnr)
 end

@@ -209,4 +209,60 @@ for _, programmatic in ipairs({ false, true }) do
   )
 end
 
+t:test("an unfocused publication keeps the cursor in view when the top row's node moves away", function()
+  local data = treeview.new_data()
+  local records = { { key = "root", label = "root", can_expand = true } }
+  for index = 1, 200 do
+    records[#records + 1] = { key = "n" .. index, parent = "root", label = string.format("node-%03d", index) }
+  end
+  support.await(data:import(records))
+  local source = data:source()
+  local ids = {}
+  for index = 1, 200 do
+    ids[index] = source:id("n" .. index)
+  end
+  local root = { kind = "children_of", node = source:id("root") }
+  local state = support.await(data:create_state(root, { mode = "list", filter = ids }))
+  local view = treeview.attach(state, { keymaps = false })
+  t:defer(function()
+    view:detach()
+  end)
+  t.wait_until(function()
+    return view:frame() ~= nil and not view._busy and not view._latest
+  end, 5000)
+  vim.cmd.new()
+  local other = vim.api.nvim_get_current_win()
+  t:defer(function()
+    vim.api.nvim_win_close(other, true)
+  end)
+  vim.api.nvim_win_set_height(view.winnr, 10)
+  support.await(view:set_cursor(146))
+  vim.api.nvim_win_call(view.winnr, function()
+    vim.fn.winrestview({ topline = 145 })
+  end)
+
+  -- The cursor's node leads the new order and the top row's node ends it.
+  local order = { ids[146] }
+  for index = 1, 200 do
+    if index ~= 145 and index ~= 146 then
+      order[#order + 1] = ids[index]
+    end
+  end
+  order[#order + 1] = ids[145]
+  local result = support.await(state:set_display({ mode = "list", filter = order }))
+  t.wait_until(function()
+    local frame = view:frame()
+    return frame ~= nil and state:native():applicable(frame, result.revisions.commit) and not view._busy
+  end, 5000)
+
+  -- getwininfo() reads the window as published; line("w0") would scroll it to the cursor first.
+  local window = vim.fn.getwininfo(view.winnr)[1]
+  local cursor = vim.api.nvim_win_get_cursor(view.winnr)[1]
+  t.assert_eq(1, cursor)
+  t.assert_true(
+    window.topline <= cursor and cursor < window.topline + window.height,
+    string.format("cursor %d outside rows %d-%d", cursor, window.topline, window.topline + window.height - 1)
+  )
+end)
+
 t:run()
