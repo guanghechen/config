@@ -21,24 +21,26 @@ end
 
 ---@class __test__.git.state.IQuery
 ---@field public token                  stl.c.CancellationToken
+---@field public started                integer
 ---@field public resolve                fun(snapshot: table): nil
 ---@field public reject                 fun(err: string): nil
 
 ---A State whose collections wait until the test settles them.
+---@param throttle_ms                   ?integer
 ---@return era.m.git.State
 ---@return __test__.git.state.IQuery[]
-local function new_state()
+local function new_state(throttle_ms)
   local queries = {} ---@type __test__.git.state.IQuery[]
   local state = Git.State.new({
     collect = function(token)
-      local query = { token = token } ---@type __test__.git.state.IQuery
+      local query = { token = token, started = vim.uv.hrtime() } ---@type __test__.git.state.IQuery
       queries[#queries + 1] = query
       return stl.c.Future.new(function(resolve, reject)
         query.resolve, query.reject = resolve, reject
       end)
     end,
     snapshot = new_snapshot({}),
-    throttle_ms = 20,
+    throttle_ms = throttle_ms or 20,
   })
   t:defer(function()
     state:dispose()
@@ -334,6 +336,37 @@ t:test("setup: exit disposes the shared state", function()
   vim.api.nvim_exec_autocmds("VimLeavePre", { group = "DotModuleGitState" })
   t.assert_true(future:is_done(), "exit settles waiting callers")
   t.assert_true(Git.refresh():is_done(), "post-exit refresh settles immediately")
+end)
+
+t:test("refresh: collections are spaced by four times the last one's duration, from 100 ms to the limit", function()
+  local state, queries = new_state(800)
+  ---@param count                       integer
+  ---@param hold_ms                     integer
+  ---@return nil
+  local function collect(count, hold_ms)
+    local future = state:refresh()
+    await_queries(queries, count, "collection " .. count)
+    if hold_ms > 0 then
+      vim.wait(hold_ms)
+    end
+    queries[count].resolve(new_snapshot({}))
+    wait_future(future)
+  end
+  ---@param count                       integer
+  ---@return number
+  local function spacing(count)
+    return (queries[count].started - queries[count - 1].started) / 1e6
+  end
+
+  collect(1, 0)
+  collect(2, 60)
+  t.assert_true(
+    spacing(2) >= 90 and spacing(2) < 500,
+    string.format("a quick query holds the next for 100 ms: %.1f", spacing(2))
+  )
+  collect(3, 0)
+  collect(4, 0)
+  t.assert_true(spacing(4) >= 230, string.format("a 60 ms query holds the one after it for 240 ms: %.1f", spacing(4)))
 end)
 
 t:run()

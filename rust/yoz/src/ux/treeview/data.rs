@@ -223,7 +223,7 @@ impl Source {
     }
 
     pub fn id(&self, key: &str) -> Option<NodeId> {
-        self.keys.get(&Arc::<str>::from(key)).copied()
+        self.keys.get(key).copied()
     }
 
     pub fn roots(&self) -> impl Iterator<Item = NodeId> + '_ {

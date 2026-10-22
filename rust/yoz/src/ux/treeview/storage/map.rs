@@ -162,7 +162,11 @@ impl<K: Ord + Clone, V> Map<K, V> {
         self.root.is_none()
     }
 
-    pub fn get(&self, key: &K) -> Option<&V> {
+    /// The value at `key`, which may be a borrowed form of the key type, as with `BTreeMap::get`.
+    pub fn get<Q: Ord + ?Sized>(&self, key: &Q) -> Option<&V>
+    where
+        K: std::borrow::Borrow<Q>,
+    {
         self.find(key).map(|entry| &entry.value.value)
     }
 
@@ -171,10 +175,13 @@ impl<K: Ord + Clone, V> Map<K, V> {
         self.find(key).map(|entry| entry.value.clone())
     }
 
-    fn find(&self, key: &K) -> Option<&Entry<K, V>> {
+    fn find<Q: Ord + ?Sized>(&self, key: &Q) -> Option<&Entry<K, V>>
+    where
+        K: std::borrow::Borrow<Q>,
+    {
         let mut current = self.root.as_deref();
         while let Some(entry) = current {
-            current = match key.cmp(&entry.key) {
+            current = match key.cmp(entry.key.borrow()) {
                 Ordering::Less => entry.left.as_deref(),
                 Ordering::Greater => entry.right.as_deref(),
                 Ordering::Equal => return Some(entry),

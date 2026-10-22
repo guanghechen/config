@@ -37,6 +37,9 @@ Histogram diff、legacy iconv 与 index 写入仍由 Lua 调用。
 
 `State.new({ collect, snapshot, throttle_ms })` 持有一份仓库状态：`collect(token)` 返回 status 查询的 Future，
 `snapshot` 是首次查询前的状态。模块加载时创建唯一的默认实例，模块函数转发给它；测试为每个用例创建自己的实例。
+请求在没有进行中的节流窗口时立即查询；窗口内的请求合并为窗口结束时的一次查询。窗口为上一次查询耗时的 4 倍，
+限定在 `min(100 ms, throttle_ms)` 到 `throttle_ms`（默认 800 ms）之间：查询快的仓库能及时反映连续的改动，
+查询慢的仓库在事件密集时不被反复查询占满。
 
 ```lua
 M.o_branch          -- Observable<string>: 当前分支名

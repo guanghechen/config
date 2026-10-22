@@ -266,6 +266,16 @@ t:test("Source key and parent reads retain identity after removal without node p
   t.assert_eq(root, source:parent(a))
 end)
 
+t:test("Source ids resolve keys in order, skip unknown keys, and reject sparse arrays", function()
+  local data, _, a, b = fixture()
+  local source = data:source()
+  local ids = source:ids({ "b", "missing", "a", "root" })
+  t.assert_eq(3, ids:len())
+  t.assert_same({ b, a, source:id("root") }, ids:slice(1, 3))
+  t.assert_eq(0, source:ids({}):len())
+  t.assert_false(pcall(source.ids, source, { "a", nil, "b" }))
+end)
+
 t:test("key pages accept the exact byte limit and reject a single oversized identity without empty progress", function()
   local data = treeview.new_data()
   local exact = string.rep("k", 1024 * 1024)

@@ -2,11 +2,12 @@
 local __module_name__ = "era.m.git.state" ---@type string
 
 local REFRESH_THROTTLE_MS = 800 ---@type integer
+local REFRESH_THROTTLE_MIN_MS = 100 ---@type integer
 
 ---@class era.m.git.state.IProps
 ---@field public collect                fun(token: stl.c.CancellationToken): stl.c.Future Resolves with yoz.git.StatusSnapshot.
 ---@field public snapshot               yoz.git.StatusSnapshot The status before the first collection.
----@field public throttle_ms            integer
+---@field public throttle_ms            integer Longest window between collections.
 
 ---Repository status: coalesced, throttled collections and their publication.
 ---@class era.m.git.State
@@ -16,6 +17,9 @@ local REFRESH_THROTTLE_MS = 800 ---@type integer
 ---@field protected _collect            fun(token: stl.c.CancellationToken): stl.c.Future
 ---@field protected _collect_token      stl.c.CancellationToken|nil
 ---@field protected _disposed           boolean
+---@field protected _elapsed_ms         number|nil Duration of the last collection.
+---@field protected _longest_ms         integer
+---@field protected _shortest_ms        integer
 ---@field protected _generation         integer
 ---@field protected _pending            boolean
 ---@field protected _pending_unknown    boolean
@@ -50,10 +54,21 @@ function State.new(props)
   self._queued_callbacks = {}
   self._refreshing = false
   self._snapshot = props.snapshot
+  self._longest_ms = props.throttle_ms
+  self._shortest_ms = math.min(REFRESH_THROTTLE_MIN_MS, props.throttle_ms)
   self._refresh_throttled = stl.timer.throttle(function()
     self:__collect__()
-  end, props.throttle_ms)
+  end, function()
+    return self:__window__()
+  end)
   return self
+end
+
+---Milliseconds before the next collection may start. Four times the last one's duration keeps a quick repository
+---current while a slow one's event storms cannot occupy Git.
+---@return integer
+function State:__window__()
+  return math.floor(math.max(self._shortest_ms, math.min(self._longest_ms, 4 * (self._elapsed_ms or 0))))
 end
 
 ---@return nil
@@ -73,8 +88,10 @@ function State:__collect__()
   local token = stl.c.CancellationToken.new()
   self._collect_token = token
 
+  local started = vim.uv.hrtime()
   self._collect(token):finally(function(resolved, result)
     self._collect_token = nil
+    self._elapsed_ms = (vim.uv.hrtime() - started) / 1000000
 
     if resolved and result and not self._disposed and not token:is_cancelled() then
       -- An unchanged status keeps its snapshot, so consumers can compare identities.

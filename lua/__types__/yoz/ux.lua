@@ -46,6 +46,10 @@ function Source:len() end
 ---@param key                           string
 ---@return ux.treeview.NodeId|nil
 function Source:id(key) end
+---Node ids of `keys` in order, skipping keys this source does not hold.
+---@param keys                          string[]
+---@return yoz.ux.treeview.NodeIds
+function Source:ids(keys) end
 ---Identity-only lookup; nil for a missing node, at most 1 MiB of key data.
 ---@param node                          ux.treeview.NodeId
 ---@return string|nil

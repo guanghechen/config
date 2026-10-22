@@ -1207,22 +1207,18 @@ function M:_display(request)
   if not same and filtered and type(request.orders) == "userdata" then
     display.filter = request.orders:ids(source)
   elseif not same and filtered then
-    local filter = {}
-    local keys = request.orders or self:collect_leafs(request.rootuuid)
-    for _, key in ipairs(keys) do
-      local id = source:id(key)
-      if id then
-        filter[#filter + 1] = id
-        local entry = self.entries[key]
-        for _, location in ipairs(entry and entry.locations or {}) do
-          local child = source:id(location.locationuuid)
-          if child then
-            filter[#filter + 1] = child
-          end
-        end
+    -- Each entry is followed by its locations; their nodes are its children, so they resolve only with it.
+    local keys, count = {}, 0
+    for _, key in ipairs(request.orders or self:collect_leafs(request.rootuuid)) do
+      count = count + 1
+      keys[count] = key
+      local entry = self.entries[key]
+      for _, location in ipairs(entry and entry.locations or {}) do
+        count = count + 1
+        keys[count] = location.locationuuid
       end
     end
-    display.filter = filter
+    display.filter = source:ids(keys)
   end
   local native_root = root and { kind = "children_of", node = root } or { kind = "forest", nodes = {} }
   local future

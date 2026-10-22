@@ -113,6 +113,21 @@ impl LuaUserData for LuaSource {
                 .id(&input::string(key).map_err(LuaError::external)?)
                 .map(output::node))
         });
+        // One call resolves a display filter's keys; a call per key stalls large results.
+        methods.add_method("ids", |_, this, keys: LuaValue| {
+            let keys = input::table(keys).map_err(LuaError::external)?;
+            let count = input::array_len(&keys).map_err(LuaError::external)?;
+            let mut ids = Vec::with_capacity(count);
+            for index in 1..=count {
+                let LuaValue::String(key) = keys.raw_get(index)? else {
+                    return Err(LuaError::external("expected string keys"));
+                };
+                if let Some(id) = this.0.id(&key.to_str()?) {
+                    ids.push(id);
+                }
+            }
+            Ok(LuaIds(ids.into()))
+        });
         methods.add_method("key", |lua, this, id: LuaValue| {
             let id = input::node(id).map_err(LuaError::external)?;
             let Some(node) = this.0.node(id) else {

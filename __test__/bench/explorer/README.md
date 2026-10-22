@@ -570,8 +570,9 @@ Widget cases (ms; first flush is 10.6–12.7 ms throughout):
 | flat 50k   | List | 861.067 |  0.211 |  0.627 |     3.329 |            7.416 |       160.041 | 22.349 |    151.6 |
 
 Startup and Git: real-configuration startup is ready at 75.303 ms and visible at 100.408 ms; the first
-default Explorer is ready at 26.290 ms. `git_1000` refresh is ready at 796.519 ms, of which the status
-query takes 792.822 ms, with 21.111 ms main-thread CPU and a 5.139 ms maximum tick gap.
+default Explorer is ready at 26.290 ms. `git_1000` refresh is ready at 87.050 ms, of which the status
+query takes 82.771 ms, with 2.350 ms main-thread CPU and a 2.449 ms maximum tick gap (2026-10-22). Each
+refresh now first outlasts the previous refresh's throttle window; the earlier 796.519 ms timed that window.
 
 | Copy case           |   Job ms |   CPU ms | Ready ms |
 | ------------------- | -------: | -------: | -------: |

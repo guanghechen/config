@@ -111,7 +111,7 @@ end
 
 ---@generic T: function
 ---@param fn                            T
----@param delay                         integer
+---@param delay                         integer|fun(): integer Window in milliseconds; a function is read as each window starts.
 ---@return stl.timer.IDisposableCallable
 function M.throttle(fn, delay)
   local timer = assert(vim.uv.new_timer()) ---@type uv.uv_timer_t
@@ -122,6 +122,14 @@ function M.throttle(fn, delay)
   local trailing_args = nil ---@type table|nil
   local wrapped = vim.schedule_wrap(fn)
   local disposed = false ---@type boolean
+
+  ---@return integer
+  local function window()
+    if type(delay) == "function" then
+      return delay()
+    end
+    return delay
+  end
 
   local function execute(call_args)
     if call_args ~= nil then
@@ -141,7 +149,7 @@ function M.throttle(fn, delay)
       local call_args = trailing_args
       trailing_args = nil
       running = true
-      timer:start(delay, 0, on_timer)
+      timer:start(window(), 0, on_timer)
       execute(call_args)
     end
   end
@@ -158,7 +166,7 @@ function M.throttle(fn, delay)
 
     running = true
     trailing_args = nil
-    timer:start(delay, 0, on_timer)
+    timer:start(window(), 0, on_timer)
     local call_args = { ... } ---@type table
     execute(call_args)
   end

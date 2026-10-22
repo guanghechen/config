@@ -196,7 +196,7 @@ bench.timer:start(
 function bench.run_operation(value)
   bench.operation = { max_tick_gap_ms = 0, readiness_checks = 0 }
   local operation = bench.operation
-  vim.schedule(function()
+  local function start()
     if kind == "git" then
       local fd = assert(vim.uv.fs_open(marker, "w", 384))
       assert(vim.uv.fs_write(fd, value and "changed\n" or "base\n", 0))
@@ -226,7 +226,13 @@ function bench.run_operation(value)
     else
       vim.api.nvim_input("c")
     end
-  end)
+  end
+  if kind == "git" then
+    -- Outlast the previous refresh's throttle window (800 ms at most), so this one times the query, not its spacing.
+    vim.defer_fn(start, 850)
+  else
+    vim.schedule(start)
+  end
 end
 
 ---@param mode                          "tree"|"list"
