@@ -358,6 +358,7 @@ local function prepare(view, plan, guard)
   if header.text_bytes > 64 * 1024 * 1024 then
     error("Treeview staging exceeded 64 MiB")
   end
+  local find, sub = string.find, string.sub
   local staging = {}
   local index, row = 1, nil
   for at = 1, #header.splices do
@@ -376,11 +377,18 @@ local function prepare(view, plan, guard)
       if row == splice[4] then
         index, row = index + 1, nil
       else
-        local lines, next_row = plan:lines(row, math.min(row + 512, splice[4]), 64 * 1024)
+        local text, next_row = plan:text(row, math.min(row + 512, splice[4]), 64 * 1024)
         if next_row == row then
           error("Treeview text transfer made no progress")
         end
-        table.move(lines, 1, #lines, #staging[index] + 1, staging[index])
+        -- Each row ends with "\n", and display text holds no line breaks.
+        local lines, count, at = staging[index], #staging[index], 1
+        while at <= #text do
+          local stop = find(text, "\n", at, true)
+          count = count + 1
+          lines[count] = sub(text, at, stop - 1)
+          at = stop + 1
+        end
         row = next_row
       end
       if vim.uv.hrtime() - started >= 2 * 1000 * 1000 then

@@ -172,7 +172,7 @@ Owner 按 NodeId 去重读取需求，使用读取队列与有界并发：
 | 标记 generation                                 | 2^31 − 1                                    | 超出前拒绝写入                                                            | `stamps.rs`                                |
 | `frame:rows()`                                  | 512 行 / 1 MiB / 8192 matches / 8192 guides | 单次 viewport 读取                                                        | `projection.rs`、`lua/output.rs`           |
 | `frame:guide_path()`                            | 512 行                                      | 单次 guide 读取                                                           | `projection.rs`                            |
-| `plan:lines()`                                  | 512 行 / 1 MiB                              | Lua surface 按 512 行、64 KiB 分块准备；单个 RenderPlan 文本不超过 64 MiB | `render.rs`、`lua/ux/treeview/surface.lua` |
+| `plan:text()`                                   | 512 行 / 1 MiB                              | Lua surface 按 512 行、64 KiB 分块准备；单个 RenderPlan 文本不超过 64 MiB | `render.rs`、`lua/ux/treeview/surface.lua` |
 | `children` / `slice` / `row_keys` / `node_keys` | 1024 项 / 1 MiB keys                        | 单次出站读取                                                              | `lua/mod.rs`、`lua/output.rs`              |
 | `source:key()`                                  | 单个 key 1 MiB                              | 单项出站读取                                                              | `lua/mod.rs`                               |
 

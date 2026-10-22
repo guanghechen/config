@@ -103,7 +103,8 @@ Splice 由 Rust 排序、合并为无歧义的计划，Lua 不临时寻找节点
 Render guard 固定：View epoch、已显示 publication（Frame、行数、changedtick、render context）、请求时的 buffer
 changedtick 与行数、目标 Frame、decoration revision，以及 consumer `prepare_frame` 的结果（feature commit）。
 
-1. 请求 RenderPlan，再在有界 Lua staging 中按 2 ms 工作片分块读取正文；准备期间保持旧 Frame 可交互。
+1. 请求 RenderPlan，再在有界 Lua staging 中按 2 ms 工作片分块读取正文；每块以一个字符串传入，各行以 `\n` 结尾，
+   由 Lua 按行切分，依据是显示文本为单行（见[写入范围](data.md#写入范围)）。准备期间保持旧 Frame 可交互。
 2. 发布前检查：epoch 与 guard 仍有效；本 View 的 range action 尚未完成或 Visual 持帧遇到布局变化时等待；
    publication 与 render context 未变；buffer changedtick 与行数等于 guard 记录，否则标为失步；
    非 Reset 发布要求 buffer 行数等于已发布行数（空 Frame 计为一行）；staging 与 splice 长度一致。

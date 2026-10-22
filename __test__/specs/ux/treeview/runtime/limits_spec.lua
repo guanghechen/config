@@ -72,12 +72,31 @@ t:test("nil, empty, and partial render contexts share default geometry", functio
   local async = require("ux.treeview.async")
   local frame = state:snapshot()
   local default = t.await(async.run(view:plan(nil, frame, nil, nil, true)))
-  local expected = default:lines(0, 2, 1024)
-  t.assert_same({ "    alpha", "    beta" }, expected)
+  local expected = default:text(0, 2, 1024)
+  t.assert_eq("    alpha\n    beta\n", expected)
   for _, context in ipairs({ {}, { separator = "/" }, { indent = 2 }, { slots = 2 } }) do
     local plan = t.await(async.run(view:plan(nil, frame, context, nil, true)))
-    local lines = plan:lines(0, 2, 1024)
-    t.assert_same(expected, lines)
+    t.assert_eq(expected, (plan:text(0, 2, 1024)))
+  end
+end)
+
+t:test("plan text stops before the row that would exceed its byte budget", function()
+  local _, state = fixture()
+  local view = state:native():attach()
+  t:defer(function()
+    view:detach()
+  end)
+  local plan = t.await(require("ux.treeview.async").run(view:plan(nil, state:snapshot(), nil, nil, true)))
+  local text, next_row = plan:text(0, 2, #"    alpha")
+  t.assert_eq("    alpha\n", text)
+  t.assert_eq(1, next_row)
+end)
+
+t:test("display text with a line break is rejected, so each plan row is one buffer line", function()
+  local data = treeview.new_data()
+  for _, label in ipairs({ "a\nb", "a\rb", "a\0b" }) do
+    local result = t.await(data:import({ { key = "x", label = label } }))
+    t.assert_eq("Rejected", result.kind, vim.inspect(label))
   end
 end)
 

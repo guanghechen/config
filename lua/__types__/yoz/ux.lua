@@ -307,13 +307,13 @@ local RenderPlan = {}
 function RenderPlan:target() end
 ---@return {mode: string, base: string|nil, target: string, row_count: integer, reason: string, splices: integer[][], text_bytes: integer, written_rows: integer, compared_rows: integer, shared_rows: integer}
 function RenderPlan:header() end
----RenderPlan text ranges use 0-based, end-exclusive coordinates.
+---Rendered rows in a 0-based, end-exclusive range, each ending with "\n"; display text holds no line breaks.
 ---@param first                         integer
 ---@param last                          integer
 ---@param byte_limit                    integer
----@return string[]
+---@return string text
 ---@return integer next_row
-function RenderPlan:lines(first, last, byte_limit) end
+function RenderPlan:text(first, last, byte_limit) end
 
 ---@class yoz.ux.treeview.Upload
 local Upload = {}

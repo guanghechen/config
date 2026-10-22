@@ -832,31 +832,23 @@ impl LuaUserData for LuaPlan {
             Ok(result)
         });
         methods.add_method(
-            "lines",
+            "text",
             |lua, this, (start, end, bytes): (LuaValue, LuaValue, LuaValue)| {
                 let start = input::integer(start).map_err(LuaError::external)?;
                 let end = input::integer(end).map_err(LuaError::external)?;
                 let bytes = input::integer(bytes).map_err(LuaError::external)?;
-                let average = this
-                    .0
-                    .work
-                    .text_bytes
-                    .checked_div(this.0.work.written_rows)
-                    .unwrap_or(1)
-                    .max(1);
-                let lines = lua.create_table_with_capacity(
-                    end.saturating_sub(start).min(512).min(bytes / average),
-                    0,
-                )?;
-                let mut index = 0;
+                /* One string per chunk halves the cost of a Lua string per row. Display text holds
+                no line breaks, so every "\n" ends exactly one row. */
+                let mut text = Vec::with_capacity(bytes.min(1024 * 1024));
                 let next = this
                     .0
-                    .write_lines(start, end, bytes, |text| {
-                        index += 1;
-                        lines.raw_set(index, text).map_err(input::invalid)
+                    .write_lines(start, end, bytes, |line| {
+                        text.extend_from_slice(line.as_bytes());
+                        text.push(b'\n');
+                        Ok(())
                     })
                     .map_err(LuaError::external)?;
-                Ok((lines, next))
+                Ok((lua.create_string(&text)?, next))
             },
         );
     }
