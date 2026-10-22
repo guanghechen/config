@@ -63,7 +63,7 @@ impl State {
     fn display_payload(display: &DisplayOptions) -> Arc<[Arc<super::memory::Payload>]> {
         let mut payloads = Vec::new();
         if let Some(filter) = &display.filter {
-            /* Charge a conservative BTree node footprint once per shared allocation. */
+            /* Charge a conservative hash table footprint once per shared allocation. */
             payloads.push(super::memory::Payload::external(
                 filter.clone(),
                 64 + filter.len() * 64,

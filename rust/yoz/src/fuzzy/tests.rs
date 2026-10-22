@@ -369,6 +369,58 @@ fn t_fzf_exact_match() {
 }
 
 #[test]
+fn t_contains_agrees_with_exact_on_every_short_ascii_text() {
+    /// Every string of up to `max` characters from `alphabet`.
+    fn strings(alphabet: &[char], max: usize) -> Vec<Vec<char>> {
+        let mut all = vec![Vec::new()];
+        let mut layer = vec![Vec::new()];
+        for _ in 0..max {
+            layer = layer
+                .iter()
+                .flat_map(|prefix| {
+                    alphabet.iter().map(move |&char| {
+                        let mut next: Vec<char> = prefix.clone();
+                        next.push(char);
+                        next
+                    })
+                })
+                .collect();
+            all.extend(layer.iter().cloned());
+        }
+        all
+    }
+    let classes = classes(Scheme::Path);
+    let texts = strings(&['a', 'A', 'b', '-'], 4);
+    // Overlapping prefixes such as "aab" in "aaab" need the scan to resume after a partial match.
+    let patterns = strings(&['a', 'A', 'b', '-', 'é'], 3);
+    for text in &texts {
+        let bytes: Vec<u8> = text.iter().map(|&char| char as u8).collect();
+        for pattern in &patterns {
+            for case_sensitive in [true, false] {
+                // Case-insensitive terms are lowercase.
+                if !case_sensitive && pattern.iter().any(|char| char.is_uppercase()) {
+                    continue;
+                }
+                let expected = algo::exact(
+                    classes,
+                    case_sensitive,
+                    false,
+                    false,
+                    Text::Bytes(&bytes),
+                    pattern,
+                )
+                .is_some();
+                assert_eq!(
+                    algo::contains(&bytes, pattern, case_sensitive),
+                    expected,
+                    "{text:?} {pattern:?} case_sensitive={case_sensitive}"
+                );
+            }
+        }
+    }
+}
+
+#[test]
 fn t_fzf_prefix_suffix_match() {
     let prefix = MATCH * 3 + WHITE * FIRST + WHITE * 2;
     for forward in [true, false] {

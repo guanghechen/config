@@ -5,7 +5,7 @@ use super::stamps::{Stamps, Summary};
 use super::state::State;
 use super::storage::{IndexedSequence, IndexedValue, Map};
 use std::borrow::Cow;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::sync::Arc;
 
 pub(crate) type MatchedChildren = Map<NodeId, IndexedSequence<NodeId>>;
@@ -118,7 +118,7 @@ pub struct Snapshot {
 pub(crate) struct Inherited<'a> {
     source: &'a Source,
     stamps: &'a Stamps,
-    values: HashMap<NodeId, u32>,
+    values: NodeMap<u32>,
 }
 
 impl<'a> Inherited<'a> {
@@ -126,7 +126,7 @@ impl<'a> Inherited<'a> {
         Self {
             source,
             stamps,
-            values: HashMap::new(),
+            values: NodeMap::default(),
         }
     }
 
@@ -186,53 +186,56 @@ pub(crate) fn compression_child(
     (node.child_count() == 1).then(|| node.child_at(0).expect("single source child"))
 }
 
-pub(crate) fn sorted(
+pub(crate) fn sorted(source: &Source, ids: Vec<NodeId>, options: &DisplayOptions) -> Vec<NodeId> {
+    sorted_by(source, ids, options, |id| *id)
+}
+
+/// Orders `items` as [`sorted`] orders their ids, so callers keep what they found with each id.
+fn sorted_by<T>(
     source: &Source,
-    mut ids: Vec<NodeId>,
+    mut items: Vec<T>,
     options: &DisplayOptions,
-) -> Vec<NodeId> {
+    id: impl Fn(&T) -> NodeId,
+) -> Vec<T> {
+    // A filtered List follows the filter's ranks; each id's rank is looked up once, not per comparison.
+    let rank = |id: NodeId| {
+        options
+            .filter
+            .as_ref()
+            .filter(|_| options.mode == Mode::List && options.sort == Sort::Source)
+            .map_or(usize::MAX, |filter| {
+                filter.get(&id).copied().unwrap_or(usize::MAX)
+            })
+    };
     if options.sort == Sort::Source && !options.branches_first {
-        if options.mode == Mode::List
-            && let Some(filter) = &options.filter
-        {
-            ids.sort_by_key(|id| filter.get(id).copied().unwrap_or(usize::MAX));
+        if options.mode == Mode::List && options.filter.is_some() {
+            items.sort_by_cached_key(|item| rank(id(item)));
         }
-        return ids;
+        return items;
     }
-    let mut keys: Vec<_> = ids
-        .iter()
-        .map(|id| {
-            let node = source.node(*id).expect("validated source child");
+    let mut keys: Vec<_> = items
+        .into_iter()
+        .map(|item| {
+            let id = id(&item);
+            let node = source.node(id).expect("validated source child");
             (
-                *id,
+                id,
                 options.branches_first && !node.data.can_expand,
                 (options.sort == Sort::Name).then(|| node.data.label.to_ascii_lowercase()),
                 node.data.score,
+                rank(id),
+                item,
             )
         })
         .collect();
     keys.sort_by(|a, b| {
         a.1.cmp(&b.1).then_with(|| match options.sort {
-            Sort::Source if options.mode == Mode::List => {
-                options
-                    .filter
-                    .as_ref()
-                    .map_or(std::cmp::Ordering::Equal, |filter| {
-                        filter
-                            .get(&a.0)
-                            .copied()
-                            .unwrap_or(usize::MAX)
-                            .cmp(&filter.get(&b.0).copied().unwrap_or(usize::MAX))
-                    })
-            }
-            Sort::Source => std::cmp::Ordering::Equal,
+            Sort::Source => a.4.cmp(&b.4),
             Sort::Name => a.2.cmp(&b.2).then_with(|| a.0.cmp(&b.0)),
             Sort::Score => b.3.total_cmp(&a.3).then_with(|| a.0.cmp(&b.0)),
         })
     });
-    ids.clear();
-    ids.extend(keys.into_iter().map(|key| key.0));
-    ids
+    keys.into_iter().map(|key| key.5).collect()
 }
 
 fn hidden(source: &Source, state: &State, id: NodeId) -> bool {
@@ -279,7 +282,7 @@ fn retained(
     roots: &[NodeId],
     matcher: Option<&Matcher>,
     matched_children: &mut MatchedChildren,
-) -> Result<Option<HashSet<NodeId>>> {
+) -> Result<Option<NodeSet>> {
     *matched_children = Map::default();
     if matcher.is_none() && state.display.filter.is_none() && !state.display.selected_only {
         return Ok(None);
@@ -408,7 +411,7 @@ fn flat_rows(
         let descend = state.display.list_depth.is_none_or(|limit| depth < limit);
         visited += 1;
         if allowed(&id) {
-            candidates.push(id);
+            candidates.push(node);
         }
         if descend && node.data.can_expand && node.completeness != Completeness::Complete {
             needed.push(id);
@@ -424,15 +427,16 @@ fn flat_rows(
     }
     let mut display = state.display.clone();
     display.mode = Mode::List;
-    let candidates = sorted(source, candidates, &display);
-    let visible: HashSet<_> = candidates.iter().copied().collect();
-    let mut ancestors = HashMap::<NodeId, Option<NodeId>>::new();
+    // The walk already found each node; ordered Lists use those rather than looking them up again.
+    let candidates = sorted_by(source, candidates, &display, |node| node.id);
+    let visible: NodeSet = candidates.iter().map(|node| node.id).collect();
+    let mut ancestors = NodeMap::<Option<NodeId>>::default();
     let mut text = (state.display.list_text == ListText::Ancestry)
         .then(|| super::text::Builder::new(source, &state.root, text_roots, previous));
     rows.reserve(candidates.len());
-    for id in candidates {
+    for node in candidates {
+        let id = node.id;
         let mut path = Vec::new();
-        let node = source.node(id).expect("projected node");
         let mut parent = node.parent;
         while let Some(current) = parent {
             if visible.contains(&current) {

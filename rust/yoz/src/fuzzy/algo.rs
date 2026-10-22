@@ -864,6 +864,32 @@ pub(crate) fn fuzzy_v1(
     Some(Found { start, end, score })
 }
 
+/// Whether ASCII `bytes` contain `pattern`, folding case as [`exact`] does: exactly when `exact`
+/// finds an occurrence, without scoring every alignment to pick the best one.
+pub(crate) fn contains(bytes: &[u8], pattern: &[char], case_sensitive: bool) -> bool {
+    let Some((&first, rest)) = pattern.split_first() else {
+        return true;
+    };
+    if !pattern.iter().all(char::is_ascii) {
+        return false;
+    }
+    let mut from = 0;
+    while let Some(at) = try_skip(bytes, case_sensitive, first as u8, from) {
+        if at + pattern.len() > bytes.len() {
+            return false;
+        }
+        if rest
+            .iter()
+            .zip(&bytes[at + 1..])
+            .all(|(&char, &byte)| lower_any(byte as char, case_sensitive) == char)
+        {
+            return true;
+        }
+        from = at + 1;
+    }
+    false
+}
+
 /// ExactMatchNaive, or ExactMatchBoundary when `boundary` holds: the occurrence with the best bonus at
 /// its first character.
 pub(crate) fn exact(

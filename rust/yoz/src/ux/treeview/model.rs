@@ -14,6 +14,31 @@ impl NodeId {
     }
 }
 
+/// FxHash's multiply-rotate for [`NodeId`] keys: engine-assigned counters, not untrusted input,
+/// so per-node lookups in projections need not pay for SipHash.
+#[derive(Clone, Copy, Default)]
+pub struct NodeHasher(u64);
+
+impl std::hash::Hasher for NodeHasher {
+    fn finish(&self) -> u64 {
+        self.0
+    }
+
+    fn write(&mut self, bytes: &[u8]) {
+        for &byte in bytes {
+            self.write_u64(u64::from(byte));
+        }
+    }
+
+    fn write_u64(&mut self, value: u64) {
+        self.0 = (self.0.rotate_left(5) ^ value).wrapping_mul(0x517c_c1b7_2722_0a95);
+    }
+}
+
+pub type NodeMap<V> =
+    std::collections::HashMap<NodeId, V, std::hash::BuildHasherDefault<NodeHasher>>;
+pub type NodeSet = std::collections::HashSet<NodeId, std::hash::BuildHasherDefault<NodeHasher>>;
+
 #[derive(Clone, Copy, Debug, Default, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Revision(pub(crate) u64);
 
@@ -317,7 +342,7 @@ pub struct DisplayOptions {
     pub branch_suffix: Arc<str>,
     pub pattern: Arc<str>,
     /** Ordered result membership; Tree keeps connecting ancestors, List follows this order. */
-    pub filter: Option<Arc<BTreeMap<NodeId, usize>>>,
+    pub filter: Option<Arc<NodeMap<usize>>>,
     pub case_sensitive: bool,
     pub fuzzy: bool,
     pub regex: bool,

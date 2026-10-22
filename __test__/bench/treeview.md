@@ -27,18 +27,19 @@ filter 以 `set_display` 在收窄与放宽之间交替，计时不含 consumer 
 
 | 路径                    | Tree 输入到 flush |   Tree 发布段 | Ancestry 输入到 flush | Ancestry 发布段 |
 | ----------------------- | ----------------: | ------------: | --------------------: | --------------: |
-| 单行更新，无过滤        |       1.11 / 3.20 |   0.91 / 2.92 |           1.40 / 2.58 |     1.17 / 2.06 |
-| 单行更新，过滤态        |       1.90 / 4.24 |   1.61 / 3.93 |           1.86 / 4.08 |     1.55 / 3.57 |
-| Selection               |       2.29 / 3.61 |   0.63 / 1.43 |           2.32 / 4.08 |     0.61 / 1.39 |
-| Filter 收窄到 100 行    |      9.29 / 11.43 |   3.38 / 4.92 |         11.30 / 12.95 |     3.34 / 4.57 |
-| Filter 放宽到 50,000 行 |     36.03 / 45.45 | 23.54 / 30.38 |         40.20 / 53.35 |   24.25 / 36.86 |
+| 单行更新，无过滤        |       1.99 / 4.36 |   1.69 / 3.91 |           1.45 / 2.55 |     1.16 / 2.16 |
+| 单行更新，过滤态        |       2.11 / 4.55 |   1.84 / 4.01 |           1.82 / 4.44 |     1.54 / 4.02 |
+| Selection               |       2.34 / 3.79 |   0.64 / 1.40 |           2.38 / 3.30 |     0.62 / 1.35 |
+| Filter 收窄到 100 行    |       7.89 / 9.45 |   3.28 / 4.77 |          9.99 / 12.10 |     3.33 / 5.22 |
+| Filter 放宽到 50,000 行 |     30.76 / 36.20 | 24.11 / 29.27 |         31.87 / 40.22 |   24.03 / 32.19 |
 
 - 与[性能契约](../../spec/design/treeview/performance.md#延迟口径与目标)的对应：发布段即 render 的 Lua 发布加 redraw，
   对应“常见局部发布及当前窗口 redraw”（p95 ≤ 8 ms）；单行更新与 Selection 的输入到 flush 对应“已加载数据上的
   局部交互到 Frame flush”（p95 ≤ 16 ms）；filter 的输入到 flush 对应 50,000 驻留候选的 filter/sort 目标（p95 ≤ 50 ms）。
-- 放宽到 50,000 行没有稳定达到 50 ms：Ancestry 合并 p95 为 53.35 ms，各进程 p95 为 41.3–63.2 ms；Tree 合并 45.45 ms，
-  各进程 37.9–51.1 ms。尾部主要在 Lua staging（Ancestry median 19.34 / p95 31.30 ms），其次是输入到 Lua 观察到投影
-  （15.95 / 17.70 ms）。同日把等待轮询从 1 ms 放宽到 20 ms 复测 Ancestry，p95 为 49.71 ms，测量 RPC 的影响在进程间波动之内。
+- 放宽到 50,000 行各进程 p95：Tree 34.1–39.4 ms，Ancestry 34.1–45.1 ms。同日优化前为 Tree 45.45 / Ancestry 53.35 ms
+  （合并 p95，各进程最高 63.2 ms），输入到 Lua 观察到投影由 12.4 / 15.9 ms 降到 6.68 / 7.74 ms（median），见下文 Rust 测量。
+  其余主要是 Lua staging（Ancestry median 19.36 / p95 26.07 ms），即逐行导出 50,000 行正文及其 GC。
+  等待轮询从 1 ms 放宽到 20 ms 的同日对照显示，测量 RPC 的影响在进程间波动之内。
 - 旧记录的单行更新为 9.161 / 11.469 ms，其中“输入到投影完成”的 8.374 ms 实为连续更新落在发布节奏内的等待：
   同日去掉间隔的对照复现了 9.24 ms，节奏等待占 8.43 ms；孤立更新时输入到 Lua 观察到投影的 median 为 0.19 ms。
 - 全局 sort、压缩链拆合、排序视图单项插入与宽目录 selected-only 变化已没有驱动，旧记录见 git 历史。
@@ -47,17 +48,23 @@ filter 以 `set_display` 在收窄与放宽之间交替，计时不含 consumer 
 
 `rust/yoz/src/ux/treeview/perf_tests.rs` 中的 release 测量默认 ignored，各自打印样本并只断言正确性：
 `t_ancestry_unrelated_subtree_performance`、`t_ancestry_forest_leaf_performance`、`t_ancestry_deep_rename_performance`、
-`t_filetree_support_performance`、`t_ancestry_filter_performance`。逐个运行，不并发其他 build、tests 或 benchmark：
+`t_filetree_support_performance`、`t_ancestry_filter_performance`、`t_ranked_filter_performance`。逐个运行，
+不并发其他 build、tests 或 benchmark；`<name>` 为完整路径，如 `ux::treeview::perf_tests::t_ranked_filter_performance`：
 
 ```sh
 cargo test --manifest-path rust/Cargo.toml -p yoz --release --lib <name> -- --exact --ignored --nocapture
 ```
 
-2026-10-21（环境同上）：三 states 的 50k leaf 更新（`ancestry_wide_leaf`，n=100）p50 0.031 / p95 0.036 ms；
-在 native owner 上准备 50k 个显式操作 roots（`task_prepare`，n=10）p50 55.672 / p95 90.302 ms，与局部 UI 交互分开；
-8k 祖先过滤批次（`ancestry_filtered_batch`，n=10）p50 13.403 / p95 17.286 ms；50k 行祖先过滤的投影阶段
-（`ancestry_filter_expand`，n=50）p50 15.187 / p95 15.954 ms。这些测试按 p50 / p95 打印，n=10 时 p95 接近最大值。
-深度安全另由常规测试覆盖 10k 层构建、文本存储与迭代释放。
+2026-10-22（环境同上）：三 states 的 50k leaf 更新（`ancestry_wide_leaf`，n=100）p50 0.031 / p95 0.034 ms；
+在 native owner 上准备 50k 个显式操作 roots（`task_prepare`，n=10）p50 44.209 / p95 48.121 ms，与局部 UI 交互分开；
+8k 祖先过滤批次（`ancestry_filtered_batch`，n=10）p50 13.447 / p95 14.740 ms；50k 行祖先过滤的投影阶段
+（`ancestry_filter_expand`，n=50）p50 6.691 / p95 7.573 ms；按 filter 排名放宽到 50k 行的投影（`ranked_filter_expand`，
+即 Picker 的结果顺序，n=50）List p50 9.205 / p95 10.254 ms、Tree p50 5.247 / p95 5.764 ms。这些测试按 p50 / p95 打印，
+n=10 时 p95 接近最大值。深度安全另由常规测试覆盖 10k 层构建、文本存储与迭代释放。
+
+- 同日优化前，同样场景下祖先过滤投影 p50 为 15.19 ms，按排名的 List 为 69.27 ms、Tree 为 7.61 ms。优化包括：
+  List 排序对每项只取一次排名并沿用遍历时找到的节点，不再在每次比较时查询 filter、再按排名顺序回查持久节点树；
+  NodeId 集合与 filter 使用 FxHash；精确匹配只判断是否包含，不为全部对齐位置打分。
 
 `ux::treeview::incremental::tests::t_large_multi_root_mutations_keep_retained_frames` 是显式 ignored 的压力用例：
 2 GiB 预算下 200,005 个 source 节点、三个不同 root 与 Tree/List 模式的 states、三个持有的旧 frame，
@@ -170,6 +177,7 @@ native 确认 median 0.39 / p95 0.49 ms，cursor 零正文写入，保留 Lua he
 ## 普通 List 与 Find Explorer
 
 首开、过滤与清空过滤的采样入口 `treeview_migration.lua` 已随迁移期工具删除，复测需要新 runner。
+下表早于 2026-10-22 的投影优化；按 filter 排名的 List 投影部分改由 Rust 测量 `t_ranked_filter_performance` 覆盖。
 最新数据：2026-10-12 Flat List producer 收敛（Apple M5 Pro、Neovim 0.12.6、100×30 attached UI，每档 5 对独立进程交替）：
 
 | List 项数 | 首开 UI ms | 首开主线程 CPU ms | Lua heap MiB | 进程 footprint MiB |

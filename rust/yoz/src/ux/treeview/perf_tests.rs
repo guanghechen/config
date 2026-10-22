@@ -550,3 +550,56 @@ fn t_ancestry_filter_performance() {
         );
     }
 }
+
+#[test]
+#[ignore = "explicit release-mode filter stage measurement"]
+fn t_ranked_filter_performance() {
+    for mode in [Mode::List, Mode::Tree] {
+        let (mut engine, state, _root) = fixture(50_000);
+        let ids: Vec<NodeId> = (0..50_000)
+            .map(|i| engine.source.id(format!("n{i}").as_str()).unwrap())
+            .collect();
+        // Picker scores reorder the source: a stride permutation stands in for them.
+        let wide: Arc<NodeMap<usize>> = Arc::new(
+            (0..50_000usize)
+                .map(|rank| (ids[(rank * 7919) % 50_000], rank))
+                .collect(),
+        );
+        let narrow: Arc<NodeMap<usize>> = Arc::new(
+            ids.iter()
+                .take(100)
+                .enumerate()
+                .map(|(rank, id)| (*id, rank))
+                .collect(),
+        );
+        let mut samples = Vec::new();
+        for index in 0..100 {
+            set_display(
+                &mut engine,
+                state,
+                DisplayOptions {
+                    mode,
+                    filter: Some(if index % 2 == 0 {
+                        narrow.clone()
+                    } else {
+                        wide.clone()
+                    }),
+                    ..DisplayOptions::default()
+                },
+            );
+            let start = Instant::now();
+            let frame = project(&mut engine, state);
+            let elapsed = start.elapsed().as_secs_f64() * 1000.0;
+            if index % 2 == 1 {
+                assert_eq!(frame.len(), 50_000);
+                samples.push(elapsed);
+            }
+        }
+        samples.sort_by(f64::total_cmp);
+        println!(
+            "ranked_filter_expand: mode={mode:?}, rows=50000, n=50, p50_ms={:.3}, p95_ms={:.3}",
+            percentile(&samples, 0.5),
+            percentile(&samples, 0.95)
+        );
+    }
+}

@@ -115,6 +115,10 @@ pub(crate) fn is_match(
                 (TermKind::Fuzzy, Text::Bytes(_)) => {
                     algo::fuzzy_index(text, &term.text, term.case_sensitive).is_some()
                 }
+                // Any occurrence matches; the alignment only decides the score.
+                (TermKind::Exact, Text::Bytes(bytes)) => {
+                    algo::contains(bytes, &term.text, term.case_sensitive)
+                }
                 _ => run(classes, term, text, options, scratch).is_some(),
             };
             found != term.inverse
