@@ -145,7 +145,7 @@ function M.open(props)
 
   ---@type integer
   local winnr = vim.api.nvim_open_win(bufnr, true, {
-    anchor = "NW",
+    anchor = props.anchor or "NW",
     border = "rounded",
     col = col,
     focusable = true,
@@ -359,6 +359,7 @@ function M.confirm(props)
     title = props.title,
     position = props.position,
     relative = props.relative,
+    anchor = props.anchor,
     win = props.win,
     row = props.row,
     col = props.col,

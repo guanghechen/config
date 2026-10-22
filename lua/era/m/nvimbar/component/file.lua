@@ -159,12 +159,10 @@ function M.path(position)
 
     era.fn.select_copy_filepath({
       filepath = filepath,
-      winopts = {
-        relative = "editor",
-        anchor = "SW",
-        row = vim.o.lines - 1,
-        col = 36,
-      },
+      relative = "editor",
+      anchor = "SW",
+      row = vim.o.lines - 1,
+      col = 36,
     })
   end) or ""
 

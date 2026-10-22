@@ -16,6 +16,7 @@ local function select_copy_filepath(params)
     title = "Copy filepath",
     position = params.position or "cursor",
     relative = params.relative,
+    anchor = params.anchor,
     win = params.win,
     row = params.row,
     col = params.col,
