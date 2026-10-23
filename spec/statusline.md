@@ -305,7 +305,10 @@ Session list 的 group、order、focus 与 last-session 语义由 `session-navig
 - bell source 为 tmux `session_alerts`，包含 `!` 即表示该 session 有 bell；
 - session item state prefix 可同时包含 running spinner 与 bell，位于 title 前且不改变 slant edge；
 - `literal_text` 必须包含每个可见 icon 的 width placeholder；
-- 超长 session name 在固定 byte budget 内截断。
+- 超长 session name 在固定 byte budget 内截断；
+- tmux 接受 `new-session -s ''`：空 name 显示为 `@GHC_SYM_SESSION_UNNAMED` + session id
+  （status01 session pill 同规则），不参与 last-session 高亮；render / navigation context
+  以 `session_id` 判定 session 是否解析成功，不依赖 name。
 
 ### 8.1 Running indicator
 

@@ -122,6 +122,39 @@ with tempfile.TemporaryDirectory(prefix="ghc-tmux-session-names-", dir="/tmp") a
                 assert "#[fg=black,bg=blue,nobold]" in item, (name, item)
                 tmux("set-option", "-s", "@GHC_SL_SESSION_STATES", "")
             tmux("kill-session", "-t", target)
+
+        # tmux accepts an empty name; status02 must still render and navigate it.
+        unnamed = tmux("new-session", "-d", "-s", "", "-P", "-F", "#{session_id}",
+                       "/bin/sleep", "120")
+        unnamed_title = f"\U000f07e2 {unnamed}"
+        unnamed_env = dict(renderer_env, TMUX_PANE=tmux(
+            "display-message", "-p", "-t", unnamed, "#{pane_id}"))
+        for rows in ["1", "2"]:
+            tmux("set-option", "-g", "@GHC_SL_ROWS", rows)
+            tmux("switch-client", "-c", client_name, "-t", unnamed)
+            apply()
+            assert tmux("show-options", "-v", "-t", unnamed, "status") == (
+                "on" if rows == "1" else "2"
+            )
+            session_item(unnamed, unnamed, unnamed_title)
+
+            state = subprocess.run(
+                [binary, "dump-state"], env=unnamed_env, check=True,
+                capture_output=True, text=True, timeout=35
+            ).stdout
+            index = next(line.split(".")[0].strip() for line in state.splitlines()
+                         if line.rstrip().endswith(f". {unnamed}"))
+            subprocess.run(
+                [binary, "session", "focus", index], env=unnamed_env, check=True,
+                capture_output=True, text=True, timeout=35
+            )
+
+            tmux("switch-client", "-c", client_name, "-t", main)
+            apply()
+            item = session_item(main, unnamed, unnamed_title)
+            # client_last_session is now empty, which must not mark the unnamed item.
+            assert "#[fg=black,bg=blue,reverse]" in item, item
+        tmux("kill-session", "-t", unnamed)
     finally:
         subprocess.run(tmux_command + ["kill-server"], env=env, capture_output=True, timeout=10)
         if client is not None:

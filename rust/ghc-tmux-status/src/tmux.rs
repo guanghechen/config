@@ -532,7 +532,7 @@ fn snapshot_command_args(
             "display-message".to_string(),
             "-p".to_string(),
             format!(
-                "{CONTEXT_MARK}{FIELD_SEP}#{{client_width}}{FIELD_SEP}#{{session_name}}{FIELD_SEP}#{{client_last_session}}{FIELD_SEP}#{{host}}{FIELD_SEP}#{{session_created}}"
+                "{CONTEXT_MARK}{FIELD_SEP}#{{client_width}}{FIELD_SEP}#{{session_id}}{FIELD_SEP}#{{session_name}}{FIELD_SEP}#{{client_last_session}}{FIELD_SEP}#{{host}}{FIELD_SEP}#{{session_created}}"
             ),
         ],
     );
@@ -599,7 +599,7 @@ fn session_navigation_command_args() -> Vec<String> {
         [
             "display-message".to_string(),
             "-p".to_string(),
-            format!("{NAVIGATION_MARK}{FIELD_SEP}#{{session_name}}"),
+            format!("{NAVIGATION_MARK}{FIELD_SEP}#{{session_id}}{FIELD_SEP}#{{session_name}}"),
         ],
     );
     append_options_commands(
@@ -954,11 +954,6 @@ fn parse_snapshot_output(
     }
     let client_widths = lines.filter_map(parse_client_line).collect();
 
-    if current_session_name.is_empty() {
-        return Err(AppError::TmuxParse(
-            "current session name is empty".to_string(),
-        ));
-    }
     let status = sessions
         .iter()
         .find(|session| session.name == current_session_name)
@@ -1019,8 +1014,10 @@ fn parse_session_navigation_output(output: &str) -> AppResult<SessionNavigationS
         .ok_or_else(|| AppError::TmuxParse("missing navigation context".to_string()))?;
     let current_session_name = context
         .strip_prefix(&format!("{NAVIGATION_MARK}{FIELD_SEP}"))
-        .filter(|name| !name.is_empty())
+        .and_then(|fields| fields.split_once(FIELD_SEP))
+        .filter(|(id, _)| !id.is_empty())
         .ok_or_else(|| AppError::TmuxParse("invalid navigation context".to_string()))?
+        .1
         .to_string();
     let mut option_values = parse_option_values(&mut lines, 2)?.into_iter();
     let order_value = option_values.next().unwrap_or_default();
@@ -1136,6 +1133,12 @@ fn parse_context_line(context_line: &str) -> AppResult<(usize, String, String, S
         .next()
         .and_then(|value| value.parse::<usize>().ok())
         .unwrap_or(200);
+    // tmux accepts `new-session -s ''`, so only the id proves a resolved session.
+    if fields.next().unwrap_or_default().is_empty() {
+        return Err(AppError::TmuxParse(
+            "current session is unavailable".to_string(),
+        ));
+    }
     let current_session_name = fields.next().unwrap_or_default().to_string();
     let client_last_session = fields.next().unwrap_or_default().to_string();
     let host = fields.next().unwrap_or_default().to_string();
@@ -1354,7 +1357,7 @@ mod tests {
         let option_values = vec![""; DIAGNOSTIC_SNAPSHOT_OPTIONS.len()];
         let options = option_section(&option_values);
         let output = format!(
-            "{CONTEXT_MARK}{FIELD_SEP}120{FIELD_SEP}yui{FIELD_SEP}dev{FIELD_SEP}host{FIELD_SEP}42
+            "{CONTEXT_MARK}{FIELD_SEP}120{FIELD_SEP}$1{FIELD_SEP}yui{FIELD_SEP}dev{FIELD_SEP}host{FIELD_SEP}42
 {options}
 {SESSIONS_MARK}
 $1	yui	0	on	02:wide	64	84
@@ -1390,6 +1393,39 @@ $2	90"
     }
 
     #[test]
+    fn snapshot_accepts_an_unnamed_current_session() {
+        let option_values = vec![""; DIAGNOSTIC_SNAPSHOT_OPTIONS.len()];
+        let options = option_section(&option_values);
+        let output = format!(
+            "{CONTEXT_MARK}{FIELD_SEP}120{FIELD_SEP}$2{FIELD_SEP}{FIELD_SEP}yui{FIELD_SEP}host{FIELD_SEP}42
+{options}
+{SESSIONS_MARK}
+$1	yui	0	on
+$2		0	2
+{CLIENTS_MARK}
+$2	120"
+        );
+
+        let snapshot = parse_snapshot_output(&output, DIAGNOSTIC_SNAPSHOT_OPTIONS).unwrap();
+        assert_eq!(snapshot.current_session_name, "");
+        assert_eq!(snapshot.status, "2");
+    }
+
+    #[test]
+    fn snapshot_rejects_an_unresolved_session() {
+        let option_values = vec![""; DIAGNOSTIC_SNAPSHOT_OPTIONS.len()];
+        let options = option_section(&option_values);
+        let output = format!(
+            "{CONTEXT_MARK}{FIELD_SEP}120{FIELD_SEP}{FIELD_SEP}{FIELD_SEP}{FIELD_SEP}host{FIELD_SEP}0
+{options}
+{SESSIONS_MARK}
+{CLIENTS_MARK}"
+        );
+
+        assert!(parse_snapshot_output(&output, DIAGNOSTIC_SNAPSHOT_OPTIONS).is_err());
+    }
+
+    #[test]
     fn parses_session_line_reads_bell_flag_field() {
         let belling = parse_session_line(
             "$1\tlegacy\t1\ton\t02:wide\t64\t84\tfmt0\tfmt1\t02:wide:v1:abcd\tw0\tw1\tw2\tw3\t123",
@@ -1416,7 +1452,7 @@ $2	90"
     fn parses_minimal_session_navigation_snapshot() {
         let options = option_section(&["$2\t$1", "7"]);
         let output = format!(
-            "{NAVIGATION_MARK}{FIELD_SEP}main\n{options}\n{SESSIONS_MARK}\n$1\tmain\n$2\twork"
+            "{NAVIGATION_MARK}{FIELD_SEP}$1{FIELD_SEP}main\n{options}\n{SESSIONS_MARK}\n$1\tmain\n$2\twork"
         );
 
         let snapshot = parse_session_navigation_output(&output).unwrap();
@@ -1425,6 +1461,25 @@ $2	90"
         assert_eq!(snapshot.order_revision, "7");
         assert_eq!(snapshot.sessions.len(), 2);
         assert_eq!(snapshot.sessions[1].name, "work");
+    }
+
+    #[test]
+    fn session_navigation_accepts_an_unnamed_current_session() {
+        let options = option_section(&["", ""]);
+        let output =
+            format!("{NAVIGATION_MARK}{FIELD_SEP}$2{FIELD_SEP}\n{options}\n{SESSIONS_MARK}\n$2\t");
+
+        let snapshot = parse_session_navigation_output(&output).unwrap();
+        assert_eq!(snapshot.current_session_name, "");
+        assert_eq!(snapshot.sessions[0].id, "$2");
+    }
+
+    #[test]
+    fn session_navigation_rejects_an_unresolved_session() {
+        let options = option_section(&["", ""]);
+        let output = format!("{NAVIGATION_MARK}{FIELD_SEP}{FIELD_SEP}\n{options}\n{SESSIONS_MARK}");
+
+        assert!(parse_session_navigation_output(&output).is_err());
     }
 
     #[test]
@@ -1628,7 +1683,7 @@ $2	90"
         option_values[network_index] = "1	2	3	4	5";
         let options = option_section(&option_values);
         let output = format!(
-            "{CONTEXT_MARK}{FIELD_SEP}200{FIELD_SEP}yui{FIELD_SEP}{FIELD_SEP}host{FIELD_SEP}42
+            "{CONTEXT_MARK}{FIELD_SEP}200{FIELD_SEP}$1{FIELD_SEP}yui{FIELD_SEP}{FIELD_SEP}host{FIELD_SEP}42
 {options}
 {SESSIONS_MARK}
 $1	yui	0	off

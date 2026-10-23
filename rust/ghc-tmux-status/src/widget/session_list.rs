@@ -17,6 +17,7 @@ const INACTIVE_NUM_BG: &str = "#{@GHC_SL_BG_SESSION_ITEM_NUM}";
 const INACTIVE_NUM_FG: &str = "#{@GHC_SL_FG_SESSION_ITEM_NUM}";
 const LAST_FG: &str = "#{@GHC_SL_FG_SESSION_ITEM_LAST}";
 const INACTIVE_BELL_FG: &str = "#{@GHC_SL_FG_SESSION_ITEM_BELL}";
+const UNNAMED_SYMBOL: &str = "#{@GHC_SYM_SESSION_UNNAMED}";
 const RANGE_CLOSE: &str = "#[norange]#[default]";
 /*
  * The last item always pads one trailing cell so status-left-length stays constant
@@ -42,10 +43,12 @@ const PERCENT_LITERAL_ESCAPE: &str = "}#{a:37}#{l:";
 const OVERFLOW_LITERAL: &str = " … ";
 
 /*
- * This placeholder mirrors the arrow separator glyph in rich_text. status-left-length
- * uses literal_text as a tmux-width shadow, so update it with the rich item shape.
+ * These placeholders mirror the arrow separator and unnamed-session glyphs in
+ * rich_text. status-left-length uses literal_text as a tmux-width shadow, so
+ * update them with the rich item shape.
  */
 const ARROW_LITERAL: char = '\u{e0b0}';
+const UNNAMED_LITERAL: char = '\u{f07e2}';
 const STATE_LITERAL: char = '\u{00a4}';
 
 pub struct SessionListWidget;
@@ -148,7 +151,26 @@ fn render_session_window(context: &RenderContext, start: usize, end: usize) -> R
         let index = start + offset + 1;
         let is_last = entry_offset + 1 == entry_count;
         let is_active = session.name == context.group.current_session_name;
-        let (display_name, name_was_truncated) = bounded_session_name(&session.name);
+        /*
+         * tmux accepts `new-session -s ''`; such an item shows a symbol and its id.
+         * It skips last-focus: `client_last_session` is also empty without a previous
+         * session, so the comparison cannot tell the two apart.
+         */
+        let (title_literal, title, last_focus_session_name) = if session.name.is_empty() {
+            (
+                format!("{UNNAMED_LITERAL} {}", session.id),
+                format!("{UNNAMED_SYMBOL} {}", session.id),
+                None,
+            )
+        } else {
+            let (display_name, name_was_truncated) = bounded_session_name(&session.name);
+            let title = display_literal(&display_name);
+            (
+                display_name,
+                title,
+                (!name_was_truncated).then_some(session.name.as_str()),
+            )
+        };
 
         rich_text.push_str(&format!("#[range=session|{}]", session.id));
         literal_text.push(ARROW_LITERAL);
@@ -156,13 +178,13 @@ fn render_session_window(context: &RenderContext, start: usize, end: usize) -> R
             Some(left_active) => rich_text.push_str(&render_join_separator(left_active, is_active)),
             None => rich_text.push_str(&render_left_edge(is_active)),
         }
-        literal_text.push_str(&render_item_body_literal(&display_name, index, is_active));
+        literal_text.push_str(&render_item_body_literal(&title_literal, index, is_active));
         rich_text.push_str(&render_item_body_with_last_focus(
-            &display_name,
+            &title,
             &session.id,
             index,
             is_active,
-            (!name_was_truncated).then_some(session.name.as_str()),
+            last_focus_session_name,
         ));
         if is_last {
             literal_text.push(ARROW_LITERAL);
@@ -337,7 +359,7 @@ fn render_right_edge(last_active: bool) -> String {
     render_arrow(fg, LIST_SURFACE_BG, false)
 }
 
-fn render_item_body_literal(session_name: &str, index: usize, is_active: bool) -> String {
+fn render_item_body_literal(title: &str, index: usize, is_active: bool) -> String {
     /*
      * Keep one state slot in the responsive-layout shadow so idle/single-state
      * metric thresholds remain stable. status-left-length separately reserves
@@ -345,34 +367,36 @@ fn render_item_body_literal(session_name: &str, index: usize, is_active: bool) -
      * separates title and index with " | ", one column wider than inactive.
      */
     let separator = if is_active { " | " } else { "  " };
-    format!(" {STATE_LITERAL} {session_name}{separator}{index} ")
+    format!(" {STATE_LITERAL} {title}{separator}{index} ")
 }
 
+/**
+ * `title` is draw-safe rich text; the last-focus name stays raw for comparison.
+ */
 fn render_item_body_with_last_focus(
-    session_name: &str,
+    title: &str,
     session_id: &str,
     index: usize,
     is_active: bool,
     last_focus_session_name: Option<&str>,
 ) -> String {
     if is_active {
-        return active_item_body(session_name, session_id, index);
+        return active_item_body(title, session_id, index);
     }
-    inactive_item_body_with_last_focus(session_name, session_id, index, last_focus_session_name)
+    inactive_item_body_with_last_focus(title, session_id, index, last_focus_session_name)
 }
 
-fn active_item_body(session_name: &str, session_id: &str, index: usize) -> String {
-    let name = display_literal(session_name);
+fn active_item_body(title: &str, session_id: &str, index: usize) -> String {
     let state_prefix = session_state_prefix(session_id, " #{@GHC_SYM_WIN_BELL}");
 
     // Reverse cells stay opaque in Ghostty; swapping colors preserves the theme.
     format!(
-        "#[fg={ACTIVE_BG}#,bg={ACTIVE_FG}#,reverse#,bold]{state_prefix} {name} | {index} #[noreverse]"
+        "#[fg={ACTIVE_BG}#,bg={ACTIVE_FG}#,reverse#,bold]{state_prefix} {title} | {index} #[noreverse]"
     )
 }
 
 fn inactive_item_body_with_last_focus(
-    session_name: &str,
+    title: &str,
     session_id: &str,
     index: usize,
     last_focus_session_name: Option<&str>,
@@ -385,7 +409,6 @@ fn inactive_item_body_with_last_focus(
         || INACTIVE_NUM_FG.to_string(),
         |name| last_focus_fg(name, INACTIVE_NUM_FG),
     );
-    let name = display_literal(session_name);
     let bell_prefix =
         format!(" #[fg={INACTIVE_NAME_BG}#,bg={INACTIVE_BELL_FG}#,bold]#{{@GHC_SYM_WIN_BELL}}");
     let state_prefix = session_state_prefix(session_id, &bell_prefix);
@@ -396,7 +419,7 @@ fn inactive_item_body_with_last_focus(
      * only in its own cell renders half in the title colour.
      */
     format!(
-        "#[fg={INACTIVE_NAME_BG}#,bg={name_fg}#,reverse]{state_prefix} #[fg={INACTIVE_NAME_BG}#,bg={name_fg}#,nobold]{name} #[fg={INACTIVE_NUM_BG}#,bg={num_fg}] {index} #[noreverse]"
+        "#[fg={INACTIVE_NAME_BG}#,bg={name_fg}#,reverse]{state_prefix} #[fg={INACTIVE_NAME_BG}#,bg={name_fg}#,nobold]{title} #[fg={INACTIVE_NUM_BG}#,bg={num_fg}] {index} #[noreverse]"
     )
 }
 
@@ -430,11 +453,18 @@ mod tests {
 
     #[test]
     fn item_body_bakes_the_owner_active_branch() {
-        let active = render_item_body_with_last_focus("tmux", "$2", 2, true, Some("tmux"));
+        let active =
+            render_item_body_with_last_focus(&display_literal("tmux"), "$2", 2, true, Some("tmux"));
         assert!(active.contains("@GHC_SL_FG_SESSION_LIST_ACTIVE"));
         assert!(!active.contains("client_last_session"));
 
-        let inactive = render_item_body_with_last_focus("tmux", "$2", 2, false, Some("tmux"));
+        let inactive = render_item_body_with_last_focus(
+            &display_literal("tmux"),
+            "$2",
+            2,
+            false,
+            Some("tmux"),
+        );
         assert!(inactive.contains("@GHC_SL_FG_SESSION_ITEM_NAME"));
         assert!(inactive.contains("#{==:#{client_last_session},#{l:tmux}}"));
         assert!(inactive.contains("@GHC_SL_SESSION_STATES"));
@@ -442,7 +472,7 @@ mod tests {
 
     #[test]
     fn active_branch_places_state_prefix_before_title() {
-        let active = active_item_body("tmux", "$2", 2);
+        let active = active_item_body(&display_literal("tmux"), "$2", 2);
         let state_prefix = session_state_prefix("$2", " #{@GHC_SYM_WIN_BELL}");
         assert_eq!(
             active,
@@ -455,7 +485,8 @@ mod tests {
 
     #[test]
     fn inactive_branch_splits_name_and_number_with_last_focus_fg() {
-        let inactive = inactive_item_body_with_last_focus("dev", "$2", 2, Some("dev"));
+        let inactive =
+            inactive_item_body_with_last_focus(&display_literal("dev"), "$2", 2, Some("dev"));
         let name_fg = "#{?#{==:#{client_last_session},#{l:dev}},#{@GHC_SL_FG_SESSION_ITEM_LAST},#{@GHC_SL_FG_SESSION_ITEM_NAME}}";
         let bell_prefix = " #[fg=#{@GHC_SL_BG_SESSION_ITEM_NAME}#,bg=#{@GHC_SL_FG_SESSION_ITEM_BELL}#,bold]#{@GHC_SYM_WIN_BELL}";
         let state_prefix = session_state_prefix("$2", bell_prefix);
@@ -502,13 +533,57 @@ mod tests {
 
     #[test]
     fn item_bodies_use_draw_safe_display_and_expand_safe_compare() {
+        let context = context_with_session_infos(
+            "a#b",
+            "",
+            vec![
+                session_info("$1", "a#b", false),
+                session_info("$2", "c#d", false),
+            ],
+        );
+        let segment = render_session_list(&context);
+
         // Display text takes the draw-safe (quadrupled) form in both branches...
-        let active = active_item_body("a#b", "$1", 1);
-        assert!(active.contains(" #{l:a####b} "));
-        let inactive = inactive_item_body_with_last_focus("a#b", "$1", 1, Some("a#b"));
-        assert!(inactive.contains("nobold]#{l:a####b} "));
+        assert!(segment.rich_text.contains(" #{l:a####b} | 1 "));
+        assert!(segment.rich_text.contains("nobold]#{l:c####d} "));
         // ...while the last-focus compare right-value keeps the expand-only (doubled) form.
-        assert!(inactive.contains("#{==:#{client_last_session},#{l:a##b}}"));
+        assert!(
+            segment
+                .rich_text
+                .contains("#{==:#{client_last_session},#{l:c##d}}")
+        );
+    }
+
+    #[test]
+    fn unnamed_session_shows_symbol_and_id_without_last_focus() {
+        let sessions = vec![
+            session_info("$1", "main", false),
+            session_info("$2", "", false),
+        ];
+
+        let on_main =
+            render_session_list(&context_with_session_infos("main", "", sessions.clone()));
+        assert!(
+            on_main
+                .rich_text
+                .contains("nobold]#{@GHC_SYM_SESSION_UNNAMED} $2 ")
+        );
+        assert!(!on_main.rich_text.contains("#{l:}"));
+        assert_eq!(
+            on_main.literal_text,
+            "\u{e0b0} ¤ main | 1 \u{e0b0} ¤ \u{f07e2} $2  2 \u{e0b0} "
+        );
+
+        let on_unnamed = render_session_list(&context_with_session_infos("", "main", sessions));
+        assert!(
+            on_unnamed
+                .rich_text
+                .contains(" #{@GHC_SYM_SESSION_UNNAMED} $2 | 2 ")
+        );
+        assert_eq!(
+            display_width(&on_main.literal_text),
+            display_width(&on_unnamed.literal_text)
+        );
     }
 
     #[test]
