@@ -1,3 +1,5 @@
+/** The lines of `text`, each as many bytes long as its width in `lwidths`, the lengths
+`calc_linewidths` measures; without widths, `text` split at line feeds. */
 pub fn parse_lines(text: &str, lwidths: Option<&[u32]>) -> Vec<String> {
     match lwidths {
         Some(widths) if !widths.is_empty() => {
@@ -17,21 +19,8 @@ pub fn parse_lines(text: &str, lwidths: Option<&[u32]>) -> Vec<String> {
                 if width == 0 {
                     lines.push(String::new());
                 } else {
-                    let mut end = offset;
-                    let mut consumed = 0usize;
-                    let mut iter = text[offset..].char_indices();
-                    while consumed < width {
-                        match iter.next() {
-                            Some((relative_idx, ch)) => {
-                                end = offset + relative_idx + ch.len_utf8();
-                                consumed += 1;
-                            }
-                            None => {
-                                end = text_len;
-                                break;
-                            }
-                        }
-                    }
+                    /* A width that ends inside a character keeps the character whole. */
+                    let end = text.ceil_char_boundary((offset + width).min(text_len));
                     lines.push(text[offset..end].to_string());
                     offset = end;
                 }
@@ -53,6 +42,21 @@ pub fn parse_lines(text: &str, lwidths: Option<&[u32]>) -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use super::parse_lines;
+    use crate::string::calc_linewidths;
+
+    #[test]
+    fn t_parse_lines_with_multibyte_widths() {
+        /* `calc_linewidths` measures bytes: "İ" takes two and each CJK character three. */
+        let text = "İab a\n中文\nend";
+        let lines = parse_lines(text, Some(&calc_linewidths(text)));
+        assert_eq!(lines, vec!["İab a", "中文", "end"]);
+    }
+
+    #[test]
+    fn t_parse_lines_keeps_characters_whole() {
+        let lines = parse_lines("中文", Some(&[1, 1]));
+        assert_eq!(lines, vec!["中", "文"]);
+    }
 
     #[test]
     fn t_parse_lines_with_widths() {
