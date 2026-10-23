@@ -304,7 +304,7 @@ impl Scan {
                         }
                         let old_identity = self.known.observe_identity(entry.identity);
                         let defer = if let Some(ordinal) = named {
-                            self.known.entry(ordinal)?.identity != entry.identity
+                            self.known.identity_at(ordinal)? != entry.identity
                         } else {
                             old_identity
                         };
@@ -376,7 +376,6 @@ impl Scan {
                 old = named.and_then(|ordinal| self.known.take(ordinal));
             }
             let (key, reordered) = if let Some(ordinal) = old {
-                let old_entry = self.known.entry(ordinal)?;
                 let id = self.known.node(ordinal);
                 let key = self
                     .known
@@ -385,42 +384,50 @@ impl Scan {
                     .expect("captured child")
                     .key
                     .clone();
-                if old_entry.identity == entry.identity && old_entry.kind == entry.kind {
-                    if old_entry != entry {
-                        let data = entry.node_data();
-                        page.operations.push(Operation::Update {
-                            node: NodeRef::Key(key.clone()),
-                            patch: NodePatch {
-                                label: Some(data.label),
-                                payload: Some(data.payload),
-                                can_expand: Some(data.can_expand),
-                                foldable: Some(data.foldable),
-                                hidden: Some(data.hidden),
-                                completeness: entry.target_unknown.then_some(Completeness::Partial),
-                                ..NodePatch::default()
-                            },
-                        });
-                    }
-                    let reordered = old_entry.sort_cmp(&entry).is_ne();
-                    if reordered {
-                        self.known.retire(ordinal);
-                        self.reserve_order(&entry, &key)?;
-                        page.operations.push(Operation::Reparent {
-                            node: NodeRef::Key(key.clone()),
-                            parent: Some(node.into()),
-                            position: self.position(&entry, &sort)?,
-                        });
-                    }
-                    (key, reordered)
+                if self.known.unchanged(ordinal, &entry)? {
+                    /* An identical observation keeps its data and its place. */
+                    (key, false)
                 } else {
-                    self.known.retire(ordinal);
-                    page.operations.push(Operation::Remove {
-                        node: NodeRef::Key(key),
-                    });
-                    (
-                        self.insert(node, &entry, &sort, &mut page.operations)?,
-                        true,
-                    )
+                    let old_entry = self.known.entry(ordinal)?;
+                    if old_entry.identity == entry.identity && old_entry.kind == entry.kind {
+                        if old_entry != entry {
+                            let data = entry.node_data();
+                            page.operations.push(Operation::Update {
+                                node: NodeRef::Key(key.clone()),
+                                patch: NodePatch {
+                                    label: Some(data.label),
+                                    payload: Some(data.payload),
+                                    can_expand: Some(data.can_expand),
+                                    foldable: Some(data.foldable),
+                                    hidden: Some(data.hidden),
+                                    completeness: entry
+                                        .target_unknown
+                                        .then_some(Completeness::Partial),
+                                    ..NodePatch::default()
+                                },
+                            });
+                        }
+                        let reordered = old_entry.sort_cmp(&entry).is_ne();
+                        if reordered {
+                            self.known.retire(ordinal);
+                            self.reserve_order(&entry, &key)?;
+                            page.operations.push(Operation::Reparent {
+                                node: NodeRef::Key(key.clone()),
+                                parent: Some(node.into()),
+                                position: self.position(&entry, &sort)?,
+                            });
+                        }
+                        (key, reordered)
+                    } else {
+                        self.known.retire(ordinal);
+                        page.operations.push(Operation::Remove {
+                            node: NodeRef::Key(key),
+                        });
+                        (
+                            self.insert(node, &entry, &sort, &mut page.operations)?,
+                            true,
+                        )
+                    }
                 }
             } else {
                 (

@@ -1,5 +1,6 @@
 use super::{Entry, FileIdentity};
 use crate::ux::treeview::{Error, ErrorCode, NodeId, Result, Source};
+use std::ffi::OsStr;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -40,15 +41,33 @@ pub(crate) fn key() -> Result<Arc<str>> {
     sequence().map(|value| format!("ft{value}").into())
 }
 
+fn payload(source: &Source, node: NodeId) -> Result<&Option<Arc<[u8]>>> {
+    Ok(&source
+        .node(node)
+        .ok_or_else(|| Error::missing(node))?
+        .data
+        .payload)
+}
+
 pub(crate) fn entry(source: &Source, node: NodeId) -> Result<Entry> {
-    Entry::from_payload(
-        &source
-            .node(node)
-            .ok_or_else(|| Error::missing(node))?
-            .data
-            .payload,
-    )
-    .map_err(|error| io_error("decode resource", error))
+    Entry::from_payload(payload(source, node)?).map_err(|error| io_error("decode resource", error))
+}
+
+/** A node's resource identity, read without decoding the rest of the resource. */
+pub(crate) fn identity(source: &Source, node: NodeId) -> Result<FileIdentity> {
+    Entry::payload_identity(payload(source, node)?)
+        .map_err(|error| io_error("decode resource", error))
+}
+
+/** Whether a node's resource is named `name`, compared without decoding the rest. */
+pub(crate) fn named(source: &Source, node: NodeId, name: &OsStr) -> Result<bool> {
+    Entry::payload_named(payload(source, node)?, name)
+        .map_err(|error| io_error("decode resource", error))
+}
+
+/** Whether `entry` encodes exactly as a node's resource, so nothing about it changed. */
+pub(crate) fn matches(source: &Source, node: NodeId, entry: &Entry) -> Result<bool> {
+    Ok(entry.matches_payload(payload(source, node)?))
 }
 
 pub(crate) fn path(source: &Source, node: NodeId) -> Result<PathBuf> {

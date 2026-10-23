@@ -45,7 +45,7 @@ impl Known {
                 return Err(Error::stale("directory scan cancelled"));
             }
             identities.push(Identity {
-                value: resource::entry(&source, id)?.identity,
+                value: resource::identity(&source, id)?,
                 original: Some(ordinal as u32),
                 observed: 0,
             });
@@ -85,6 +85,19 @@ impl Known {
         self.children[ordinal]
     }
 
+    pub fn identity_at(&self, ordinal: usize) -> Result<FileIdentity> {
+        resource::identity(&self.source, self.children[ordinal])
+    }
+
+    /** Whether `entry` matches the captured child exactly, compared without decoding the child. */
+    pub fn unchanged(&self, ordinal: usize, entry: &Entry) -> Result<bool> {
+        resource::matches(&self.source, self.children[ordinal], entry)
+    }
+
+    fn named_at(&self, ordinal: usize, name: &OsStr) -> Result<bool> {
+        resource::named(&self.source, self.children[ordinal], name)
+    }
+
     pub fn lower_bound(&self, directory: bool, name: &OsStr) -> Result<usize> {
         let (mut first, mut last) = (0, self.children.len());
         while first < last {
@@ -102,13 +115,13 @@ impl Known {
         /* Most refresh observations retain a unique identity and name; avoid decoding a name search path. */
         if let Some(index) = self.identity(entry.identity)
             && let Some(ordinal) = self.identities[index].original
-            && self.entry(ordinal as usize)?.name == entry.name
+            && self.named_at(ordinal as usize, &entry.name)?
         {
             return Ok(Some(ordinal as usize));
         }
         for directory in [entry.directory(), !entry.directory()] {
             let ordinal = self.lower_bound(directory, &entry.name)?;
-            if ordinal < self.children.len() && self.entry(ordinal)?.name == entry.name {
+            if ordinal < self.children.len() && self.named_at(ordinal, &entry.name)? {
                 return Ok(Some(ordinal));
             }
         }
@@ -149,7 +162,7 @@ impl Known {
 
     pub fn renamed(&self, entry: &Entry) -> Result<bool> {
         self.unique(entry.identity).map_or(Ok(false), |ordinal| {
-            Ok(self.entry(ordinal)?.name != entry.name)
+            Ok(!self.named_at(ordinal, &entry.name)?)
         })
     }
 

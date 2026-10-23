@@ -169,6 +169,22 @@ fn os_encoded_len(value: &OsStr) -> usize {
 }
 
 #[cfg(unix)]
+fn os_equals(value: &[u8], name: &OsStr) -> bool {
+    use std::os::unix::ffi::OsStrExt;
+    value == name.as_bytes()
+}
+
+#[cfg(windows)]
+fn os_equals(value: &[u8], name: &OsStr) -> bool {
+    use std::os::windows::ffi::OsStrExt;
+    value.len().is_multiple_of(2)
+        && value
+            .chunks_exact(2)
+            .map(|pair| u16::from_le_bytes([pair[0], pair[1]]))
+            .eq(name.encode_wide())
+}
+
+#[cfg(unix)]
 fn os_string(value: &[u8]) -> io::Result<OsString> {
     use std::os::unix::ffi::OsStringExt;
     Ok(OsString::from_vec(value.to_vec()))
@@ -409,28 +425,66 @@ impl Entry {
 
     pub fn encode(&self) -> Vec<u8> {
         let mut bytes = Vec::with_capacity(self.encoded_len());
-        bytes.extend_from_slice(b"FT01");
-        bytes.push(self.kind as u8);
-        bytes.push(u8::from(self.target_unknown) | (u8::from(self.cycle) << 1));
-        put_identity(&mut bytes, self.identity);
-        bytes.push(self.target.map_or(0, |(kind, _)| kind as u8));
+        self.encode_to(&mut bytes);
+        bytes
+    }
+
+    /** Whether this entry encodes exactly to `payload`, compared without encoding into a buffer. */
+    pub(crate) fn matches_payload(&self, payload: &Option<Arc<[u8]>>) -> bool {
+        let Some(expected) = payload else {
+            return false;
+        };
+        let mut matcher = Matcher {
+            expected,
+            at: 0,
+            equal: true,
+        };
+        self.encode_to(&mut matcher);
+        matcher.equal && matcher.at == expected.len()
+    }
+
+    fn encode_to(&self, sink: &mut impl Sink) {
+        sink.put(b"FT01");
+        sink.put(&[
+            self.kind as u8,
+            u8::from(self.target_unknown) | (u8::from(self.cycle) << 1),
+        ]);
+        put_identity(sink, self.identity);
+        sink.put(&[self.target.map_or(0, |(kind, _)| kind as u8)]);
         if let Some((_, identity)) = self.target {
-            put_identity(&mut bytes, identity);
+            put_identity(sink, identity);
         }
-        bytes.extend_from_slice(&self.size.to_le_bytes());
-        bytes.extend_from_slice(&self.created.unwrap_or(i128::MIN).to_le_bytes());
-        bytes.extend_from_slice(&self.modified.unwrap_or(i128::MIN).to_le_bytes());
+        sink.put(&self.size.to_le_bytes());
+        sink.put(&self.created.unwrap_or(i128::MIN).to_le_bytes());
+        sink.put(&self.modified.unwrap_or(i128::MIN).to_le_bytes());
         for value in [self.mode, self.uid, self.gid] {
-            bytes.extend_from_slice(&value.to_le_bytes());
+            sink.put(&value.to_le_bytes());
         }
-        put_os(&mut bytes, &self.name);
+        put_os(sink, &self.name);
         for path in [&self.link, &self.anchor] {
-            bytes.push(u8::from(path.is_some()));
+            sink.put(&[u8::from(path.is_some())]);
             if let Some(path) = path {
-                put_os(&mut bytes, path.as_os_str());
+                put_os(sink, path.as_os_str());
             }
         }
-        bytes
+    }
+
+    /** The identity an encoded resource carries, read without decoding the rest. */
+    pub(crate) fn payload_identity(payload: &Option<Arc<[u8]>>) -> io::Result<FileIdentity> {
+        Input::header(payload)?.identity()
+    }
+
+    /** Whether an encoded resource is named `name`, compared without decoding the rest. */
+    pub(crate) fn payload_named(payload: &Option<Arc<[u8]>>, name: &OsStr) -> io::Result<bool> {
+        let mut input = Input::header(payload)?;
+        input.identity()?;
+        if input.take(1)?[0] != 0 {
+            input.identity()?;
+        }
+        /* Size, creation and modification times, mode, uid and gid. */
+        input.take(8 + 16 + 16 + 12)?;
+        let length = u32::from_le_bytes(input.array()?) as usize;
+        Ok(os_equals(input.take(length)?, name))
     }
 
     pub fn decode(bytes: &[u8]) -> io::Result<Self> {
@@ -476,22 +530,49 @@ impl Entry {
     }
 }
 
-fn put_identity(bytes: &mut Vec<u8>, value: FileIdentity) {
-    bytes.extend_from_slice(&value.volume.to_le_bytes());
-    bytes.extend_from_slice(&value.file.to_le_bytes());
+/** Where an encoding goes: a buffer, or a comparison against an existing encoding. */
+trait Sink {
+    fn put(&mut self, bytes: &[u8]);
 }
 
-fn put_os(bytes: &mut Vec<u8>, value: &OsStr) {
-    bytes.extend_from_slice(&(os_encoded_len(value) as u32).to_le_bytes());
+impl Sink for Vec<u8> {
+    fn put(&mut self, bytes: &[u8]) {
+        self.extend_from_slice(bytes);
+    }
+}
+
+struct Matcher<'a> {
+    expected: &'a [u8],
+    at: usize,
+    equal: bool,
+}
+
+impl Sink for Matcher<'_> {
+    fn put(&mut self, bytes: &[u8]) {
+        let end = self.at + bytes.len();
+        self.equal = self.equal && self.expected.get(self.at..end) == Some(bytes);
+        self.at = end;
+    }
+}
+
+fn put_identity(sink: &mut impl Sink, value: FileIdentity) {
+    sink.put(&value.volume.to_le_bytes());
+    sink.put(&value.file.to_le_bytes());
+}
+
+fn put_os(sink: &mut impl Sink, value: &OsStr) {
+    sink.put(&(os_encoded_len(value) as u32).to_le_bytes());
     #[cfg(unix)]
     {
         use std::os::unix::ffi::OsStrExt;
-        bytes.extend_from_slice(value.as_bytes());
+        sink.put(value.as_bytes());
     }
     #[cfg(windows)]
     {
         use std::os::windows::ffi::OsStrExt;
-        bytes.extend(value.encode_wide().flat_map(u16::to_le_bytes));
+        for unit in value.encode_wide() {
+            sink.put(&unit.to_le_bytes());
+        }
     }
 }
 
@@ -501,6 +582,19 @@ struct Input<'a> {
 }
 
 impl<'a> Input<'a> {
+    /** A resource's input after its encoding tag, kind and flags. */
+    fn header(payload: &'a Option<Arc<[u8]>>) -> io::Result<Self> {
+        let Some(bytes) = payload else {
+            return Err(invalid("node has no Filetree resource"));
+        };
+        let mut input = Input { bytes, at: 0 };
+        if input.take(4)? != b"FT01" {
+            return Err(invalid("unknown Filetree resource encoding"));
+        }
+        input.take(2)?;
+        Ok(input)
+    }
+
     fn take(&mut self, length: usize) -> io::Result<&'a [u8]> {
         let end = self
             .at
@@ -657,6 +751,77 @@ mod tests {
                 assert_eq!(Entry::decode(&bytes).unwrap(), entry);
             }
         }
+    }
+
+    #[test]
+    fn t_payload_reads_agree_with_decoding_for_all_optional_fields() {
+        let mut names = vec![OsString::new(), "file".into(), "文🦀\n\\name".into()];
+        #[cfg(unix)]
+        {
+            use std::os::unix::ffi::OsStringExt;
+            names.push(OsString::from_vec(b"raw\xff\xfe".to_vec()));
+        }
+        #[cfg(windows)]
+        {
+            use std::os::windows::ffi::OsStringExt;
+            names.push(OsString::from_wide(&[0x0061, 0xd800, 0x0062]));
+        }
+        for name in names {
+            let mut longer = name.clone();
+            longer.push("x");
+            for flags in 0..8 {
+                let entry = Entry {
+                    name: name.clone(),
+                    identity: FileIdentity { volume: 3, file: 4 },
+                    kind: Kind::Link,
+                    size: 8,
+                    created: Some(-7),
+                    modified: None,
+                    mode: 0o777,
+                    uid: 23,
+                    gid: 24,
+                    link: (flags & 1 != 0).then(|| PathBuf::from(&name)),
+                    anchor: (flags & 2 != 0).then(|| PathBuf::from(&name)),
+                    target: (flags & 4 != 0)
+                        .then_some((Kind::Directory, FileIdentity { volume: 3, file: 5 })),
+                    target_unknown: false,
+                    cycle: false,
+                };
+                let payload = Some(Arc::<[u8]>::from(entry.encode()));
+                assert_eq!(Entry::payload_identity(&payload).unwrap(), entry.identity);
+                assert!(Entry::payload_named(&payload, &name).unwrap());
+                assert!(!Entry::payload_named(&payload, &longer).unwrap());
+                let renamed = Entry {
+                    name: longer.clone(),
+                    ..entry.clone()
+                };
+                assert!(!Entry::payload_named(&Some(renamed.encode().into()), &name).unwrap());
+                assert!(entry.matches_payload(&payload));
+                for changed in [
+                    Entry {
+                        size: 9,
+                        ..entry.clone()
+                    },
+                    Entry {
+                        cycle: true,
+                        ..entry.clone()
+                    },
+                    renamed,
+                ] {
+                    assert!(!changed.matches_payload(&payload), "{changed:?}");
+                }
+                let bytes = entry.encode();
+                assert!(!entry.matches_payload(&Some(bytes[..bytes.len() - 1].into())));
+                let mut extended = bytes.clone();
+                extended.push(0);
+                assert!(!entry.matches_payload(&Some(extended.into())));
+                assert!(!entry.matches_payload(&None));
+            }
+        }
+        assert!(Entry::payload_identity(&None).is_err());
+        assert!(
+            Entry::payload_named(&Some(b"XX01\x01\x00".as_slice().into()), OsStr::new("")).is_err()
+        );
     }
 
     #[test]
