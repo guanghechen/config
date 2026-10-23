@@ -1,5 +1,6 @@
 local harness = require("__test__.support.harness")
 local embedded = require("__test__.support.cmp.embedded")
+local UI = require("__test__.support.ui")
 local t = harness.new()
 
 ---@param lines                         string[]
@@ -839,5 +840,24 @@ for _, preview in ipairs({ false, true }) do
     )
   end
 end
+
+t:test("a terminating signal ends the editor while completion is visible", function()
+  local ui = UI.new()
+  t:defer(function()
+    ui:close()
+  end)
+  -- On a short screen an error message on exit waits at the more prompt, so the child never exits.
+  ui:start({ width = 80, height = 8 })
+  ui:lua([[
+    local lines = {}
+    for index = 1, 20 do lines[index] = '' end
+    require('__test__.support.cmp.behavior').setup({ lines = lines, cursor = { 10, 0 } })
+  ]])
+  ui:rpc("nvim_input", "ial")
+  wait(ui, [[return vim.fn.pumvisible() == 1]], "completion menu is visible")
+  -- The completion session is destroyed on VimLeavePre, after SIGTERM has unloaded the buffer contents.
+  local closed, err = pcall(ui.close, ui)
+  t.assert_true(closed, tostring(err))
+end)
 
 t:run()

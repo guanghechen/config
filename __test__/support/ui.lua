@@ -187,19 +187,29 @@ function M:wait_until(predicate, timeout_ms, msg, interval_ms)
   end
 end
 
+---Stops the child. One that outlives SIGTERM, such as a child stuck at a message prompt after an exit autocommand
+---failed, is killed so that it cannot outlive the test, and the close fails.
 ---@return nil
 function M:close()
+  local stuck = false ---@type boolean
   if self.exit_code == nil then
     self._process:kill("sigterm")
-    vim.wait(1000, function()
+    stuck = not vim.wait(1000, function()
       return self.exit_code ~= nil
     end)
+    if stuck then
+      self._process:kill("sigkill")
+      vim.wait(1000, function()
+        return self.exit_code ~= nil
+      end)
+    end
   end
   for _, pipe in ipairs({ self._stdin, self._stdout, self._stderr }) do
     if not pipe:is_closing() then
       pipe:close()
     end
   end
+  assert(not stuck, "the child Neovim did not exit on SIGTERM")
 end
 
 return M

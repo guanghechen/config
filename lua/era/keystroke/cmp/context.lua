@@ -56,6 +56,10 @@ function M.capture(trigger)
   local winnr = vim.api.nvim_get_current_win()
   local cursor = vim.api.nvim_win_get_cursor(winnr)
   local line = vim.api.nvim_buf_get_lines(bufnr, cursor[1] - 1, cursor[1], false)[1]
+  if line == nil then
+    -- A terminating signal unloads buffer contents before VimLeavePre runs.
+    return nil
+  end
   local col = cursor[2]
   local start_col = M.start_col(line, col)
   return {
