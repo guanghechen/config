@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# The swap context relies on tmux's default session choice; a pane id inherited
+# from an outer tmux can name a pane in the isolated server instead.
+unset TMUX_PANE
+
 crate_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 repo_dir=$(cd "$crate_dir/../.." && pwd)
 tmp=$(mktemp -d /tmp/ghc-tmux-swap-session-test.XXXXXX)
