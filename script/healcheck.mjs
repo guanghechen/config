@@ -27,6 +27,9 @@ const REQUIREMENTS = [
   { name: "rustc", command: "rustc" },
 ]
 
+// Between them they reach the cfg branches of every supported platform and architecture.
+export const CROSS_TARGETS = ["aarch64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-pc-windows-msvc"]
+
 function getFailure(result) {
   if (result.error) return result.error.message
   if (result.status === 0) return null
@@ -122,6 +125,40 @@ function checkGitWhitespace(cwd) {
   return failures.length === 0 ? null : failures.join("; ")
 }
 
+export function selectCrossTargets(host, installed) {
+  const targets = new Set(installed.split(/\r?\n/).map((line) => line.trim()))
+  return CROSS_TARGETS.filter((target) => target !== host.trim() && targets.has(target))
+}
+
+// Checking needs a target's standard library but no linker; a target that is not installed is skipped, not failed.
+function checkCrossTargets(cwd) {
+  const installed = spawnSync("rustup", ["target", "list", "--installed"], { cwd, encoding: "utf8" })
+  if (getFailure(installed)) {
+    console.log("rustup is unavailable; skipped")
+    return null
+  }
+  const host = spawnSync("rustc", ["--print", "host-tuple"], { cwd, encoding: "utf8" })
+  const hostFailure = getFailure(host)
+  if (hostFailure) return `rustc --print host-tuple: ${hostFailure}`
+
+  const targets = selectCrossTargets(host.stdout, installed.stdout)
+  if (targets.length === 0) {
+    console.log("no other platform target is installed; skipped")
+    return null
+  }
+  const failures = []
+  for (const target of targets) {
+    console.log(target)
+    const failure = runCommand(
+      "cargo",
+      ["clippy", "--target", target, "--workspace", "--all-targets", "--quiet", "--", "-D", "warnings"],
+      cwd,
+    )
+    if (failure) failures.push(`${target}: ${failure}`)
+  }
+  return failures.length === 0 ? null : failures.join("; ")
+}
+
 function getChecks() {
   const nodeTestDir = join(rootDir, "__test__", "node")
   const nodeTests = readdirSync(nodeTestDir)
@@ -160,6 +197,10 @@ function getChecks() {
       run: () =>
         runCommand("cargo", ["clippy", "--version"], rustDir) ??
         runCommand("cargo", ["clippy", "--workspace", "--all-targets", "--quiet", "--", "-D", "warnings"], rustDir),
+    },
+    {
+      name: "Cross-target clippy",
+      run: () => checkCrossTargets(rustDir),
     },
     {
       name: "Rust tests",

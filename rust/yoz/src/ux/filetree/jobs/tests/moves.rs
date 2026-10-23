@@ -1,7 +1,6 @@
 use super::super::*;
 use crate::test_support::{TempDir, eventually};
 use crate::ux::filetree::test_support::*;
-use crate::ux::treeview::test_support::hold;
 use std::fs;
 
 #[test]
@@ -327,6 +326,7 @@ fn t_job_cross_filesystem_directory_move_retains_all_admitted_identities() {
 #[test]
 #[ignore = "requires FILETREE_TEST_VOLUME on a separate filesystem"]
 fn t_job_cross_filesystem_move_coordinates_watched_items_until_publication() {
+    use crate::ux::treeview::test_support::hold;
     let _operations = operations();
     let volume = std::env::var_os("FILETREE_TEST_VOLUME").expect("separate test filesystem");
     let target = TempDir::new_in(std::path::Path::new(&volume));

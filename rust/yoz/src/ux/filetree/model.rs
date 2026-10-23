@@ -177,10 +177,11 @@ fn os_equals(value: &[u8], name: &OsStr) -> bool {
 #[cfg(windows)]
 fn os_equals(value: &[u8], name: &OsStr) -> bool {
     use std::os::windows::ffi::OsStrExt;
-    value.len().is_multiple_of(2)
-        && value
-            .chunks_exact(2)
-            .map(|pair| u16::from_le_bytes([pair[0], pair[1]]))
+    let (pairs, rest) = value.as_chunks::<2>();
+    rest.is_empty()
+        && pairs
+            .iter()
+            .map(|pair| u16::from_le_bytes(*pair))
             .eq(name.encode_wide())
 }
 
@@ -193,13 +194,14 @@ fn os_string(value: &[u8]) -> io::Result<OsString> {
 #[cfg(windows)]
 fn os_string(value: &[u8]) -> io::Result<OsString> {
     use std::os::windows::ffi::OsStringExt;
-    if !value.len().is_multiple_of(2) {
+    let (pairs, rest) = value.as_chunks::<2>();
+    if !rest.is_empty() {
         return Err(invalid("invalid native filename encoding"));
     }
     Ok(OsString::from_wide(
-        &value
-            .chunks_exact(2)
-            .map(|pair| u16::from_le_bytes([pair[0], pair[1]]))
+        &pairs
+            .iter()
+            .map(|pair| u16::from_le_bytes(*pair))
             .collect::<Vec<_>>(),
     ))
 }

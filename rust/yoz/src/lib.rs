@@ -54,6 +54,8 @@ fn fn_module(lua: &Lua) -> LuaResult<LuaTable> {
 
 #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
 fn im_module(lua: &Lua) -> LuaResult<LuaTable> {
+    // Backends differ by platform; only the Windows one is a unit struct.
+    #[allow(clippy::default_constructed_unit_structs)]
     let state = Rc::new(RefCell::new(im::Backend::default()));
 
     #[cfg(target_os = "linux")]

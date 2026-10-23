@@ -4,7 +4,7 @@
 mod osx;
 #[cfg(any(target_os = "linux", target_os = "windows", test))]
 mod win;
-#[cfg(any(target_os = "linux", test))]
+#[cfg(any(target_os = "linux", all(test, unix)))]
 mod wsl;
 
 #[cfg(target_os = "macos")]

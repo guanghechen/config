@@ -7,6 +7,7 @@ use std::time::{Duration, Instant};
 const TIMEOUT: Duration = Duration::from_secs(15);
 
 /** Set in the child process that [`isolated`] starts. */
+#[cfg(any(target_os = "macos", target_os = "linux"))]
 const ISOLATED: &str = "YOZ_TEST_ISOLATED";
 
 /// A fresh directory, removed with its contents on drop.
@@ -80,6 +81,7 @@ pub(crate) fn percentile<T: Copy>(sorted: &[T], fraction: f64) -> T {
 /// disturbing tests running beside it. In the test process it reruns `test` alone in a child process,
 /// asserts that it passed and returns false; in that child it returns true and the test runs its body.
 /// `test` is the test's path, `concat!(module_path!(), "::<name>")`.
+#[cfg(any(target_os = "macos", target_os = "linux"))]
 pub(crate) fn isolated(test: &str) -> bool {
     if std::env::var_os(ISOLATED).is_some() {
         return true;

@@ -1,5 +1,4 @@
-use super::super::test_support::request;
-use super::super::{Entry, Filetree};
+use super::super::Entry;
 use super::*;
 use crate::test_support::{TempDir, eventually};
 use crate::ux::treeview::*;
@@ -580,6 +579,8 @@ fn t_scan_work_rejected_before_execution_does_not_wake_owner() {
 #[cfg(unix)]
 #[test]
 fn t_delayed_probe_preserves_new_target_children() {
+    use super::super::Filetree;
+    use super::super::test_support::request;
     let dir = TempDir::new();
     let target = dir.path().join("target");
     let path = dir.path().join("link");

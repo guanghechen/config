@@ -38,7 +38,7 @@ pub fn to_filepath(uri: &str, keep_trailing_slash: bool) -> Option<String> {
                 && result
                     .chars()
                     .next()
-                    .map_or(false, |c| c.is_ascii_alphabetic());
+                    .is_some_and(|c| c.is_ascii_alphabetic());
 
             #[cfg(not(windows))]
             let is_windows_root = false;

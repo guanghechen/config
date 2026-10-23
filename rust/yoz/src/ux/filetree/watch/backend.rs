@@ -71,9 +71,12 @@ mod platform {
         }
     }
 
+    /** Each watch descriptor's subscription and, for a parent watch, the only names it reports. */
+    type Watches = HashMap<i32, (u64, Option<Arc<BTreeSet<OsString>>>)>;
+
     pub struct Backend {
         fd: File,
-        watches: HashMap<i32, (u64, Option<Arc<BTreeSet<OsString>>>)>,
+        watches: Watches,
     }
     impl Backend {
         pub fn wait(&self, wake: &Wake, timeout: Option<std::time::Duration>) -> Result<()> {

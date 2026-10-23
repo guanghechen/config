@@ -1,7 +1,7 @@
 use super::super::test_support::*;
-use super::super::{Entry, Filetree, work};
+use super::super::{Entry, Filetree};
 use super::*;
-use crate::test_support::{TempDir, eventually, isolated, percentile};
+use crate::test_support::{TempDir, eventually, percentile};
 use crate::ux::treeview::test_support::hold;
 use std::fs;
 
@@ -871,6 +871,8 @@ fn t_link_root_observes_referent_recreation_outside_its_occurrence_parent() {
 #[cfg(any(target_os = "macos", target_os = "linux"))]
 #[test]
 fn t_busy_recovery_probe_retries_without_another_event() {
+    use super::super::work;
+    use crate::test_support::isolated;
     // Saturates the shared IO pool, which parallel tests also use.
     if !isolated(concat!(
         module_path!(),

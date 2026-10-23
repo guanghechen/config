@@ -3,7 +3,6 @@ use super::*;
 use crate::test_support::{TempDir, eventually};
 use crate::ux::treeview::*;
 use std::fs;
-use std::path::PathBuf;
 use std::time::Duration;
 
 #[test]
@@ -727,6 +726,7 @@ fn t_link_target_permission_failure_preserves_children_and_selection() {
 #[cfg(unix)]
 fn t_parent_components_preserve_final_symlink_in_open_and_resolve() {
     use std::os::unix::fs::symlink;
+    use std::path::PathBuf;
     let dir = TempDir::new();
     let base = fs::canonicalize(dir.path()).unwrap();
     fs::create_dir_all(base.join("real/nested")).unwrap();

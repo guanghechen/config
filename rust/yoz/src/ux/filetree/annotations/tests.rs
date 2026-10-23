@@ -1,8 +1,7 @@
 use super::*;
-use crate::test_support::{TempDir, eventually, percentile};
+use crate::test_support::{TempDir, eventually};
 use std::collections::BTreeMap;
 use std::fs;
-use std::time::Instant;
 
 /// The result of a request, which may fail.
 fn request<T: Clone>(value: Request<T>) -> Result<T> {
@@ -490,6 +489,8 @@ fn t_sparse_diagnostic_navigation_includes_differently_named_file_aliases() {
 #[test]
 #[ignore = "explicit release-mode annotation scale measurement"]
 fn t_annotations_wide_directory_with_loaded_aliases() {
+    use crate::test_support::percentile;
+    use std::time::Instant;
     let directory = TempDir::new();
     fs::write(directory.path().join("file-49999"), "content").unwrap();
     let leaf = super::super::Entry::read(&directory.path().join("file-49999")).unwrap();

@@ -800,21 +800,20 @@ impl Watcher {
                 }
             }
             #[cfg(target_os = "linux")]
-            if roots.contains(&id) && entry.kind != Kind::Link {
-                if let Some(parent) = source.node(id).and_then(|node| node.parent) {
-                    if let (Ok(parent_entry), Ok(path)) = (
-                        resource::entry(source, parent),
-                        resource::path(source, parent),
-                    ) {
-                        if let Some(identity) = parent_entry.target_identity() {
-                            requests.push((
-                                identity,
-                                path,
-                                Some(Arc::new(BTreeSet::from([entry.name.clone()]))),
-                            ));
-                        }
-                    }
-                }
+            if roots.contains(&id)
+                && entry.kind != Kind::Link
+                && let Some(parent) = source.node(id).and_then(|node| node.parent)
+                && let (Ok(parent_entry), Ok(path)) = (
+                    resource::entry(source, parent),
+                    resource::path(source, parent),
+                )
+                && let Some(identity) = parent_entry.target_identity()
+            {
+                requests.push((
+                    identity,
+                    path,
+                    Some(Arc::new(BTreeSet::from([entry.name.clone()]))),
+                ));
             }
             for (identity, path, names) in requests {
                 if let Some(&at) = groups.get(&identity) {
