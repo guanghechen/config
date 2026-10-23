@@ -145,7 +145,8 @@ impl Scan {
         #[cfg(any(target_os = "macos", target_os = "linux"))]
         let hidden =
             super::io::staging::Filter::new(current.target_identity().expect("directory identity"));
-        /* macOS lists entries with their metadata; elsewhere each entry is read by path. */
+        /* macOS lists entries with their metadata on volumes where it matches `lstat`; elsewhere each
+         * entry is read by path. */
         #[cfg(target_os = "macos")]
         let iterator =
             Listing::open(&path).map_err(|error| resource::io_error("read directory", error))?;

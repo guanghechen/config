@@ -1,6 +1,7 @@
 use super::c_path;
 use crate::ux::filetree::{Entry, FileIdentity, Kind};
 use std::ffi::{CStr, OsStr, OsString, c_void};
+use std::fs::{self, ReadDir};
 use std::io;
 use std::os::fd::{AsRawFd, FromRawFd, OwnedFd};
 use std::os::unix::ffi::OsStrExt;
@@ -29,7 +30,7 @@ const COMMON: u32 = libc::ATTR_CMN_NAME
 const DIRECTORY: u32 = libc::ATTR_DIR_MOUNTSTATUS | libc::ATTR_DIR_DATALENGTH;
 
 /** A listed name with metadata equal to `Entry::read` of its path, or a name left for that read:
-links, firmlinks, mount points, entry errors and incomplete attributes. */
+links, firmlinks, mount points, entry errors, incomplete attributes and every entry of other volumes. */
 // Each value moves once from the buffer into the scan; boxing would allocate per entry.
 #[allow(clippy::large_enum_variant)]
 pub(crate) enum Listed {
@@ -37,9 +38,16 @@ pub(crate) enum Listed {
     Name(OsString),
 }
 
-/** A directory's entries with their metadata: one `getattrlistbulk` call per buffer of entries
-instead of an `lstat` per entry. */
-pub(crate) struct Listing {
+/** A directory's entries: with their metadata on volumes that list it as `Entry::read` reads it,
+otherwise names from `readdir`. */
+pub(crate) enum Listing {
+    Bulk(Bulk),
+    Names(ReadDir),
+}
+
+/** Entries with their metadata: one `getattrlistbulk` call per buffer of entries instead of an
+`lstat` per entry. */
+pub(crate) struct Bulk {
     directory: OwnedFd,
     request: libc::attrlist,
     /* Entry groups start 8-byte aligned. */
@@ -50,32 +58,58 @@ pub(crate) struct Listing {
 
 impl Listing {
     pub fn open(path: &Path) -> io::Result<Self> {
-        let path = c_path(path)?;
         let fd = unsafe {
             libc::open(
-                path.as_ptr(),
+                c_path(path)?.as_ptr(),
                 libc::O_RDONLY | libc::O_DIRECTORY | libc::O_CLOEXEC,
             )
         };
         if fd < 0 {
             return Err(io::Error::last_os_error());
         }
+        let directory = unsafe { OwnedFd::from_raw_fd(fd) };
+        let mut volume: libc::statfs = unsafe { std::mem::zeroed() };
+        if unsafe { libc::fstatfs(directory.as_raw_fd(), &mut volume) } < 0 {
+            return Err(io::Error::last_os_error());
+        }
+        if !consistent(&volume) {
+            return fs::read_dir(path).map(Self::Names);
+        }
         let mut request: libc::attrlist = unsafe { std::mem::zeroed() };
         request.bitmapcount = libc::ATTR_BIT_MAP_COUNT;
         request.commonattr = libc::ATTR_CMN_RETURNED_ATTRS | ATTR_CMN_ERROR | COMMON;
         request.dirattr = DIRECTORY;
         request.fileattr = libc::ATTR_FILE_DATALENGTH;
-        Ok(Self {
-            directory: unsafe { OwnedFd::from_raw_fd(fd) },
+        Ok(Self::Bulk(Bulk {
+            directory,
             request,
             buffer: vec![0; BUFFER_BYTES / 8].into_boxed_slice(),
             remaining: 0,
             offset: 0,
-        })
+        }))
     }
 }
 
+/** Only APFS mounted without nosuid is known to list metadata as `Entry::read` reads it. FAT and
+exFAT give an empty file a new ID in every listing, and a nosuid mount drops setuid and setgid bits. */
+fn consistent(volume: &libc::statfs) -> bool {
+    let kind = volume.f_fstypename.map(|byte| byte as u8);
+    CStr::from_bytes_until_nul(&kind).is_ok_and(|kind| kind == c"apfs")
+        && volume.f_flags & libc::MNT_NOSUID as u32 == 0
+}
+
 impl Iterator for Listing {
+    type Item = io::Result<Listed>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self {
+            Self::Bulk(bulk) => bulk.next(),
+            Self::Names(names) => Some(names.next()?.map(|entry| Listed::Name(entry.file_name()))),
+        }
+    }
+}
+
+impl Iterator for Bulk {
     type Item = io::Result<Listed>;
 
     fn next(&mut self) -> Option<Self::Item> {

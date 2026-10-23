@@ -4,11 +4,16 @@ use std::collections::BTreeSet;
 use std::fs;
 use std::os::unix::fs::{PermissionsExt, symlink};
 
-/** Lists `root`, checks each listed entry against a read by path, and returns all names and the names
-left to that read. */
+/** Lists `root` with metadata, checks each listed entry against a read by path, and returns all names
+and the names left to that read. */
 fn list(root: &Path) -> (BTreeSet<OsString>, BTreeSet<OsString>) {
+    let listing = Listing::open(root).unwrap();
+    assert!(
+        matches!(listing, Listing::Bulk(_)),
+        "{root:?} lists names only"
+    );
     let (mut names, mut by_path) = (BTreeSet::new(), BTreeSet::new());
-    for listed in Listing::open(root).unwrap() {
+    for listed in listing {
         match listed.unwrap() {
             Listed::Entry(entry) => {
                 let read = Entry::read(&root.join(&entry.name)).unwrap();
@@ -68,6 +73,36 @@ fn t_bulk_listing_reads_mount_points_by_path() {
     let (_, by_path) = list(Path::new("/System/Volumes"));
     /* The data volume is mounted over a directory of the system volume. */
     assert!(by_path.contains(OsStr::new("Data")), "{by_path:?}");
+}
+
+#[test]
+fn t_bulk_listing_reads_other_volumes_by_path() {
+    /* devfs is not APFS. */
+    let listing = Listing::open(Path::new("/dev")).unwrap();
+    assert!(matches!(listing, Listing::Names(_)));
+    let names: Vec<_> = listing
+        .map(|listed| match listed.unwrap() {
+            Listed::Name(name) => name,
+            Listed::Entry(entry) => panic!("{:?} is listed with metadata", entry.name),
+        })
+        .collect();
+    assert!(names.iter().any(|name| name == "null"), "{names:?}");
+}
+
+#[test]
+fn t_bulk_metadata_is_listed_only_on_apfs_without_nosuid() {
+    let volume = |kind: &str, flags: libc::c_int| {
+        let mut volume: libc::statfs = unsafe { std::mem::zeroed() };
+        for (to, from) in volume.f_fstypename.iter_mut().zip(kind.bytes()) {
+            *to = from as libc::c_char;
+        }
+        volume.f_flags = flags as u32;
+        volume
+    };
+    assert!(consistent(&volume("apfs", libc::MNT_RDONLY)));
+    assert!(!consistent(&volume("apfs", libc::MNT_NOSUID)));
+    assert!(!consistent(&volume("exfat", 0)));
+    assert!(!consistent(&volume("msdos", 0)));
 }
 
 /** One regular file's group as getattrlistbulk lays it out, with `dirattr` claimed as returned. */
