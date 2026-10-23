@@ -1,5 +1,4 @@
-use super::regex::compile_regex;
-use crate::algorithm::kmp::find_all_matched_points;
+use crate::search::matcher;
 use regex::Captures;
 use std::collections::HashSet;
 
@@ -13,59 +12,50 @@ pub fn replace_text_preview_by_matches(
     match_offsets: &[usize],
 ) -> Result<String, String> {
     let match_offsets: HashSet<usize> = match_offsets.iter().cloned().collect();
-    if flag_regex {
-        let regex = compile_regex(search_pattern)?;
-        let next_text: String = regex
-            .replace_all(text, |caps: &Captures| {
-                let mut replacement = replace_pattern.to_string();
-                for i in 1..caps.len() {
-                    if let Some(cap) = caps.get(i) {
-                        let placeholder = format!("${}", i);
-                        replacement = replacement.replace(&placeholder, cap.as_str());
-                    }
+    let regex = matcher(search_pattern, flag_regex, flag_case_sensitive)?;
+    let next_text: String = regex
+        .replace_all(text, |caps: &Captures| {
+            let mut replacement = replace_pattern.to_string();
+            for i in 1..caps.len() {
+                if let Some(cap) = caps.get(i) {
+                    let placeholder = format!("${}", i);
+                    replacement = replacement.replace(&placeholder, cap.as_str());
                 }
-
-                let m = caps.get(0).unwrap();
-                let should_replace: bool = match_offsets.contains(&m.start());
-                if should_replace {
-                    if keep_search_pieces {
-                        format!("{}{}", m.as_str(), replacement)
-                    } else {
-                        replacement
-                    }
-                } else {
-                    m.as_str().to_string()
-                }
-            })
-            .to_string();
-        return Ok(next_text);
-    }
-
-    let match_points: Vec<usize> = if flag_case_sensitive {
-        find_all_matched_points(text.as_bytes(), search_pattern.as_bytes(), None)
-    } else {
-        let text_lower = text.to_lowercase();
-        let pattern_lower = search_pattern.to_lowercase();
-        find_all_matched_points(text_lower.as_bytes(), pattern_lower.as_bytes(), None)
-    };
-    let len_of_search: usize = search_pattern.len();
-    let mut pieces: Vec<&str> = vec![];
-    let mut i: usize = 0;
-    for m in match_points {
-        let j: usize = m + len_of_search;
-        if match_offsets.contains(&m) {
-            if keep_search_pieces {
-                pieces.push(&text[i..j]);
-                pieces.push(replace_pattern);
-            } else {
-                pieces.push(&text[i..m]);
-                pieces.push(replace_pattern);
             }
-        } else {
-            pieces.push(&text[i..j]);
-        }
-        i = j;
+
+            let m = caps.get(0).unwrap();
+            let should_replace: bool = match_offsets.contains(&m.start());
+            if should_replace {
+                if keep_search_pieces {
+                    format!("{}{}", m.as_str(), replacement)
+                } else {
+                    replacement
+                }
+            } else {
+                m.as_str().to_string()
+            }
+        })
+        .to_string();
+    Ok(next_text)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::search::search_in_text;
+
+    #[test]
+    fn t_replace_by_matches_replaces_the_match_search_reported() {
+        let text = "İab a";
+        let offsets: Vec<usize> = search_in_text("a", text, false, false, false)
+            .unwrap()
+            .matches
+            .iter()
+            .map(|found| found.ox)
+            .collect();
+        assert_eq!(offsets, [2, 5]);
+        let result =
+            replace_text_preview_by_matches(text, "a", "X", false, false, false, &offsets[..1]);
+        assert_eq!(result.unwrap(), "İXb a");
     }
-    pieces.push(&text[i..]);
-    Ok(pieces.join(""))
 }

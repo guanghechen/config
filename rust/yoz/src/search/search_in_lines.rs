@@ -48,7 +48,7 @@ pub(crate) fn search_in_lines_buffer(
     let raw_line_matches = if flag_regex {
         search_in_lines_regex(pattern, buffer, flag_case_sensitive)?
     } else {
-        search_in_lines_literal(pattern, buffer, flag_fuzzy, flag_case_sensitive)
+        search_in_lines_literal(pattern, buffer, flag_fuzzy, flag_case_sensitive)?
     };
 
     let line_matches: Vec<ISearchInLinesLineMatch> = raw_line_matches
@@ -220,6 +220,16 @@ mod tests {
         ];
         let result = search_in_lines("hello", &lines, false, false, false).unwrap();
         assert_eq!(result.matches.len(), 3);
+    }
+
+    #[test]
+    fn t_search_case_insensitive_offsets_are_in_the_searched_text() {
+        /* "İ" lowercases to three bytes; lowercased offsets would land one byte late. */
+        let lines = ["İab".to_string(), "İa".to_string(), "b".to_string()];
+        let single = search_in_lines("ab", &lines[..1], false, false, false).unwrap();
+        assert_eq!((single.matches[0].ox, single.matches[0].oy), (2, 3));
+        let multiline = search_in_lines("a\nb", &lines[1..], false, false, false).unwrap();
+        assert_eq!((multiline.matches[0].ox, multiline.matches[0].oy), (2, 4));
     }
 
     #[test]

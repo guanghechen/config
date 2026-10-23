@@ -1,9 +1,9 @@
 use super::ISearchBuffer;
+use super::matcher;
 use super::text_utils::locate_line;
-use crate::algorithm::kmp::calc_fails;
-use crate::algorithm::kmp::find_all_matched_points;
 use crate::types::ISearchInLinesLiteralLineMatch;
 use crate::types::ISearchInLinesLiteralMatchPoint;
+use regex::Regex;
 use std::borrow::Cow;
 
 const SCORE_EXACT: u32 = 100;
@@ -16,59 +16,44 @@ pub fn search_in_lines_literal(
     buffer: &ISearchBuffer,
     flag_fuzzy: bool,
     flag_case_sensitive: bool,
-) -> Vec<ISearchInLinesLiteralLineMatch> {
-    let pattern_str = if flag_case_sensitive {
-        pattern.to_string()
-    } else {
-        pattern.to_lowercase()
-    };
-    let pattern_bytes = pattern_str.as_bytes();
-    let pattern_chars = pattern_str.chars().collect::<Vec<char>>();
-    let n_pattern_bytes: usize = pattern_bytes.len();
-    if n_pattern_bytes == 0 {
-        return Vec::new();
+) -> Result<Vec<ISearchInLinesLiteralLineMatch>, String> {
+    if pattern.is_empty() {
+        return Ok(Vec::new());
     }
-
-    let mut fails: Vec<usize> = vec![0; n_pattern_bytes + 1];
-    calc_fails(pattern_bytes, &mut fails);
+    let literal = matcher(pattern, false, flag_case_sensitive)?;
 
     let is_multiline_pattern = pattern.contains('\n');
 
     if is_multiline_pattern {
-        return search_multiline(buffer, pattern_bytes, &fails, flag_case_sensitive);
+        return Ok(search_multiline(buffer, &literal));
     }
 
-    search_single_line(
+    let pattern_chars = if flag_case_sensitive {
+        pattern.chars().collect::<Vec<char>>()
+    } else {
+        pattern.to_lowercase().chars().collect::<Vec<char>>()
+    };
+    Ok(search_single_line(
         buffer,
-        pattern_bytes,
+        &literal,
         &pattern_chars,
-        &fails,
         flag_fuzzy,
         flag_case_sensitive,
-    )
+    ))
 }
 
 fn search_multiline(
     buffer: &ISearchBuffer,
-    pattern_bytes: &[u8],
-    fails: &Vec<usize>,
-    flag_case_sensitive: bool,
+    literal: &Regex,
 ) -> Vec<ISearchInLinesLiteralLineMatch> {
     let line_offsets = buffer.line_offsets();
     if line_offsets.len() < 2 {
         return Vec::new();
     }
 
-    let search_text: Cow<'_, str> = if flag_case_sensitive {
-        Cow::Borrowed(buffer.as_str())
-    } else {
-        Cow::Owned(buffer.as_str().to_lowercase())
-    };
-
     let mut matches: Vec<ISearchInLinesLiteralLineMatch> = Vec::new();
-    let points = find_all_matched_points(search_text.as_bytes(), pattern_bytes, Some(fails));
-    for start_pos in points {
-        let end_pos = start_pos + pattern_bytes.len();
+    for found in literal.find_iter(buffer.as_str()) {
+        let (start_pos, end_pos) = (found.start(), found.end());
         let line_num = locate_line(line_offsets, start_pos);
         if line_num == 0 || line_num > buffer.line_count() {
             continue;
@@ -94,27 +79,20 @@ fn search_multiline(
 
 fn search_single_line(
     buffer: &ISearchBuffer,
-    pattern_bytes: &[u8],
+    literal: &Regex,
     pattern_chars: &[char],
-    fails: &Vec<usize>,
     flag_fuzzy: bool,
     flag_case_sensitive: bool,
 ) -> Vec<ISearchInLinesLiteralLineMatch> {
     let mut matches: Vec<ISearchInLinesLiteralLineMatch> = Vec::new();
 
     for (line_idx, line) in buffer.iter_lines().enumerate() {
-        let line_view: Cow<'_, str> = if flag_case_sensitive {
-            Cow::Borrowed(line)
-        } else {
-            Cow::Owned(line.to_lowercase())
-        };
-        let line_bytes = line_view.as_bytes();
         let base: f64 = line.len() as f64;
 
-        let points = find_all_matched_points(line_bytes, pattern_bytes, Some(fails));
-        if !points.is_empty() {
-            for start_pos in points {
-                let end_pos = start_pos + pattern_bytes.len();
+        let mut points = literal.find_iter(line).peekable();
+        if points.peek().is_some() {
+            for found in points {
+                let (start_pos, end_pos) = (found.start(), found.end());
                 let delta: f64 = end_pos as f64;
                 let bonus: u32 = if base <= f64::EPSILON {
                     0
@@ -139,6 +117,11 @@ fn search_single_line(
             continue;
         }
 
+        let line_view: Cow<'_, str> = if flag_case_sensitive {
+            Cow::Borrowed(line)
+        } else {
+            Cow::Owned(line.to_lowercase())
+        };
         if let Some(fuzzy_match) = fuzzy_match_line(&line_view, pattern_chars, flag_case_sensitive)
         {
             matches.push(ISearchInLinesLiteralLineMatch {
@@ -302,7 +285,7 @@ mod tests {
     #[test]
     fn t_search_literal_case_sensitive() {
         let buf = buffer(&["Hello World", "hello world", "HELLO WORLD"]);
-        let result = search_in_lines_literal("Hello", &buf, false, true);
+        let result = search_in_lines_literal("Hello", &buf, false, true).unwrap();
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].lnum, 1);
         assert_eq!(result[0].matches[0].start, 0);
@@ -312,7 +295,7 @@ mod tests {
     #[test]
     fn t_search_literal_case_insensitive() {
         let buf = buffer(&["Hello World", "hello world", "HELLO WORLD"]);
-        let result = search_in_lines_literal("hello", &buf, false, false);
+        let result = search_in_lines_literal("hello", &buf, false, false).unwrap();
         assert_eq!(result.len(), 3);
         assert_eq!(result[0].lnum, 1);
         assert_eq!(result[1].lnum, 2);
@@ -322,21 +305,21 @@ mod tests {
     #[test]
     fn t_search_multiline_literal() {
         let buf = buffer(&["line1", "line2", "line3"]);
-        let result = search_in_lines_literal("line1\nline2", &buf, false, true);
+        let result = search_in_lines_literal("line1\nline2", &buf, false, true).unwrap();
         assert_eq!(result.len(), 1);
     }
 
     #[test]
     fn t_search_fuzzy_match() {
         let buf = buffer(&["hello world"]);
-        let result = search_in_lines_literal("hw", &buf, true, false);
+        let result = search_in_lines_literal("hw", &buf, true, false).unwrap();
         assert!(!result.is_empty());
     }
 
     #[test]
     fn t_search_multiple_matches_same_line() {
         let buf = buffer(&["foo bar foo baz foo"]);
-        let result = search_in_lines_literal("foo", &buf, false, true);
+        let result = search_in_lines_literal("foo", &buf, false, true).unwrap();
         assert_eq!(result.len(), 3);
         assert_eq!(result[0].lnum, 1);
         assert_eq!(result[1].lnum, 1);

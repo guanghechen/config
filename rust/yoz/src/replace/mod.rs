@@ -1,4 +1,3 @@
-mod regex;
 mod replace_file;
 mod replace_file_by_matches;
 mod replace_file_by_matches_advance;

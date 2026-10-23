@@ -1,8 +1,8 @@
 use super::ISearchBuffer;
+use super::matcher;
 use super::text_utils::locate_line;
 use crate::types::ISearchInLinesRegexLineMatch;
 use crate::types::ISearchInLinesRegexMatchPoint;
-use regex::Regex;
 
 pub fn search_in_lines_regex(
     pattern: &str,
@@ -12,14 +12,7 @@ pub fn search_in_lines_regex(
     let score_exact: u32 = 100;
     let mut matches: Vec<ISearchInLinesRegexLineMatch> = Vec::new();
 
-    let regex_pattern = if flag_case_sensitive {
-        format!("(?-i)(?s){}", pattern)
-    } else {
-        format!("(?i)(?s){}", pattern)
-    };
-
-    let regex =
-        Regex::new(&regex_pattern).map_err(|error| format!("Invalid regex pattern: {}", error))?;
+    let regex = matcher(pattern, true, flag_case_sensitive)?;
     let is_multiline_pattern = pattern.contains('\n');
 
     if is_multiline_pattern {

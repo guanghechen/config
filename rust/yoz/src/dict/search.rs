@@ -120,7 +120,11 @@ fn collect_fuzzy_candidates(
             .map(|value| value.to_string())
             .collect::<Vec<_>>(),
     );
-    let matches = search_in_lines_literal(tail, &buffer, true, false);
+    /* An escaped literal fails to compile only past the regex size limit; the dictionary then
+     * offers nothing. */
+    let Ok(matches) = search_in_lines_literal(tail, &buffer, true, false) else {
+        return Vec::new();
+    };
     matches
         .into_iter()
         .filter_map(|line_match| {
