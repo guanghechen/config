@@ -20,6 +20,7 @@ bash -n \
   "$crate_dir/tests/renderer-lifecycle-integration.sh" \
   "$crate_dir/tests/running-indicator-integration.sh" \
   "$crate_dir/tests/session-names-integration.sh" \
+  "$crate_dir/tests/session-prompt-integration.sh" \
   "$crate_dir/tests/status-width-integration.sh" \
   "$crate_dir/tests/swap-session-integration.sh" \
   "$crate_dir/tests/scheduler-integration.sh"
@@ -30,6 +31,7 @@ bash -n \
 "$crate_dir/tests/renderer-lifecycle-integration.sh"
 "$crate_dir/tests/running-indicator-integration.sh"
 "$crate_dir/tests/session-names-integration.sh"
+"$crate_dir/tests/session-prompt-integration.sh"
 "$crate_dir/tests/status-width-integration.sh"
 "$crate_dir/tests/swap-session-integration.sh"
 "$crate_dir/tests/scheduler-integration.sh"
