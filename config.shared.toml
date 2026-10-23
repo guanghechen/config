@@ -101,11 +101,6 @@ network_access = true
 ignore_default_excludes = false
 inherit = "all"
 
-[realtime]
-version = "v2"
-transport = "websocket"
-type = "conversational"
-
 [tui]
 notifications = true
 notification_method = "bel"
