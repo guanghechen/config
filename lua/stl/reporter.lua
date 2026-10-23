@@ -47,7 +47,7 @@ function M.log(level, options)
     end
   end
 
-  local LEVEL = type(level) == "integer" and level or Levels[level] or vim.log.levels.INFO ---@type integer
+  local LEVEL = type(level) == "number" and level or Levels[level] or vim.log.levels.INFO ---@type integer
   vim.notify(text, LEVEL, {
     group = group,
     title = title,
