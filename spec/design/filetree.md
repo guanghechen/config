@@ -217,7 +217,10 @@ Treeview owner 分配 NodeId。一个物理资源经 hardlink/symlink 出现在�
   Seen 集合与在途结果计入预算；无需为未变化成员复制新的 NodeData 或重新发布 metadata。
 - 初次加载可逐页插入，source 顺序通过 sibling 索引维护。刷新中的新数据可以发布，旧数据保留到完整终态。
   枚举失败、取消或硬预算失败不得把 partial 集合当成完整集合。
-- `read_dir` 已缓存的条目在 metadata 读取前被删除或 rename，明确的 NotFound 可跳过；
+- macOS 以 `getattrlistbulk` 按 64 KiB 批次同时读取名称与 metadata，结果与逐项 `lstat` 一致，批次缓冲计入扫描预留；
+  symlink、firmlink、挂载点、单项错误与属性不全的条目仍按路径逐项读取。一个批次是一次观测：
+  批次读取之后才删除或 rename 的条目留在本轮结果中，由之后的监听重读收敛。
+- 逐项读取时，`read_dir` 已缓存的条目在 metadata 读取前被删除或 rename，明确的 NotFound 可跳过；
   只有扫描成功终态才按本轮成员集合删除对应旧项，目录本身的 identity 与读取错误仍须检查。
   其他条目 metadata 失败不能当作该条目不存在。保留已知有效记录并标记本轮不完整；首次未知条目报告读取错误。
   无法确认缺失的其他旧项也不能在该轮被清除。权限失败可显式重试。

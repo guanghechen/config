@@ -265,100 +265,102 @@ behavior.
 Values are medians of per-process medians in milliseconds unless noted. Fewer than 20 processes support no p95
 claim; rerun the unified runner before comparing against another build.
 
-### macOS (2026-10-22)
+### macOS (2026-10-23)
 
 `node script/benchmark/explorer.mjs --processes 3`, native only: Apple M5 Pro (6P + 12E) on AC power, Darwin 27.0.0,
 Neovim 0.12.6, libuv 1.53.0, Rust 1.99.0, a verified release receipt and macOS physical footprint. All 25 cases
 passed, including every acceptance driver.
 
-Widget cases (first flush 11.0–17.4 ms throughout):
+Widget cases (first flush 10.8–12.6 ms throughout):
 
 | Case       | Mode |   Ready | Cursor | Scroll | Selection | Visual selection | Refresh ready | Reopen | Open MiB |
 | ---------- | ---- | ------: | -----: | -----: | --------: | ---------------: | ------------: | -----: | -------: |
-| mixed 200  | Tree |  17.325 |  0.290 |  0.799 |     0.524 |            6.774 |         9.597 |  5.974 |     10.6 |
-| mixed 200  | List |  20.959 |  0.239 |  0.715 |     0.570 |            4.272 |         9.553 |  5.750 |     11.0 |
-| flat 1k    | Tree |  32.963 |  0.284 |  0.907 |     0.805 |            4.852 |         9.606 |  4.983 |     15.0 |
-| flat 1k    | List |  26.472 |  0.281 |  0.870 |     0.622 |            4.655 |         9.092 |  6.877 |     14.9 |
-| flat 10k   | Tree | 116.573 |  0.260 |  0.753 |     1.103 |            4.849 |        38.448 |  7.117 |     43.9 |
-| flat 10k   | List | 118.739 |  0.236 |  0.723 |     1.086 |            4.600 |        38.240 |  6.737 |     43.1 |
-| branch 10k | Tree | 120.552 |  0.225 |  0.822 |     0.891 |            4.799 |        37.870 |  7.096 |     40.4 |
-| branch 10k | List | 129.992 |  0.248 |  0.836 |     0.950 |            4.546 |        38.822 |  6.125 |     42.5 |
-| flat 50k   | Tree | 758.881 |  0.227 |  0.808 |     3.720 |            8.499 |       196.891 | 16.838 |    136.2 |
-| flat 50k   | List | 739.457 |  0.221 |  0.693 |     3.684 |            7.693 |       171.955 | 15.321 |    136.1 |
+| mixed 200  | Tree |  10.762 |  0.264 |  0.701 |     0.406 |            5.590 |         8.834 |  5.345 |     10.5 |
+| mixed 200  | List |  10.999 |  0.232 |  0.648 |     0.418 |            5.223 |         9.630 |  4.282 |     11.5 |
+| flat 1k    | Tree |  32.539 |  0.236 |  0.818 |     0.551 |            4.548 |         9.347 |  4.587 |     15.4 |
+| flat 1k    | List |  22.218 |  0.222 |  0.734 |     0.570 |            3.835 |         9.239 |  5.123 |     14.3 |
+| flat 10k   | Tree | 102.428 |  0.293 |  0.746 |     1.007 |            5.440 |        26.453 |  7.374 |     43.4 |
+| flat 10k   | List | 102.000 |  0.267 |  0.674 |     0.839 |            4.332 |        21.701 |  6.228 |     43.3 |
+| branch 10k | Tree |  97.462 |  0.224 |  0.746 |     0.759 |            4.371 |        28.764 |  7.406 |     41.9 |
+| branch 10k | List | 107.623 |  0.249 |  0.731 |     0.862 |            4.704 |        29.115 |  6.115 |     41.9 |
+| flat 50k   | Tree | 681.468 |  0.223 |  0.723 |     3.598 |            7.721 |       117.663 | 14.532 |    129.7 |
+| flat 50k   | List | 684.514 |  0.197 |  0.696 |     3.320 |            7.385 |       119.026 | 15.057 |    135.6 |
 
-- Ready is one cold open per process; mixed 200 ranged from 10 to 41 ms across processes. In branch 10k, cold
-  expansion flushes in 11.8 ms, warm expansion in 4.7 ms and collapse in 3.3 ms.
-- Real-configuration startup is ready at 83.8 ms and visible at 112.3 ms; the first default Explorer is ready at
-  28.5 ms.
-- `git_1000` refresh is ready at 85.3 ms, of which the status query takes 83.0 ms, with 8.0 ms main-thread CPU and a
-  3.6 ms maximum tick gap. The CPU includes the watch re-read of the file the case modifies, which lands inside the
+- Ready is one cold open per process, so a single slow open moves it; mixed 200 ranged from 9.2 to 11.7 ms. In branch
+  10k, cold expansion flushes in 11.4 ms, warm expansion in 4.1 ms and collapse in 3.2 ms.
+- Real-configuration startup is ready at 80.6 ms and visible at 108.0 ms; the first default Explorer is ready at
+  29.5 ms.
+- `git_1000` refresh is ready at 80.6 ms, of which the status query takes 76.6 ms, with 8.0 ms main-thread CPU and a
+  2.9 ms maximum tick gap. The CPU includes the watch re-read of the file the case modifies, which lands inside the
   refresh.
 
 | Copy case           |   Job ms |   CPU ms | Ready ms |
 | ------------------- | -------: | -------: | -------: |
-| One dense 64 MiB    |   22.760 |   15.358 |   29.932 |
-| 100 × 4 B           |   22.712 |   20.176 |   26.424 |
-| 1k × 4 B            |  178.224 |  150.818 |  181.392 |
-| 10k × 4 B           | 1583.879 | 1385.000 | 1588.406 |
-| 1k × 4 KiB          |  177.280 |  157.350 |  179.166 |
-| 1k × 64 KiB         |  189.840 |  166.361 |  192.673 |
-| 1k, source expanded |  185.508 |  164.517 |  189.570 |
-| 1k, target outside  |  165.627 |  143.212 |  170.201 |
+| One dense 64 MiB    |   14.084 |   14.855 |   18.359 |
+| 100 × 4 B           |   22.276 |   19.819 |   24.818 |
+| 1k × 4 B            |  168.262 |  148.677 |  171.273 |
+| 10k × 4 B           | 1543.817 | 1367.170 | 1546.050 |
+| 1k × 4 KiB          |  186.354 |  158.078 |  190.517 |
+| 1k × 64 KiB         |  182.206 |  162.075 |  185.443 |
+| 1k, source expanded |  188.776 |  161.165 |  194.567 |
+| 1k, target outside  |  174.477 |  147.340 |  176.724 |
 
-Copies keep the main thread to 3.8–29.4 ms of CPU and the maximum tick gap to 2.6–4.2 ms.
+Copies keep the main thread to 3.8–26.1 ms of CPU and the maximum tick gap to 2.8–4.0 ms.
 
 Active loading (50k directory):
 
 | Mode | Phase | Input visible ms | Cancel visible ms | Resume ms | Max tick gap ms |
 | ---- | ----- | ---------------: | ----------------: | --------: | --------------: |
-| Tree | Cold  |            0.289 |             7.617 |   800.958 |           3.743 |
-| Tree | Warm  |            0.253 |             9.767 |   230.396 |           2.553 |
-| List | Cold  |            0.245 |            17.972 |   786.901 |           4.953 |
-| List | Warm  |            0.239 |            26.015 |   232.193 |           3.612 |
+| Tree | Cold  |            0.276 |             6.888 |   733.446 |           4.466 |
+| Tree | Warm  |            0.256 |            11.027 |   191.135 |           2.474 |
+| List | Cold  |            0.275 |             1.503 |   739.304 |           4.747 |
+| List | Warm  |            0.254 |             5.643 |   192.593 |           6.228 |
 
-- Idle visible, hidden and disposed phases use 0.11–0.18 ms of CPU per three seconds with no redraw notifications
-  at 10.6 MiB; the macOS recursive root watch over 97 idle directories uses 0.14 ms.
-- Watch activity: an isolated rename is visible after 57.8 ms; a continuous stream shows its changes after 14.4 ms
-  and catches up 131.0 ms after the last; a 500-file burst is visible after 129.3 ms. Main-thread CPU is 3.1%, 4.7%
-  and 5.2% of one core. The 256 MiB sparse-file Job takes 49.5 ms wall time, 3.0 ms main-thread CPU and a 5.7 ms
-  maximum tick gap.
+- Idle visible, hidden and disposed phases use 0.09–0.20 ms of CPU per three seconds with no redraw notifications
+  at 10.7 MiB; the macOS recursive root watch over 97 idle directories uses 0.06 ms.
+- Watch activity: an isolated rename is visible after 59.0 ms; a continuous stream shows its changes after 34.5 ms
+  (10–42 ms by their place in the merge window) and catches up 126.8 ms after the last; a 500-file burst is visible
+  after 121.3 ms. Main-thread CPU is 3.1%, 5.4% and 4.4% of one core. The 256 MiB sparse-file Job takes 44.6 ms wall
+  time, 2.4 ms main-thread CPU and a 5.7 ms maximum tick gap.
 - Soak (200 cycles): each cycle's rename follows reopening the hidden view within 150 ms, which the restarted watch
-  counts as activity, so it is visible after 176.9 ms (56 ms when it comes 600 ms later). Hidden-view footprint grows
-  from 16.7 to 22.0 MiB and settles at 21.4 MiB after the trace flush.
-- Full configuration: create, rename and delete are confirmed after 30.9, 9.3 and 8.6 ms; the worst cursor during a
-  refresh is 9.9 ms. The vtsls rename edits arrive after 73.0 ms with 7.7 ms of rename I/O.
+  counts as activity, so it is visible after 175.7 ms (56 ms when it comes 600 ms later). Hidden-view footprint grows
+  from 16.9 to 21.2 MiB and settles at 20.7 MiB after the trace flush.
+- Full configuration: create, rename and delete are confirmed after 25.2, 9.6 and 9.2 ms; the worst cursor during a
+  refresh is 9.6 ms. The vtsls rename edits arrive after 71.9 ms with 7.2 ms of rename I/O.
 - Navigation acceptance: three processes of ten cycles each complete typed selection, nested reveal, removed-root
   recovery and view release.
 
-### Focused probes (2026-10-22)
+### Focused probes (2026-10-22/23)
 
-Same host and build. Filetree probes over 50k files in an 80×48 UI, 20 samples each, median / p95 ms:
+Same host. The Filetree probes and scan stages were re-measured on 2026-10-23 with the macOS bulk listing; the other
+probes are from 2026-10-22. Filetree probes over 50k files in an 80×48 UI, 20 samples each, median / p95 ms:
 
 | Measurement                            |            Tree |            List |
 | -------------------------------------- | --------------: | --------------: |
-| First 512 rows through UI flush        |     5.44 / 6.73 |     5.39 / 6.86 |
-| Complete initial load through UI flush | 749.35 / 755.54 | 756.21 / 817.71 |
-| 48-row annotation query                |     0.64 / 1.48 |     0.70 / 1.51 |
-| Diagnostic navigation across 50k rows  |     5.70 / 6.10 |     4.77 / 6.07 |
-| Diagnostic update through UI flush     |     0.72 / 1.92 |     0.58 / 1.32 |
+| First 512 rows through UI flush        |     4.88 / 6.67 |     4.69 / 6.29 |
+| Complete initial load through UI flush | 673.16 / 693.50 | 679.78 / 695.57 |
+| 48-row annotation query                |     0.53 / 1.51 |     0.71 / 1.48 |
+| Diagnostic navigation across 50k rows  |     4.80 / 5.90 |     4.79 / 5.95 |
+| Diagnostic update through UI flush     |     0.68 / 2.07 |     0.60 / 1.36 |
 
-- Rust retains 80.1 MiB for 50,009 nodes; final Lua heaps are 1.43 / 1.23 MiB and process footprint about 250 MiB.
+- Rust retains 80.1 MiB for 50,009 nodes; final Lua heaps are 1.34 / 1.25 MiB and process footprint about 250 MiB.
   These owners overlap; do not add them.
 - `filetree_watch.lua`, three processes of 20 isolated renames: rename to UI flush 47.4 ms (per-process p95
   53.8–56.4 ms); Lua's first observation to flush 0.9 ms (p95 8.5–9.3 ms).
 - With 128 loaded aliases, annotation aggregation takes p95 6.30 ms and sparse Git navigation p95 3.79 ms. OS watch
   notifications arrive after p50 11.6 / p95 13.7 ms with 1 ms polling.
 
-`t_scan_stages`, one process; total is initialization, IO, owner application, projection and retirement:
+`t_scan_stages`, medians of three processes; total is initialization, IO, owner application, projection and
+retirement:
 
 | Direct files | Phase | Total ms |  IO ms | Apply ms | Project ms | Pages | Staging MiB |
 | -----------: | ----- | -------: | -----: | -------: | ---------: | ----: | ----------: |
-|        1,000 | Cold  |     6.04 |   3.06 |     1.60 |       1.17 |     2 |        0.89 |
-|        1,000 | Warm  |     2.62 |   2.26 |     0.24 |       0.01 |     2 |        0.70 |
-|       10,000 | Cold  |    66.80 |  29.78 |    19.69 |      16.73 |     6 |        5.01 |
-|       10,000 | Warm  |    35.04 |  30.71 |     3.61 |       0.04 |     6 |        3.12 |
-|      100,000 | Cold  |  1436.20 | 346.08 |   490.12 |     596.79 |    70 |       28.84 |
-|      100,000 | Warm  |   547.20 | 442.25 |    96.66 |       0.41 |    50 |        8.11 |
+|        1,000 | Cold  |     4.97 |   1.78 |     1.70 |       1.17 |     2 |        0.96 |
+|        1,000 | Warm  |     1.71 |   1.34 |     0.25 |       0.01 |     2 |        0.76 |
+|       10,000 | Cold  |    55.26 |  16.72 |    20.36 |      17.38 |     6 |        5.08 |
+|       10,000 | Warm  |    23.81 |  19.13 |     3.83 |       0.05 |     6 |        3.18 |
+|      100,000 | Cold  |  1319.52 | 218.28 |   481.65 |     615.38 |    70 |       28.90 |
+|      100,000 | Warm  |   415.77 | 310.55 |    97.04 |       0.43 |    50 |        8.17 |
 
 Bulk Move preparation, 200 four-byte files, three processes per case:
 

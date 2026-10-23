@@ -60,6 +60,22 @@ impl Filter {
     pub fn read(&self, path: &Path) -> io::Result<Option<Entry>> {
         observe(path, Some(&self.0))
     }
+
+    /** An entry listed with its metadata takes the checks of a read by `path`, its directory. */
+    #[cfg(target_os = "macos")]
+    pub fn admit(&self, path: &Path, entry: Entry) -> io::Result<Option<Entry>> {
+        if private_name(&entry.name) {
+            return self.read(&path.join(&entry.name));
+        }
+        if entry.kind == Kind::Directory && private_directory(entry.identity) {
+            return Ok(None);
+        }
+        Ok(Some(entry))
+    }
+}
+
+fn private_name(name: &OsStr) -> bool {
+    name.as_bytes().starts_with(b".yoz-filetree-")
 }
 
 pub(crate) fn private_directory(identity: FileIdentity) -> bool {
@@ -77,12 +93,9 @@ pub(crate) fn read(path: &Path) -> io::Result<Option<Entry>> {
 }
 
 fn observe(path: &Path, scan: Option<&Hidden>) -> io::Result<Option<Entry>> {
-    let private_name = path
-        .file_name()
-        .is_some_and(|name| name.as_bytes().starts_with(b".yoz-filetree-"));
     /* Namespace creation and publication hold this same gate. Ordinary file metadata
      * remains parallel; only a possible private name needs the gate around its read. */
-    if private_name {
+    if path.file_name().is_some_and(private_name) {
         let registry = REGISTRY.lock().unwrap_or_else(|error| error.into_inner());
         return match Entry::read(path) {
             Ok(entry)

@@ -1,3 +1,5 @@
+#[cfg(target_os = "macos")]
+use super::io::bulk::{self, Listed, Listing};
 use super::resource;
 use super::{Entry, FileIdentity};
 use crate::ux::treeview::memory::Budget;
@@ -6,6 +8,7 @@ use crate::ux::treeview::{
 };
 use std::collections::{BTreeMap, HashSet, VecDeque};
 use std::ffi::OsString;
+#[cfg(not(target_os = "macos"))]
 use std::fs::{self, ReadDir};
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -92,6 +95,9 @@ pub(crate) struct Scan {
     #[cfg(any(target_os = "macos", target_os = "linux"))]
     hidden: super::io::staging::Filter,
     ancestors: Vec<FileIdentity>,
+    #[cfg(target_os = "macos")]
+    iterator: Listing,
+    #[cfg(not(target_os = "macos"))]
     iterator: ReadDir,
     names: HashSet<OsString>,
     order: BTreeMap<SortKey, Arc<str>>,
@@ -139,6 +145,11 @@ impl Scan {
         #[cfg(any(target_os = "macos", target_os = "linux"))]
         let hidden =
             super::io::staging::Filter::new(current.target_identity().expect("directory identity"));
+        /* macOS lists entries with their metadata; elsewhere each entry is read by path. */
+        #[cfg(target_os = "macos")]
+        let iterator =
+            Listing::open(&path).map_err(|error| resource::io_error("read directory", error))?;
+        #[cfg(not(target_os = "macos"))]
         let iterator =
             fs::read_dir(&path).map_err(|error| resource::io_error("read directory", error))?;
         let ancestors = resource::ancestors(source, node)?;
@@ -149,6 +160,8 @@ impl Scan {
                 + std::mem::size_of::<Self>()
                 + 256,
         )?;
+        #[cfg(target_os = "macos")]
+        reservation.add(bulk::BUFFER_BYTES)?;
         let known = Known::new(source.clone(), node, &mut reservation, cancelled)?;
         Ok(Self {
             known,
@@ -232,7 +245,12 @@ impl Scan {
                     Some(item) => {
                         let item =
                             item.map_err(|error| resource::io_error("enumerate directory", error))?;
-                        #[cfg(any(target_os = "macos", target_os = "linux"))]
+                        #[cfg(target_os = "macos")]
+                        let observed = match item {
+                            Listed::Entry(entry) => self.hidden.admit(&self.path, entry),
+                            Listed::Name(name) => self.hidden.read(&self.path.join(name)),
+                        };
+                        #[cfg(target_os = "linux")]
                         let observed = self.hidden.read(&item.path());
                         #[cfg(not(any(target_os = "macos", target_os = "linux")))]
                         let observed = Entry::read(&item.path()).map(Some);

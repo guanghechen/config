@@ -8,6 +8,8 @@ use std::path::{Path, PathBuf};
 #[cfg(unix)]
 use std::sync::Arc;
 
+#[cfg(target_os = "macos")]
+pub(crate) mod bulk;
 mod source;
 #[cfg(any(target_os = "macos", target_os = "linux"))]
 pub(crate) mod staging;
