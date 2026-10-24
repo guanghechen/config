@@ -132,6 +132,10 @@ multiline file 上的 regex evaluation 都无法强制中断。Lua 在 terminal 
 3. 清空 pending request。
 4. 安排 debounced snapshot 与 submit。
 
+Replacement 与 replace flag 不进入 native search options，只决定预览文本与高亮；它们的通知同样执行上述步骤，
+但在下一轮 event loop 立即 snapshot 与 submit，不等 debounce。这类编辑仍会重新搜索，因此结果始终反映
+当前文件内容；延迟原本主要来自 debounce。同一轮中若有其他输入的通知先到，合并后仍按 debounce 提交。
+
 Immutable request snapshot 包含 root/cwd/specified path、复制的 include/exclude patterns、query、
 replacement、全部 search flags、`max_filesize` 与 `max_matches`。结果归一化和发布只使用该 snapshot。
 每次 request-scoped publication 或 error report 前，与 composer 当前输入的新 snapshot 比较；

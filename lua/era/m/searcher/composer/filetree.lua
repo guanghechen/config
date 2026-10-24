@@ -1537,12 +1537,10 @@ function M.new(props)
     o_flag_gitignore,
     o_flag_limit_matches,
     o_flag_regex,
-    o_flag_replace,
     o_flag_case_sensitive,
     o_includes,
     o_max_filesize,
     o_max_matches,
-    o_replace_pattern,
     o_rootpath,
     o_search_pattern,
   }
@@ -1551,6 +1549,17 @@ function M.new(props)
       stl.c.Subscriber.new({
         on_next = function()
           self:schedule_search()
+        end,
+      }),
+      true
+    )
+  end
+  -- Replacement inputs only change previews, and an edit of them waited mostly on the debounce.
+  for _, observable in ipairs({ o_flag_replace, o_replace_pattern }) do
+    observer_unsubs[#observer_unsubs + 1] = observable:subscribe(
+      stl.c.Subscriber.new({
+        on_next = function()
+          self:schedule_search(true)
         end,
       }),
       true
@@ -1794,8 +1803,9 @@ function M:reset_filepaths(rootpath, cwd, filepaths)
   return self
 end
 
+---@param immediate                     ?boolean Search on the next tick instead of after the debounce.
 ---@return nil
-function M:schedule_search()
+function M:schedule_search(immediate)
   self:__health__()
   if self._search_schedule_pending then
     return
@@ -1818,7 +1828,7 @@ function M:schedule_search()
     return
   end
   self:__start_search_indicator__()
-  self._scheduler_search:schedule({ context = generation })
+  self._scheduler_search:schedule({ context = generation, immediate = immediate })
 end
 
 ---@protected
