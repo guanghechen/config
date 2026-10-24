@@ -390,4 +390,90 @@ t:test("one buffer failure does not suppress another pending buffer", function()
   t.assert_eq(successful, ctx.calls[1].bufnr, "successful buffer")
 end)
 
+t:test("insert leave lints only after an edit since the last run", function()
+  local bufnr = create_buffer("lua")
+  vim.api.nvim_set_current_buf(bufnr)
+
+  local ctx = setup()
+  ctx.flush()
+  t.assert_eq(1, #ctx.calls, "initial lint")
+
+  ctx.callbacks.InsertLeave({ buf = bufnr })
+  ctx.flush()
+  t.assert_eq(1, #ctx.calls, "insert leave without an edit")
+
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "edited" })
+  ctx.callbacks.InsertLeave({ buf = bufnr })
+  ctx.flush()
+  t.assert_eq(2, #ctx.calls, "insert leave after an edit")
+
+  ctx.callbacks.InsertLeave({ buf = bufnr })
+  ctx.flush()
+  t.assert_eq(2, #ctx.calls, "a second insert leave without another edit")
+end)
+
+t:test("write and manual refresh lint without an edit", function()
+  local bufnr = create_buffer("lua")
+  vim.api.nvim_set_current_buf(bufnr)
+
+  local ctx = setup()
+  ctx.flush()
+  ctx.calls = {}
+
+  ctx.callbacks.BufWritePost({ buf = bufnr })
+  ctx.flush()
+  t.assert_eq(1, #ctx.calls, "write lint")
+
+  ctx.emit(bufnr)
+  ctx.flush()
+  t.assert_eq(2, #ctx.calls, "manual lint")
+
+  ctx.callbacks.InsertLeave({ buf = bufnr })
+  ctx.flush()
+  t.assert_eq(2, #ctx.calls, "insert leave without an edit since the manual lint")
+end)
+
+t:test("a skipped lint does not count as a run for insert leave", function()
+  local bufnr = create_buffer("lua")
+  vim.api.nvim_set_current_buf(bufnr)
+  vim.b[bufnr].__test_disable_lint = true
+
+  local ctx = setup()
+  ctx.flush()
+  t.assert_eq(0, #ctx.calls, "disabled buffer")
+
+  vim.b[bufnr].__test_disable_lint = nil
+  ctx.callbacks.InsertLeave({ buf = bufnr })
+  ctx.flush()
+  t.assert_eq(1, #ctx.calls, "insert leave lints the content no linter has run on")
+end)
+
+t:test("deleting a buffer or setting up again forgets its last run", function()
+  local current = create_buffer("json")
+  local bufnr = create_buffer("lua")
+  vim.api.nvim_set_current_buf(current)
+
+  local ctx = setup()
+  ctx.flush()
+  ctx.calls = {}
+
+  ctx.callbacks.BufWritePost({ buf = bufnr })
+  ctx.flush()
+  t.assert_eq(1, #ctx.calls, "write lint")
+
+  ctx.callbacks.BufDelete({ buf = bufnr })
+  ctx.callbacks.InsertLeave({ buf = bufnr })
+  ctx.flush()
+  t.assert_eq(2, #ctx.calls, "insert leave after the buffer was deleted")
+
+  -- Setup lints only the current buffer, so the other buffer shows whether its record survived.
+  ctx.plugin.config(ctx.plugin, {})
+  ctx.flush()
+  ctx.calls = {}
+  ctx.callbacks.InsertLeave({ buf = bufnr })
+  ctx.flush()
+  t.assert_eq(1, #ctx.calls, "insert leave after setup ran again")
+  t.assert_eq(bufnr, ctx.calls[1].bufnr, "the forgotten buffer")
+end)
+
 t:run()

@@ -63,6 +63,8 @@ local linters = {
 
 local pending_bufnrs = {} ---@type table<integer, true>
 local deferred_bufnrs = {} ---@type table<integer, true>
+-- Each buffer's changedtick at its last linter run.
+local linted_ticks = {} ---@type table<integer, integer>
 local lint_debounced = nil ---@type stl.timer.IDisposableCallable|nil
 local lint_schedule_subscription = nil ---@type stl.c.IUnsubscribable|nil
 
@@ -155,6 +157,7 @@ local function do_lint_current(bufnr)
 
   -- Run linters.
   if #names > 0 then
+    linted_ticks[bufnr] = vim.api.nvim_buf_get_changedtick(bufnr)
     lint.try_lint(names)
   end
 end
@@ -249,6 +252,7 @@ return {
 
     pending_bufnrs = {}
     deferred_bufnrs = {}
+    linted_ticks = {}
     lint_debounced = stl.timer.debounce(flush_pending_lints, 128)
 
     lint_schedule_subscription = dot.state.status.lint_schedule_nr:subscribe(
@@ -278,6 +282,7 @@ return {
       callback = function(event)
         pending_bufnrs[event.buf] = nil
         deferred_bufnrs[event.buf] = nil
+        linted_ticks[event.buf] = nil
       end,
     })
 
@@ -291,6 +296,10 @@ return {
     vim.api.nvim_create_autocmd({ "InsertLeave" }, {
       group = stl.nvim.fn.augroup("nvim-lint-on-insert-leave"),
       callback = function(event)
+        -- Leaving Insert mode without an edit since the last run leaves nothing new to lint.
+        if linted_ticks[event.buf] == vim.api.nvim_buf_get_changedtick(event.buf) then
+          return
+        end
         schedule_lint(event.buf)
       end,
     })
