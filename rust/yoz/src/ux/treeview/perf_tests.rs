@@ -553,6 +553,63 @@ fn t_ancestry_filter_performance() {
 
 #[test]
 #[ignore = "explicit release-mode filter stage measurement"]
+fn t_scattered_filter_performance() {
+    for mode in [Mode::List, Mode::Tree] {
+        let (mut engine, state, _root) = fixture(50_000);
+        let ids: Vec<NodeId> = (0..50_000)
+            .map(|i| engine.source.id(format!("n{i}").as_str()).unwrap())
+            .collect();
+        let all: Arc<NodeMap<usize>> = Arc::new(
+            ids.iter()
+                .enumerate()
+                .map(|(rank, id)| (*id, rank))
+                .collect(),
+        );
+        /* Every fourth row leaves: a quarter of the rows change, each in a span of its own. */
+        let scattered: Arc<NodeMap<usize>> = Arc::new(
+            ids.iter()
+                .enumerate()
+                .filter(|(rank, _)| rank % 4 != 0)
+                .map(|(rank, id)| (*id, rank))
+                .collect(),
+        );
+        let (mut narrow, mut widen) = (Vec::new(), Vec::new());
+        for index in 0..62 {
+            let narrowing = index % 2 == 0;
+            set_display(
+                &mut engine,
+                state,
+                DisplayOptions {
+                    mode,
+                    filter: Some(if narrowing {
+                        scattered.clone()
+                    } else {
+                        all.clone()
+                    }),
+                    ..DisplayOptions::default()
+                },
+            );
+            let start = Instant::now();
+            let frame = project(&mut engine, state);
+            let elapsed = start.elapsed().as_secs_f64() * 1000.0;
+            assert_eq!(frame.len(), if narrowing { 37_500 } else { 50_000 });
+            if index >= 2 {
+                if narrowing { &mut narrow } else { &mut widen }.push(elapsed);
+            }
+        }
+        for (direction, mut samples) in [("narrow", narrow), ("widen", widen)] {
+            samples.sort_by(f64::total_cmp);
+            println!(
+                "scattered_filter: mode={mode:?}, direction={direction}, rows=50000, n=30, p50_ms={:.3}, p95_ms={:.3}",
+                percentile(&samples, 0.5),
+                percentile(&samples, 0.95)
+            );
+        }
+    }
+}
+
+#[test]
+#[ignore = "explicit release-mode filter stage measurement"]
 fn t_ranked_filter_performance() {
     for mode in [Mode::List, Mode::Tree] {
         let (mut engine, state, _root) = fixture(50_000);

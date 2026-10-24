@@ -598,6 +598,15 @@ function M:update(context, manual)
     requested[name] = true
   end
   local request_source ---@type fun(name: string): nil
+  -- Responses that arrive before this update renders are shown by that render.
+  local updating = true ---@type boolean
+
+  ---@return nil
+  local function render_later()
+    if not updating then
+      self:schedule_render()
+    end
+  end
 
   ---@return nil
   local function update_buffer()
@@ -618,14 +627,14 @@ function M:update(context, manual)
     local slot = self._slots.buffer
     if eligible and slot == nil then
       request_source("buffer")
-      self:schedule_render()
+      render_later()
     elseif not eligible and slot ~= nil then
       self._slots.buffer = nil
       if slot.cancel ~= nil then
         slot.cancel()
         slot.cancel = nil
       end
-      self:schedule_render()
+      render_later()
     end
   end
 
@@ -682,43 +691,55 @@ function M:update(context, manual)
           self:render(true)
         end
       end
-      slot.cancel = source.complete(context, function(response)
-        vim.schedule(function()
-          if self._epoch ~= epoch or self._slots[name] ~= slot or self.context == nil then
-            return
-          end
-          if not Context.same_input(self._observed or context, Context.capture()) then
-            return
-          end
-          local previous = slot.prepared
-          local groups ---@type era.keystroke.cmp.IRankGroup[]|nil
-          if previous ~= nil and #previous.items == #response.items then
-            local reusable = true
-            if previous.items ~= response.items then
-              for index, item in ipairs(response.items) do
-                if item ~= previous.items[index] then
-                  reusable = false
-                  break
-                end
+      ---@param response                era.keystroke.cmp.IResponse
+      ---@return nil
+      local function receive(response)
+        if self._epoch ~= epoch or self._slots[name] ~= slot or self.context == nil then
+          return
+        end
+        if not Context.same_input(self._observed or context, Context.capture()) then
+          return
+        end
+        local previous = slot.prepared
+        local groups ---@type era.keystroke.cmp.IRankGroup[]|nil
+        if previous ~= nil and #previous.items == #response.items then
+          local reusable = true
+          if previous.items ~= response.items then
+            for index, item in ipairs(response.items) do
+              if item ~= previous.items[index] then
+                reusable = false
+                break
               end
             end
-            if reusable then
-              groups = previous.groups
-            end
           end
-          groups = groups or Rank.prepare(response.items)
-          local changed = slot.groups ~= groups
-          slot.response = response
-          slot.prepared = { items = response.items, groups = groups }
-          slot.groups = groups
-          if vim.list_contains(Policy.buffer_parents, name) then
-            update_buffer()
+          if reusable then
+            groups = previous.groups
           end
-          if changed then
-            self:schedule_render()
-          end
-        end)
+        end
+        groups = groups or Rank.prepare(response.items)
+        local changed = slot.groups ~= groups
+        slot.response = response
+        slot.prepared = { items = response.items, groups = groups }
+        slot.groups = groups
+        if vim.list_contains(Policy.buffer_parents, name) then
+          update_buffer()
+        end
+        if changed then
+          render_later()
+        end
+      end
+      -- Buffer, path and dictionary sources answer within complete(); only later answers wait a tick.
+      local synchronous = true ---@type boolean
+      slot.cancel = source.complete(context, function(response)
+        if synchronous then
+          receive(response)
+        else
+          vim.schedule(function()
+            receive(response)
+          end)
+        end
       end, dispatch)
+      synchronous = false
     end
   end
   for _, name in ipairs(names) do
@@ -729,6 +750,7 @@ function M:update(context, manual)
   update_buffer()
   -- LSP subscribers transfer compatible transports before the superseded handles are cancelled.
   self:cancel_requests(false, old_slots)
+  updating = false
   self:render()
 end
 

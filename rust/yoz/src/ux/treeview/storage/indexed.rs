@@ -400,6 +400,11 @@ impl<T: IndexedValue> IndexedSequence<T> {
             old = a + 1;
             new = b + 1;
         }
+        /* Each span is a persistent splice of its own, which costs far more than a rebuild once changes
+         * scatter; a render plan resets past 512 edits anyway, so no shared block would be used. */
+        if spans.len() > 512 {
+            return Self::from_vec(values).map(|sequence| (sequence, replaced));
+        }
         let mut result = self.clone();
         for &(a, b, _, _) in spans.iter().rev() {
             if a != b {
@@ -547,6 +552,30 @@ impl<T: IndexedValue> IndexedSequence<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn t_reconcile_keeps_content_whether_it_splices_or_rebuilds() {
+        let budget = super::super::super::memory::Budget::new(usize::MAX);
+        let _guard = budget.enter();
+        let all: Vec<NodeId> = (1..=4_000).map(NodeId).collect();
+        /* Ten single-row spans splice; a thousand rebuild without reaching the one-third rebuild. */
+        for (label, every) in [("few spans", 400), ("scattered spans", 4)] {
+            let kept: Vec<NodeId> = all.iter().copied().filter(|id| id.0 % every != 0).collect();
+            let removed = all.len() - kept.len();
+            for (from, to, replaced) in [(&all, &kept, 0), (&kept, &all, removed)] {
+                let base = IndexedSequence::from_vec(from.clone()).unwrap();
+                let (sequence, count) = base.reconcile(to.clone()).unwrap();
+                assert_eq!(sequence.iter().copied().collect::<Vec<_>>(), *to, "{label}");
+                assert_eq!(count, replaced, "{label}");
+                assert!(
+                    to.iter()
+                        .enumerate()
+                        .all(|(index, id)| sequence.position(id) == Some(index)),
+                    "{label}: positions"
+                );
+            }
+        }
+    }
 
     #[test]
     fn t_dense_locations_share_pages_and_release_their_budget() {

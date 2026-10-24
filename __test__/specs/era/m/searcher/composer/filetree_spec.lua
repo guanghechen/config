@@ -11,8 +11,9 @@ local function observable(value)
 end
 
 ---@param on_attached                   ?era.m.searcher.composer.filetree.IOnAttached
+---@param frecency                      ?stl.c.Frecency
 ---@return era.m.searcher.FiletreeComposer
-local function fixture(on_attached)
+local function fixture(on_attached, frecency)
   local composer = era.m.searcher.FiletreeComposer.new({
     name = "published-actions",
     permanent = false,
@@ -35,6 +36,7 @@ local function fixture(on_attached)
     rootpath = observable(root),
     search_pattern = observable(""),
     on_attached = on_attached,
+    frecency = frecency,
   })
   t:defer(function()
     vim.cmd.normal({ args = { vim.keycode("<Esc>") }, bang = true })
@@ -79,6 +81,16 @@ local function action(composer, description)
   end
   error("missing action: " .. description)
 end
+
+t:test("files are ordered by frecency, the most visited first", function()
+  local frecency = stl.c.Frecency.new({ items = {} })
+  local a, b, other = Paths.key(root .. "/dir/a.lua"), Paths.key(root .. "/dir/b.lua"), Paths.key(root .. "/other.lua")
+  frecency:access(other)
+  frecency:access(other)
+  frecency:access(b)
+  local composer = fixture(nil, frecency)
+  t.assert_same({ other, b, a }, composer._uuids_order, "frecency order")
+end)
 
 t:test("copy filepath offers the choices one row below and four columns right of the result cursor", function()
   local composer = fixture()

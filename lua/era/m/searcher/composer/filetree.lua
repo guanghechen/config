@@ -174,6 +174,18 @@ local SEARCH_INDICATOR_HIGHLIGHTS = {
   "m_pk_search_spinner_pink",
 }
 
+-- Scoring hashes each key, which a sort comparator would repeat at every comparison.
+---@param frecency                      stl.c.Frecency
+---@param uuids                         string[]
+---@return table<string, number>
+local function frecency_scores(frecency, uuids)
+  local scores = {} ---@type table<string, number>
+  for _, uuid in ipairs(uuids) do
+    scores[uuid] = frecency:score(uuid)
+  end
+  return scores
+end
+
 ---@param props                         era.m.searcher.IFiletreeComposerProps
 ---@return era.m.searcher.FiletreeComposer
 function M.new(props)
@@ -1768,10 +1780,9 @@ function M:reset_filepaths(rootpath, cwd, filepaths)
   local uuids_order = vim.list_slice(uuids_file) ---@type string[]
 
   if frecency ~= nil then
+    local scores = frecency_scores(frecency, uuids_order) ---@type table<string, number>
     table.sort(uuids_order, function(a, b)
-      local sa = frecency:score(a) or 0 ---@type integer
-      local sb = frecency:score(b) or 0 ---@type integer
-      return sa > sb
+      return scores[a] > scores[b]
     end)
   end
 
@@ -2143,10 +2154,9 @@ function M:__apply_search_result__(context, result)
   treeview:publish_search_result(result, uuids)
 
   if frecency ~= nil then
+    local scores = frecency_scores(frecency, uuids) ---@type table<string, number>
     stl.table.stable_sort(uuids, function(a, b)
-      local sa = frecency:score(a) or 0 ---@type integer
-      local sb = frecency:score(b) or 0 ---@type integer
-      return sb - sa
+      return scores[b] - scores[a]
     end)
   end
 
