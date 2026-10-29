@@ -15,5 +15,6 @@ cmd + ctrl + alt + shift - left         : yabai -m window --warp    west
 cmd + ctrl + alt + shift - down         : yabai -m window --warp    south
 cmd + ctrl + alt + shift - up           : yabai -m window --warp    north
 cmd + ctrl + alt + shift - right        : yabai -m window --warp    east
+cmd + ctrl + alt + shift - 0x2A         : yabai -m window --toggle  split # | = Shift + backslash (ANSI keycode 0x2A)
 cmd + ctrl + alt - f                    : yabai -m window --toggle  float
 cmd + ctrl + alt - z                    : yabai -m window --toggle  zoom-fullscreen
