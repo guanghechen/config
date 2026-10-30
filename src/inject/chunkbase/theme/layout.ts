@@ -324,6 +324,43 @@ export const layoutTheme: string = `
     }
   }
 
+  @supports (appearance: base-select) {
+    html astro-island[component-export="FinderApp"] select[data-testid="platform"],
+    html astro-island[component-export="FinderApp"] select[data-testid="platform"]::picker(select) {
+      appearance: base-select;
+    }
+
+    html astro-island[component-export="FinderApp"] select[data-testid="platform"]::picker-icon {
+      display: none;
+    }
+
+    html astro-island[component-export="FinderApp"] select[data-testid="platform"]::picker(select) {
+      max-height: min(22rem, calc(100dvh - 24px));
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      margin-block: 4px;
+      border: 1px solid #a8bdcf;
+      border-radius: 6px;
+      background: #f8fbff;
+      color: #314b62;
+      box-shadow: 0 4px 12px rgb(49 75 98 / 20%);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    html astro-island[component-export="FinderApp"] select[data-testid="platform"] option {
+      padding: 5px 10px;
+    }
+
+    html astro-island[component-export="FinderApp"] select[data-testid="platform"] option:checked {
+      background: #d7e8f5;
+    }
+
+    html astro-island[component-export="FinderApp"] select[data-testid="platform"] option:hover {
+      background: #e5f0f9;
+    }
+  }
+
   @media (forced-colors: active) {
     html astro-island[component-export="FinderApp"] .fancy-row select {
       appearance: auto;
