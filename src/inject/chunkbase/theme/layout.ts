@@ -2,6 +2,7 @@ export const layoutTheme: string = `
   .adthrive-sticky.adthrive-footer,
   .adthrive-footer-message,
   [id^="AdThrive_Footer_"],
+  html #main.wide > .adthrive-ad,
   html #main.wide > article > .adthrive {
     display: none !important;
   }
@@ -88,6 +89,8 @@ export const layoutTheme: string = `
   }
 
   html astro-island[component-export="FinderApp"] .fancy-row:has(input[name="seed"]) > .fancy-inputs {
+    /* Include the controls in the right-aligned row's intrinsic width. */
+    container-type: normal;
     margin-inline-end: 0;
   }
 
