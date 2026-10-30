@@ -193,6 +193,21 @@ t:test("future FileType starts synchronously", function()
   t.assert_eq(12, started[1], "FileType buffer")
 end)
 
+t:test("JSONC and JSX filetypes start their parsers", function()
+  local buffers = {
+    [11] = { valid = true, loaded = true, filetype = "jsonc" },
+    [12] = { valid = true, loaded = true, filetype = "javascriptreact" },
+  }
+  ---@diagnostic disable-next-line: missing-parameter
+  local callbacks, started, _, _, registrations = setup(buffers, {}, {})
+
+  callbacks.FileType({ buf = 11 })
+  callbacks.FileType({ buf = 12 })
+
+  t.assert_same({ 11, 12 }, started, "started buffers")
+  t.assert_eq("json", registrations.jsonc, "JSONC parser mapping")
+end)
+
 t:test("missing parser skips FileType activation", function()
   local buffers = {
     [11] = { valid = true, loaded = true, filetype = "typescript" },
