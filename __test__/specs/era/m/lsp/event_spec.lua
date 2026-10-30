@@ -3,7 +3,19 @@ local harness = require("__test__.support.harness")
 
 local t = harness.new()
 
+-- Display switches observed by Event.dressing(); a case flips a switch and runs its observer.
+local switches = { code_lens = true, inlay_hints = true } ---@type table<string, boolean>
+local switch_observers = {} ---@type table<table, fun(): nil>
+
 bootstrap.with_global(t, "stl", {
+  fn = {
+    observe = function(observables, callback)
+      for _, observable in ipairs(observables) do
+        switch_observers[observable] = callback
+      end
+      return { unsubscribe = function() end }
+    end,
+  },
   nvim = {
     fn = {
       augroup = function(name)
@@ -13,6 +25,30 @@ bootstrap.with_global(t, "stl", {
     },
   },
 })
+bootstrap.with_global(t, "dot", {
+  context = {
+    lsp = {
+      code_lens = {
+        snapshot = function()
+          return switches.code_lens
+        end,
+      },
+      inlay_hints = {
+        snapshot = function()
+          return switches.inlay_hints
+        end,
+      },
+    },
+  },
+})
+
+---@param name                          "code_lens"|"inlay_hints"
+---@param enabled                       boolean
+---@return nil
+local function set_switch(name, enabled)
+  switches[name] = enabled
+  assert(switch_observers[dot.context.lsp[name]], name .. " observer")()
+end
 
 local completion_loads = 0 ---@type integer
 t:patch_table(package.preload, "era.keystroke.cmp", function()
@@ -620,6 +656,90 @@ t:test("inlay hints: pause in the buffer being typed in and resume once the mode
     "false@c,flush@c,true@c", -- attaching mid-insert
   } ---@type string[]
   t.assert_eq(table.concat(expected, ","), table.concat(calls, ","), "inlay hint calls")
+end)
+
+t:test("display switches: inlay hints follow the switch without stopping clients and keep a typing pause", function()
+  t:defer(function()
+    switches.inlay_hints = true
+  end)
+  local names = {} ---@type table<integer, string>
+  local calls = {} ---@type string[]
+  t:patch_table(vim.lsp.inlay_hint, "enable", function(enable, filter)
+    calls[#calls + 1] = tostring(enable) .. "@" .. names[filter.bufnr]
+  end)
+  t:patch_table(vim.lsp._changetracking, "flush", function() end)
+  local previous_bufnr = vim.api.nvim_get_current_buf() ---@type integer
+  t:defer(function()
+    if vim.api.nvim_buf_is_valid(previous_bufnr) then
+      vim.api.nvim_set_current_buf(previous_bufnr)
+    end
+  end)
+  local stops = 0 ---@type integer
+  local bufnrs = {} ---@type integer[]
+  for index, name in ipairs({ "a", "b" }) do
+    local bufnr = vim.api.nvim_create_buf(true, false) ---@type integer
+    t:defer(function()
+      delete_buffer(bufnr)
+    end)
+    bufnrs[index] = bufnr
+    names[bufnr] = name
+    local client = add_client(bufnr, "lua_ls", { [Methods.textDocument_inlayHint] = true })
+    function client:stop()
+      stops = stops + 1
+    end
+    Event.on_attach(client, bufnr)
+  end
+
+  -- Typing in `a` pauses its hints.
+  vim.api.nvim_set_current_buf(bufnrs[1])
+  vim.api.nvim_exec_autocmds("ModeChanged", { pattern = "n:i", modeline = false })
+  set_switch("inlay_hints", false)
+  set_switch("inlay_hints", true)
+  -- Once typing stops, the reconcile resumes `a`.
+  vim.api.nvim_exec_autocmds("ModeChanged", { pattern = "i:n", modeline = false })
+  vim.wait(20)
+
+  local expected = {
+    "true@a,true@b", -- attach
+    "false@a", -- typing pause
+    "false@a,false@b", -- switch off
+    "true@b", -- switch on; the paused buffer waits
+    "true@a", -- typing stopped
+  } ---@type string[]
+  t.assert_eq(table.concat(expected, ","), table.concat(calls, ","), "inlay hint calls")
+  t.assert_eq(0, stops, "client stops")
+end)
+
+t:test("display switches: code lenses follow the switch in normal buffers without stopping clients", function()
+  t:defer(function()
+    switches.code_lens = true
+  end)
+  local normal = vim.api.nvim_create_buf(true, false) ---@type integer
+  t:defer(function()
+    delete_buffer(normal)
+  end)
+  local scratch = vim.api.nvim_create_buf(false, true) ---@type integer
+  t:defer(function()
+    delete_buffer(scratch)
+  end)
+  local calls = {} ---@type string[]
+  t:patch_table(vim.lsp.codelens, "enable", function(enable, filter)
+    calls[#calls + 1] = tostring(enable) .. "@" .. (filter.bufnr == normal and "normal" or "scratch")
+  end)
+  local stops = 0 ---@type integer
+  for _, bufnr in ipairs({ normal, scratch }) do
+    local client = add_client(bufnr, "lens", { [Methods.textDocument_codeLens] = true })
+    function client:stop()
+      stops = stops + 1
+    end
+    Event.on_attach(client, bufnr)
+  end
+
+  set_switch("code_lens", false)
+  set_switch("code_lens", true)
+
+  t.assert_same({ "true@normal", "false@normal", "true@normal" }, calls, "code lens calls")
+  t.assert_eq(0, stops, "client stops")
 end)
 
 t:test("document colors: only servers reporting hex literals drop their colors", function()

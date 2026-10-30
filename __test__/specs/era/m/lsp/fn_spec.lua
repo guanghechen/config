@@ -184,4 +184,18 @@ t:test("locate_js_project_root: preserves nearest-marker and same-directory prec
   end
 end)
 
+t:test("restart_server: restarts through :lsp restart instead of editing the buffer again", function()
+  t:patch_table(stl, "reporter", { info = function() end })
+  local commands = {} ---@type string[]
+  t:patch_table(vim, "cmd", function(command)
+    commands[#commands + 1] = command
+  end)
+
+  Fn.restart_server()
+  -- A deferred `:edit` would follow within this window.
+  vim.wait(150)
+
+  t.assert_same({ "lsp restart" }, commands, "commands")
+end)
+
 t:run()

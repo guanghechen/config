@@ -286,16 +286,6 @@ function M.watch_changes()
   end, true)
 
   stl.fn.observe({
-    M.lsp.code_lens,
-    M.lsp.diagnostics_virt_lines,
-    M.lsp.inlay_hints,
-  }, function()
-    pcall(function()
-      dot.command.definitions.lsp.restart:execute()
-    end)
-  end, true)
-
-  stl.fn.observe({
     dot.state.status.msg_lsp,
     dot.state.status.msg_mode,
     dot.state.status.msg_transient,

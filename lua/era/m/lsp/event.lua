@@ -82,6 +82,36 @@ local function queue_inlay_hints_reconcile()
   end
 end
 
+-- The switch only shows or hides hints; a buffer paused for typing resumes through the reconcile.
+---@return nil
+local function apply_inlay_hints_switch()
+  local enabled = dot.context.lsp.inlay_hints:snapshot() ---@type boolean
+  for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+    if
+      vim.api.nvim_buf_is_loaded(bufnr)
+      and (vim.b[bufnr].support_inlayhint or 0) > 0
+      and not (enabled and inlay_hints_paused[bufnr])
+    then
+      vim.lsp.inlay_hint.enable(enabled, { bufnr = bufnr })
+    end
+  end
+end
+
+-- Like on_attach, the switch shows lenses only in normal buffers.
+---@return nil
+local function apply_code_lens_switch()
+  local enabled = dot.context.lsp.code_lens:snapshot() ---@type boolean
+  for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+    if
+      vim.api.nvim_buf_is_loaded(bufnr)
+      and (vim.b[bufnr].support_codelens or 0) > 0
+      and vim.api.nvim_get_option_value("buftype", { buf = bufnr }) == ""
+    then
+      vim.lsp.codelens.enable(enabled, { bufnr = bufnr })
+    end
+  end
+end
+
 ---@type table<string, true>
 local KEYMAP_METHODS = {
   ["textDocument/codeAction"] = true,
@@ -521,6 +551,10 @@ function M.dressing()
       end
     end,
   })
+  -- The display switches act on attached buffers without restarting servers; on_attach applies them to later
+  -- attachments.
+  stl.fn.observe({ dot.context.lsp.inlay_hints }, apply_inlay_hints_switch, true)
+  stl.fn.observe({ dot.context.lsp.code_lens }, apply_code_lens_switch, true)
 
   vim.lsp.handlers[Methods.client_registerCapability] = function(err, params, ctx, config)
     local result = register_capability(err, params, ctx, config) ---@type any

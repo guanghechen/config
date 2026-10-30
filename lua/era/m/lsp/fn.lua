@@ -149,21 +149,14 @@ end
 
 ---@return nil
 function M.restart_server()
-  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  local clients = vim.lsp.get_clients({ bufnr = bufnr }) ---@type vim.lsp.Client[]
-
   stl.reporter.info({
     from = __module_name__,
     subject = "restart_server",
   })
 
-  for _, client in ipairs(clients) do
-    client:stop(true)
-  end
-
-  vim.defer_fn(function()
-    vim.cmd("edit")
-  end, 100)
+  -- Each client starts again once its server exits, attached to every buffer it had. Editing the buffer again
+  -- would reach only the current one and fail with E37 when it is modified.
+  vim.cmd("lsp restart")
 end
 
 return M
