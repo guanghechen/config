@@ -411,8 +411,18 @@ local function reconcile_keymaps(bufnr, exclude_client_id)
       end
     end
   end
+
+  -- LSP keymaps replace Neovim's default `gr*` mappings and bind with nowait, so `gr` runs at once instead of waiting
+  -- 'timeoutlen' for them. The defaults are unreachable in Normal mode here; their replacements:
+  --   grr  references        gr
+  --   grn  rename            <leader>cr
+  --   gra  code action       <C-a><CR>, <D-CR>, <M-CR> (Visual-mode gra still works)
+  --   gri  implementation    gi
+  --   grt  type definition   gt
+  --   grx  run codelens      <leader>cc
+  local override = { bufnr = bufnr, nowait = true } ---@type stl.t.IKeymapOverridable
   track_keymaps(state.bound, generic)
-  stl.nvim.fn.bindkeys(generic, { bufnr = bufnr })
+  stl.nvim.fn.bindkeys(generic, override)
 
   local client_keymaps_list = {} ---@type era.m.lsp.event.IClientKeymaps[]
   for client_id, client_keymaps in pairs(state.clients) do
@@ -428,7 +438,7 @@ local function reconcile_keymaps(bufnr, exclude_client_id)
   end)
   for _, client_keymaps in ipairs(client_keymaps_list) do
     track_keymaps(state.bound, client_keymaps.keymaps)
-    stl.nvim.fn.bindkeys(client_keymaps.keymaps, { bufnr = bufnr })
+    stl.nvim.fn.bindkeys(client_keymaps.keymaps, override)
   end
 end
 

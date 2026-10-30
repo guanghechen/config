@@ -276,6 +276,30 @@ t:test("keymaps: client-specific mappings win and detach restores fallback", fun
   delete_buffer(bufnr)
 end)
 
+t:test("keymaps: generic and client mappings do not wait for Neovim's default gr* mappings", function()
+  t.assert_true(vim.fn.maparg("grr", "n") ~= "", "default grr mapping")
+  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  t:defer(function()
+    delete_buffer(bufnr)
+  end)
+  local vtsls = add_client(bufnr, "vtsls", { [Methods.textDocument_references] = true })
+
+  Event.on_attach(vtsls, bufnr)
+  Event.bindkeys(vtsls, bufnr, {
+    { modes = { "n" }, key = "gR", callback = function() end, desc = "lsp: find all file references" },
+  })
+
+  for _, lhs in ipairs({ "gr", "gR" }) do
+    local nowait = nil ---@type integer|nil
+    for _, keymap in ipairs(vim.api.nvim_buf_get_keymap(bufnr, "n")) do
+      if keymap.lhs == lhs then
+        nowait = keymap.nowait
+      end
+    end
+    t.assert_eq(1, nowait, lhs .. " nowait")
+  end
+end)
+
 t:test("foldexpr: restores visible windows after the last folding client detaches", function()
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
   local original = vim.api.nvim_get_current_win() ---@type integer
