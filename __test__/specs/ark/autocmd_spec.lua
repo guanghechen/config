@@ -176,4 +176,26 @@ for _, host in ipairs({ "neovim", "neovide", "vscode", "yozvim", "yuivim" }) do
   end)
 end
 
+t:test("filetype patterns match the intended files and leave Neovim's own rules in place", function()
+  t:patch_table(vim.api, "nvim_create_augroup", function(name)
+    return name
+  end)
+  t:patch_table(vim.api, "nvim_create_autocmd", function()
+    return 1
+  end)
+  assert(loadfile("lua/ark/autocmd.lua"))()
+
+  for filepath, expected in pairs({
+    ["/home/user/.config/fzf/fzf.fzfrc"] = "bash",
+    ["/home/user/.config/ripgrep/web.tsx.ripgreprc"] = "bash",
+    ["/home/user/.config/tmux/conf/keymap.tmux.conf"] = "tmux",
+    ["/repo/.vscode/settings.json"] = "jsonc",
+    ["/repo/data.json5"] = "json5",
+    ["/home/user/.vimrc"] = "vim",
+    ["/repo/resource.rc"] = "rc",
+  }) do
+    t.assert_eq(expected, (vim.filetype.match({ filename = filepath })), filepath)
+  end
+end)
+
 t:run()

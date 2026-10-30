@@ -28,6 +28,7 @@ vim.filetype.add({
     vimrc = "vim",
     yabairc = "sh",
   },
+  -- Lua patterns: Neovim anchors each one to the file name, or to the full path when it contains `/`.
   pattern = {
     [".*"] = {
       function(filepath, bufnr)
@@ -59,31 +60,20 @@ vim.filetype.add({
       end,
     },
 
-    ["*.fzfrc"] = "bash",
-    ["*.ripgreprc"] = "bash",
-    ["*.tmux.conf"] = "tmux",
+    [".*%.fzfrc"] = "bash",
+    [".*%.ripgreprc"] = "bash",
+    [".*%.tmux%.conf"] = "tmux",
 
-    ["*.ts"] = "typescript",
-    ["*.cts"] = "typescript",
-    ["*.mts"] = "typescript",
-
-    ["*.js"] = "javascript",
-    ["*.cjs"] = "javascript",
-    ["*.mjs"] = "javascript",
-
-    ["%.json5$"] = "jsonc",
-    ["%.jsonc$"] = "jsonc",
-    ["%.vscode/tasks%.json$"] = "jsonc",
-    ["%.vscode/settings%.json$"] = "jsonc",
-    ["%.vscode/launch%.json$"] = "jsonc",
-    ["%.vscode/extensions%.json$"] = "jsonc",
+    [".*/%.vscode/tasks%.json"] = "jsonc",
+    [".*/%.vscode/settings%.json"] = "jsonc",
+    [".*/%.vscode/launch%.json"] = "jsonc",
+    [".*/%.vscode/extensions%.json"] = "jsonc",
     [".*/waybar/config"] = "jsonc",
     [".*/mako/config"] = "dosini",
     [".*/kitty/.+%.conf"] = "bash",
     [".*/hypr/.+%.conf"] = "hyprlang",
     ["%.env%.[%w_.-]+"] = "conf",
     ["untitled%-(%d+)"] = "text",
-    [".*rc"] = "ini",
   },
 })
 
