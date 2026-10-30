@@ -54,22 +54,26 @@ local ignored = {
     markdown = true,
     sql = true,
   },
-  filepaths = {
-    ".git/",
-    ".cache/",
-    ".next/",
-    ".yarn/",
-    "build/",
-    "debug/",
-    "node_modules/",
-    "target/",
-    "yarn.lock",
-    "npm-package.lock",
-    "*.log",
-    "*.pdf",
-    "*.mkv",
-    "*.mp4",
-    "*.zip",
+  -- Compared with whole path segments and file extensions, not as patterns.
+  dirnames = {
+    [".git"] = true,
+    [".cache"] = true,
+    [".next"] = true,
+    [".yarn"] = true,
+    build = true,
+    node_modules = true,
+    target = true,
+  },
+  filenames = {
+    ["yarn.lock"] = true,
+    ["package-lock.json"] = true,
+  },
+  extensions = {
+    log = true,
+    pdf = true,
+    mkv = true,
+    mp4 = true,
+    zip = true,
   },
 }
 
@@ -274,10 +278,15 @@ return {
         return
       end
 
-      -- Disable autoformat for files in a certain path
-      local filepath = vim.api.nvim_buf_get_name(bufnr)
-      for _, ignore_filepath in ipairs(ignored.filepaths) do
-        if filepath:match(ignore_filepath) then
+      -- Disable autoformat for files in ignored directories, lockfiles and binary files
+      local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+      local filename = vim.fs.basename(filepath) ---@type string
+      local extension = filename:match("%.([^.]+)$") ---@type string|nil
+      if ignored.filenames[filename] or (extension ~= nil and ignored.extensions[extension]) then
+        return
+      end
+      for dirpath in vim.fs.parents(filepath) do
+        if ignored.dirnames[vim.fs.basename(dirpath)] then
           return
         end
       end

@@ -261,4 +261,24 @@ t:test("projects without Biome configuration do not launch an availability probe
   t.assert_eq("prettier", conform.list_formatters_to_run(bufnr)[1].name, "legacy project formatter")
 end)
 
+t:test("format on save skips ignored directories, lockfiles and binaries but not lookalike paths", function()
+  for filepath, expected in pairs({
+    ["/repo/node_modules/pkg/index.ts"] = false,
+    ["/repo/target/debug/main.ts"] = false,
+    ["/repo/package-lock.json"] = false,
+    ["/repo/logs/app.log"] = false,
+    ["/repo/src/digit/main.ts"] = true,
+    ["/repo/src/debug/logger.ts"] = true,
+    ["/repo/src/rebuild/main.ts"] = true,
+  }) do
+    local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+    t:defer(function()
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end)
+    vim.api.nvim_buf_set_name(bufnr, filepath)
+    vim.api.nvim_set_option_value("filetype", "typescript", { buf = bufnr })
+    t.assert_eq(expected, plugin.opts.format_on_save(bufnr) ~= nil, filepath)
+  end
+end)
+
 t:run()
