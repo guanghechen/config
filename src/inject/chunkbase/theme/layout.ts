@@ -1,6 +1,9 @@
 export const layoutTheme: string = `
   .adthrive-sticky.adthrive-footer,
   .adthrive-footer-message,
+  .adthrive-auto-injected-player-container,
+  [data-raptive-video-fallback-anchor],
+  [id^="cls-video-container-"],
   [id^="AdThrive_Footer_"],
   html #main.wide > .adthrive-ad,
   html #main.wide > article > .adthrive {
