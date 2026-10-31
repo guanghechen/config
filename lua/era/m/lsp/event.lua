@@ -650,11 +650,6 @@ function M.on_attach(client, bufnr)
     vim.lsp.document_color.enable(false, { bufnr = bufnr, client_id = client.id })
   end
 
-  -- highlighting: stop treesitter
-  if client.server_capabilities.semanticTokensProvider then
-    vim.hl.priorities.semantic_tokens = 125
-  end
-
   if support_foldingRange == 1 then
     apply_lsp_foldexpr(bufnr)
   end

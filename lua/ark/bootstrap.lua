@@ -6,11 +6,7 @@ local M = {}
 
 ---@return nil
 function M.setup_patches()
-  table.clear = table.clear or function(map)
-    for k in pairs(map) do
-      map[k] = nil
-    end
-  end
+  -- Glue for runtime gaps, such as missing builtins or upstream workarounds, that later modules rely on.
 end
 
 ---@return nil

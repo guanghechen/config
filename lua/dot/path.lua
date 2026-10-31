@@ -91,13 +91,6 @@ function M.is_git_repo()
   return IS_GIT_REPO
 end
 
----@param filepath                      string
----@return boolean
-function M.is_git_ignored(filepath)
-  vim.fn.system({ "git", "check-ignore", "-q", filepath })
-  return vim.v.shell_error == 0
-end
-
 ---@param from                          string
 ---@param to                            string
 ---@return string
