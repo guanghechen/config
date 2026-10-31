@@ -285,12 +285,21 @@ function M.retrieve_selected_text()
     return ""
   end
 
-  local saved_reg = vim.fn.getreg("v") ---@type string
-  vim.cmd([[noautocmd sil norm! "vy]])
+  -- Outside Visual mode the yank does nothing, and register v would be returned as the selection.
+  local mode = vim.fn.mode() ---@type string
+  if mode ~= "v" and mode ~= "V" and mode ~= "\22" then
+    return ""
+  end
 
+  -- The yank keeps Vim's own selection rules ($, blockwise); restore register v and the unnamed register it
+  -- repoints, with their types.
+  local saved_v = vim.fn.getreginfo("v") ---@type table
+  local saved_unnamed = vim.fn.getreginfo('"') ---@type table
+  vim.cmd([[noautocmd sil norm! "vy]])
   local selected_text = vim.fn.getreg("v") ---@type string
-  vim.fn.setreg("v", saved_reg)
-  return selected_text or ""
+  vim.fn.setreg("v", saved_v)
+  vim.fn.setreg('"', saved_unnamed)
+  return selected_text
 end
 
 ---@return integer

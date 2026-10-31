@@ -220,4 +220,59 @@ t:test("outside Visual mode only an explicit request reads the last selection", 
   )
 end)
 
+---@param keys                          string Keys that end in Visual mode, where the text is read.
+---@return string|nil text
+---@return string mode after the read
+---@return integer[] cursor after the read
+local function selected_text(keys)
+  local bufnr = create_buffer()
+  vim.api.nvim_set_current_buf(bufnr)
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "abc中x", "hello world", "second line" })
+  local text ---@type string|nil
+  vim.keymap.set({ "n", "x" }, "<F3>", function()
+    text = buf.retrieve_selected_text()
+  end, { buffer = bufnr })
+  vim.api.nvim_feedkeys(vim.keycode("<Esc>" .. keys .. "<F3>"), "x", false)
+  return text, vim.fn.mode(), vim.api.nvim_win_get_cursor(0)
+end
+
+---@return table<string, table>
+local function register_state()
+  return { v = vim.fn.getreginfo("v"), unnamed = vim.fn.getreginfo('"') }
+end
+
+t:test("selected text follows the Visual yank and leaves every register as it was", function()
+  for _, case in ipairs({
+    { keys = "gg0v3l", text = "abc中", cursor = { 1, 0 } },
+    { keys = "2G0wv$", text = "world\n", cursor = { 2, 6 } },
+    { keys = "3G$vk", text = "\nsecond line", cursor = { 2, 10 } },
+    { keys = "2G6|Vj", text = "hello world\nsecond line\n", cursor = { 2, 0 } },
+    { keys = "2G0<C-v>jl", text = "he\nse", cursor = { 2, 0 } },
+    { keys = "2G0<C-v>j$", text = "hello world\nsecond line", cursor = { 2, 0 } },
+  }) do
+    vim.fn.setreg("v", { "kept", "block" }, "b")
+    vim.fn.setreg('"', "last yank")
+    local registers = register_state()
+
+    local text, mode, cursor = selected_text(case.keys)
+
+    t.assert_eq(case.text, text, case.keys .. " text")
+    t.assert_eq("n", mode, case.keys .. " leaves Visual mode")
+    t.assert_same(case.cursor, cursor, case.keys .. " cursor at the selection start")
+    t.assert_same(registers, register_state(), case.keys .. " registers")
+  end
+end)
+
+t:test("a Normal mode caller gets no selection, even with text in register v", function()
+  vim.fn.setreg("v", "lua print('stale')")
+  vim.fn.setreg('"', "last yank")
+  local registers = register_state()
+
+  local text, mode = selected_text("gg0w")
+
+  t.assert_eq("", text, "Normal mode text")
+  t.assert_eq("n", mode, "mode")
+  t.assert_same(registers, register_state(), "registers")
+end)
+
 t:run()
