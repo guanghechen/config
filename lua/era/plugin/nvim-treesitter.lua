@@ -267,7 +267,6 @@ M.spec = {
     vim.treesitter.language.register("json", "jsonc")
 
     local augroup = stl.nvim.fn.augroup(__module_name__) ---@type integer
-    local pending_bufnrs = {} ---@type table<integer, true>
     local ensured_filetype_set = {} ---@type table<string, true>
     for _, filetype in ipairs(ensure_filetypes) do
       ensured_filetype_set[filetype] = true
@@ -329,11 +328,9 @@ M.spec = {
     local function activate(bufnr)
       local lang = resolve_lang(bufnr) ---@type string|nil
       if lang == nil then
-        pending_bufnrs[bufnr] = nil
         return
       end
 
-      pending_bufnrs[bufnr] = nil
       local current_lang = active_lang(bufnr) ---@type string|nil
       if current_lang ~= lang then
         if not vim.treesitter.language.add(lang) then
@@ -347,22 +344,6 @@ M.spec = {
       configure(bufnr)
     end
 
-    ---@param bufnr                      integer
-    ---@return nil
-    local function defer_activation(bufnr)
-      local lang = resolve_lang(bufnr) ---@type string|nil
-      if lang == nil then
-        pending_bufnrs[bufnr] = nil
-        return
-      end
-      if active_lang(bufnr) == lang then
-        pending_bufnrs[bufnr] = nil
-        configure(bufnr)
-        return
-      end
-      pending_bufnrs[bufnr] = true
-    end
-
     vim.api.nvim_create_autocmd("FileType", {
       group = augroup,
       pattern = ensure_filetypes,
@@ -374,31 +355,19 @@ M.spec = {
     vim.api.nvim_create_autocmd("BufWinEnter", {
       group = augroup,
       callback = function(event)
-        defer_activation(event.buf)
+        activate(event.buf)
       end,
     })
 
-    vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI", "InsertEnter" }, {
-      group = augroup,
-      callback = function(event)
-        if pending_bufnrs[event.buf] then
-          activate(event.buf)
+    -- Buffers shown before the plugin loaded, such as files from the command line, missed their FileType. Start
+    -- them on the next tick, so that a broken parser or query cannot fail the plugin load.
+    vim.schedule(function()
+      for _, winnr in ipairs(vim.api.nvim_list_wins()) do
+        if vim.api.nvim_win_is_valid(winnr) then
+          activate(vim.api.nvim_win_get_buf(winnr))
         end
-      end,
-    })
-
-    vim.api.nvim_create_autocmd({ "BufUnload", "BufDelete", "BufWipeout" }, {
-      group = augroup,
-      callback = function(event)
-        pending_bufnrs[event.buf] = nil
-      end,
-    })
-
-    for _, winnr in ipairs(vim.api.nvim_list_wins()) do
-      if vim.api.nvim_win_is_valid(winnr) then
-        defer_activation(vim.api.nvim_win_get_buf(winnr))
       end
-    end
+    end)
   end,
 }
 

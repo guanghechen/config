@@ -29,6 +29,8 @@ t:test("treesitter does not eagerly own textobjects", function()
   t.assert_nil(Treesitter.spec.dependencies, "dependencies")
 end)
 
+local loading = false ---@type boolean True while the plugin config runs.
+
 ---@param buffers                      table<integer, { valid: boolean, loaded: boolean, filetype: string, indentexpr: string? }>
 ---@param windows                      table<integer, { valid: boolean, bufnr: integer, foldexpr: string }>
 ---@param winnrs                       integer[]
@@ -42,6 +44,7 @@ local function setup(buffers, windows, winnrs, start, active_languages, parser_a
   local stopped = {} ---@type integer[]
   local active = {} ---@type table<integer, table>
   local registrations = {} ---@type table<string, string>
+  local scheduled = {} ---@type fun()[]
 
   ---@param lang                        string
   ---@return table
@@ -127,9 +130,18 @@ local function setup(buffers, windows, winnrs, start, active_languages, parser_a
     stopped[#stopped + 1] = bufnr
     active[bufnr] = nil
   end)
+  t:patch_table(vim, "schedule", function(callback)
+    scheduled[#scheduled + 1] = callback
+  end)
 
+  loading = true
   ---@diagnostic disable-next-line: param-type-mismatch
   Treesitter.spec.config(nil, Treesitter.spec.opts)
+  loading = false
+  -- Neovim runs scheduled callbacks on a later tick, after the plugin loader has returned.
+  for _, callback in ipairs(scheduled) do
+    callback()
+  end
   return callbacks, started, stopped, active, registrations
 end
 
@@ -152,40 +164,38 @@ t:test("C# filetype uses the c_sharp parser", function()
   t.assert_eq("c_sharp", registrations.cs, "C# parser mapping")
 end)
 
-t:test("existing visible buffer starts on idle exactly once", function()
+t:test("buffers already in windows start once the plugin has loaded", function()
   local buffers = {
     [11] = { valid = true, loaded = true, filetype = "typescript" },
-  }
-  local windows = {
-    [101] = { valid = true, bufnr = 11, foldexpr = "0" },
-  }
-  ---@diagnostic disable-next-line: missing-parameter
-  local callbacks, started = setup(buffers, windows, { 101 })
-
-  t.assert_eq(0, #started, "startup must only queue visible buffers")
-  t.assert_nil(buffers[11].indentexpr, "indent before start")
-  t.assert_eq("0", windows[101].foldexpr, "fold before start")
-
-  callbacks.CursorHold({ buf = 11 })
-  callbacks.CursorHold({ buf = 11 })
-
-  t.assert_eq(1, #started, "idempotent start")
-  t.assert_eq(11, started[1], "started buffer")
-  t.assert_eq("v:lua.require'nvim-treesitter'.indentexpr()", buffers[11].indentexpr, "indent after start")
-  t.assert_eq("v:lua.vim.treesitter.foldexpr()", windows[101].foldexpr, "fold after start")
-end)
-
-t:test("future FileType starts synchronously", function()
-  local buffers = {
-    [11] = { valid = true, loaded = true, filetype = "typescript" },
-    [12] = { valid = true, loaded = true, filetype = "lua" },
+    [12] = { valid = true, loaded = true, filetype = "rust" },
   }
   local windows = {
     [101] = { valid = true, bufnr = 11, foldexpr = "0" },
     [102] = { valid = true, bufnr = 12, foldexpr = "0" },
   }
+  local during_load = {} ---@type boolean[]
   ---@diagnostic disable-next-line: missing-parameter
-  local callbacks, started = setup(buffers, windows, { 101 })
+  local callbacks, started = setup(buffers, windows, { 101, 102 }, function()
+    during_load[#during_load + 1] = loading
+  end)
+
+  t.assert_same({ 11, 12 }, started, "every visible buffer starts, not only the current one")
+  t.assert_same({ false, false }, during_load, "no start runs inside the plugin load")
+  t.assert_eq("v:lua.require'nvim-treesitter'.indentexpr()", buffers[11].indentexpr, "indent after start")
+  t.assert_eq("v:lua.vim.treesitter.foldexpr()", windows[101].foldexpr, "fold after start")
+  t.assert_eq("v:lua.vim.treesitter.foldexpr()", windows[102].foldexpr, "fold in the other window")
+
+  callbacks.BufWinEnter({ buf = 11 })
+
+  t.assert_eq(2, #started, "entering a window again keeps the running parser")
+end)
+
+t:test("future FileType starts synchronously", function()
+  local buffers = {
+    [12] = { valid = true, loaded = true, filetype = "lua" },
+  }
+  ---@diagnostic disable-next-line: missing-parameter
+  local callbacks, started = setup(buffers, {}, {})
 
   callbacks.FileType({ buf = 12 })
 
@@ -237,7 +247,7 @@ t:test("existing matching highlighter is reused", function()
   ---@diagnostic disable-next-line: missing-parameter
   local callbacks, started = setup(buffers, windows, { 101 }, nil, { [11] = "lua" })
 
-  callbacks.CursorHold({ buf = 11 })
+  callbacks.BufWinEnter({ buf = 11 })
 
   t.assert_eq(0, #started, "native highlighter start")
   t.assert_eq("v:lua.require'nvim-treesitter'.indentexpr()", buffers[11].indentexpr, "indent")
@@ -254,7 +264,6 @@ t:test("FileType restarts a mismatched parser", function()
   ---@diagnostic disable-next-line: missing-parameter
   local callbacks, started, stopped, active = setup(buffers, windows, { 101 })
 
-  callbacks.CursorHold({ buf = 11 })
   buffers[11].filetype = "rust"
   callbacks.FileType({ buf = 11 })
 
@@ -263,7 +272,7 @@ t:test("FileType restarts a mismatched parser", function()
   t.assert_eq("rust", active[11].tree:lang(), "active language")
 end)
 
-t:test("hidden buffer waits until it enters a window", function()
+t:test("a hidden buffer starts when it enters a window", function()
   local buffers = {
     [11] = { valid = true, loaded = true, filetype = "typescript" },
     [12] = { valid = true, loaded = true, filetype = "lua" },
@@ -275,16 +284,14 @@ t:test("hidden buffer waits until it enters a window", function()
   ---@diagnostic disable-next-line: missing-parameter
   local callbacks, started = setup(buffers, windows, winnrs)
 
-  callbacks.CursorHold({ buf = 12 })
-  t.assert_eq(0, #started, "hidden buffer")
+  t.assert_same({ 11 }, started, "only the visible buffer starts with the plugin")
 
   windows[102] = { valid = true, bufnr = 12, foldexpr = "0" }
   winnrs[#winnrs + 1] = 102
   callbacks.BufWinEnter({ buf = 12 })
-  callbacks.InsertEnter({ buf = 12 })
 
-  t.assert_eq(1, #started, "visible hidden buffer")
-  t.assert_eq(12, started[1], "visible hidden buffer number")
+  t.assert_same({ 11, 12 }, started, "the hidden buffer starts on entering a window")
+  t.assert_eq("v:lua.vim.treesitter.foldexpr()", windows[102].foldexpr, "fold in its window")
 end)
 
 t:test("ineligible buffers never start", function()
@@ -304,72 +311,35 @@ t:test("ineligible buffers never start", function()
   callbacks.FileType({ buf = 11 })
   callbacks.FileType({ buf = 12 })
   callbacks.FileType({ buf = 13 })
-  callbacks.CursorHold({ buf = 11 })
-  callbacks.CursorHold({ buf = 12 })
-  callbacks.CursorHold({ buf = 13 })
+  callbacks.BufWinEnter({ buf = 11 })
+  callbacks.BufWinEnter({ buf = 12 })
+  callbacks.BufWinEnter({ buf = 13 })
 
   t.assert_eq(0, #started, "ineligible buffers")
 end)
 
-t:test("buffer becoming ineligible drops its pending start", function()
+t:test("a failed start is raised after the plugin has loaded and writes no options", function()
   local buffers = {
     [11] = { valid = true, loaded = true, filetype = "typescript" },
   }
   local windows = {
     [101] = { valid = true, bufnr = 11, foldexpr = "0" },
   }
+  local during_load = nil ---@type boolean|nil
   ---@diagnostic disable-next-line: missing-parameter
-  local callbacks, started = setup(buffers, windows, { 101 })
-
-  buffers[11].filetype = "bigfile"
-  callbacks.CursorHold({ buf = 11 })
-  buffers[11].filetype = "typescript"
-  callbacks.CursorHold({ buf = 11 })
-
-  t.assert_eq(0, #started, "stale pending start")
-end)
-
-t:test("start failure does not write options", function()
-  local buffers = {
-    [11] = { valid = true, loaded = true, filetype = "typescript" },
-  }
-  local windows = {
-    [101] = { valid = true, bufnr = 11, foldexpr = "0" },
-  }
-  ---@diagnostic disable-next-line: missing-parameter
-  local callbacks = setup(buffers, windows, { 101 }, function()
+  local ok, err = pcall(setup, buffers, windows, { 101 }, function()
+    during_load = loading
     error("missing parser")
   end)
 
-  local ok = pcall(callbacks.CursorHold, { buf = 11 })
-
   t.assert_false(ok, "start error propagation")
+  t.assert_true(tostring(err):find("missing parser", 1, true) ~= nil, "the start error itself: " .. tostring(err))
+  t.assert_false(during_load, "the plugin load has finished, so the start cannot fail it")
   t.assert_nil(buffers[11].indentexpr, "indent after failed start")
   t.assert_eq("0", windows[101].foldexpr, "fold after failed start")
 end)
 
-t:test("BufUnload permits the same buffer to restart", function()
-  local buffers = {
-    [11] = { valid = true, loaded = true, filetype = "typescript" },
-  }
-  local windows = {
-    [101] = { valid = true, bufnr = 11, foldexpr = "0" },
-  }
-  ---@diagnostic disable-next-line: missing-parameter
-  local callbacks, started, _, active = setup(buffers, windows, { 101 })
-
-  callbacks.CursorHold({ buf = 11 })
-  callbacks.BufUnload({ buf = 11 })
-  active[11] = nil
-  windows[101].foldexpr = "0"
-  buffers[11].indentexpr = nil
-  callbacks.BufWinEnter({ buf = 11 })
-  callbacks.CursorHold({ buf = 11 })
-
-  t.assert_eq(2, #started, "reloaded buffer start")
-end)
-
-t:test("delayed parser activation preserves native LSP folding", function()
+t:test("parser activation preserves native LSP folding", function()
   local buffers = {
     [11] = { valid = true, loaded = true, filetype = "typescript" },
   }
@@ -378,9 +348,7 @@ t:test("delayed parser activation preserves native LSP folding", function()
     [102] = { valid = true, bufnr = 11, foldexpr = "0" },
   }
   ---@diagnostic disable-next-line: missing-parameter
-  local callbacks = setup(buffers, windows, { 101, 102 })
-
-  callbacks.CursorHold({ buf = 11 })
+  setup(buffers, windows, { 101, 102 })
 
   t.assert_eq("v:lua.vim.lsp.foldexpr()", windows[101].foldexpr, "LSP retains ownership")
   t.assert_eq("v:lua.vim.treesitter.foldexpr()", windows[102].foldexpr, "Treesitter fold")
@@ -388,13 +356,16 @@ end)
 
 t:test("a parser without a folds query preserves the unconfigured expression", function()
   local buffers = { [11] = { valid = true, loaded = true, filetype = "typescript" } }
-  local windows = { [101] = { valid = true, bufnr = 11, foldexpr = "0" } }
+  local windows = {} ---@type table<integer, { valid: boolean, bufnr: integer, foldexpr: string }>
+  local winnrs = {} ---@type integer[]
   ---@diagnostic disable-next-line: missing-parameter
-  local callbacks = setup(buffers, windows, { 101 })
+  local callbacks = setup(buffers, windows, winnrs)
   t:patch_table(vim.treesitter.query, "get", function()
     return nil
   end)
-  callbacks.CursorHold({ buf = 11 })
+  windows[101] = { valid = true, bufnr = 11, foldexpr = "0" }
+  winnrs[1] = 101
+  callbacks.BufWinEnter({ buf = 11 })
   t.assert_eq("0", windows[101].foldexpr, "no unusable Tree-sitter expression installed")
 end)
 
@@ -411,7 +382,6 @@ t:test("repeated configuration does not rewrite the Tree-sitter expression", fun
     end
     return set_option(name, ...)
   end)
-  callbacks.CursorHold({ buf = 11 })
   callbacks.BufWinEnter({ buf = 11 })
   t.assert_eq(0, writes, "no redundant foldexpr writes")
 end)
