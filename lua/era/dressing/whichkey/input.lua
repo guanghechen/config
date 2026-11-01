@@ -336,6 +336,7 @@ function M.__loop__(prefix)
     local has_children = node.is_group or next(node.children) ~= nil
     local has_declared_action = node.action ~= nil or node.rhs ~= nil
     local passthrough = not has_declared_action and S.state.__get_keymap__(S.state.bufnr, S.state.mode, new_prefix)
+      or nil
     local is_executable = has_declared_action or passthrough ~= nil
     local is_nowait = (has_declared_action and node.nowait) or (passthrough ~= nil and passthrough.nowait == 1)
     is_nowait = is_nowait or (timedout and is_executable)

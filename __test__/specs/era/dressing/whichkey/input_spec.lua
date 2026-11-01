@@ -229,4 +229,59 @@ t:test("group-only prefix still waits for a child key", function()
   t.assert_true(stopped, "input stops after child read fails")
 end)
 
+---@param node                          era.dressing.whichkey.INode
+---@return { reads: integer, executed: era.dressing.whichkey.INode|false, stopped: boolean }
+local function loop_declared(node)
+  local result = { reads = 0, executed = false, stopped = false }
+  t:patch_table(vim.fn, "getcharstr", function()
+    result.reads = result.reads + 1
+    if result.reads == 1 then
+      return "s"
+    end
+    error("no further key")
+  end)
+  t:patch_table(State, "get_node", function()
+    return node
+  end)
+  t:patch_table(State, "__get_keymap__", function()
+    error("a declared action does not look up a native mapping")
+  end)
+  t:patch_table(State, "keys", "")
+  t:patch_table(State, "show_popup", false)
+  t:patch_table(Input, "__cancel_delay__", function() end)
+  t:patch_table(Input, "__reschedule_popup__", function() end)
+  t:patch_table(Input, "__is_timedout__", function()
+    return false
+  end)
+  t:patch_table(Input, "__execute__", function(actual_node)
+    result.executed = actual_node
+  end)
+  t:patch_table(Input, "stop", function()
+    result.stopped = true
+  end)
+
+  Input.__loop__("g")
+  return result
+end
+
+t:test("a declared action without nowait runs when no longer key starts with it", function()
+  local node = { key = "s", lhs = "gs", desc = "surround", action = function() end, children = {} }
+
+  local result = loop_declared(node --[[@as era.dressing.whichkey.INode]])
+
+  t.assert_eq(1, result.reads, "input count")
+  t.assert_true(result.executed == node, "declared action executed")
+end)
+
+t:test("a declared action without nowait waits for the next key when longer keys start with it", function()
+  local child = { key = "a", lhs = "gsa", desc = "add", children = {} }
+  local node = { key = "s", lhs = "gs", desc = "surround", action = function() end, children = { a = child } }
+
+  local result = loop_declared(node --[[@as era.dressing.whichkey.INode]])
+
+  t.assert_eq(2, result.reads, "the prefix waits for a child")
+  t.assert_false(result.executed, "the action waits for the next key")
+  t.assert_true(result.stopped, "input stops after the child read fails")
+end)
+
 t:run()

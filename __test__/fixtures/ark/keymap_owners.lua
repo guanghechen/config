@@ -3,7 +3,7 @@ local __module_name__ = "__test__.fixtures.ark.keymap_owners" ---@type string
 
 -- Runs in a child Neovim that starts the full configuration: `install` from --cmd, before the configuration loads,
 -- and `run` from -c. It records every mapping made while the configuration starts, loads its lazy parts, enters Insert
--- and Command-line mode once, then writes which sources mapped the same key.
+-- and Command-line mode once, then writes which sources mapped the same key and which mapped keys start longer ones.
 
 local SOURCE = debug.getinfo(1, "S").source ---@type string
 local ROOT = vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(SOURCE:sub(2))))) ---@type string
@@ -233,7 +233,30 @@ local function report(out_path)
     end
   end
 
-  vim.fn.writefile({ vim.json.encode({ overrides = overrides, shadows = shadows }) }, out_path)
+  -- Mapped keys that start a longer mapping without nowait; which-key waits for the key after them.
+  local prefixes = {} ---@type table<string, string>
+  for _, mode in ipairs({ "n", "x" }) do
+    local maps = {} ---@type table<string, table>
+    for _, map in ipairs(vim.api.nvim_get_keymap(mode)) do
+      maps[map.lhsraw] = map
+    end
+    for _, map in ipairs(vim.api.nvim_buf_get_keymap(bufnr, mode)) do
+      maps[map.lhsraw] = map
+    end
+    local lhss = vim.tbl_keys(maps) ---@type string[]
+    table.sort(lhss)
+    -- Sorted, the mappings a key starts follow it directly.
+    for index, lhs in ipairs(lhss) do
+      local following = lhss[index + 1]
+      if maps[lhs].nowait ~= 1 and following ~= nil and vim.startswith(following, lhs) then
+        local key = mode .. " " .. vim.fn.keytrans(lhs)
+        local owner = maps[lhs].buffer ~= 0 and buffer_owner[key] or global_owner[key]
+        prefixes[key] = owner or (defaults[key] and "nvim") or "?"
+      end
+    end
+  end
+
+  vim.fn.writefile({ vim.json.encode({ overrides = overrides, shadows = shadows, prefixes = prefixes }) }, out_path)
 end
 
 ---@param out_path                      string

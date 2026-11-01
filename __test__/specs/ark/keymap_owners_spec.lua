@@ -44,9 +44,19 @@ local SHADOWS = {
   ["s <S-Tab>"] = "nvim -> era/keystroke/cmp/keymap.lua",
 } ---@type table<string, string>
 
+-- Mapped keys that start a longer mapping without nowait, with their source. Which-key then waits for the next key for
+-- as long as it takes: right for an operator or a text object, which needs one, but a key meant to act on its own is
+-- stuck until another key arrives, so it needs nowait instead.
+local PREFIXES = {
+  ["n gc"] = "nvim",
+  ["x a"] = "era/keystroke/textobject/keymap.lua",
+  ["x i"] = "era/keystroke/textobject/keymap.lua",
+} ---@type table<string, string>
+
 ---@class __test__.specs.ark.keymap_owners.IReport
 ---@field public overrides              ?table<string, string>
 ---@field public shadows                ?table<string, string>
+---@field public prefixes               ?table<string, string>
 ---@field public missing                ?string[]
 ---@field public error                  ?string
 
@@ -107,7 +117,7 @@ local function assert_recorded(what, expected, actual)
   end
 end
 
----@param name                          "overrides"|"shadows"
+---@param name                          "overrides"|"shadows"|"prefixes"
 ---@return table<string, string>
 local function started(name)
   local data = start()
@@ -124,6 +134,10 @@ end)
 
 t:test("an edited file hides only the recorded global keys with buffer-local maps", function()
   assert_recorded("buffer-local maps over global ones", SHADOWS, started("shadows"))
+end)
+
+t:test("only the recorded mapped keys wait for a longer mapping", function()
+  assert_recorded("mapped keys waiting for a longer mapping", PREFIXES, started("prefixes"))
 end)
 
 t:run()
