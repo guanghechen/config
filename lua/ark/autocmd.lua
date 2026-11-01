@@ -18,7 +18,6 @@ vim.filetype.add({
     wofi = "rasi",
   },
   filename = {
-    [".env"] = "conf",
     [".eslintignore"] = "ignore",
     [".git-credentials"] = "git-credentials",
     [".prettierignore"] = "ignore",
@@ -28,8 +27,11 @@ vim.filetype.add({
     vimrc = "vim",
     yabairc = "sh",
   },
-  -- Lua patterns: Neovim anchors each one to the file name, or to the full path when it contains `/`.
+  -- Lua patterns: Neovim anchors each one to the file name, or to the full path when it contains `/`. Patterns of
+  -- equal priority are tried in an order that changes from one process to the next, so a pattern that overlaps one of
+  -- Neovim's own only wins reliably with a higher priority.
   pattern = {
+    -- The size check runs before every other pattern, Neovim's included.
     [".*"] = {
       function(filepath, bufnr)
         if not filepath or not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
@@ -58,6 +60,7 @@ vim.filetype.add({
           return "bigfile"
         end
       end,
+      { priority = math.huge },
     },
 
     [".*%.fzfrc"] = "bash",
@@ -70,9 +73,7 @@ vim.filetype.add({
     [".*/%.vscode/extensions%.json"] = "jsonc",
     [".*/waybar/config"] = "jsonc",
     [".*/mako/config"] = "dosini",
-    [".*/kitty/.+%.conf"] = "bash",
     [".*/hypr/.+%.conf"] = "hyprlang",
-    ["%.env%.[%w_.-]+"] = "conf",
     ["untitled%-(%d+)"] = "text",
   },
 })
