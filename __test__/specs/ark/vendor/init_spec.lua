@@ -1,4 +1,3 @@
-local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 local t = harness.new()
 
@@ -16,11 +15,6 @@ for _, case in ipairs({
   t:test("routes " .. vim.inspect(case.flags) .. " to " .. case.vendor, function()
     local calls = {} ---@type string[]
     t:patch_table(vim, "g", vim.deepcopy(case.flags))
-    bootstrap.with_global(t, "dot", { path = {
-      is_git_repo = function()
-        return false
-      end,
-    } })
     t:patch_global("require", function(name)
       calls[#calls + 1] = name
       if name == "ark.bootstrap" then
