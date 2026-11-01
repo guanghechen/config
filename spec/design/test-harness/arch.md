@@ -77,7 +77,9 @@ runner 也不编译 native module。Baseline 比较按同样的路径加载另�
 - 入口从自身位置解析 canonical checkout，将 CWD 设为该目录，并配置 runtimepath、packpath 与
   Lua paths，同时保留 Neovim 内置 runtime/library 目录及独立于 `$VIMRUNTIME` 安装的 bundled parsers。
 - 每个 suite 使用独立的 `--headless -u NONE -i NONE -n` Neovim 进程。应用配置与 plugin
-  不自动启动；测试 composed runtime 时可显式加载 `ark.bootstrap`。
+  不自动启动；测试 composed runtime 时可显式加载 `ark.bootstrap`。只有断言完整启动结果的 suite
+  （如 keymap 覆盖）在子进程中以本 checkout 为 config 目录启动完整配置，state 与 cache 位于临时目录，
+  依赖本机已安装的 plugin，未安装时 skip。
 - Runner 以 argv 形式的 `vim.system` 并发执行最多 N 个 suite（`--jobs`，默认取硬件线程数的一半，最多 8）；
   各 suite 的输出整块写出，并按发现顺序排列，与顺序执行时一致。`--jobs 1` 即顺序执行。
 - 启动顺序按上次记录的耗时从长到短，没有记录的 suite 最先启动，避免慢 suite 最后才开始而拖长全程。
