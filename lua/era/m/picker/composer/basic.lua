@@ -122,6 +122,32 @@ local __highlights__ = {
 ---@field public on_preview_rendered    ?era.m.picker.composer.basic.IOnPreviewRendered
 ---@field public on_result_rendered     ?era.m.picker.composer.basic.IOnResultRendered
 
+---Leaves Insert mode in the current window, which just regained the focus and was not edited, without the step back
+---to the left that <Esc> takes: the cursor stays where it was unless the caller moved it or changed the buffer.
+---@return nil
+local function stop_insert_in_place()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
+  local autocmd = vim.api.nvim_create_autocmd("InsertLeave", {
+    once = true,
+    callback = function()
+      if not vim.api.nvim_win_is_valid(winnr) or vim.api.nvim_win_get_buf(winnr) ~= bufnr then
+        return
+      end
+      local current = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
+      if current[1] == cursor[1] and current[2] == cursor[2] - 1 then
+        vim.api.nvim_win_set_cursor(winnr, cursor)
+      end
+    end,
+  })
+  -- Insert mode ends before scheduled callbacks run; drop the handler if it did not fire.
+  vim.schedule(function()
+    pcall(vim.api.nvim_del_autocmd, autocmd)
+  end)
+  vim.cmd("stopinsert")
+end
+
 ---@class era.m.picker.BasicComposer : dot.t.IWidget
 ---@field public uuid                   string
 ---@field public fullname               string
@@ -134,6 +160,8 @@ local __highlights__ = {
 ---@field protected _result_number      boolean
 ---
 ---@field protected _disposed           boolean
+---@field protected _opened_in_insert   boolean Whether the window the picker took the focus from was in Insert mode.
+---@field protected _origin_winnr       ?integer The window the picker took the focus from.
 ---@field protected _pane_focused       era.m.picker.composer.basic.PaneEnum
 ---@field protected _pane_last_focused  era.m.picker.composer.basic.PaneEnum
 ---@field protected _recommended_height number
@@ -194,6 +222,7 @@ function M.new(props)
   self.fullname = fullname
   self.permanent = permanent
   self._disposed = false
+  self._opened_in_insert = false
   self._pane_focused = pane_focused
   self._pane_last_focused = pane_last_focused
   self._recommended_height = recommended_height
@@ -305,6 +334,9 @@ function M:dispose()
   if self._disposed then
     return
   end
+  if self:__holds_insert__() then
+    stop_insert_in_place()
+  end
   self._disposed = true
   if self._preview_observer then
     self._preview_observer:unsubscribe()
@@ -393,6 +425,11 @@ end
 function M:focus(pane)
   self:__health__()
   dot.state.widget.push(self)
+
+  if not self:isfocused() then
+    self._origin_winnr = vim.api.nvim_get_current_win()
+    self._opened_in_insert = vim.api.nvim_get_mode().mode:match("^[iR]") ~= nil
+  end
 
   local has_new_created = self:__create_wins__()
   local pane_focused = self._pane_focused ---@type era.m.picker.composer.basic.PaneEnum
@@ -688,6 +725,17 @@ function M:__health__()
   end
 end
 
+---Typing a filter leaves the finder in Insert mode, which would carry over to the window the picker returns to, also
+---when the caller focuses that window itself before closing the picker.
+---@protected
+---@return boolean
+function M:__holds_insert__()
+  if self._opened_in_insert or vim.api.nvim_get_mode().mode:match("^[iR]") == nil then
+    return false
+  end
+  return self:isfocused() or vim.api.nvim_get_current_win() == self._origin_winnr
+end
+
 ---@protected
 ---@return nil
 function M:__hide__()
@@ -695,10 +743,14 @@ function M:__hide__()
   local result = self.result ---@type era.m.picker.Result
   local preview = self.preview ---@type era.m.picker.Preview|nil
 
+  local holds_insert = self:__holds_insert__() ---@type boolean
   finder:hide()
   result:hide()
   if preview ~= nil then
     preview:hide()
+  end
+  if holds_insert then
+    stop_insert_in_place()
   end
 end
 
