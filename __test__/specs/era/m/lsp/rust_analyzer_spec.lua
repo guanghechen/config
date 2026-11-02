@@ -82,4 +82,24 @@ t:test("a Cargo project reports a missing executable without starting metadata",
   t.assert_eq("cargo executable not found.", warning.message)
 end)
 
+t:test("inlay hints are requested again each time rust-analyzer becomes ready", function()
+  local refreshed = {} ---@type integer[]
+  t:patch_table(vim.lsp.handlers, "workspace/inlayHint/refresh", function(_, _, ctx)
+    refreshed[#refreshed + 1] = ctx.client_id
+    return vim.NIL
+  end)
+  local on_server_status = config.handlers["experimental/serverStatus"]
+  local ctx = { client_id = 7, method = "experimental/serverStatus" }
+
+  on_server_status(nil, { health = "ok", quiescent = false }, ctx)
+  t.assert_same({}, refreshed, "a busy server")
+  on_server_status(nil, { health = "ok", quiescent = true }, ctx)
+  t.assert_same({ 7 }, refreshed, "the server became ready")
+  on_server_status(nil, { health = "ok", quiescent = true }, ctx)
+  t.assert_same({ 7 }, refreshed, "the server stays ready")
+  on_server_status(nil, { health = "ok", quiescent = false }, ctx)
+  on_server_status(nil, { health = "ok", quiescent = true }, ctx)
+  t.assert_same({ 7, 7 }, refreshed, "ready again after reloading the workspace")
+end)
+
 t:run()

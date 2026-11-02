@@ -184,6 +184,21 @@ local function on_attach(client, bufnr)
   end, { desc = "Reload current cargo workspace" })
 end
 
+local quiescent = {} ---@type table<integer, boolean>
+
+-- rust-analyzer asks for a refresh as it starts indexing and answers the requests that follow with ContentModified
+-- once it is done, which Neovim drops without asking again; ask again when it reports being ready.
+---@param _                             lsp.ResponseError?
+---@param result                        { quiescent: boolean }
+---@param ctx                           lsp.HandlerContext
+---@return nil
+local function on_server_status(_, result, ctx)
+  if result.quiescent and not quiescent[ctx.client_id] then
+    vim.lsp.handlers["workspace/inlayHint/refresh"](nil, nil, ctx)
+  end
+  quiescent[ctx.client_id] = result.quiescent
+end
+
 local capabilities = era.m.lsp.event.get_capabilities()
 local experimental = type(capabilities.experimental) == "table" and capabilities.experimental or {} ---@cast experimental table
 experimental.serverStatusNotification = true
@@ -238,4 +253,7 @@ return {
   root_dir = root_dir,
   before_init = before_init,
   on_attach = on_attach,
+  handlers = {
+    ["experimental/serverStatus"] = on_server_status,
+  },
 }
