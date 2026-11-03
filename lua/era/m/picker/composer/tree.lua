@@ -483,7 +483,7 @@ function M.new(props)
       callback = actions.open_node,
     },
     {
-      modes = { "n", "x" },
+      modes = { "i", "n", "x" },
       key = "<Tab>",
       desc = "tree: toggle selection",
       callback = actions.toggle_selection,

@@ -1022,4 +1022,17 @@ t:test("attach and file-location toggle interpret the displayed nodes after prod
   end)
 end)
 
+t:test("Tab toggles the selection from the finder while a filter is being typed", function()
+  with_composer("finder-tab", function(composer)
+    local tab ---@type stl.t.IKeymap|nil
+    for _, keymap in ipairs(composer.finder.keymaps) do
+      if keymap.key == "<Tab>" then
+        tab = keymap
+      end
+    end
+    t.assert_eq("filetree: toggle selection", tab and tab.desc, "finder Tab")
+    t.assert_true(vim.list_contains(tab and tab.modes or {}, "i"), "Insert mode, like Normal mode and the result pane")
+  end)
+end)
+
 t:run()

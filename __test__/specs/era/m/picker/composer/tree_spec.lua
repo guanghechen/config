@@ -288,5 +288,34 @@ for _, description in ipairs({ "tree: mark the node invisible", "tree: mark the 
   end)
 end
 
+t:test("Tab toggles the selection from the finder while a filter is being typed", function()
+  local composer = era.m.picker.TreeComposer.new({
+    name = "finder-tab",
+    title = "tree test",
+    permanent = false,
+    node_sorter = function(a, b)
+      return a.name < b.name
+    end,
+    search_pattern = stl.c.Observable.from_value(""),
+    flag_foldempty = stl.c.Observable.from_value(false),
+    flag_fuzzy = stl.c.Observable.from_value(false),
+    flag_regex = stl.c.Observable.from_value(false),
+    flag_case_sensitive = stl.c.Observable.from_value(true),
+    flag_selected = stl.c.Observable.from_value(false),
+    flag_viewtype = stl.c.Observable.from_value("tree"),
+  })
+  t:defer(function()
+    composer:dispose()
+  end)
+  local tab ---@type stl.t.IKeymap|nil
+  for _, keymap in ipairs(composer.finder.keymaps) do
+    if keymap.key == "<Tab>" then
+      tab = keymap
+    end
+  end
+  t.assert_eq("tree: toggle selection", tab and tab.desc, "finder Tab")
+  t.assert_true(vim.list_contains(tab and tab.modes or {}, "i"), "Insert mode, like Normal mode and the result pane")
+end)
+
 t:run()
 t:run()
