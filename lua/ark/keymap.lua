@@ -47,13 +47,15 @@ mk({ "i" }, "；", "；<C-g>u")
 mk({ "i" }, "：", "：<C-g>u")
 mk({ "i" }, "！", "！<C-g>u")
 mk({ "i" }, "？", "？<C-g>u")
--- Outside VSCode, yozvim and yuivim, blink.pairs maps these keys in Insert mode when it loads and replaces the break-points below.
-mk({ "i" }, "<", "<<C-g>u")
-mk({ "i" }, "(", "(<C-g>u")
-mk({ "i" }, "[", "[<C-g>u")
-mk({ "i" }, "{", "{<C-g>u")
-mk({ "i" }, "<cr>", "<cr><C-g>u")
-mk({ "i" }, "<space>", "<space><C-g>u")
+-- As in VS Code, a line break and the first space after a word start a new undo step, so undo takes back a line or a
+-- word with the space before it. blink.pairs replaces these two maps when it loads; era/plugin/blink-pairs.lua keeps
+-- the break-points on its maps.
+mk({ "i" }, "<cr>", "<C-g>u<cr>")
+mk({ "i" }, "<space>", function()
+  local col = vim.api.nvim_win_get_cursor(0)[2] ---@type integer
+  local before = vim.api.nvim_get_current_line():sub(col, col) ---@type string
+  return (before ~= "" and before:match("%s") == nil) and "<C-g>u<space>" or "<space>"
+end, nil, true)
 
 ---! better copy/paste list
 mk({ "i", "n", "x" }, { "<C-a>a", "<D-a>", "<M-a>" }, "<esc>ggVG", "system: select all")
