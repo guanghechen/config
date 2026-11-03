@@ -10,7 +10,7 @@ return {
   {
     name = "null_insertion_falls_back_to_label",
     options = { items = { { label = "alpha", insertText = vim.NIL, kind = 6 } } },
-    steps = { "ial", "<CR>" },
+    steps = { "ial", "<C-y>" },
     expect = {
       { menu = true, labels = { "alpha" }, selected = "alpha", lines = { "al" } },
       { menu = false, lines = { "alpha" } },
@@ -39,7 +39,7 @@ return {
         },
       },
     },
-    steps = { "idiv>ul>li", "<CR>" },
+    steps = { "idiv>ul>li", "<C-y>" },
     expect = {
       { menu = true, labels = { "div>ul>li", "link" }, selected = "div>ul>li" },
       { menu = false, lines = { "<div><ul><li></li></ul></div>" } },
@@ -50,7 +50,7 @@ return {
     options = {
       items = { { label = "beta", filterText = "al", kind = 6 }, { label = "alpha", filterText = "al", kind = 6 } },
     },
-    steps = { "ial", "<CR>" },
+    steps = { "ial", "<C-y>" },
     expect = {
       { menu = true, labels = { "beta", "alpha" }, selected = "beta" },
       { lines = { "beta" } },
@@ -59,7 +59,7 @@ return {
   {
     name = "lowercase_candidate_preference",
     options = { items = { { label = "getClientUrl", kind = 6 }, { label = "get_current_user", kind = 6 } } },
-    steps = { "igcu", "<CR>" },
+    steps = { "igcu", "<C-y>" },
     expect = {
       { selected = "get_current_user" },
       { lines = { "get_current_user" } },
@@ -68,7 +68,7 @@ return {
   {
     name = "uppercase_candidate_preference",
     options = { items = { { label = "getClientUrl", kind = 6 }, { label = "get_current_user", kind = 6 } } },
-    steps = { "iGCU", "<CR>" },
+    steps = { "iGCU", "<C-y>" },
     expect = {
       { selected = "getClientUrl" },
       { lines = { "getClientUrl" } },
@@ -77,7 +77,7 @@ return {
   {
     name = "empty_query_uses_history",
     options = { items = { { label = "alpha", kind = 6 }, { label = "beta", kind = 6 } } },
-    steps = { "ib", "<CR>", "<C-w>", "a", "<BS>" },
+    steps = { "ib", "<C-y>", "<C-w>", "a", "<BS>" },
     expect = { [5] = { menu = true, labels = { "beta", "alpha" }, selected = "beta", lines = { "" } } },
   },
   {
@@ -249,20 +249,20 @@ return {
   {
     name = "hyphen_keyword",
     options = { items = { { label = "foo-bar", kind = 6 } } },
-    steps = { "ifo-", "b", "<CR>" },
+    steps = { "ifo-", "b", "<C-y>" },
     expect = { [3] = { menu = false, lines = { "foo-bar" } } },
   },
-  { name = "leading_hyphen", steps = { "i-", "al", "<CR>" }, expect = { [3] = { lines = { "-alpha" } } } },
+  { name = "leading_hyphen", steps = { "i-", "al", "<C-y>" }, expect = { [3] = { lines = { "-alpha" } } } },
   {
     name = "accept_trigger",
     options = { items = { { label = "alpha", insertText = "alpha.", kind = 6 } } },
-    steps = { "ial", "<CR>", "<C-h>" },
+    steps = { "ial", "<C-y>", "<C-h>" },
     expect = { [2] = { menu = true, lines = { "alpha." } } },
   },
   {
     name = "accept_blocked_trigger",
     options = { triggers = { "(" }, items = { { label = "alpha", insertText = "alpha(", kind = 6 } } },
-    steps = { "ial", "<CR>", "<BS>" },
+    steps = { "ial", "<C-y>", "<BS>" },
     expect = { [2] = { menu = false, lines = { "alpha(" } }, [3] = { menu = true } },
   },
   {
@@ -327,7 +327,7 @@ return {
   },
   {
     name = "accept_and_undo",
-    steps = { "ial", "<CR>", "<Esc>", "u", "<C-r>" },
+    steps = { "ial", "<C-y>", "<Esc>", "u", "<C-r>" },
     expect = {
       {
         menu = true,
@@ -345,8 +345,8 @@ return {
     },
   },
   {
-    name = "accept_after_deselect",
-    steps = { "ial", "<Up>", "<CR>" },
+    name = "enter_with_default_selection",
+    steps = { "ial", "<CR>" },
     expect = {
       {
         menu = true,
@@ -357,7 +357,30 @@ return {
         mode = "i",
         snippet = false,
       },
-      {
+      { menu = false, lines = { "al", "" }, cursor = { 2, 0 }, mode = "i", snippet = false },
+    },
+  },
+  {
+    name = "enter_accepts_selection",
+    steps = { "ial", "<Tab>", "<CR>" },
+    expect = {
+      [2] = {
+        menu = true,
+        labels = { "alpha", "alpine" },
+        selected = "alpine",
+        lines = { "alpine" },
+        cursor = { 1, 6 },
+        mode = "i",
+        snippet = false,
+      },
+      [3] = { menu = false, lines = { "alpine" }, cursor = { 1, 6 }, mode = "i", snippet = false },
+    },
+  },
+  {
+    name = "enter_after_deselect",
+    steps = { "ial", "<Up>", "<CR>" },
+    expect = {
+      [2] = {
         menu = true,
         labels = { "alpha", "alpine" },
         selected = false,
@@ -366,7 +389,7 @@ return {
         mode = "i",
         snippet = false,
       },
-      { menu = false, lines = { "alpha" }, cursor = { 1, 5 }, mode = "i", snippet = false },
+      [3] = { menu = false, lines = { "al", "" }, cursor = { 2, 0 }, mode = "i", snippet = false },
     },
   },
   {
@@ -494,7 +517,7 @@ return {
   {
     name = "directory_accept",
     options = { triggers = { "/" }, items = { { label = "assets/", kind = 19 } } },
-    steps = { "ias", "<CR>" },
+    steps = { "ias", "<C-y>" },
     expect = {
       {
         menu = true,

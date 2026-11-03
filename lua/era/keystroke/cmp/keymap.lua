@@ -82,7 +82,7 @@ function M.bind_insert(bufnr, get_session)
   bound[bufnr] = true
   local actions = {
     ["<CR>"] = function(session)
-      return session:accept()
+      return session:accept_explicit()
     end,
     ["<Up>"] = function(session)
       return session:select(-1)

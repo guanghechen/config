@@ -120,6 +120,22 @@ t:test("compound LSP filters outrank suffix snippets without losing provider alt
   end
 end)
 
+t:test("prefix-matched candidates need a query that starts their filter text", function()
+  for _, example in ipairs({
+    { line = "t = {", expected = false, why = "an empty query" },
+    { line = "aa", expected = false, why = "a fuzzy match of the trigger words" },
+    { line = "bo", expected = true, why = "the start of the trigger" },
+  }) do
+    local context = runtime.context(example.line)
+    local snippet = Item.new(context, "snippets", { label = "bold and italic", insertText = "***$1***" })
+    snippet.prefix_match = true
+    local word = Item.new(context, "buffer", { label = "bold and italic" })
+    local ranked = Rank.filter(context, Rank.prepare({ snippet, word }))
+    t.assert_eq(example.expected, vim.list_contains(ranked, snippet), example.why)
+    t.assert_true(vim.list_contains(ranked, word), "other candidates still match fuzzily: " .. example.why)
+  end
+end)
+
 t:test("wide LSP edits preserve namespace filtering and explicit filterText semantics", function()
   local Lsp = require("era.keystroke.cmp.source.lsp")
   local client = { id = 10, name = "fixture", offset_encoding = "utf-16" }

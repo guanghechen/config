@@ -101,7 +101,7 @@ for _, timeout in ipairs({ false, true }) do
               and session.items[1].raw.label == 'alpNEW' and session:is_visible()
           ]])
         end, 3000, "latest queued query publishes its own result")
-        ui:rpc("nvim_input", "<CR>")
+        ui:rpc("nvim_input", "<C-y>")
         ui:wait_until(function()
           return ui:lua([[return #require('__test__.support.cmp.behavior').commands == 1]])
         end, 1000, "completion accepted")

@@ -123,8 +123,12 @@ function M.filter(context, groups, frecency)
   local ranked = {} ---@type era.keystroke.cmp.IItem[]
   for position, source in ipairs(sources) do
     local item = active[source].items[indexes[position]]
-    item.score = scores[position]
-    ranked[position] = item
+    local query = requests[source].query ---@type string
+    local filter = Item.optional(item.raw.filterText) or item.raw.label ---@type string
+    if not item.prefix_match or (query ~= "" and vim.startswith(filter:lower(), query:lower())) then
+      item.score = scores[position]
+      ranked[#ranked + 1] = item
+    end
   end
   return ranked
 end

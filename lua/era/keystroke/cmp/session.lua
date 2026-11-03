@@ -816,6 +816,19 @@ function M:accept(index)
   return self:_accept(item, restored, current.line, current.col)
 end
 
+-- The first candidate is selected by default only as a suggestion. Enter accepts a candidate that the user selected;
+-- otherwise it closes the menu, where native Enter would accept the default, and goes on to start a new line.
+---@return boolean
+function M:accept_explicit()
+  if self._explicit and self.selected ~= nil then
+    return self:accept(self.selected)
+  end
+  if self:is_visible() then
+    self:hide()
+  end
+  return false
+end
+
 ---@private
 ---@param item                          era.keystroke.cmp.IItem
 ---@param context                       era.keystroke.cmp.IContext

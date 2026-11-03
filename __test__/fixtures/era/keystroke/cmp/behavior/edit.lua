@@ -128,7 +128,7 @@ return {
         },
       },
     },
-    steps = { "ifo", "<CR>", "x<Esc>", "u", "<C-r>" },
+    steps = { "ifo", "<C-y>", "x<Esc>", "u", "<C-r>" },
     expect = {
       [2] = { lines = { "import { foobar } from './lib';", "foobar" }, cursor = { 2, 6 }, snippet = false },
       [3] = { lines = { "import { foobar } from './lib';", "foobarx" } },
@@ -154,7 +154,7 @@ return {
         },
       },
     },
-    steps = { "ifo", "<CR>", "x<Esc>", "u", "u", "<C-r>", "<C-r>" },
+    steps = { "ifo", "<C-y>", "x<Esc>", "u", "u", "<C-r>", "<C-r>" },
     expect = {
       [2] = { lines = { "import { foobar } from './lib';", "foobar(value)" }, cursor = { 2, 7 }, snippet = true },
       [3] = { lines = { "import { foobar } from './lib';", "foobar(x)" }, cursor = { 2, 7 } },
@@ -182,7 +182,7 @@ return {
         },
       },
     },
-    steps = { "ifo", "<CR>", "x<Esc>", "u", "<C-r>" },
+    steps = { "ifo", "<C-y>", "x<Esc>", "u", "<C-r>" },
     expect = {
       [2] = { lines = { "import { foobar } from './lib';", "foobar()" }, cursor = { 2, 7 }, snippet = false },
       [3] = { lines = { "import { foobar } from './lib';", "foobar(x)" } },
@@ -206,7 +206,7 @@ return {
         },
       },
     },
-    steps = { "ial", "<CR>", "<Esc>u", "<C-r>" },
+    steps = { "ial", "<C-y>", "<Esc>u", "<C-r>" },
     expect = {
       [2] = { menu = false, lines = { "alpha", "-- trailing declaration" } },
       [3] = { lines = { "al" } },
@@ -313,7 +313,7 @@ return {
   {
     name = "function_brackets",
     options = { items = { { label = "demo", kind = 3 } } },
-    steps = { "ide", "<CR>" },
+    steps = { "ide", "<C-y>" },
     expect = {
       {
         menu = true,
@@ -334,7 +334,7 @@ return {
       cursor = { 1, 0 },
       items = { { label = "sin", insertText = "sin", insertTextFormat = 2, kind = 3 } },
     },
-    steps = { "ai", "<CR>", "x" },
+    steps = { "ai", "<C-y>", "x" },
     expect = {
       [2] = { lines = { "sin()" }, cursor = { 1, 4 }, snippet = false },
       [3] = { lines = { "sin(x)" }, cursor = { 1, 5 } },
@@ -343,7 +343,7 @@ return {
   {
     name = "text_snippet_tab_fallback",
     options = { items = { { label = "sin", insertText = "sin", insertTextFormat = 2, kind = 3 } } },
-    steps = { "isi", "<CR>", "<Tab>" },
+    steps = { "isi", "<C-y>", "<Tab>" },
     expect = {
       [2] = { lines = { "sin()" }, cursor = { 1, 4 }, snippet = false },
       [3] = { lines = { "sin(\t)" }, cursor = { 1, 5 }, snippet = false },
@@ -352,7 +352,7 @@ return {
   {
     name = "text_snippet_undo",
     options = { items = { { label = "sin", insertText = "sin", insertTextFormat = 2, kind = 3 } } },
-    steps = { "isi", "<CR>", "x<Esc>", "u" },
+    steps = { "isi", "<C-y>", "x<Esc>", "u" },
     expect = { [4] = { lines = { "" }, cursor = { 1, 0 }, snippet = false } },
   },
   {
@@ -362,7 +362,7 @@ return {
       cursor = { 1, 0 },
       items = { { label = "sin", insertText = "sin", insertTextFormat = 2, kind = 3 } },
     },
-    steps = { "isi", "<CR>", "x<Esc>j0." },
+    steps = { "isi", "<C-y>", "x<Esc>j0." },
     expect = { [3] = { lines = { "sin(x)", "sin(x)" }, mode = "n", snippet = false } },
   },
   {
@@ -530,7 +530,7 @@ return {
     options = {
       items = { { label = "call", kind = 15, insertText = "call(${1:first}, ${2:second})$0", insertTextFormat = 2 } },
     },
-    steps = { "ica", "<CR>", "<Tab>", "<S-Tab>" },
+    steps = { "ica", "<C-y>", "<Tab>", "<S-Tab>" },
     expect = {
       {
         menu = true,
@@ -551,7 +551,7 @@ return {
     options = {
       items = { { label = "call", kind = 15, insertText = "call(${1:first}, ${2:second})$0", insertTextFormat = 2 } },
     },
-    steps = { "ica", "<CR>", "value", "<Tab>", "other", "<Tab>" },
+    steps = { "ica", "<C-y>", "value", "<Tab>", "other", "<Tab>" },
     expect = { [6] = { lines = { "call(value, other)" }, cursor = { 1, 18 }, mode = "i", snippet = false } },
   },
 }

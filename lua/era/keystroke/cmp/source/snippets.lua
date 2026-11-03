@@ -107,13 +107,17 @@ function M.complete(context, callback)
           break
         end
       end
-      items[#items + 1] = Item.new(context, "snippets", {
+      local item = Item.new(context, "snippets", {
         label = snippet.prefix,
         kind = vim.lsp.protocol.CompletionItemKind.Snippet,
         insertTextFormat = vim.lsp.protocol.InsertTextFormat.Snippet,
         textEdit = Item.text_edit(context, start_col, snippet.body),
         documentation = { kind = "markdown", value = snippet.description },
       })
+      -- A snippet answers the start of its trigger. Fuzzy matches of multi-word triggers such as "bold and italic"
+      -- and every snippet at an empty query would otherwise come up while typing ordinary text.
+      item.prefix_match = true
+      items[#items + 1] = item
     end
   end
   callback({ items = items, incomplete = false })

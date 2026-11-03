@@ -137,7 +137,7 @@ for _, prefix in ipairs({ "obj.", "😀 obj." }) do
     ui:rpc("nvim_input", "<C-Space>")
     wait(ui, [[return vim.fn.complete_info({'selected'}).selected == 0]], "reopened menu")
     if prefix == "obj." then
-      ui:rpc("nvim_input", "<CR>")
+      ui:rpc("nvim_input", "<C-y>")
     else
       ui:lua([[vim.api.nvim_select_popupmenu_item(0,true,true,{})]])
     end

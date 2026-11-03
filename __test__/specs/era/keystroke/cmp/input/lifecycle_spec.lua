@@ -93,7 +93,7 @@ for _, command in ipairs({ "checktime", "edit" }) do
     )
     ui:lua([[require('era.keystroke.cmp').show()]])
     wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "fresh candidate")
-    ui:rpc("nvim_input", "<CR>")
+    ui:rpc("nvim_input", "<C-y>")
     wait(
       ui,
       [[return vim.deep_equal({ 'IMPORT', 'foobar' }, vim.api.nvim_buf_get_lines(0, 0, -1, false))]],
@@ -168,7 +168,7 @@ for _, command in ipairs({ "checktime", "edit" }) do
     wait(ui, [[return cmp_reload_fallbacks == 1]], "buffer-local mapping fallback retained")
     ui:lua([[require('era.keystroke.cmp').show()]])
     wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "fresh candidate")
-    ui:rpc("nvim_input", "<CR>")
+    ui:rpc("nvim_input", "<C-y>")
     wait(
       ui,
       [[return vim.deep_equal({ 'IMPORT', 'foobar' }, vim.api.nvim_buf_get_lines(0, 0, -1, false))]],
@@ -210,7 +210,7 @@ for _, command in ipairs({ "checktime", "edit" }) do
     wait(ui, [[return #cmp_reload_replies == 2]], "new request")
     ui:lua([[cmp_reload_replies[2]()]])
     wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "new response")
-    ui:rpc("nvim_input", "<CR>")
+    ui:rpc("nvim_input", "<C-y>")
     wait(
       ui,
       [[return vim.deep_equal({ 'IMPORT', 'foobar' }, vim.api.nvim_buf_get_lines(0, 0, -1, false))]],
@@ -266,7 +266,7 @@ for _, independent in ipairs({ false, true }) do
           or [[return vim.api.nvim_get_current_line() == 'al']],
         "preview follows candidate eligibility"
       )
-      ui:rpc("nvim_input", "<CR>")
+      ui:rpc("nvim_input", "<C-y>")
       -- This fixture's independent sources also opt into the accept trigger and open a fresh list.
       wait(
         ui,
@@ -390,7 +390,7 @@ t:test("typing and native backspace share a pending LSP request while Escape sti
   ]],
     "latest candidates replace the partial result"
   )
-  ui:rpc("nvim_input", "<CR>")
+  ui:rpc("nvim_input", "<C-y>")
   wait(ui, [[return vim.api.nvim_get_current_line() == 'alpine']], "acceptance uses the latest edit coordinates")
   ui:rpc("nvim_input", "<Esc>")
   wait(ui, [[return vim.api.nvim_get_mode().mode == 'n']], "normal mode")
@@ -445,7 +445,7 @@ t:test("provisional LSP edits remain valid after backspace while a wider query i
   ui:rpc("nvim_input", "<BS><BS>")
   wait(ui, [[return vim.api.nvim_get_current_line() == 'al' and cmp_wider_reply ~= nil]], "broader query is pending")
   t.assert_true(ui:lua([[return require('era.keystroke.cmp').is_menu_visible()]]), "provisional menu remains available")
-  ui:rpc("nvim_input", "<CR>")
+  ui:rpc("nvim_input", "<C-y>")
   wait(ui, [[return vim.api.nvim_buf_line_count(0) == 3]], "provisional import and main edit are applied")
   t.assert_eq(
     'local alpha = require("alpha")\n-- imports\nalpha',
@@ -639,7 +639,7 @@ t:test("a fresh LSP response does not inherit a selected cached alternative", fu
   ui:lua([[cmp_replace_alternative()]])
   wait(ui, [[return vim.api.nvim_get_current_line() == 'Fo']], "replacement restores the stale preview")
   t.assert_true(ui:lua([[return require('era.keystroke.cmp').is_menu_visible()]]), "replacement remains available")
-  ui:rpc("nvim_input", "<CR>")
+  ui:rpc("nvim_input", "<C-y>")
   wait(ui, [[return vim.api.nvim_buf_line_count(0) == 3]], "new alternative accepted")
   t.assert_eq('local Foo = require("module_b")', ui:lua("return vim.api.nvim_buf_get_lines(0, 0, 1, false)[1]"))
 end)

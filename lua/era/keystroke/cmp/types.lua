@@ -28,6 +28,7 @@ local __module_name__ = "era.keystroke.cmp.types" ---@type string
 ---@field public filter_start_col       ?integer
 ---@field public encoding               string
 ---@field public score_offset           number
+---@field public prefix_match           ?boolean Matches only a non-empty query that begins its filter text.
 ---@field public resolved               ?lsp.CompletionItem
 ---@field public score                  ?number
 ---@field public preview_word           ?string Static snippet prefix cached only for displayed items; raw payloads are immutable.

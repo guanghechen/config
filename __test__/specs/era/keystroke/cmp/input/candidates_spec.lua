@@ -51,7 +51,7 @@ t:test("native fuzzy completion preserves ranked aliases and duplicate alternati
       "native selection follows the Rust candidate order"
     )
   end
-  ui:rpc("nvim_input", "<CR>")
+  ui:rpc("nvim_input", "<C-y>")
   wait(ui, [[return vim.api.nvim_get_current_line() == 'replacement']], "the selected alternative is accepted")
 end)
 
@@ -66,7 +66,7 @@ t:test("native fuzzy completion retains typo-only candidates", function()
   ui:rpc("nvim_input", "icompletiom")
   wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "Rust typo match survives native filtering")
   t.assert_eq("completion", ui:lua([[return vim.fn.complete_info({'items'}).items[1].abbr]]))
-  ui:rpc("nvim_input", "<CR>")
+  ui:rpc("nvim_input", "<C-y>")
   wait(ui, [[return vim.api.nvim_get_current_line() == 'completion']], "typo candidate remains acceptable")
 end)
 
@@ -88,7 +88,7 @@ t:test("plain quoted words retain buffer fallback even when the directory has fi
     wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "buffer candidate appears automatically")
     ui:lua([[require('era.keystroke.cmp').show()]])
     wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "manual refresh keeps the buffer candidate")
-    ui:rpc("nvim_input", "<CR>")
+    ui:rpc("nvim_input", "<C-y>")
     t.wait_until(function()
       return ui:lua("return vim.api.nvim_get_current_line()") == "local text = " .. quote .. "qzxProjectToken"
     end, 1000, "acceptance replaces only the quoted prefix")
@@ -115,7 +115,7 @@ t:test("long path prefixes remain visible and accept after the fuzzy query limit
   ui:rpc("nvim_input", "b")
   wait(ui, [[return vim.api.nvim_get_current_line():sub(-1) == 'b']], "129th character is processed")
   wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "long prefix retains its candidate")
-  ui:rpc("nvim_input", "<CR>")
+  ui:rpc("nvim_input", "<C-y>")
   t.wait_until(function()
     return ui:lua("return vim.api.nvim_get_current_line()") == 'local file = "./' .. filename
   end, 1000, "long filename is accepted without changing the path prefix")
@@ -148,7 +148,7 @@ t:test("raw bytes in a background file cannot interrupt valid completion", funct
   )
   ui:rpc("nvim_input", "ial")
   wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "valid candidate remains available")
-  ui:rpc("nvim_input", "<CR>")
+  ui:rpc("nvim_input", "<C-y>")
   wait(ui, [[return vim.api.nvim_get_current_line() == 'alpha']], "valid candidate accepted")
   t.assert_eq("i", ui:lua([[return vim.api.nvim_get_mode().mode:sub(1, 1)]]), "editor remains in Insert mode")
   t.assert_eq(
@@ -168,7 +168,7 @@ t:test("an invalid UTF-8 query stays idle and completion resumes at the next wor
   t.assert_eq("", ui:lua([[return vim.v.errmsg]]), "invalid query does not raise a matcher error")
   ui:rpc("nvim_input", " al")
   wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "next valid word completes")
-  ui:rpc("nvim_input", "<CR>")
+  ui:rpc("nvim_input", "<C-y>")
   wait(ui, [[return vim.api.nvim_get_current_line() == '\255a alpha']], "only the valid word is replaced")
 end)
 
@@ -204,7 +204,7 @@ t:test("persisted acceptance history survives a new LSP client instance", functi
   restarted:lua([[vim.lsp.get_clients({ method = 'textDocument/completion' })[1].id = 9002]])
   restarted:rpc("nvim_input", "ial")
   wait(restarted, [[return require('era.keystroke.cmp').is_menu_visible()]], "candidates from restarted client")
-  restarted:rpc("nvim_input", "<CR>")
+  restarted:rpc("nvim_input", "<C-y>")
   wait(
     restarted,
     [[return vim.api.nvim_get_current_line() == 'alpine' and not require('era.keystroke.cmp').is_menu_visible()]],
@@ -285,12 +285,42 @@ t:test("the snippet registry loads package data and native filename variables", 
   )
   ui:rpc("nvim_input", "izzcmpf")
   wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "filetype snippets")
-  ui:rpc("nvim_input", "<CR>")
+  ui:rpc("nvim_input", "<C-y>")
   wait(
     ui,
     [[return vim.api.nvim_get_current_line() == "local stem = 'stem'" and vim.snippet.active()]],
     "nested snippet variable expansion"
   )
+end)
+
+t:test("snippets come up for the start of their trigger, not for an empty or fuzzy query", function()
+  local ui = editor({ "" })
+  ui:lua(
+    [[
+    local root = ...
+    vim.opt.runtimepath:prepend(root .. '/__test__/fixtures/era/keystroke/cmp/friendly-snippets')
+    vim.api.nvim_buf_set_name(0, vim.fn.tempname() .. '/stem.lua')
+  ]],
+    vim.uv.cwd()
+  )
+  -- The language server keeps a candidate in the menu, so a missing snippet is not a menu that has yet to open.
+  lsp_client(ui, [[return function(_, callback) callback(nil, { { label = 'zzcfield', kind = 5 } }) end]])
+  ui:lua([[
+    _G.cmp_menu_labels = function()
+      local labels = {}
+      for _, item in ipairs(vim.fn.complete_info({ 'items' }).items) do labels[#labels + 1] = item.abbr end
+      return table.concat(labels, ' ')
+    end
+  ]])
+  for _, keys in ipairs({ "ix.", "Szzcf" }) do
+    ui:rpc("nvim_input", "<Esc>")
+    ui:rpc("nvim_input", keys)
+    wait(ui, [[return cmp_menu_labels():find('zzcfield', 1, true) ~= nil]], keys .. " menu")
+    t.assert_eq(nil, ui:lua([[return cmp_menu_labels():find('zzcmp', 1, true)]]), keys .. " brings up no snippet")
+  end
+  ui:rpc("nvim_input", "<Esc>")
+  ui:rpc("nvim_input", "Szzcm")
+  wait(ui, [[return cmp_menu_labels():find('zzcmpfixture', 1, true) ~= nil]], "the start of a trigger")
 end)
 
 t:run()

@@ -187,6 +187,8 @@ import、except、pseudo-selector 限制，kind 与 semantic token resolution �
 `blink.pairs` 独立处理键入括号与配对高亮。
 
 `Tab` 依次处理菜单、snippet、inline completion、原按键；`C-y` / `C-l` 优先 inline completion。
+`Enter` 只接受用户选择的候选（导航、鼠标或插入预览）；菜单默认选中的首项只作建议，`C-y` / `C-l` 才接受它。
+此时 `Enter` 先关闭菜单（原生 `Enter` 会接受默认项），再交给 fallback 换行；显式取消选择后同样换行。
 保留 `C-j` / `C-k` 的 mapping fallback、数字选取、文档滚动及 signature 切换。
 Insert 与 cmdline 分别对接 Session 和 native command completion；无相应动作时转交原 mapping/原按键。
 `C-j` / `C-k` 的 mappings-only fallback 仅用于补全已准入的 context，禁用时保留原生换行、
@@ -230,6 +232,8 @@ buffer 词条必须是有效 UTF-8；含原始非法字节的词条被跳过，�
 校验使用 `yoz.string.is_utf8`，正常文本按行校验，含非法字节时才逐词检查。
 
 `friendly-snippets` 作为数据依赖按需加载；本地和 package.json snippets 按 filetype 缓存。
+snippet 只回应其触发词的开头：Rust 排序后，query 须非空且为触发词的前缀（不区分大小写），不做 label 模糊匹配。
+因此 `{`、`.` 等触发字符之后的空 query 和普通单词（如 `aa` 之于 `bold and italic`）都不会带出 snippet。
 词典继续使用 `yoz.dict.search`，slash commands 保留独立 edit range。
 
 Cmdline 候选、Lua namespace、option/custom-command prefix、文件转义和 PATH 扫描均由 Neovim 原生补全处理。

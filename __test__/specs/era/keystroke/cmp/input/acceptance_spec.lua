@@ -46,7 +46,7 @@ t:test("compound LSP acceptance replaces the full input instead of a suffix snip
     ]],
     "the full LSP result has arrived alongside the local snippet"
   )
-  ui:rpc("nvim_input", "<CR>")
+  ui:rpc("nvim_input", "<C-y>")
   wait(
     ui,
     [[return vim.api.nvim_get_current_line() == '<div><ul><li></li></ul></div>']],
@@ -71,7 +71,7 @@ t:test("accepting an invalid snippet preserves the prefix and additional edit ta
   wait(ui, [[return vim.api.nvim_get_mode().mode:sub(1, 1) == 'i']], "insert mode")
   ui:lua([[require('era.keystroke.cmp').show()]])
   wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "candidate menu")
-  ui:rpc("nvim_input", "<CR>")
+  ui:rpc("nvim_input", "<C-y>")
   wait(ui, [[return cmp_invalid_snippet == true]], "invalid snippet rejected")
   t.assert_eq("-- keep\npre", ui:lua([[return table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), '\n')]]))
   t.assert_eq(0, ui:lua([[return #cmp_commands]]), "no completion command ran")
@@ -82,7 +82,7 @@ t:test("acceptance creates an undo boundary and records dot repeat", function()
   ui:lua([[vim.api.nvim_win_set_cursor(0, { 2, 0 })]])
   ui:rpc("nvim_input", "ial")
   wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "completion menu")
-  ui:rpc("nvim_input", "<CR>")
+  ui:rpc("nvim_input", "<C-y>")
   wait(ui, [[return vim.api.nvim_get_current_line() == 'alpha']], "accepted text")
   ui:rpc("nvim_input", "<Esc>j0.")
   wait(ui, [[return vim.api.nvim_buf_get_lines(0, 2, 3, false)[1] == 'alpha']], "dot repeat")
@@ -126,7 +126,7 @@ for _, command in ipairs({ "editor.action.triggerSuggest", "editor.action.trigge
     ]])
     ui:rpc("nvim_input", "ial")
     wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "initial menu")
-    ui:rpc("nvim_input", "<CR>")
+    ui:rpc("nvim_input", "<C-y>")
     wait(ui, [[return vim.api.nvim_get_current_line() == 'alpha']], "completion accepted")
     if command == "editor.action.triggerSuggest" then
       wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "command reopens completion")
@@ -183,7 +183,7 @@ t:test("UTF-16 acceptance applies resolved imports and commands once", function(
   )
   ui:rpc("nvim_input", "i😀 fo")
   wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "LSP candidate")
-  ui:rpc("nvim_input", "<CR>")
+  ui:rpc("nvim_input", "<C-y>")
   wait(ui, [[return vim.api.nvim_buf_line_count(0) == 3]], "import applied")
   t.assert_same(
     { "local Foo = require('foo')", "-- imports", "😀 foobar" },
@@ -216,7 +216,7 @@ t:test("UTF-16 boundary insertions track the completion after further typing", f
   wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "original candidate")
   ui:rpc("nvim_input", "o")
   wait(ui, [[return vim.api.nvim_get_current_line() == '😀 fo']], "continued input")
-  ui:rpc("nvim_input", "<CR>")
+  ui:rpc("nvim_input", "<C-y>")
   wait(ui, [[return vim.api.nvim_get_current_line() == '😀 prefix foobar suffix']], "both boundary edits applied")
   t.assert_eq(#"😀 prefix foobar", ui:lua("return vim.api.nvim_win_get_cursor(0)[2]"), "cursor precedes suffix")
   ui:rpc("nvim_input", "<Esc>u")
@@ -235,7 +235,7 @@ t:test("typing during resolve prevents a late edit and command", function()
   )
   ui:rpc("nvim_input", "ifo")
   wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "LSP menu")
-  ui:rpc("nvim_input", "<CR>x")
+  ui:rpc("nvim_input", "<C-y>x")
   wait(ui, [[return vim.api.nvim_get_current_line() == 'fox']], "new user input")
   vim.wait(150)
   t.assert_eq("fox", ui:lua([[return vim.api.nvim_get_current_line()]]), "late resolve ignored")
@@ -323,7 +323,7 @@ t:test("function completion records cursor placement inside brackets", function(
   lsp_client(ui, [[return function(_, callback) callback(nil, { { label = 'foobar', kind = 3 } }) end]])
   ui:rpc("nvim_input", "ifo")
   wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "function menu")
-  ui:rpc("nvim_input", "<CR>")
+  ui:rpc("nvim_input", "<C-y>")
   wait(
     ui,
     [[return vim.api.nvim_get_current_line() == 'foobar()' and vim.api.nvim_win_get_cursor(0)[2] == 7]],
@@ -370,7 +370,7 @@ t:test("semantic brackets follow language delimiters and context exclusions afte
     wait(ui, [[return vim.api.nvim_get_mode().mode:sub(1, 1) == 'i']], "insert mode")
     ui:lua([[require('era.keystroke.cmp').show()]])
     wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], case.filetype .. " semantic candidate")
-    ui:rpc("nvim_input", "<CR>")
+    ui:rpc("nvim_input", "<C-y>")
     t.wait_until(function()
       return ui:lua([[return vim.api.nvim_get_current_line()]]) == case.text
     end, 3000, case.filetype .. " accepted text")
@@ -434,7 +434,7 @@ t:test("LSP snippets expand and Tab moves through the native snippet session", f
   )
   ui:rpc("nvim_input", "ifu")
   wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "snippet menu")
-  ui:rpc("nvim_input", "<CR>")
+  ui:rpc("nvim_input", "<C-y>")
   wait(ui, [[return vim.snippet.active() and vim.api.nvim_get_current_line() == 'call(value)']], "snippet expansion")
   ui:rpc("nvim_input", "argument")
   wait(ui, [[return vim.api.nvim_get_current_line() == 'call(argument)']], "placeholder edit")
@@ -513,7 +513,7 @@ for _, example in ipairs({
         "documentation does not insert text"
       )
     end
-    ui:rpc("nvim_input", "<CR>")
+    ui:rpc("nvim_input", "<C-y>")
     wait(
       ui,
       [[return vim.api.nvim_get_current_line() == cmp_documentation_expected]],
@@ -545,7 +545,7 @@ t:test("resolved acceptance applies before input queued behind Enter", function(
   ]],
     "completion has resolved for documentation"
   )
-  ui:rpc("nvim_input", "<CR>x")
+  ui:rpc("nvim_input", "<C-y>x")
   wait(ui, [[return vim.api.nvim_get_current_line()=='foobarx']], "completion precedes queued input")
   t.assert_eq(1, ui:lua([[return #cmp_commands]]), "completion command executes once")
 end)
@@ -598,7 +598,7 @@ t:test("Unicode completion records character-safe dot repeat", function()
   ui:lua([[vim.api.nvim_win_set_cursor(0, { 2, 0 })]])
   ui:rpc("nvim_input", "i中变")
   wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "Unicode candidate")
-  ui:rpc("nvim_input", "<CR>")
+  ui:rpc("nvim_input", "<C-y>")
   wait(ui, [[return vim.api.nvim_get_current_line() == '中文变量']], "Unicode acceptance")
   ui:rpc("nvim_input", "<Esc>j0.")
   wait(ui, [[return vim.api.nvim_buf_get_lines(0, 2, 3, false)[1] == '中文变量']], "Unicode repeat")
@@ -614,7 +614,7 @@ t:test("multiline plain-text completions retain their cursor and undo semantics"
   )
   ui:rpc("nvim_input", "ifr")
   wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "multiline candidate")
-  ui:rpc("nvim_input", "<CR>")
+  ui:rpc("nvim_input", "<C-y>")
   wait(ui, [[return vim.api.nvim_buf_line_count(0) == 2]], "multiline edit")
   t.assert_same({ "first", "second" }, ui:lua([[return vim.api.nvim_buf_get_lines(0, 0, -1, false)]]), "inserted lines")
   t.assert_same({ 2, 6 }, ui:lua([[return vim.api.nvim_win_get_cursor(0)]]), "cursor after inserted text")
