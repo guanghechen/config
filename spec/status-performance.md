@@ -57,7 +57,9 @@ Final contract：
 - fixed lock path 是唯一 driver owner；
 - acquisition 通过 prewritten owner 原子发布；
 - failed acquisition 前后都要重新检查 live owner；
-- 只有 dead known owner 可进入 server-scoped recovery lease；
+- 只有 dead known owner，或超过 1 分钟未更新的 lock，可进入 server-scoped recovery
+  lease；后者覆盖 PID 被复用后 owner 看似存活的情况（live owner 在 renderer 启动时
+  重写 lock，其后由 30 s watchdog 约束）；
 - unknown state 与 tmux lease failure 均 fail closed；
 - candidate/update cleanup 可合并，但不得改变 fixed lock authority。
 

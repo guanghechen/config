@@ -421,6 +421,24 @@ if [ ! -f "$stale_lock" ]; then
 fi
 unlink "$stale_lock"
 
+# A lock unchanged past every bounded tick is stale even when its recorded owner
+# PID was recycled by a live process; the next driver must reclaim it and run.
+cat >"$renderer" <<EOF
+#!/bin/sh
+: >'$tmp/expired-owner-renderer-ran'
+EOF
+chmod +x "$renderer"
+printf '%s:%s\n' "$$" "$$" >"$stale_lock"
+python3 -c 'import os, sys, time; t = time.time() - 120; os.utime(sys.argv[1], (t, t))' "$stale_lock"
+env -u TMUX tmux -L "$socket" set -s @GHC_SL_SCHED_ACTIVE 1
+env HOME="$home" TMPDIR="$lock_tmp" TMUX="$server_env" \
+  GHC_TMUX_STATUS_DRIVER_DELAY_SECONDS=0 "$driver" >/dev/null 2>&1
+if [ ! -f "$tmp/expired-owner-renderer-ran" ] || [ -e "$stale_lock" ]; then
+  echo "an expired lock with a recycled live owner stalled the scheduler" >&2
+  exit 1
+fi
+env -u TMUX tmux -L "$socket" set -s @GHC_SL_SCHED_ACTIVE 0
+
 # Empty/corrupt legacy state is conservatively retained. New lock acquisition
 # cannot publish an empty owner because candidate content is written before link(2).
 : >"$stale_lock"

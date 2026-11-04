@@ -74,10 +74,18 @@ read_lock_owner() {
   fi
 }
 
+# A live owner rewrites the lock when it starts the renderer after its short delay,
+# and the renderer watchdog (30 s) bounds the rest of the tick. A lock left
+# unchanged for over a minute is stale even when a recycled PID makes its recorded
+# owner look alive.
+lock_is_expired() {
+  [ -n "$(find "$lock_path" -prune -mmin +1 2>/dev/null)" ]
+}
+
 lock_has_live_owner() {
   lock_exists || return 1
   read_lock_owner
-  owner_value_is_alive "$lock_owner_value"
+  owner_value_is_alive "$lock_owner_value" && ! lock_is_expired
 }
 
 cleanup_candidate_files() {
@@ -131,7 +139,7 @@ recover_stale_lock() {
   read_lock_owner
   owner=$lock_owner_value
   # Empty or unsupported lock state is retained rather than guessed stale.
-  if [ -z "$owner" ] || owner_value_is_alive "$owner"; then
+  if [ -z "$owner" ] || { owner_value_is_alive "$owner" && ! lock_is_expired; }; then
     return 1
   fi
   owner_driver=${owner%%:*}
