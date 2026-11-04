@@ -4,8 +4,10 @@
 
 "$schema" = "https://starship.rs/config-schema.json"
 
+# The trailing space is italic so tmux redraws keep it instead of trimming it to EL;
+# kitty only widens a Nerd Font icon into a following real space cell.
 format = """$character${env_var.STARSHIP_OS_ICON}$username${custom.separator}$hostname$directory$git_branch$git_status $time$conda
-  [󰈺](cyan) """
+  [󰈺](cyan)[ ](italic)"""
 
 [character]
 format = "$symbol "
