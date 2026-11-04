@@ -12,11 +12,6 @@ local M = {}
 
 ---@alias LinkDefinition                 {label: string, dest: string}
 
----@class era.m.image.Hover
----@field public img                     era.m.image.Placement
----@field public winnr                   integer
----@field public bufnr                   integer
-
 ---@class era.m.image.ctx
 ---@field public bufnr                   integer
 ---@field public lang                    string
@@ -50,20 +45,6 @@ M.transforms = {
     local row, col = ctx.src.node:start()
     local line = vim.api.nvim_buf_get_lines(ctx.bufnr, row, row + 1, false)[1]
     img.src = line:sub(col + 1)
-  end,
-  typst = function(img, ctx)
-    if not img.content then
-      return
-    end
-    local state = require("era.m.image.state")
-    local s = state.data
-    local color_val = vim.api.nvim_get_hl(0, { name = "m_img_math" }).fg
-    local color = color_val and string.format("#%06x", color_val) or "#000000"
-    img.content = state.tpl_env(s.math.typst.tpl, {
-      color = color,
-      header = M.get_header(ctx.bufnr),
-      content = img.content,
-    })
   end,
   latex = function(img, ctx)
     local state = require("era.m.image.state")
@@ -100,9 +81,6 @@ M.transforms = {
     })
   end,
 }
-
----@type era.m.image.Hover|nil
-local hover = nil
 
 local uv = vim.uv
 
@@ -220,6 +198,8 @@ function M.is_dir(dir)
   return dir_cache[dir]
 end
 
+---Where `src` points from the document `bufnr`. The document's directory comes before the working directory, and a
+---file that does not exist yet is named next to the document, where it is most likely to appear.
 ---@param bufnr                          integer
 ---@param src                            string
 ---@return string
@@ -230,24 +210,34 @@ function M.resolve(bufnr, src)
   if resolved then
     return resolved
   end
-  local cwd = uv.cwd() or "."
-  local checks = { [src] = true }
-  for _, root in ipairs({ cwd, vim.fs.dirname(file) }) do
-    checks[root .. "/" .. src] = true
-    for _, dir in ipairs(s.img_dirs) do
-      dir = root .. "/" .. dir
-      if M.is_dir(dir) then
-        checks[dir .. "/" .. src] = true
+  -- URLs and data URIs are no files; normalizing one would even fold the `//` that base64 data contains.
+  if src:find("^data:") or (src:find("^%a[%w+.-]*://") and not src:find("^file://")) then
+    return src
+  end
+  -- A link destination escapes spaces and the like (`my%20image.png`); `#page=` selects a page of a PDF.
+  local path = src:find("^file://") and vim.uri_to_fname(src) or yoz.uri.decode(src) ---@type string
+  local page = path:match("#page=%d+$") or "" ---@type string
+  path = path:sub(1, #path - #page)
+  local candidates = {} ---@type string[]
+  if path:find("^[/~]") then
+    candidates[1] = path
+  else
+    for _, root in ipairs({ vim.fs.dirname(file), uv.cwd() or "." }) do
+      candidates[#candidates + 1] = root .. "/" .. path
+      for _, dir in ipairs(s.img_dirs) do
+        dir = root .. "/" .. dir
+        if M.is_dir(dir) then
+          candidates[#candidates + 1] = dir .. "/" .. path
+        end
       end
     end
   end
-  for f in pairs(checks) do
-    if vim.fn.filereadable(f) == 1 then
-      src = uv.fs_realpath(f) or f
-      break
+  for _, candidate in ipairs(candidates) do
+    if vim.fn.filereadable(candidate) == 1 then
+      return dot.path.normalize(uv.fs_realpath(candidate) or candidate) .. page
     end
   end
-  return dot.path.normalize(src)
+  return dot.path.normalize(candidates[1]) .. page
 end
 
 ---@param bufnr                          integer
@@ -428,154 +418,15 @@ function M.find(bufnr, cb, opts)
   end
 end
 
----@return nil
-function M.hover_close()
-  if hover then
-    if vim.api.nvim_win_is_valid(hover.winnr) then
-      vim.api.nvim_win_close(hover.winnr, true)
-    end
-    hover.img:close()
-    hover = nil
-  end
-end
-
----@param cb                             fun(image_src?: string, image_pos?: era.m.image.Pos)
----@return nil
-function M.at_cursor(cb)
-  local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local cursor = vim.api.nvim_win_get_cursor(winnr)
-  M.find(vim.api.nvim_get_current_buf(), function(imgs)
-    for _, img in ipairs(imgs) do
-      local range = img.range
-      if range then
-        if
-          (range[1] == range[3] and cursor[2] >= range[2] and cursor[2] <= range[4])
-          or (range[1] ~= range[3] and cursor[1] >= range[1] and cursor[1] <= range[3])
-        then
-          return cb(img.src, img.pos)
-        end
-      end
-    end
-    cb()
-  end, { from = cursor[1], to = cursor[1] + 1 })
-end
-
----@return nil
-function M.hover()
-  local current_winnr = vim.api.nvim_get_current_win()
-  local current_bufnr = vim.api.nvim_get_current_buf()
-
-  if hover and hover.winnr == current_winnr and vim.api.nvim_win_is_valid(hover.winnr) then
-    return
-  end
-
-  if hover and (hover.bufnr ~= current_bufnr or vim.fn.mode() ~= "n") then
-    return M.hover_close()
-  end
-
-  if hover and not vim.api.nvim_win_is_valid(hover.winnr) then
-    M.hover_close()
-  end
-
-  M.at_cursor(function(src)
-    if not src then
-      return M.hover_close()
-    end
-
-    if hover and hover.img.img.src ~= src then
-      M.hover_close()
-    elseif hover then
-      hover.img:update()
-      return
-    end
-
-    local s = require("era.m.image.state").data
-    local placement = require("era.m.image.placement")
-
-    local bufnr = vim.api.nvim_create_buf(false, true)
-    local winnr = vim.api.nvim_open_win(bufnr, false, {
-      relative = "cursor",
-      row = 1,
-      col = 1,
-      width = 40,
-      height = 20,
-      style = "minimal",
-      border = "rounded",
-      focusable = false,
-    })
-
-    vim.api.nvim_set_option_value("winblend", 0, { win = winnr, scope = "local" })
-
-    local updated = false
-    local o = vim.tbl_deep_extend("force", {}, s.doc, {
-      on_update_pre = function()
-        if hover and not updated then
-          updated = true
-          local loc = hover.img:state().loc
-          vim.api.nvim_win_set_config(winnr, {
-            width = loc.width,
-            height = loc.height,
-          })
-        end
-      end,
-      inline = false,
-    })
-    o.max_width = o.max_width or 80
-    o.max_height = o.max_height or 40
-
-    hover = {
-      winnr = winnr,
-      bufnr = current_bufnr,
-      img = placement.new(bufnr, src, o),
-    }
-    vim.api.nvim_create_autocmd({ "BufWritePost", "CursorMoved", "ModeChanged", "BufLeave" }, {
-      group = vim.api.nvim_create_augroup(__module_name__ .. ".hover", { clear = true }),
-      callback = function()
-        if not hover then
-          return true
-        end
-        M.hover()
-        if not hover then
-          return true
-        end
-      end,
-    })
-  end)
-end
-
 ---@param bufnr                          integer
 ---@return nil
 function M.attach(bufnr)
-  if not dot.context.flight.dressing_image:snapshot() then
-    return
-  end
+  -- Attached whatever the `dressing_image` flight says: the renderer follows it, so turning it on shows the images.
   local current = inlines[bufnr]
   if current and not current.disposed then
     return
   end
-
-  local state_mod = require("era.m.image.state")
-  local inline_mod = require("era.m.image.inline")
-  local s = state_mod.data
-
-  local inline = s.doc.inline and state_mod.env.placeholders
-  local float = s.doc.float and not inline
-
-  if not inline and not float then
-    return
-  end
-
-  if inline then
-    inlines[bufnr] = inline_mod.new(bufnr, M)
-  else
-    local group = vim.api.nvim_create_augroup(__module_name__ .. ".doc." .. bufnr, { clear = true })
-    vim.api.nvim_create_autocmd({ "CursorMoved" }, {
-      group = group,
-      buf = bufnr,
-      callback = vim.schedule_wrap(M.hover),
-    })
-    vim.schedule(M.hover)
-  end
+  inlines[bufnr] = require("era.m.image.inline").new(bufnr, M)
 end
 
 return M

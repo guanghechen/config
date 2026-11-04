@@ -74,21 +74,21 @@ function M.new(bufnr, document)
     end,
   })
 
-  -- Inline math mirrors render-markdown's rendering state (see doc.math_enabled): re-sync on the
-  -- `dressing_image` flight, the global `render_markdown` flag, and the per-buffer `<leader>um`
+  -- Images follow the `dressing_image` flight, and inline math also mirrors render-markdown's rendering state (see
+  -- doc.math_enabled): re-sync on the flight, the global `render_markdown` flag, and the per-buffer `<leader>um`
   -- toggle (which fires the `User EraImageMathSync` event below since it has no observable).
   self._flag_unsub = stl.fn.observe({
     dot.context.flight.dressing_image,
     dot.context.plugin.render_markdown,
   }, function()
-    self:sync_math()
+    self:sync()
   end, true)
   vim.api.nvim_create_autocmd("User", {
     pattern = "EraImageMathSync",
     group = self._augroup,
     callback = function(ev)
       if not (ev.data and ev.data.buf) or ev.data.buf == self.bufnr then
-        self:sync_math()
+        self:sync()
       end
     end,
   })
@@ -119,14 +119,16 @@ function M:dispose()
   self.idx = {}
 end
 
+---Closes what the switches no longer show: every image with the `dressing_image` flight off, and the formulas when
+---math is not rendered; `update` shows the rest again.
 ---@return nil
-function M:sync_math()
-  if not self._document.math_enabled(self.bufnr) then
-    for id, img in pairs(self.imgs) do
-      if img.opts.type == "math" then
-        img:close()
-        self.imgs[id] = nil
-      end
+function M:sync()
+  local shown = dot.context.flight.dressing_image:snapshot() ---@type boolean
+  local math = shown and self._document.math_enabled(self.bufnr)
+  for id, img in pairs(self.imgs) do
+    if not shown or (img.opts.type == "math" and not math) then
+      img:close()
+      self.imgs[id] = nil
     end
   end
   self:update()
@@ -189,7 +191,7 @@ end
 
 ---@return nil
 function M:update()
-  if self.disposed then
+  if self.disposed or not dot.context.flight.dressing_image:snapshot() then
     return
   end
   local s = require("era.m.image.state").data

@@ -97,12 +97,6 @@ function M.request(opts)
   M.write(data)
 end
 
----@param pos                             {[1]: integer, [2]: integer}
----@return nil
-function M.set_cursor(pos)
-  M.write("\27[" .. pos[1] .. ";" .. (pos[2] + 1) .. "H")
-end
-
 ---@param data                            string
 ---@return nil
 function M.write(data)

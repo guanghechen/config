@@ -42,7 +42,7 @@
 ## 集成
 
 - [AI Widget](feat/ai.md)：agent/source、prompt、消息发送与 tmux session。
-- [Image](feat/image.md)：图像模块依赖、状态归属、buffer 生命周期、版本缓存与转换限制。
+- [Image](feat/image.md)：图像模块依赖、状态归属、buffer 生命周期、标识与解析、版本缓存与转换限制。
 - [Plugin 管理](feat/plugin.md)：lazy load、版本同步、操作与计时。
 - [nvim-lint](nvim-lint-buffer-ownership.md)：buffer 归属、被动请求 gating 与显式调度。
 

@@ -14,6 +14,9 @@ state / terminal → env
 `init` 负责生命周期组装。在 tmux 中先将所在 pane 的 `allow-passthrough` 设为 `all`（`on` 会在 redraw
 或 pane 隐藏时丢弃上传）；没有 `TMUX_PANE`（如 popup）或设置失败时不启用 image。
 
+图片只通过 kitty graphics protocol 的 Unicode placeholder 绘制，因此只支持 kitty 与 Ghostty；没有 WezTerm 式的
+绝对定位 fallback，也没有浮窗预览。
+
 ## 状态归属
 
 - `placement` 是 placement identity 的唯一 writer，并向 `image` 注册已分配的 ID。
@@ -30,6 +33,19 @@ state / terminal → env
 - 图片 buffer 每次被读取（`:edit`，或 `checktime` 在文件改动后的重新加载）都先关闭已有 placements，再建新的。
 - `doc` 为每个 buffer 只保留一个 `inline`。buffer 卸载（`:edit`、`:bdelete`）时 `inline` 随之 dispose，
   下次 FileType 时重新创建；`checktime` 的重新加载保留它，读入新文本后重建全部 placements。
+- `doc` 不论 `dressing_image` 开关如何都会 attach；`inline` 跟随开关：关闭时移除全部图片与公式，打开时重新绘制。
+  公式只在 markdown 中渲染，并另随 render-markdown 的开关。
+- 退出时（`VimLeavePre`，而不是会被未保存修改取消的 `ExitPre`）关闭全部 placements。
+- 在 tmux 中，pane 换到另一个 client（从别的终端 attach）后，terminal 中没有此前发送的图片：`image` 把它们标记为
+  未发送，`placement` 全部重画，当前 tab 立即重画，其余在窗口显示时重画。client 以进程与创建时间区分，tty 会被新终端
+  复用，不能作为标识。
+
+## 标识与解析
+
+- image id 是 24 位随机数（由 placeholder 的前景色承载），本实例内不重复；同一 terminal 中的多个 Neovim
+  实例不再按计数器成片撞号，只剩偶然碰撞的可能。image 释放后其 id 可再用。
+- 相对路径先在文档所在目录查找，再找工作目录，以及两者下的 `img_dirs`；link destination 的转义（如 `%20`）先解码，
+  `#page=N` 保留。找不到时按文档所在目录命名，文件出现后由版本检查发现。URL 与 data URI 不当作文件，原样传递。
 
 ## 版本与缓存
 

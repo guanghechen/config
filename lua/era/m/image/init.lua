@@ -82,7 +82,8 @@ function M.dressing()
       end)
     end,
   })
-  vim.api.nvim_create_autocmd({ "ExitPre" }, {
+  -- Not ExitPre: it also fires for a quit that unsaved changes then cancel, which would leave the images closed.
+  vim.api.nvim_create_autocmd({ "VimLeavePre" }, {
     group = group,
     once = true,
     callback = function()
@@ -128,6 +129,37 @@ function M.dressing()
       vim.api.nvim_set_option_value("modified", false, { buf = e.buf })
     end,
   })
+
+  if stl.env.IS_TMUX then
+    -- A tmux client attached from another terminal starts without the images this Neovim sent: once the pane is in
+    -- use again under a different client, send them anew. A client is told apart by its process and creation time;
+    -- its tty is no identity, as a new terminal often gets the pty number a closed one freed.
+    local client = nil ---@type string|nil
+    local function check_client()
+      local command = { "tmux", "display-message", "-p", "-t", vim.env.TMUX_PANE, "#{client_pid}:#{client_created}" }
+      vim.system(command, { text = true, timeout = 1000 }, function(result)
+        local id = vim.trim(result.stdout or "") ---@type string
+        -- Without a client the format reads ":" (nothing to resend for).
+        if result.code ~= 0 or id == "" or id == ":" or id == client then
+          return
+        end
+        local changed = client ~= nil
+        client = id
+        if changed then
+          vim.schedule(function()
+            local Image = package.loaded["era.m.image.image"]
+            local Placement = package.loaded["era.m.image.placement"]
+            if Image ~= nil and Placement ~= nil then
+              Image.resend()
+              Placement.redraw()
+            end
+          end)
+        end
+      end)
+    end
+    vim.api.nvim_create_autocmd({ "FocusGained", "VimResume" }, { group = group, callback = check_client })
+    check_client()
+  end
 
   -- This setup is deferred past startup, which has already read the files it was given as text, so an
   -- unchanged image buffer among them is read again through the viewer.

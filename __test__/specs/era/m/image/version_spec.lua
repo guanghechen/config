@@ -21,7 +21,6 @@ bootstrap.with_runtime(t, {
       IS_GHOSTTY = false,
       IS_KITTY = false,
       IS_TMUX = false,
-      IS_WEZTERM = false,
       IS_WIN = false,
       mkdirs = function(path)
         vim.fn.mkdir(path, "p")
@@ -54,7 +53,6 @@ t:patch_table(package.loaded, "era.m.image.terminal", {
 
 local state = require("era.m.image.state")
 t:patch_table(state.data, "tmpdir", t:tempdir())
-t:patch_table(state.env, "placeholders", true)
 
 ---@param n                             integer
 ---@return string
@@ -213,6 +211,60 @@ t:test("a viewer follows its rewritten source and stays unmodified", function()
 
   t.assert_false(vim.api.nvim_get_option_value("modified", { buf = bufnr }), "viewer unmodified")
   t.assert_true(has_placeholder(bufnr, Placement.ns), "rendered")
+end)
+
+t:test("image ids are random, unique and fit a 24-bit color", function()
+  local Image = require("era.m.image.image")
+  local dir = t:tempdir() ---@type string
+  local ids = {} ---@type table<integer, boolean>
+  local consecutive = 0 ---@type integer
+  local previous = nil ---@type integer|nil
+  for i = 1, 50 do
+    local file = ("%s/id%d.png"):format(dir, i) ---@type string
+    write_png(file, 4, 2)
+    local id = Image.new(file).id
+    t.assert_true(id > 0 and id <= 0xFFFFFF, "24-bit id")
+    t.assert_nil(ids[id], "unique id")
+    ids[id] = true
+    consecutive = consecutive + ((previous and id == previous + 1) and 1 or 0)
+    previous = id
+  end
+  t.assert_true(consecutive < 5, "ids do not count up")
+end)
+
+t:test("a placement leaves by its own id and the image is sent again after a resend", function()
+  local Image = require("era.m.image.image")
+  local file = t:tempdir() .. "/f.png" ---@type string
+  write_png(file, 4, 2)
+  local img = Image.new(file)
+  t.wait_until(function()
+    return img.sent == true
+  end, 5000, "image sent")
+  img:place({ id = 911, update = function() end })
+  img:place({ id = 912, update = function() end })
+
+  img:del(911)
+  t.assert_true(
+    vim.tbl_contains(requests, function(request)
+      return vim.deep_equal(request, { a = "d", d = "i", i = img.id, p = 911 })
+    end, { predicate = true }),
+    "placement deleted by its id"
+  )
+
+  Image.resend()
+  t.assert_false(img.sent, "sent again on the next placement")
+  local before = #requests ---@type integer
+  img:place({ id = 913, update = function() end })
+  local transmitted = vim.tbl_filter(function(request)
+    return request.t == "f" and request.i == img.id
+  end, vim.list_slice(requests, before + 1))
+  t.assert_eq(1, #transmitted, "image transmitted again")
+end)
+
+t:test("an extension in capitals is supported", function()
+  t.assert_true(state.is_support_file("/photos/IMG_0001.HEIC"), "HEIC")
+  t.assert_true(state.is_support_file("/shots/SHOT.PNG"), "PNG")
+  t.assert_false(state.is_support_file("/notes/README.MD"), "markdown")
 end)
 
 t:test("the pixel size of a PNG rewritten in place is read again", function()

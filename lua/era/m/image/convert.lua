@@ -370,9 +370,9 @@ function Convert.new(opts)
   -- Outputs are reused only after a whole pipeline wrote them; an interrupted run leaves files but no marker.
   self.marker = self:tmpfile("done")
   self._cached = uv.fs_stat(self.marker) ~= nil
-  -- kind is inferred only from module-generated template extensions (.math.tex / .math.typ),
+  -- kind is inferred only from the module-generated template extension (.math.tex),
   -- never from a user's direct file, so e.g. a direct `paper.math.pdf` is not treated as math.
-  self.meta = { src = src, kind = src:match("%.(%w+)%.tex$") or src:match("%.(%w+)%.typ$") }
+  self.meta = { src = src, kind = src:match("%.(%w+)%.tex$") }
   self.steps = {}
   local terminal = require("era.m.image.terminal")
   self._tpl_data = {

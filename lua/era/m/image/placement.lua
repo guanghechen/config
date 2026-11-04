@@ -69,8 +69,32 @@ local next_placement_id = 10
 ---@type boolean
 local watching_windows = false
 
----Viewers follow the size of the windows showing them. One listener serves them all and visits only the buffers the
----current tab shows, so a window event costs the same however many images were opened.
+---Placements to draw again once a window shows them (see `redraw`).
+---@type table<era.m.image.Placement, boolean>
+local stale = setmetatable({}, { __mode = "k" })
+
+---Updates the placements of the buffers the current tab shows that follow window sizes (viewers) or wait to be drawn
+---again (see `redraw`).
+---@return nil
+local function update_shown()
+  local seen = {} ---@type table<integer, boolean>
+  for _, winnr in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+    if not seen[bufnr] then
+      seen[bufnr] = true
+      for _, placement in pairs(placements[bufnr] or {}) do
+        if placement.opts.auto_resize or stale[placement] then
+          vim.schedule(function()
+            placement:update()
+          end)
+        end
+      end
+    end
+  end
+end
+
+---One listener serves every placement and visits only the buffers the current tab shows, so a window event costs the
+---same however many images were opened.
 ---@return nil
 local function watch_windows()
   if watching_windows then
@@ -80,20 +104,7 @@ local function watch_windows()
   vim.api.nvim_create_autocmd({ "WinClosed", "WinNew", "WinEnter", "WinResized" }, {
     group = vim.api.nvim_create_augroup(__module_name__ .. ".windows", { clear = true }),
     callback = function()
-      local seen = {} ---@type table<integer, boolean>
-      for _, winnr in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-        local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-        if not seen[bufnr] then
-          seen[bufnr] = true
-          for _, placement in pairs(placements[bufnr] or {}) do
-            if placement.opts.auto_resize then
-              vim.schedule(function()
-                placement:update()
-              end)
-            end
-          end
-        end
-      end
+      update_shown()
     end,
   })
 end
@@ -111,6 +122,19 @@ function M.clean(bufnr, id)
       end
     end
   end
+end
+
+---Draws every placement again, as the terminal may have lost the images: the ones this tab shows at once, the others
+---when a window shows them.
+---@return nil
+function M.redraw()
+  for _, buffer_placements in pairs(placements) do
+    for _, placement in pairs(buffer_placements) do
+      placement._state = nil
+      stale[placement] = true
+    end
+  end
+  update_shown()
 end
 
 ---@param bufnr                          integer
@@ -143,8 +167,8 @@ function M.new(bufnr, src, opts)
         end)
       end,
     })
-    watch_windows()
   end
+  watch_windows()
   placements[self.bufnr] = placements[self.bufnr] or {}
   placements[self.bufnr][self.id] = self
 
@@ -401,58 +425,17 @@ function M:render_grid(loc)
   end
 end
 
----@param state                          era.m.image.State
----@return nil
-function M:render_fallback(state)
-  local terminal = require("era.m.image.terminal")
-  if not self.opts.inline then
-    vim.api.nvim_buf_clear_namespace(self.bufnr, ns, 0, -1)
-  end
-  for _, winnr in ipairs(state.wins) do
-    local win_config = vim.api.nvim_win_get_config(winnr)
-    local border_top = 0
-    local border_left = 0
-    if win_config.border then
-      border_top = 1
-      border_left = 1
-    end
-    local pos = vim.api.nvim_win_get_position(winnr)
-    if (vim.o.showtabline == 2) or (vim.o.showtabline == 1 and vim.fn.tabpagenr("$") > 1) then
-      terminal.set_cursor({ pos[1] + border_top, pos[2] + border_left })
-    else
-      terminal.set_cursor({ pos[1] + 1 + border_top, pos[2] + border_left })
-    end
-    terminal.request({
-      a = "p",
-      i = self.img.id,
-      p = self.id,
-      C = 1,
-      c = state.loc.width,
-      r = state.loc.height,
-    })
-  end
-end
-
 ---@return era.m.image.State
 function M:state()
   local state = require("era.m.image.state")
-  local winnr_current = vim.api.nvim_get_current_win() ---@type integer
   local width, height = vim.o.columns, vim.o.lines
-  local wins = {} ---@type integer[]
-  local is_fallback = not state.env.placeholders
-  local zindex = vim.api.nvim_win_get_config(winnr_current).zindex or 0
+  local wins = self:wins()
 
-  for _, winnr in ipairs(self:wins()) do
-    width = math.min(width, vim.api.nvim_win_get_width(winnr))
-    height = math.min(height, vim.api.nvim_win_get_height(winnr))
-    if is_fallback then
-      local z = vim.api.nvim_win_get_config(winnr).zindex or 0
-      if z >= zindex or (zindex > 0 and z > 0) then
-        wins[#wins + 1] = winnr
-      end
-    else
-      wins[#wins + 1] = winnr
-    end
+  for _, winnr in ipairs(wins) do
+    local info = vim.fn.getwininfo(winnr)[1]
+    -- The image fits the text area, right of the line numbers and signs.
+    width = math.min(width, info.width - info.textoff)
+    height = math.min(height, info.height)
   end
 
   local function minmax(value, min, max)
@@ -540,20 +523,17 @@ function M:update()
     end
   end
 
-  if state.env.placeholders then
-    terminal.request({
-      a = "p",
-      U = 1,
-      i = self.img.id,
-      p = self.id,
-      C = 1,
-      c = cur_state.loc.width,
-      r = cur_state.loc.height,
-    })
-    self:render_grid(cur_state.loc)
-  else
-    self:render_fallback(cur_state)
-  end
+  terminal.request({
+    a = "p",
+    U = 1,
+    i = self.img.id,
+    p = self.id,
+    C = 1,
+    c = cur_state.loc.width,
+    r = cur_state.loc.height,
+  })
+  self:render_grid(cur_state.loc)
+  stale[self] = nil
 
   if not self.opts.inline then
     for _, winnr in ipairs(cur_state.wins) do

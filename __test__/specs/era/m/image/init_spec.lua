@@ -53,7 +53,7 @@ t:test("dressing attaches existing and future supported buffers", function()
       filetype_callback = opts.callback
     elseif events[1] == "BufWipeout" then
       cleanup_buffer = opts.callback
-    elseif events[1] == "ExitPre" then
+    elseif events[1] == "VimLeavePre" then
       cleanup_exit = opts.callback
     end
     return 1

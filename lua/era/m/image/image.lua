@@ -12,14 +12,11 @@
 local M = {}
 M.__index = M
 
-local NVIM_ID_BITS = 10
 local MAX_FSIZE = 200 * 1024 * 1024
 
----@type integer
-local _id = 30
-
----@type integer
-local nvim_id = 0
+---Ids in use, so that a random one is never handed out twice.
+---@type table<integer, boolean>
+local ids = {}
 
 ---The current version of each source, by source id.
 ---@type table<string, era.m.image.Image>
@@ -27,6 +24,20 @@ local images = {}
 
 ---@type {img: era.m.image.Image, used: integer}[]
 local lru = {}
+
+---A random id small enough for the 24-bit color that carries it to the terminal. All programs a terminal shows, every
+---tmux pane included, share one image store, so ids counted per Neovim instance collide across instances.
+---@return integer
+local function new_id()
+  while true do
+    local high, middle, low = assert(vim.uv.random(3)):byte(1, 3)
+    local id = high * 65536 + middle * 256 + low
+    if id ~= 0 and not ids[id] then
+      ids[id] = true
+      return id
+    end
+  end
+end
 
 ---@type integer
 local lru_fsize = 0
@@ -70,13 +81,7 @@ function M.new(src)
   self.placements = {}
   self.file = self:__convert__()
   images[source.id] = self
-  _id = _id + 1
-  local bit = require("bit")
-  if nvim_id == 0 then
-    local pid = vim.fn.getpid()
-    nvim_id = bit.band(bit.bxor(pid, bit.rshift(pid, 5), bit.rshift(pid, NVIM_ID_BITS)), 0x3FF)
-  end
-  self.id = bit.bor(bit.lshift(nvim_id, 24 - NVIM_ID_BITS), _id)
+  self.id = new_id()
   if current then
     current:__retire__()
   end
@@ -96,6 +101,20 @@ function M:latest()
     return self
   end
   return M.new(self.src)
+end
+
+---The terminal lost the images it held, e.g. a tmux client attached from another terminal: each image is sent again
+---the next time a placement shows it.
+---@return nil
+function M.resend()
+  for _, entry in ipairs(lru) do
+    entry.img.sent = false
+  end
+  for _, img in pairs(images) do
+    img.sent = false
+  end
+  lru = {}
+  lru_fsize = 0
 end
 
 ---@return boolean
@@ -142,10 +161,10 @@ end
 ---@return nil
 function M:del(pid)
   local terminal = require("era.m.image.terminal")
-  for id, p in ipairs(pid and { pid } or vim.tbl_keys(self.placements)) do
-    if self.placements[p] then
+  for _, id in ipairs(pid and { pid } or vim.tbl_keys(self.placements)) do
+    if self.placements[id] then
       terminal.request({ a = "d", d = "i", i = self.id, p = id })
-      self.placements[p] = nil
+      self.placements[id] = nil
     end
   end
 
@@ -249,6 +268,7 @@ function M:__free__()
     self.sent = false
     require("era.m.image.terminal").request({ a = "d", d = "I", i = self.id })
   end
+  ids[self.id] = nil
   if self.convert then
     self.convert:discard()
   end

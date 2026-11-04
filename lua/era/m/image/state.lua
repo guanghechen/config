@@ -21,8 +21,6 @@ local data = {
   },
   doc = {
     enabled = true,
-    inline = true,
-    float = true,
     max_width = 80,
     max_height = 40,
     ---@param lang                      string
@@ -70,14 +68,6 @@ local data = {
           \color[HTML]{${color}}
         ${content}}
         \end{document}]],
-    },
-    typst = {
-      tpl = [[
-        #set page(width: auto, height: auto, margin: (x: 2pt, y: 2pt))
-        #show math.equation.where(block: false): set text(top-edge: "bounds", bottom-edge: "bounds")
-        #set text(size: 12pt, fill: rgb("${color}"))
-        ${header}
-        ${content}]],
     },
   },
 }
@@ -250,7 +240,8 @@ end
 ---@param filename                       string
 ---@return boolean
 function M.is_support_file(filename)
-  local extname = yoz.path.extname(filename) ---@type string
+  -- macOS matches the BufReadCmd patterns regardless of case, so `IMG_0001.HEIC` reaches here too.
+  local extname = yoz.path.extname(filename):lower() ---@type string
   return SUPPORTED_EXTNAME_SET[extname] == true
 end
 

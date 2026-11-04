@@ -21,7 +21,6 @@ bootstrap.with_runtime(t, {
       IS_GHOSTTY = false,
       IS_KITTY = false,
       IS_TMUX = false,
-      IS_WEZTERM = false,
       IS_WIN = false,
       mkdirs = function(path)
         vim.fn.mkdir(path, "p")

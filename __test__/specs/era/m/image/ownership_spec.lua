@@ -17,7 +17,6 @@ bootstrap.with_runtime(t, {
       IS_GHOSTTY = false,
       IS_KITTY = false,
       IS_TMUX = false,
-      IS_WEZTERM = false,
     },
     table = require("stl.table"),
     timer = require("stl.timer"),
@@ -158,15 +157,6 @@ t:test("document injects its query contract into inline rendering", function()
       vim.api.nvim_buf_delete(bufnr, { force = true })
     end
   end)
-  t:patch_table(dot.context.flight, "dressing_image", {
-    snapshot = function()
-      return true
-    end,
-  })
-  t:patch_table(package.loaded, "era.m.image.state", {
-    data = { doc = { inline = true, float = true } },
-    env = { placeholders = true },
-  })
   t:patch_table(package.loaded, "era.m.image.inline", {
     new = function(_, document)
       provider = document
@@ -181,15 +171,6 @@ end)
 
 t:test("a document keeps one inline renderer until it is disposed", function()
   local created = {} ---@type table[]
-  t:patch_table(dot.context.flight, "dressing_image", {
-    snapshot = function()
-      return true
-    end,
-  })
-  t:patch_table(package.loaded, "era.m.image.state", {
-    data = { doc = { inline = true, float = true } },
-    env = { placeholders = true },
-  })
   t:patch_table(package.loaded, "era.m.image.inline", {
     new = function(bufnr)
       created[#created + 1] = { bufnr = bufnr }

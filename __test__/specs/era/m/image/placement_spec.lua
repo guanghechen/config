@@ -5,7 +5,16 @@ local t = harness.new()
 
 bootstrap.with_runtime(t, {
   dot = {
-    context = { flight = {}, plugin = {} },
+    context = {
+      flight = {
+        dressing_image = {
+          snapshot = function()
+            return true
+          end,
+        },
+      },
+      plugin = {},
+    },
     var = { N_IMAGE_CONCEAL = "image_placement_conceal" },
   },
   stl = {
@@ -65,7 +74,6 @@ local function load_placement(image)
         end,
       },
     },
-    env = { placeholders = true },
     fit = function()
       return { width = 3, height = 2 }
     end,
@@ -306,6 +314,56 @@ t:test("a document reloaded from disk keeps following its edits", function()
   t.wait_until(function()
     return vim.deep_equal({ "a", "b", "c" }, shown())
   end, 2000, "edit after the reload")
+end)
+
+t:test("turning dressing_image off removes every image until it is on again", function()
+  local shown = true ---@type boolean
+  t:patch_table(dot.context.flight, "dressing_image", {
+    snapshot = function()
+      return shown
+    end,
+  })
+  local images = {} ---@type table<string, table>
+  load_placement(function(src)
+    images[src] = images[src] or vim.tbl_extend("force", fake_image({ ready = false, failed = true }), { src = src })
+    return images[src]
+  end)
+  local Inline = assert(loadfile("lua/era/m/image/inline.lua"))()
+  local _, bufnr = edited_file({ "img:a", "img:b" })
+  local inline = Inline.new(bufnr, line_document)
+  t:defer(function()
+    inline:dispose()
+  end)
+  inline:update()
+  t.assert_eq(2, vim.tbl_count(inline.imgs), "images shown")
+
+  shown = false
+  inline:sync()
+  t.assert_eq(0, vim.tbl_count(inline.imgs), "images removed")
+  inline:update()
+  t.assert_eq(0, vim.tbl_count(inline.imgs), "nothing drawn while off")
+
+  shown = true
+  inline:sync()
+  t.assert_eq(2, vim.tbl_count(inline.imgs), "images back")
+end)
+
+t:test("an image is no wider than the text area of its windows", function()
+  local image = fake_image({ ready = true })
+  local Placement = load_placement(image)
+  t:patch_table(package.loaded["era.m.image.state"], "fit", function(_, cells)
+    return cells
+  end)
+  local bufnr = shown_buf()
+  vim.api.nvim_set_option_value("number", true, { win = 0, scope = "local" })
+  local placement = Placement.new(bufnr, image.src, { inline = true, max_width = 1000 })
+  t:defer(function()
+    placement:close()
+  end)
+
+  local info = vim.fn.getwininfo(vim.api.nvim_get_current_win())[1]
+  t.assert_true(info.textoff > 0, "line numbers take columns")
+  t.assert_eq(info.width - info.textoff, Placement.state(placement).loc.width, "image width")
 end)
 
 t:test("unloading a document disposes its renderer", function()
