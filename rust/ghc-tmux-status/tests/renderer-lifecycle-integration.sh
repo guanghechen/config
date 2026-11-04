@@ -309,6 +309,23 @@ case "$loader_state" in
   *) echo "loader did not converge and activate status02: $loader_state" >&2; exit 1 ;;
 esac
 
+# A status02 reload keeps a two-row session at `status 2`: undoing and restoring it
+# resizes every pane twice. Only a status01 target undoes the narrow layout.
+tmux -L "$socket" set -t lifecycle status 2
+env HOME="$loader_home" TMUX="$server_env" bash "$loader_root/script/load-theme.sh"
+if [ "$(tmux -L "$socket" show -qv -t lifecycle status)" != 2 ]; then
+  echo "status02 reload undid a two-row session layout" >&2
+  exit 1
+fi
+tmux -L "$socket" set -g @GHC_SL_MODE 01
+env HOME="$loader_home" TMUX="$server_env" bash "$loader_root/script/load-theme.sh"
+if [ "$(tmux -L "$socket" show -qv -t lifecycle status)" != on ]; then
+  echo "status01 reload kept a two-row session layout" >&2
+  exit 1
+fi
+tmux -L "$socket" set -g @GHC_SL_MODE 02
+env HOME="$loader_home" TMUX="$server_env" bash "$loader_root/script/load-theme.sh"
+
 # A non-empty standard render folds its guarded status refresh into the final
 # commit queue, avoiding a third tmux process.
 mkdir -p "$tmp/folded-refresh/bin"

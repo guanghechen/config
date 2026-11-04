@@ -101,11 +101,14 @@ function _ghc_tmux_unset_status_layout_hooks_ {
 # The renderer writes both render cache and LAYOUT (rows / status-format / lengths /
 # @GHC_SL_LAYOUT) per session. Switching modes (or any reload) must clear those
 # overrides on EVERY session, else stale cache shadows the next global fallback and
-# a session left at `status 2` keeps two rows under status01. We only undo the
-# renderer's two-row narrow (`status 2` -> `on`); on/off ownership is left untouched,
-# so popup/agent sessions stay `off` without name-class knowledge here. All resets
-# are folded into one tmux invocation; `-q` tolerates a session vanishing mid-reload.
+# a session left at `status 2` keeps two rows under status01. Only a non-status02
+# target undoes the renderer's two-row narrow (`status 2` -> `on`): a status02
+# reload keeps it, because undoing resizes every pane twice before the bootstrap
+# reconciles rows. On/off ownership is left untouched, so popup/agent sessions stay
+# `off` without name-class knowledge here. All resets are folded into one tmux
+# invocation; `-q` tolerates a session vanishing mid-reload.
 function _ghc_tmux_reset_per_session_layout_ {
+  local target_renderer=$1
   local -a args=()
   local session_id session_status
   while IFS=$'\t' read -r session_id session_status; do
@@ -121,7 +124,7 @@ function _ghc_tmux_reset_per_session_layout_ {
            set -q -t "$session_id" -u 'status-format' ';' \
            set -q -t "$session_id" -u 'status-left-length' ';' \
            set -q -t "$session_id" -u 'status-right-length')
-    if [ "$session_status" = "2" ]; then
+    if [ "$session_status" = "2" ] && [ "$target_renderer" != "status02" ]; then
       args+=(';' set -q -t "$session_id" status on)
     fi
   done < <(tmux list-sessions -F '#{session_id}'$'\t''#{status}' 2>/dev/null)
@@ -200,7 +203,7 @@ function _ghc_tmux_status02_fallback_ {
 
   _ghc_tmux_unset_status_layout_hooks_
   _ghc_tmux_fence_scheduler_ >/dev/null 2>&1 || true
-  _ghc_tmux_reset_per_session_layout_
+  _ghc_tmux_reset_per_session_layout_ status01
   _ghc_tmux_load_status01_ "$status_position"
   tmux display-message "$message" 2>/dev/null || true
 }
@@ -248,20 +251,25 @@ function _ghc_tmux_load_theme_ {
   fi
   _ghc_tmux_recover_status_scheduler_lock_
 
+  local status_renderer="" status_driver="" target_renderer="status01"
+  if [ "$status_mode" = "02" ] || [ "$status_mode" = "12" ]; then
+    status_renderer=$(_ghc_tmux_status_renderer_bin_)
+    status_driver=$(_ghc_tmux_status_driver_bin_)
+    if [ -n "$status_renderer" ] && [ -n "$status_driver" ]; then
+      target_renderer="status02"
+    fi
+  fi
+
   # Lifecycle is fenced before the first renderer-owned reset, so an in-flight
   # hook cannot publish stale status02 options over the selected mode.
   tmux set -gu status-format ';' set -gu @GHC_SL_LAYOUT 2>/dev/null || true
-  _ghc_tmux_reset_per_session_layout_
+  _ghc_tmux_reset_per_session_layout_ "$target_renderer"
 
   case "$status_mode" in
     "01" | "11")
       _ghc_tmux_load_status01_ "$status_position"
       ;;
     "02" | "12")
-      local status_renderer
-      status_renderer=$(_ghc_tmux_status_renderer_bin_)
-      local status_driver
-      status_driver=$(_ghc_tmux_status_driver_bin_)
       # Global single-row baseline; the renderer overrides per session (on/2). Any
       # session without a per-session override falls back to one row, never two.
       tmux set -g status-justify centre ';' \

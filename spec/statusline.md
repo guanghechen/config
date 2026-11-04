@@ -132,7 +132,9 @@ unknown -> 01
 1. 归一化 mode。
 2. 将 scheduler 置为 inactive 并 rotate generation。
 3. invalidate render revision。
-4. 清理所有 session 的 renderer-owned layout/cache overrides。
+4. 清理所有 session 的 renderer-owned layout/cache overrides；仅当目标不是 `status02`
+   时才把 two-row session 的 `status 2` 撤销为 `on`，`status02` reload 保留它，避免
+   pane 高度往返变化，由 bootstrap reconcile rows。
 5. 加载 `status01`，或使用显式 generation bootstrap `status02`。
 6. 注册 lifecycle hooks。
 7. 通过 generation CAS 激活 scheduler。
