@@ -164,7 +164,8 @@ function M.new()
       end
       for _, scope in ipairs(scopes) do
         if self.panes[scope].result:isfocused() then
-          self._active, self._last_left = scope, scope
+          self._last_left = scope
+          self:_set_active(scope)
           self:_update_preview()
           break
         end
@@ -243,9 +244,55 @@ function M:focus(scope)
     self.input:focus()
   else
     ---@cast scope era.view.git_files.Scope
-    self._active = scope
+    self:_set_active(scope)
     self.panes[scope].result:focus()
   end
+  self:_update_preview()
+end
+
+---@param scope                         era.view.git_files.Scope
+---@return nil
+function M:_set_active(scope)
+  if self._active == scope then
+    return
+  end
+  self._active = scope
+  for _, side in ipairs(scopes) do
+    self:_header(self.panes[side])
+  end
+end
+
+---The tree the inputbox drives: `preferred` unless only the other tree has visible rows.
+---@param preferred                     ?era.view.git_files.Scope Defaults to the most recently used tree.
+---@return era.view.git_files.Scope
+function M:target(preferred)
+  preferred = preferred or self._active
+  local other = preferred == "staged" and "unstaged" or "staged"
+  if self.panes[preferred].tree:linecount() == 0 and self.panes[other].tree:linecount() > 0 then
+    return other
+  end
+  return preferred
+end
+
+---Move the inputbox's target tree like its own motions while focus stays in the inputbox; rows do not wrap.
+---@param motion                        "down"|"up"|"first"|"last"
+---@param count                         integer `v:count`; zero applies the motion's default.
+---@return nil
+function M:move(motion, count)
+  local pane = self.panes[self:target()]
+  local winnr, total = pane.result:get_winnr(), pane.tree:linecount()
+  if not winnr or not vim.api.nvim_win_is_valid(winnr) or total == 0 then
+    return
+  end
+  self:_set_active(pane.scope)
+  local lnum = vim.api.nvim_win_get_cursor(winnr)[1]
+  if motion == "down" or motion == "up" then
+    lnum = lnum + (motion == "down" and 1 or -1) * math.max(count, 1)
+  else
+    lnum = count > 0 and count or motion == "first" and 1 or total
+  end
+  pane.result:set_lnum_current(math.max(1, math.min(total, lnum)))
+  -- on_drawed follows cursor frames, but a target switch that keeps the cursor publishes none.
   self:_update_preview()
 end
 
@@ -459,8 +506,8 @@ function M:refresh(focus)
     end
     self._failed = false
     if request.focus then
+      self:_set_active(self:target("staged"))
       self:_show()
-      self._active = self.panes.staged.tree.totals.count > 0 and "staged" or "unstaged"
       self:focus("input")
     end
     self:_update_preview(true)
@@ -557,7 +604,12 @@ function M:_header(pane)
     return
   end
   local name = pane.scope == "staged" and "Staged" or "Unstaged"
-  local title = { { " " .. name, pane.scope == "staged" and "m_ft_git_staged" or "m_ft_git_unstaged" } }
+  local highlight = pane.scope == "staged" and "m_ft_git_staged" or "m_ft_git_unstaged"
+  -- The marker names the most recently used tree; the other keeps the border line so names stay in place.
+  local title = {
+    self._active == pane.scope and { stl.icon.ui.ArrowPresent, highlight } or { "─", "FloatBorder" },
+    { " " .. name, highlight },
+  }
   local status = self._writing and "Updating index…"
     or self._request and "Refreshing…"
     or self._failed and "Refresh failed"

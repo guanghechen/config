@@ -361,9 +361,9 @@ function M.input(widget)
     {
       modes = { "i", "n" },
       key = "<CR>",
-      desc = "Git Files: focus current tree",
+      desc = "Git Files: focus target tree",
       callback = function()
-        widget:focus(widget._active)
+        widget:focus(widget:target())
       end,
     },
     {
@@ -380,6 +380,56 @@ function M.input(widget)
       desc = "Git Files: focus Unstaged",
       callback = function()
         widget:focus("unstaged")
+      end,
+    },
+    {
+      modes = { "n" },
+      key = "j",
+      desc = "Git Files: target tree next row",
+      callback = function()
+        widget:move("down", vim.v.count)
+      end,
+    },
+    {
+      modes = { "i", "n" },
+      key = "<Down>",
+      aliases = { "<C-j>" },
+      desc = "Git Files: target tree next row",
+      callback = function()
+        widget:move("down", vim.v.count)
+      end,
+    },
+    {
+      modes = { "n" },
+      key = "k",
+      desc = "Git Files: target tree previous row",
+      callback = function()
+        widget:move("up", vim.v.count)
+      end,
+    },
+    {
+      modes = { "i", "n" },
+      key = "<Up>",
+      aliases = { "<C-k>" },
+      desc = "Git Files: target tree previous row",
+      callback = function()
+        widget:move("up", vim.v.count)
+      end,
+    },
+    {
+      modes = { "n" },
+      key = "gg",
+      desc = "Git Files: target tree first row",
+      callback = function()
+        widget:move("first", vim.v.count)
+      end,
+    },
+    {
+      modes = { "n" },
+      key = "G",
+      desc = "Git Files: target tree last row",
+      callback = function()
+        widget:move("last", vim.v.count)
       end,
     },
     {

@@ -13,9 +13,10 @@ Status: Design。入口代码位于 `lua/era/m/git_files/`，树视图为 `era.v
   当前子目录、光标与滚动位置。空组仍保留窗口和零文件数标题。
 - 四个 pane 组成一个连续圆角外框，共用单线分隔，不显示 footer。下方 pane 的顶边承担左栏的横向分隔，
   左栏的右边承担 preview 的竖向分隔；只有整个浮窗的四个外角使用圆角。Preview 收起或恢复时同步更新边框连接。
-- 两棵树不显示 winbar。顶边左侧依次放名称、刷新 / index 操作状态（`Refreshing…`、`Updating index…`、
+- 两棵树不显示 winbar。顶边左侧依次放标记位、名称、刷新 / index 操作状态（`Refreshing…`、`Updating index…`、
   `Refresh failed`）、文件数、新增 / 删除汇总与 unknown 文件数；右侧放当前行 / 可见总行数，空树显示 `0 / 0`。
-  光标、过滤、折叠与缩放后同步更新。窄窗口优先保留位置计数，左侧文字按剩余宽度截断。
+  标记位以 `stl.icon.ui.ArrowPresent` 标出最近使用的树（inputbox 的首选目标，见[输入与过滤](#输入与过滤)），另一棵在该位置
+  保留边框线，名称位置不变。光标、过滤、折叠、缩放与最近使用的树切换后同步更新。窄窗口优先保留位置计数，左侧文字按剩余宽度截断。
 
 ## 数据与刷新
 
@@ -41,7 +42,12 @@ Status: Design。入口代码位于 `lua/era/m/git_files/`，树视图为 `era.v
 - Inputbox 的内容实时作为 [fzf 语法](yoz/fuzzy.md#查询语法)、smart-case 的路径 query 同时过滤两棵树；
   输入中的 CR / LF 归一化为空格。
   隐藏后重开保留 query。过滤后的树保留连接祖先。
-- `/` 聚焦输入并进入 Insert；inputbox 中 `<CR>` 返回最近使用的树，`<Tab>` / `<S-Tab>` 分别进入 Staged / Unstaged。
+- 打开后焦点在 inputbox（Normal）。Inputbox 驱动一棵目标树，在打开时以及 inputbox 的移动键与 `<CR>` 触发时解析：
+  首选树有可见行时取首选树，否则取另一棵有可见行的树，两棵都没有可见行时保持首选树。打开时首选 Staged，之后首选
+  最近使用的树；解析出的目标树成为最近使用的树，preview 随之切换。
+- Inputbox 中 `j` / `k`（Normal）以及 `<Down>` / `<Up>`、`<C-j>` / `<C-k>`（Insert / Normal）按 count 逐行移动目标树的光标，
+  `gg` / `G`（Normal）移到首行 / 末行，有 count 时移到该行。移动停在边界、不循环；焦点与 mode 不变，位置计数与 preview 随之更新。
+- `/` 聚焦输入并进入 Insert；inputbox 中 `<CR>` 进入目标树，`<Tab>` / `<S-Tab>` 分别进入 Staged / Unstaged。
 - `tf` 切换目录压缩，默认开启。
 
 ## 键位

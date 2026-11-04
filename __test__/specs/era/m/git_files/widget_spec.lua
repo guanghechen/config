@@ -192,6 +192,29 @@ t:test("the single-line input survives reopening and closing it closes every pan
   t.assert_false(widget.preview.surface:isvisible())
 end)
 
+t:test("opening keeps the input focused and targets Staged unless only Unstaged has visible rows", function()
+  local state = fixture()
+  local widget = state.widget
+  t.assert_true(widget.input:isfocused())
+  t.assert_eq("staged", widget._active)
+  ---@param query                       string
+  ---@return nil
+  local function reopen(query)
+    widget:hide()
+    widget.input:set_content(query)
+    widget:toggle()
+    support.ready(widget)
+  end
+  reopen("second")
+  t.assert_true(widget.panes.staged.tree.totals.count > 0)
+  t.assert_eq(0, widget.panes.staged.tree:linecount(), "the retained query hides every staged file")
+  t.assert_true(widget.input:isfocused())
+  t.assert_eq("unstaged", widget._active)
+  reopen("zznotfound")
+  t.assert_eq("staged", widget._active, "Staged stays preferred when neither tree has visible rows")
+  t.assert_eq(0, #state.warnings, vim.inspect(state.warnings))
+end)
+
 t:test("expansion keys typed ahead act on the tree their earlier keys produce", function()
   local state = fixture()
   local widget = state.widget

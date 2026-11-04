@@ -456,4 +456,105 @@ t:test("Git count columns and status starts align across panes and remain fixed 
   t.assert_eq(0, #ui:lua("return errors"))
 end)
 
+t:test("the input drives its target tree in Normal and Insert modes while the border marks it", function()
+  local root = support.repo(t)
+  support.write(root, "dir/mixed.lua", { "one", "two", "three", "staged" })
+  support.write(root, "dir/second.lua", { "base", "staged" })
+  git.run(root, { "add", "dir" })
+  support.write(root, "outside.lua", { "base", "unstaged" })
+  local ui = surface(140, 42)
+  ui:lua(
+    [[
+    local root = ...
+    dot.path.workspace = function() return root end
+    dot.path.is_git_repo = function() return true end
+    widget = require("era.m.git_files").new()
+    widget:toggle()
+    support.ready(widget)
+    function probe()
+      local state = { focus = widget.input:isfocused() and "input" or nil, rows = {}, counts = {}, marks = {} }
+      for scope, pane in pairs(widget.panes) do
+        local winnr = pane.result:get_winnr()
+        state.focus = pane.result:isfocused() and scope or state.focus
+        state.rows[scope] = vim.api.nvim_win_get_cursor(winnr)[1]
+        state.counts[scope] = pane.tree:linecount()
+        state.marks[scope] = vim.api.nvim_win_get_config(winnr).title[1][1]
+      end
+      local entry = widget.preview._entry
+      state.active, state.mode, state.query = widget._active, vim.api.nvim_get_mode().mode, widget._query
+      state.preview = entry and entry.scope .. ":" .. entry.path or ""
+      return state
+    end
+  ]],
+    root
+  )
+  local marker = stl.icon.ui.ArrowPresent
+
+  ---@param keys                        string
+  ---@param expected                    table
+  ---@param message                     string
+  ---@return nil
+  local function expect(keys, expected, message)
+    if keys ~= "" then
+      ui:rpc("nvim_input", keys)
+    end
+    local actual
+    local ok = pcall(ui.wait_until, ui, function()
+      actual = ui:lua("return probe()")
+      for field, value in pairs(expected) do
+        if not vim.deep_equal(actual[field], value) then
+          return false
+        end
+      end
+      return true
+    end, 3000)
+    t.assert_true(ok, message .. "\n" .. vim.inspect(actual))
+  end
+
+  expect("", {
+    focus = "input",
+    mode = "n",
+    active = "staged",
+    counts = { staged = 3, unstaged = 1 },
+    rows = { staged = 1, unstaged = 1 },
+    marks = { staged = marker, unstaged = "─" },
+  }, "opening focuses the input and marks Staged as its target")
+  expect("j", {
+    focus = "input",
+    mode = "n",
+    rows = { staged = 2, unstaged = 1 },
+    preview = "staged:dir/mixed.lua",
+  }, "j moves the target tree and the preview follows")
+  expect(
+    "5j",
+    { rows = { staged = 3, unstaged = 1 }, preview = "staged:dir/second.lua" },
+    "counts stop at the last row"
+  )
+  expect("5k", { rows = { staged = 1, unstaged = 1 } }, "counts stop at the first row")
+  expect("G", { rows = { staged = 3, unstaged = 1 } }, "G moves to the last row")
+  expect("2gg", { rows = { staged = 2, unstaged = 1 } }, "gg with a count moves to that row")
+  expect("i<C-j>", { focus = "input", mode = "i", rows = { staged = 3, unstaged = 1 } }, "C-j moves in Insert mode")
+  expect("<Up>", { mode = "i", rows = { staged = 2, unstaged = 1 } }, "Up moves in Insert mode")
+  expect("<C-k>", { mode = "i", rows = { staged = 1, unstaged = 1 } }, "C-k moves in Insert mode")
+  expect("<Down>", { mode = "i", rows = { staged = 2, unstaged = 1 } }, "Down moves in Insert mode")
+  expect("jk", { mode = "i", query = "jk" }, "j and k still type in Insert mode")
+  expect("<C-u>outside", { query = "outside", counts = { staged = 0, unstaged = 1 } }, "only Unstaged keeps rows")
+  expect("<C-j>", {
+    focus = "input",
+    mode = "i",
+    active = "unstaged",
+    marks = { staged = "─", unstaged = marker },
+    preview = "unstaged:outside.lua",
+  }, "a target without visible rows falls back to the other tree")
+  expect("<Tab>", {
+    focus = "staged",
+    mode = "n",
+    active = "staged",
+    marks = { staged = marker, unstaged = "─" },
+  }, "entering a tree makes it the most recently used tree")
+  expect("<C-a>k", { focus = "input", mode = "n", active = "staged" }, "the input keeps the empty tree preferred")
+  expect("<CR>", { focus = "unstaged", active = "unstaged" }, "Enter resolves the target the same way")
+  t.assert_eq(0, #ui:lua("return errors"))
+end)
+
 t:run()
