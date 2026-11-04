@@ -66,6 +66,11 @@ setmetatable(positions, {
 ---@type integer
 local next_placement_id = 10
 
+---Ids of closed placements, handed out again: each id names a highlight group (see `render_grid`), and Neovim never
+---frees one and allows about 20000 in all.
+---@type integer[]
+local free_ids = {}
+
 ---@type boolean
 local watching_windows = false
 
@@ -147,8 +152,12 @@ function M.new(bufnr, src, opts)
   assert(type(src) == "string", "`Placement.new`: src should be a string")
   local self = setmetatable({}, M)
 
-  next_placement_id = next_placement_id + 1
-  self.id = next_placement_id
+  local id = table.remove(free_ids) ---@type integer|nil
+  if id == nil then
+    next_placement_id = next_placement_id + 1
+    id = next_placement_id
+  end
+  self.id = id
   self.img = Image.new(src)
   self.img:place(self)
   self.opts = opts or {}
@@ -250,6 +259,8 @@ function M:close()
   end
   self:del()
   pcall(vim.api.nvim_del_augroup_by_id, self.augroup)
+  -- Nothing draws through the id any more: a closed placement never updates (see `ready`).
+  free_ids[#free_ids + 1] = self.id
 end
 
 ---@return nil
@@ -316,7 +327,8 @@ function M:render_grid(loc)
   for _, line in ipairs(lines) do
     text_width = math.max(text_width, vim.api.nvim_strwidth(line))
   end
-  local offset = range[2]
+  -- A window column: the text before the image may hold wide characters or tabs.
+  local offset = vim.fn.strdisplaywidth(lines[1]:sub(1, range[2])) ---@type integer
   local has_after = lines[#lines]:sub(range[4] + 1):find("%S") ~= nil
   local has_before = lines[1]:sub(1, range[2]):find("%S") ~= nil
   local conceal = self.opts.conceal and "" or nil

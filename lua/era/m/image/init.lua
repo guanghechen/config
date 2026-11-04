@@ -33,6 +33,16 @@ local M = setmetatable({
   end,
 })
 
+---Sets the `allow-passthrough` of the pane itself; an empty value unsets it, so the pane follows its window again.
+---@param pane                          string
+---@param value                         string
+---@return vim.SystemCompleted
+local function set_passthrough(pane, value)
+  local command = value == "" and { "tmux", "set-option", "-p", "-u", "-t", pane, "allow-passthrough" }
+    or { "tmux", "set-option", "-p", "-t", pane, "allow-passthrough", value }
+  return vim.system(command, { text = true, timeout = 1000 }):wait()
+end
+
 ---@return nil
 function M.dressing()
   -- Graphics-protocol image/math preview is only enabled on macOS by choice.
@@ -49,6 +59,9 @@ function M.dressing()
     return
   end
 
+  -- The pane's own `allow-passthrough` (empty when it follows its window), given back whenever this Neovim stops
+  -- drawing: the shell then in the pane must not pass every escape sequence a program prints on to the terminal.
+  local passthrough = nil ---@type string|nil
   if stl.env.IS_TMUX then
     -- Popups have no owning pane to enable passthrough for.
     local pane = vim.env.TMUX_PANE
@@ -56,14 +69,23 @@ function M.dressing()
       return
     end
 
-    -- `on` can discard uploads during tmux redraws or while the pane is hidden.
-    local result = vim
-      .system({ "tmux", "set-option", "-p", "-t", pane, "allow-passthrough", "all" }, { text = true, timeout = 1000 })
+    local shown = vim
+      .system({ "tmux", "show-options", "-p", "-q", "-v", "-t", pane, "allow-passthrough" }, { text = true, timeout = 1000 })
       :wait()
+    -- `on` can discard uploads during tmux redraws or while the pane is hidden.
+    local result = shown.code == 0 and set_passthrough(pane, "all") or shown
     if result.code ~= 0 then
       local message = ("tmux exited with %d: %s"):format(result.code, result.stderr or "")
       stl.reporter.warn({ from = __module_name__, subject = "tmux image passthrough", message = message })
       return
+    end
+    passthrough = vim.trim(shown.stdout or "")
+  end
+
+  ---@return nil
+  local function give_back_passthrough()
+    if passthrough ~= nil then
+      set_passthrough(vim.env.TMUX_PANE, passthrough)
     end
   end
 
@@ -91,6 +113,8 @@ function M.dressing()
       if Placement ~= nil then
         Placement.clean()
       end
+      -- Only after the deletions above, which still pass through.
+      give_back_passthrough()
     end,
   })
   vim.api.nvim_create_autocmd("BufReadCmd", {
@@ -131,6 +155,14 @@ function M.dressing()
   })
 
   if stl.env.IS_TMUX then
+    vim.api.nvim_create_autocmd("VimSuspend", { group = group, callback = give_back_passthrough })
+    vim.api.nvim_create_autocmd("VimResume", {
+      group = group,
+      callback = function()
+        set_passthrough(vim.env.TMUX_PANE, "all")
+      end,
+    })
+
     -- A tmux client attached from another terminal starts without the images this Neovim sent: once the pane is in
     -- use again under a different client, send them anew. A client is told apart by its process and creation time;
     -- its tty is no identity, as a new terminal often gets the pty number a closed one freed.

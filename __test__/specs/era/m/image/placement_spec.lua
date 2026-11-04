@@ -348,6 +348,32 @@ t:test("turning dressing_image off removes every image until it is on again", fu
   t.assert_eq(2, vim.tbl_count(inline.imgs), "images back")
 end)
 
+t:test("an image shows its source only while the cursor is on its line", function()
+  load_placement(function(src)
+    return vim.tbl_extend("force", fake_image({ ready = true }), { src = src })
+  end)
+  t:patch_table(package.loaded["era.m.image.state"].data.doc, "conceal", function()
+    return true
+  end)
+  local Inline = assert(loadfile("lua/era/m/image/inline.lua"))()
+  local _, bufnr = edited_file({ "text", "img:a", "text" })
+  local inline = Inline.new(bufnr, line_document)
+  t:defer(function()
+    inline:dispose()
+  end)
+  inline:update()
+  local placement = assert(vim.tbl_values(inline.imgs)[1]) ---@type era.m.image.Placement
+  t.wait_until(function()
+    return #placement.eids > 0
+  end, 1000, "image drawn")
+
+  for row, hidden in ipairs({ false, true, false }) do
+    vim.api.nvim_win_set_cursor(0, { row, 0 })
+    inline:conceal()
+    t.assert_eq(hidden, placement.hidden == true, "cursor on line " .. row)
+  end
+end)
+
 t:test("an image is no wider than the text area of its windows", function()
   local image = fake_image({ ready = true })
   local Placement = load_placement(image)
@@ -364,6 +390,57 @@ t:test("an image is no wider than the text area of its windows", function()
   local info = vim.fn.getwininfo(vim.api.nvim_get_current_win())[1]
   t.assert_true(info.textoff > 0, "line numbers take columns")
   t.assert_eq(info.width - info.textoff, Placement.state(placement).loc.width, "image width")
+end)
+
+t:test("an image after wide characters starts at their display width", function()
+  local image = fake_image({ ready = true })
+  local Placement = load_placement(image)
+  -- Three rows: the first overlays the image's line, the others are virtual lines below it.
+  t:patch_table(package.loaded["era.m.image.state"], "fit", function()
+    return { width = 3, height = 3 }
+  end)
+  local prefix = "图 1：" ---@type string
+  local line = prefix .. "![](a.png)" ---@type string
+  local bufnr = shown_buf({ line })
+  local placement = Placement.new(bufnr, image.src, {
+    inline = true,
+    conceal = true,
+    pos = { 1, #prefix },
+    range = { 1, #prefix, 1, #line },
+  })
+  t:defer(function()
+    placement:close()
+  end)
+
+  Placement.update(placement)
+
+  local columns = {} ---@type integer[]
+  for _, mark in ipairs(vim.api.nvim_buf_get_extmarks(bufnr, Placement.ns, 0, -1, { details = true })) do
+    columns[#columns + 1] = mark[4].virt_text_win_col
+    for _, virt_line in ipairs(mark[4].virt_lines or {}) do
+      columns[#columns + 1] = vim.api.nvim_strwidth(virt_line[1][1])
+    end
+  end
+  t.assert_same({ 6, 6, 6 }, columns, "image columns")
+end)
+
+t:test("a closed placement passes its id and highlight group on", function()
+  local image = fake_image({ ready = true })
+  local Placement = load_placement(image)
+  local bufnr = shown_buf()
+  local first = Placement.new(bufnr, image.src, { conceal = true })
+  Placement.update(first)
+  first:close()
+  local groups = vim.tbl_count(vim.api.nvim_get_hl(0, {})) ---@type integer
+
+  for _ = 1, 20 do
+    local placement = Placement.new(bufnr, image.src, { conceal = true })
+    Placement.update(placement)
+    t.assert_eq(first.id, placement.id, "placement id")
+    placement:close()
+  end
+
+  t.assert_eq(groups, vim.tbl_count(vim.api.nvim_get_hl(0, {})), "highlight groups")
 end)
 
 t:test("unloading a document disposes its renderer", function()

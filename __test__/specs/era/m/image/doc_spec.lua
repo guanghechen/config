@@ -105,4 +105,22 @@ t:test("URLs and data URIs are no files and pass through unchanged", function()
   t.assert_eq(url, document.resolve(bufnr, url), "URL")
 end)
 
+t:test("the visible images include the line after the last one shown whole, which may show in part", function()
+  local document = assert(loadfile("lua/era/m/image/doc.lua"))()
+  local dir = t:tempdir() ---@type string
+  local bufnr = markdown(dir, vim.fn["repeat"]({ "" }, 200))
+  vim.api.nvim_win_set_buf(0, bufnr)
+  local botline = vim.fn.getwininfo(vim.api.nvim_get_current_win())[1].botline ---@type integer
+  vim.api.nvim_buf_set_lines(bufnr, botline, botline + 2, false, { "![](part.png)", "![](below.png)" })
+
+  local found = {} ---@type string[]
+  document.find_visible(bufnr, function(imgs)
+    for _, img in ipairs(imgs) do
+      found[#found + 1] = img.src
+    end
+  end)
+
+  t.assert_same({ dir .. "/part.png" }, found, "images")
+end)
+
 t:run()

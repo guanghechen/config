@@ -159,26 +159,29 @@ function M:visible()
   local ret = {} ---@type table<integer, era.m.image.Placement>
   for _, winnr in ipairs(vim.fn.win_findbuf(self.bufnr)) do
     local info = vim.fn.getwininfo(winnr)[1]
-    for k, v in pairs(self:get(math.max(info.topline - 1, 1), info.botline)) do
+    -- The lines `doc.find_visible` searches: `botline` is the last line shown whole, the next one may show in part.
+    for k, v in pairs(self:get(math.max(info.topline - 1, 1), info.botline + 1)) do
       ret[k] = v
     end
   end
   return ret
 end
 
+---The placements with a mark on the lines `from` to `to` (1-based, both included).
 ---@param from                           integer
 ---@param to                             integer
 ---@return table<integer, era.m.image.Placement>
 function M:get(from, to)
   local placement = require("era.m.image.placement")
   local ret = {} ---@type table<integer, era.m.image.Placement>
-  local marks = vim.api.nvim_buf_get_extmarks(self.bufnr, placement.ns, { from - 1, 0 }, { to, -1 }, {
+  local marks = vim.api.nvim_buf_get_extmarks(self.bufnr, placement.ns, { from - 1, 0 }, { to - 1, -1 }, {
     overlap = true,
     hl_name = false,
   })
   for _, m in ipairs(marks) do
     local p = self.idx[m[1]] ---@type era.m.image.Placement|nil
-    if p and not self.imgs[p.id] then
+    -- A closed placement may have passed its id on to a new one.
+    if p and self.imgs[p.id] ~= p then
       self.idx[m[1]] = nil
       p = nil
     end

@@ -12,7 +12,9 @@ state / terminal → env
 ```
 
 `init` 负责生命周期组装。在 tmux 中先将所在 pane 的 `allow-passthrough` 设为 `all`（`on` 会在 redraw
-或 pane 隐藏时丢弃上传）；没有 `TMUX_PANE`（如 popup）或设置失败时不启用 image。
+或 pane 隐藏时丢弃上传）；没有 `TMUX_PANE`（如 popup）或设置失败时不启用 image。退出（关闭 placements 之后）与挂起时
+还原 pane 自己原来的值（原本未设置则取消设置），恢复运行时再设为 `all`：Neovim 不再绘制时，留在 pane 里的 shell
+不应把程序输出的任意转义序列直通到 terminal。
 
 图片只通过 kitty graphics protocol 的 Unicode placeholder 绘制，因此只支持 kitty 与 Ghostty；没有 WezTerm 式的
 绝对定位 fallback，也没有浮窗预览。
@@ -27,6 +29,9 @@ state / terminal → env
 - `doc` 持有 document queries，并向 `inline` 注入 query contract；`inline` 不反向解析 `doc`。
 - `hidden` 只表示 conceal 状态。没有窗口显示 buffer 时 placement 不渲染，也不改变 `hidden`。
 - inline placement 在转换完成前和失败后都保留一个位置 extmark，`inline` 依此找回并复用它。
+- `inline` 只在 `doc.find_visible` 查找的行上增删 placement：窗口显示的行，加上其上一行与 `botline`（最后一个完整显示的
+  行）之后可能只显示一部分的一行；范围之外的 placement 保留。显示源码（`hidden`）只针对光标或 Visual 选区所在的行，
+  且只在当前模式不属于 `concealcursor` 时。
 
 ## Buffer 生命周期
 
@@ -44,6 +49,8 @@ state / terminal → env
 
 - image id 是 24 位随机数（由 placeholder 的前景色承载），本实例内不重复；同一 terminal 中的多个 Neovim
   实例不再按计数器成片撞号，只剩偶然碰撞的可能。image 释放后其 id 可再用。
+- placement id 在 placement 关闭后再次分配：每个 placement 以 id 命名一个 highlight group，而 Neovim 不释放
+  highlight group，总数上限约 2 万（超出后任何新 group 都报 E849）。
 - 相对路径先在文档所在目录查找，再找工作目录，以及两者下的 `img_dirs`；link destination 的转义（如 `%20`）先解码，
   `#page=N` 保留。找不到时按文档所在目录命名，文件出现后由版本检查发现。URL 与 data URI 不当作文件，原样传递。
 

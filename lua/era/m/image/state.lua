@@ -78,7 +78,7 @@ local SUPPORTED_EXTNAME_SET = stl.table.to_string_set(data.extnames) ---@type ta
 
 ---@alias era.m.image.Pos          {[1]: integer, [2]: integer}
 
----@alias era.m.image.Loc          era.m.image.Pos|era.m.image.Size|{zindex?: integer}
+---@alias era.m.image.Loc          era.m.image.Pos|era.m.image.Size
 
 ---@alias era.m.image.Type         "image"|"math"|"chart"
 

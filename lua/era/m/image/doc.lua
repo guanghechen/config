@@ -335,6 +335,7 @@ function M.find_visible(bufnr, cb)
   local count = #wins
   for _, winnr in ipairs(wins) do
     local info = vim.fn.getwininfo(winnr)[1]
+    -- Up to the line after `botline`, the last line shown whole: that one may show in part.
     M.find(bufnr, function(matches)
       for _, i in ipairs(matches) do
         ret[i.id] = i
@@ -343,7 +344,7 @@ function M.find_visible(bufnr, cb)
       if count == 0 and cb then
         cb(vim.tbl_values(ret))
       end
-    end, { from = math.max(info.topline - 1, 1), to = info.botline })
+    end, { from = math.max(info.topline - 1, 1), to = info.botline + 1 })
   end
 end
 
