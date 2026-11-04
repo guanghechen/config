@@ -200,7 +200,8 @@
   },
   "enabledPlugins": {
     "diff@builtin": false,
-    "swift-lsp@claude-plugins-official": true
+    "swift-lsp@claude-plugins-official": true,
+    "rust-analyzer-lsp@claude-plugins-official": true
   },
   "modelSettings": {
     "claude-opus-5-5": {
