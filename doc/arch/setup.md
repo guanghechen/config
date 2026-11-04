@@ -48,7 +48,9 @@ The entrypoint declares the status of each step.
   scopes within the setup process, so process environment changes persist.
   PowerShell and native-command errors terminate by default. Required failures
   throw with the original exit code in `Exception.Data["ExitCode"]`; expected
-  nonzero probes opt out at their call sites.
+  nonzero probes opt out at their call sites. The entrypoint traps failures
+  that reach it: recorded step failures exit with their code, and other
+  failures print their message once and exit with the native code or 1.
 
 Both helpers render flat sections containing independent step trees. The
 entrypoints supply icons and labels; the helpers handle indentation, combined

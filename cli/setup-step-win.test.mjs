@@ -36,7 +36,15 @@ function runPowerShellStepScript(body) {
     status: result.status,
     rawOutput: normalizeOutput(result.stdout),
     output: normalizeOutput(result.stdout.replaceAll(ansiPattern, '')),
+    errorOutput: normalizeOutput(result.stderr.replaceAll(ansiPattern, '')),
   }
+}
+
+function runPowerShellEntrypointScript(body) {
+  const content = fs.readFileSync(powershellSetupPath, 'utf8')
+  const trap = content.match(/^trap \{$[\s\S]*?^\}$/m)?.[0]
+  assert.ok(trap, 'setup.ps1 declares a top-level trap')
+  return runPowerShellStepScript([trap, body].join('\n'))
 }
 
 describe('windows setup step forest', { skip: !hasPowerShell }, () => {
@@ -209,6 +217,42 @@ describe('windows setup step forest', { skip: !hasPowerShell }, () => {
     assert.match(result.output, /╰─ ✗ failed \(exit 23\); aborting/)
     assert.match(result.output, /caught exit 23/)
     assert.match(result.output, /caller continued$/)
+  })
+
+  it('exits the entrypoint with the recorded code of a failed required step', () => {
+    const result = runPowerShellEntrypointScript(String.raw`
+      $hostPath = (Get-Process -Id $PID).Path
+      Invoke-GhcStep '' broken {
+        & $hostPath -NoProfile -NonInteractive -Command 'exit 23'
+      }
+      Write-Output unreachable
+    `)
+
+    assert.equal(result.status, 23)
+    assert.match(result.output, /╰─ ✗ failed \(exit 23\); aborting$/)
+    assert.equal(result.errorOutput, '')
+  })
+
+  it('prints other entrypoint failures once with the native exit code', () => {
+    const result = runPowerShellEntrypointScript(String.raw`
+      $hostPath = (Get-Process -Id $PID).Path
+      & $hostPath -NoProfile -NonInteractive -Command 'exit 5'
+      throw "kit-repo sync failed (exit code: $LASTEXITCODE)"
+    `)
+
+    assert.equal(result.status, 5)
+    assert.equal(result.output, 'kit-repo sync failed (exit code: 5)')
+    assert.equal(result.errorOutput, '')
+  })
+
+  it('exits the entrypoint with 1 when a failure has no native exit code', () => {
+    const result = runPowerShellEntrypointScript(String.raw`
+      throw 'required command not found: git'
+    `)
+
+    assert.equal(result.status, 1)
+    assert.equal(result.output, 'required command not found: git')
+    assert.equal(result.errorOutput, '')
   })
 
   it('keeps process environment mutations from child scopes', () => {

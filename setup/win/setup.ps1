@@ -1,3 +1,15 @@
+# Failures that reach the entrypoint exit with their code instead of letting the
+# host print the error record and its source line. Step failures are already
+# rendered by their tree; render anything else once.
+trap {
+  $exitCode = $_.Exception.Data["ExitCode"]
+  if ($null -eq $exitCode) {
+    Write-Host "  $_" -ForegroundColor Red
+    $exitCode = if ($global:LASTEXITCODE) { $global:LASTEXITCODE } else { 1 }
+  }
+  exit $exitCode
+}
+
 $minimumPowerShellVersion = [Version]"7.4.0"
 if ($PSVersionTable.PSVersion -lt $minimumPowerShellVersion) {
   throw "[setup preparation] PowerShell $minimumPowerShellVersion or newer is required. Run this setup with pwsh."
