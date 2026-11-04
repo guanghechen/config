@@ -4,7 +4,6 @@ local __module_name__ = "era.view.git_files" ---@type string
 local Files = require("era.view.result_files")
 local Tree = require("era.view.result_tree")
 local Paths = require("era.view.result_paths")
-local namespace = vim.api.nvim_create_namespace("era.git_files")
 local codes = { "U", "D", "A", "R", "C", "M", "T", "?" }
 
 ---@alias era.view.git_files.Scope "staged"|"unstaged"
@@ -103,6 +102,8 @@ function M.new(name, scope)
   local self = Tree.new({
     name = name,
     tree = Paths.new(),
+    -- Both panes keep the selection column so their count columns line up whichever side has a selection.
+    reserve_selection = true,
     present = function(_, data, entry)
       local directory = entry.nodetype == "container"
       local label = vim.fn.strtrans(data.basename)
@@ -279,27 +280,14 @@ function M:targets(keys, frame)
   return targets
 end
 
----@param view                          ux.treeview.View
----@param frame                         yoz.ux.treeview.Frame
----@param row                           integer
----@param id                            string
----@param col                           integer
----@param label                         string
----@param expanded                      boolean
----@return nil
-function M:decorate_row(view, frame, row, id, col, label, expanded)
-  local node = Tree.decorate_row(self, view, frame, row, id, col, label, expanded)
+---@param node                          ux.treeview.INode|nil
+---@return table[]|nil
+function M:right_chunks(node)
   local git = node and node.fields.git
   if not node or not git or git.count == 0 then
-    return
+    return nil
   end
-  vim.api.nvim_buf_set_extmark(view.bufnr, namespace, row, 0, {
-    ephemeral = true,
-    virt_text = M.overlay(git, node.fields.git_columns),
-    virt_text_pos = "right_align",
-    hl_mode = "combine",
-    priority = 160,
-  })
+  return M.overlay(git, node.fields.git_columns)
 end
 
 return M

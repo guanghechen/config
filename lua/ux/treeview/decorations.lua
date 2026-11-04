@@ -212,6 +212,29 @@ local function overlay(view, row, col, text, highlight)
   })
 end
 
+---Whether a label that is still partly visible runs under the right-aligned chunks or past the window edge.
+---@param chunks                        table[]
+---@param col                           integer Label start; the indent and slots before it are ASCII spaces.
+---@param label                         string
+---@param leftcol                       integer
+---@param rightcol                      integer First display column past the text area.
+---@return boolean
+local function truncated(chunks, col, label, leftcol, rightcol)
+  -- Bytes bound display cells from above, so rows clear of the edge are not measured.
+  local bytes = col + #label
+  for _, chunk in ipairs(chunks) do
+    bytes = bytes + #chunk[1]
+  end
+  if bytes <= rightcol then
+    return false
+  end
+  local edge = rightcol
+  for _, chunk in ipairs(chunks) do
+    edge = edge - vim.api.nvim_strwidth(chunk[1])
+  end
+  return col < edge and edge > leftcol and col + vim.api.nvim_strwidth(label) > edge
+end
+
 ---@param view                          ux.treeview.View
 ---@param first                         integer
 ---@param last                          integer
@@ -228,7 +251,10 @@ local function decorate(view, first, last)
   local mark_width = math.max(selected_width, self_selected_width)
   local selected = " " .. glyphs.selected .. string.rep(" ", mark_width - selected_width)
   local self_selected = " " .. glyphs.self_selected .. string.rep(" ", mark_width - self_selected_width)
-  local unselected = string.rep(" ", mark_width + 1)
+  -- Every row keeps the mark column while anything is selected, so right-aligned columns stay in line.
+  local unselected = (view._options.reserve_selection or not view._header.summary.is_empty)
+      and string.rep(" ", mark_width + 1)
+    or nil
   local path = view._guide_path
   local indent = view._context.indent
   local guide_width = vim.fn.strdisplaywidth(glyphs.guide)
@@ -312,30 +338,37 @@ local function decorate(view, first, last)
         priority = 150,
       })
     end
-    if view._options.decorate_row then
-      view._options.decorate_row(
-        view,
-        view._frame,
-        row,
-        rows.ids[index],
-        start + view._context.slots,
-        rows.labels[index],
-        rows.expanded[index]
-      )
-    end
+    local label, col = rows.labels[index], start + view._context.slots
+    -- One right-aligned mark per row keeps consumer chunks, right text and the selection column in a fixed order.
     local right = {}
+    local chunks = view._options.decorate_row
+      and view._options.decorate_row(view, view._frame, row, rows.ids[index], col, label, rows.expanded[index])
+    if chunks then
+      for _, chunk in ipairs(chunks) do
+        right[#right + 1] = chunk
+      end
+    end
     if rows.right_texts[index] then
       right[#right + 1] = { rows.right_texts[index], "TreeviewRightText" }
     end
-    right[#right + 1] = rows.marked[index] and { rows.full[index] and selected or self_selected, "TreeviewSelection" }
-      or { unselected }
-    vim.api.nvim_buf_set_extmark(view.bufnr, namespace, row, 0, {
-      ephemeral = true,
-      virt_text = right,
-      virt_text_pos = "right_align",
-      hl_mode = "combine",
-      priority = 70,
-    })
+    if rows.marked[index] then
+      right[#right + 1] = { rows.full[index] and selected or self_selected, "TreeviewSelection" }
+    elseif unselected then
+      right[#right + 1] = { unselected }
+    end
+    if truncated(right, col, label, cache.leftcol, cache.rightcol) then
+      -- Without a highlight of its own the marker combines with the label cell it covers.
+      table.insert(right, 1, { glyphs.truncated })
+    end
+    if #right > 0 then
+      vim.api.nvim_buf_set_extmark(view.bufnr, namespace, row, 0, {
+        ephemeral = true,
+        virt_text = right,
+        virt_text_pos = "right_align",
+        hl_mode = "combine",
+        priority = 70,
+      })
+    end
   end
   return first, last
 end
@@ -444,6 +477,7 @@ vim.api.nvim_set_decoration_provider(namespace, {
       end
     end
     view._decorations.guide_first, view._decorations.guide_last = guide_first, guide_last
+    view._decorations.painted = 0
     return true
   end,
   on_range = function(_, winnr, bufnr, first, _, last, end_col)
@@ -451,13 +485,19 @@ vim.api.nvim_set_decoration_provider(namespace, {
     if not view or view._suspended or view.winnr ~= winnr or view._desynced or view._publishing then
       return false
     end
-    local ok, painted_first, painted_last = pcall(decorate, view, first, last + (end_col > 0 and 1 or 0))
+    -- Neovim can split a row into several ranges; a row decorated earlier in this redraw keeps its marks.
+    local cache = view._decorations
+    local ok, painted_first, painted_last =
+      pcall(decorate, view, math.max(first, cache and cache.painted or 0), last + (end_col > 0 and 1 or 0))
     if not ok then
       view._desynced = true
       vim.schedule(function()
         require("ux.treeview.surface").fail(view, painted_first, true)
       end)
       return false
+    end
+    if cache and painted_last and painted_last > (cache.painted or 0) then
+      cache.painted = painted_last
     end
     local dirty = view._guide_dirty
     if dirty and painted_first and painted_last > painted_first then

@@ -199,6 +199,8 @@ View 记录实际恢复或观察到的 cursor 坐标；坐标未变的重复、�
   ColorScheme 重新定义默认 highlight 并清空各 View 的行批次缓存。大面积装饰变化只重画当前 viewport。
 - 字节 span 基于目标行的实际 UTF-8 文本；cell 列宽与 byte column 分开。水平滚动按当前窗口的 `leftcol` 裁剪，
   不能拿另一 View 的列缓存复用。Native fold/wrap 不替代 Treeview 展开状态，View 绑定窗口时设置 `nowrap`、`nofoldenable`。
+- 同一行可能分成多个 `on_range` 区间请求装饰（如超出窗口宽度的多字节行）。从行中间开始的区间所在行已在前一区间装饰，
+  provider 只装饰从行首开始的行，否则行首 overlay 与右对齐 mark 会在分段处重复绘制。
 
 `frame:rows(first, last)` 以 1-based 闭区间读取一段行，返回稠密列：`ids`、`labels`（正文中 indent 与 slots 之后的文本）、
 `depths`、`parents` / `last_children` / `last_descendants`（1-based 行号，无目标为 0）、`connector_last`、`marked` / `full` /
@@ -212,3 +214,18 @@ Consumer 可通过 `decorate_row(view, frame, row, node, col, label, expanded)` 
 spans 或 overlay：`row` 为 0-based buffer 行，`col` 为 label 起始 byte，`expanded` 来自已发布行批次。
 该 callback 不得修改正文、读取 IO 或提交异步业务操作；业务 metadata 应按 Frame 的 data revision 解析。
 Filetype/icon 检测只在 viewport 首次需要该名称时执行并缓存，不在导入每个路径时运行。
+
+### 右对齐区与截断
+
+`decorate_row` 可返回 virt_text chunks。View 每行最多绘制一个右对齐 mark，从左到右依次为截断标记、consumer chunks、
+`right_text`、selection 标记；consumer 不另行绘制 `right_align` mark，顺序因此不依赖 extmark priority，View 也能得到
+右对齐区的总宽。
+
+- Selection 标记列只在 Frame 的 selection summary 非空时保留，此时未选中行也留出等宽空白，使同一 View 内的右对齐列对齐；
+  summary 在空与非空之间变化时整窗重绘。View 选项 `reserve_selection` 在无选择时也保留该列，供列位置需要与另一 View
+  对齐的 consumer 使用。没有任何右侧内容的行不绘制右对齐 mark。
+- Label 伸入右对齐区或超出窗口、且仍有可见部分时，右对齐 mark 以 glyph `truncated` 开头，占据 label 可见部分的最后一格。
+  该 chunk 不带 highlight，经 `hl_mode = "combine"` 取被覆盖 cell 的颜色，即 label 的高亮；窗口边缘切开宽字符时，
+  该格是 Neovim 的 NonText 填充，标记随之取 NonText 颜色。
+- 判断只针对正在重绘的行。UTF-8 byte 数不小于显示宽度，先以 byte 总长排除离边缘足够远的行，其余行才用
+  `nvim_strwidth` 计算 label 与右对齐 chunks 的宽度；不缓存宽度，也不在发布或数据阶段增加工作。

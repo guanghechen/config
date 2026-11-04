@@ -445,6 +445,38 @@ t:test("Git count columns and status starts align across panes and remain fixed 
   t.assert_nil(binary.insertions)
   t.assert_nil(binary.deletions)
   t.assert_eq(expected.status, binary.status, "unknown counts do not shift status")
+  ui:lua([[
+    local tree = widget.panes.staged.tree
+    tree:toggle_select(require("era.view.result_paths").key("/git/dir/b.lua"), true)
+    local ready = tree:ready()
+    assert(vim.wait(3000, function() return ready:is_done() and not tree:frame():header().summary.is_empty end))
+  ]])
+  t.wait_until(function()
+    local cell = grid:find("b.lua")
+    local row = cell and grid.grids[cell.grid].rows[cell.row + 1]
+    return row and vim.iter(row):any(function(item)
+      return item[1] == "●" or item[1] == "◐"
+    end)
+  end, 3000, "the staged selection is drawn")
+  -- `columns` reads a status as the last token, so measure unselected rows: Staged a_ and Unstaged c.lua.
+  for _, label in ipairs({ "a_", "c.lua" }) do
+    local actual = columns(label)
+    t.assert_eq(expected.insertions, actual.insertions, label .. " keeps its column while one pane has a selection")
+    t.assert_eq(expected.status, actual.status, label .. " status keeps its column while one pane has a selection")
+  end
+  ui:lua([[
+    local tree = widget.panes.staged.tree
+    tree:toggle_select(require("era.view.result_paths").key("/git/dir/b.lua"), false)
+    local ready = tree:ready()
+    assert(vim.wait(3000, function() return ready:is_done() and tree:frame():header().summary.is_empty end))
+  ]])
+  t.wait_until(function()
+    local cell = grid:find("b.lua")
+    local row = cell and grid.grids[cell.grid].rows[cell.row + 1]
+    return row and not vim.iter(row):any(function(item)
+      return item[1] == "●" or item[1] == "◐"
+    end)
+  end, 3000, "the staged selection is cleared")
   ui:lua("widget.input:set_content('b')")
   t.wait_until(function()
     return not grid:find("a_") and not grid:find("c.lua") and grid:find("b.lua")

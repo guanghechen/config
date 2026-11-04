@@ -31,7 +31,8 @@ Status: Design。入口代码位于 `lua/era/m/git_files/`，树视图为 `era.v
   后台刷新不把新 status 绑定到旧 buffer 行。
 - Git status 与行数统计只通过 viewport decorations 右对齐绘制，不进入正文或路径匹配。两棵树共用新增、删除和 status
   列宽：新增 / 删除数值右对齐，status 左对齐，有未知统计时统一预留标记列。列宽由两侧总计计算，随 metadata 一起发布；
-  过滤、折叠和滚动不改变列位置。
+  过滤、折叠和滚动不改变列位置。两棵树都以 Treeview 的 `reserve_selection` 保留 selection 标记列，只有一侧有选择时
+  两侧列位置仍然一致。
 - 打开与 `R` 触发刷新；`DirChanged` 只在浮窗可见时触发，Git refresh 事件只在可见且没有 index 写入时触发。
   每次刷新持有 workspace 和 cancellation token；新刷新、hide 与 dispose 取消旧请求，旧请求不能重新打开窗口。
   必需的 status 查询失败时保留旧树，标题显示 `Refresh failed` 并禁止 stage / unstage，直到下一次刷新成功。

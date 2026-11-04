@@ -58,6 +58,7 @@ local RECORD_DEFAULTS = {
 ---@field public source                 era.view.ResultSource|era.view.ResultList
 ---@field public view                   ?ux.treeview.View
 ---@field public state                  ?ux.treeview.State
+---@field _reserve_selection            ?boolean Keeps the View's selection column while nothing is selected.
 local M = {}
 M.__index = M
 
@@ -115,6 +116,7 @@ function M.new(props)
     _revision = 0,
     _disposed = false,
     _present = props.present,
+    _reserve_selection = props.reserve_selection,
     _hidden = {},
     _icons = {},
     _directory_icons = {},
@@ -1451,15 +1453,6 @@ function M:decorate_row(view, frame, row, id, col, label, expanded)
       })
     end
   end
-  if node and node.fields.overlay then
-    vim.api.nvim_buf_set_extmark(view.bufnr, namespace, row, 0, {
-      ephemeral = true,
-      virt_text = node.fields.overlay,
-      virt_text_pos = "right_align",
-      hl_mode = "combine",
-      priority = 100,
-    })
-  end
   local points, shift
   if node and self._result then
     points = self._result:highlight(node.key)
@@ -1497,6 +1490,13 @@ function M:decorate_row(view, frame, row, id, col, label, expanded)
   return node
 end
 
+---Right-aligned chunks of a decorated row, placed before the View's right text and selection mark.
+---@param node                          ux.treeview.INode|nil
+---@return table[]|nil
+function M:right_chunks(node)
+  return node and node.fields.overlay
+end
+
 ---@param frame                         yoz.ux.treeview.Frame
 ---@return stl.c.Future
 function M:prepare_frame(frame)
@@ -1529,6 +1529,7 @@ function M:_attach()
     winnr = mount.winnr,
     bufnr = mount.bufnr,
     keymaps = false,
+    reserve_selection = self._reserve_selection,
     on_attach = function(view)
       if self._mount and self._mount.on_attach then
         self._mount.on_attach(view)
@@ -1538,7 +1539,7 @@ function M:_attach()
       return self:prepare_frame(frame)
     end,
     decorate_row = function(view, frame, row, id, col, label, expanded)
-      self:decorate_row(view, frame, row, id, col, label, expanded)
+      return self:right_chunks(self:decorate_row(view, frame, row, id, col, label, expanded))
     end,
     on_frame = function(frame)
       self._frame = frame

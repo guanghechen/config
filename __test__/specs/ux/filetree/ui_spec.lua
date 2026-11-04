@@ -14,7 +14,7 @@ t:test("attached Filetree renders and withdraws ephemeral status decorations", f
     drawn = {}
     await = require("__test__.support.treeview").await
     local mark = vim.api.nvim_buf_set_extmark
-    namespace = vim.api.nvim_create_namespace("ux.filetree.annotations")
+    namespace = vim.api.nvim_create_namespace("ux.treeview")
     vim.api.nvim_buf_set_extmark = function(bufnr, ns, row, col, options)
       if ns == namespace and options.virt_text then
         for _, chunk in ipairs(options.virt_text) do drawn[chunk[1]] = true end

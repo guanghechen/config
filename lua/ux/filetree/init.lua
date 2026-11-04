@@ -37,6 +37,9 @@ function M.attach(state, options)
     prepare_frame = function(view, frame, first, last)
       return annotations.prepare(view, native, frame, first, last)
     end,
+    decorate_row = function(view, _, row)
+      return annotations.right_chunks(view, row)
+    end,
   })
   return Treeview.attach(state, options) --[[@as ux.filetree.View]]
 end

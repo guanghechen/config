@@ -585,6 +585,7 @@ function M.new(state, options)
       leaf = "",
       loading = "…",
       error = "!",
+      truncated = "…",
       branch = "├─",
       last = "╰─",
       guide = "│",

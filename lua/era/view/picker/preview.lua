@@ -408,7 +408,7 @@ function M:__show_tree__(target)
             return target.owner:prepare_frame(frame, view, first, last)
           end,
           decorate_row = function(view, frame, row, id, col, label, expanded)
-            target.owner:decorate_row(view, frame, row, id, col, label, expanded)
+            return target.owner:right_chunks(target.owner:decorate_row(view, frame, row, id, col, label, expanded))
           end,
         })
       end

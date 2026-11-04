@@ -281,7 +281,8 @@ Status: Design。本文定义当前 native Explorer 的输入、用途、窗口�
 - 文件/目录名称共用 `m_ft_filename`；优先级为 ignored → error → warning → Git status → 中性色。
   Info/hint 不覆盖名称色，selection/copy/cut 用独立 sign，焦点用背景。
   Selection 使用 Nerd Font 勾选框，copy/cut 使用复制页与剪刀图标；self-only 使用半选框区分，
-  copy/cut 的 self-only 在动作图标后附加半选框。标记区按显示宽度固定占位，右侧留空白容纳 glyph overhang。
+  copy/cut 的 self-only 在动作图标后附加半选框。有选择时各行的标记区按显示宽度固定占位，右侧留空白容纳
+  glyph overhang；没有选择时不占位。名称被右侧标记遮挡或超出窗口时以 Treeview 的截断标记结尾。
 - Diagnostics 按 E/W/H/I 显示非零分类，最多两类；Git 用具体变更字符与颜色表达状态，不额外显示 `S/U`。
   纯 staged 的 `A/M/R/C/T` 使用 staged 前景色；含 unstaged 的行按具体变更类型着色，删除与冲突始终保留各自颜色。
   装饰不写正文，不为聚合打开文件。

@@ -149,13 +149,18 @@ t:test("real UI separates file icons from right-aligned links and preserves Git 
     local path = ...
     errors, links, icons, names = {}, {}, {}, {}
     local namespace = vim.api.nvim_create_namespace("era.explorer")
+    local treeview = vim.api.nvim_create_namespace("ux.treeview")
     local mark = vim.api.nvim_buf_set_extmark
     vim.api.nvim_buf_set_extmark = function(bufnr, ns, row, col, options)
-      if ns == namespace and view and bufnr == view.bufnr then
+      if view and bufnr == view.bufnr and (ns == namespace or ns == treeview and options.virt_text_pos == "right_align") then
         local frame = view:frame()
         local info = session.data:inspect(frame:source(), frame:node_at(row + 1)):info()
-        if options.virt_text_pos == "right_align" then
-          links[info.label] = options
+        if ns == treeview then
+          for index, chunk in ipairs(options.virt_text) do
+            if type(chunk[2]) == "string" and chunk[2]:find("^m_ex_symlink") then
+              links[info.label] = { options = options, chunk = chunk, index = index }
+            end
+          end
         elseif options.virt_text_pos == "overlay" then
           icons[info.label] = options.virt_text[1]
         elseif options.hl_group then
@@ -223,11 +228,12 @@ t:test("real UI separates file icons from right-aligned links and preserves Git 
       case
     )
     for _, name in ipairs({ "dir-link", "file-link.lua", "broken-link" }) do
-      local options = rendered.links[name]
-      t.assert_eq("  ", options.virt_text[1][1], "padding stays in one highlight chunk")
-      t.assert_eq(case.expected, options.virt_text[1][2], name .. " Git tint")
-      t.assert_eq("right_align", options.virt_text_pos)
-      t.assert_eq("combine", options.hl_mode, "cursor background remains visible")
+      local link = rendered.links[name]
+      t.assert_eq("  ", link.chunk[1], "padding stays in one highlight chunk")
+      t.assert_eq(case.expected, link.chunk[2], name .. " Git tint")
+      t.assert_eq(#link.options.virt_text, link.index, name .. " link follows the status chunks")
+      t.assert_eq("right_align", link.options.virt_text_pos)
+      t.assert_eq("combine", link.options.hl_mode, "cursor background remains visible")
       t.assert_eq(
         case.git == 260 and "m_ex_ignored" or "DiagnosticError",
         rendered.names[name],

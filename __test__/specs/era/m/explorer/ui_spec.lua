@@ -530,7 +530,7 @@ t:test("real UI subscribes to diagnostics and Git ignore with independent name a
     local path = ...
     errors, drawn, colors, icons, glyphs = {}, {}, {}, {}, {}
     local explorer_ns = vim.api.nvim_create_namespace("era.explorer")
-    local annotation_ns = vim.api.nvim_create_namespace("ux.filetree.annotations")
+    local treeview_ns = vim.api.nvim_create_namespace("ux.treeview")
     local mark = vim.api.nvim_buf_set_extmark
     vim.api.nvim_buf_set_extmark = function(bufnr, ns, row, col, options)
       if ns == explorer_ns then
@@ -539,7 +539,7 @@ t:test("real UI subscribes to diagnostics and Git ignore with independent name a
           icons[row + 1] = options.virt_text[1][2]
           glyphs[row + 1] = options.virt_text[1][1]
         end
-      elseif ns == annotation_ns and options.virt_text then
+      elseif ns == treeview_ns and options.virt_text_pos == "right_align" then
         for _, chunk in ipairs(options.virt_text) do drawn[chunk[1]] = true end
       end
       return mark(bufnr, ns, row, col, options)

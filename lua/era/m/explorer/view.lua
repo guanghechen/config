@@ -124,6 +124,22 @@ function M.attach(session, view)
       on_frame(frame)
     end
   end
+  local decorate_row = view._options.decorate_row
+  view._options.decorate_row = function(current, frame, row, node, col, label, expanded)
+    ---@cast current ux.filetree.View
+    local chunks = decorate_row and decorate_row(current, frame, row, node, col, label, expanded)
+    local id = current._decorations.frame
+    if entry.key ~= id or not entry.links or not entry.links[row - entry.first + 1] then
+      return chunks
+    end
+    local annotations = current._filetree_annotations
+    local value = annotations and annotations.frame == id and annotations.rows[row - annotations.first + 2] or nil
+    local git_group = git_highlight(value)
+    -- The link follows the Filetree status chunks.
+    chunks = chunks or {}
+    chunks[#chunks + 1] = { LINK_MARKER, git_group and git_group:gsub("^m_ft_git_", "m_ex_symlink_") or "m_ex_symlink" }
+    return chunks
+  end
   local detach = view.detach
   view.detach = function(current)
     views[current.bufnr] = nil
@@ -179,6 +195,7 @@ vim.api.nvim_set_decoration_provider(namespace, {
         end
       end)
     end
+    entry.painted = 0
     return true
   end,
   on_range = function(_, winnr, bufnr, first, _, last, end_col)
@@ -194,7 +211,10 @@ vim.api.nvim_set_decoration_provider(namespace, {
     if not frame or entry.key ~= frame:id() then
       return false
     end
-    first, last = math.max(first, entry.first), math.min(last + (end_col > 0 and 1 or 0), entry.last)
+    -- Neovim can split a row into several ranges; a row decorated earlier in this redraw keeps its marks.
+    first, last =
+      math.max(first, entry.painted or 0, entry.first), math.min(last + (end_col > 0 and 1 or 0), entry.last)
+    entry.painted = math.max(entry.painted or 0, last)
     local annotations = view._filetree_annotations
     if annotations and annotations.frame ~= frame:id() then
       annotations = nil
@@ -212,17 +232,6 @@ vim.api.nvim_set_decoration_provider(namespace, {
         hl_group = highlight(value, git_group),
         priority = 100,
       })
-      if entry.links[index] then
-        local group = git_group and git_group:gsub("^m_ft_git_", "m_ex_symlink_") or "m_ex_symlink"
-        vim.api.nvim_buf_set_extmark(bufnr, namespace, row, 0, {
-          ephemeral = true,
-          virt_text = { { LINK_MARKER, group } },
-          virt_text_pos = "right_align",
-          hl_mode = "combine",
-          -- Right-aligned marks grow leftward by priority; the link follows status.
-          priority = 80,
-        })
-      end
       if rows.load_states[index] ~= "loading" and rows.load_states[index] ~= "error" then
         local icon = entry.icons[index]
         local group = value and bit.band(value.git, 256) ~= 0 and "m_ex_ignored" or icon[2]

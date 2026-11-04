@@ -70,13 +70,13 @@ end
 ---@param col                           integer
 ---@param label                         string
 ---@param expanded                      boolean
----@return nil
+---@return ux.treeview.INode|nil
 function M:decorate_row(view, frame, row, id, col, label, expanded)
   local node = ResultTree.decorate_row(self, view, frame, row, id, col, label, expanded)
   local version = self._versions[self:_read_frame(frame).header.data_revision]
   local entry = node and version and version.entries[node.key]
   if not entry or entry.nodetype ~= "location" then
-    return
+    return node
   end
   local text, highlights = M.present_location(entry)
   local offset = #label - #text
@@ -92,6 +92,7 @@ function M:decorate_row(view, frame, row, id, col, label, expanded)
       })
     end
   end
+  return node
 end
 
 ---@return nil

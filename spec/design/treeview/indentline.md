@@ -28,8 +28,9 @@ line = " " × ((depth + (Tree ? 1 : 0)) × indent + slots) .. label
   highlight。没有 indent 高亮 extmark，显示列不能直接作为 byte offset。`decorate_row` 的 `col` 为 label 起始 byte。
 - 图标优先级：loading 与 error 状态使用对应 glyph；否则使用节点 `icon`；未提供时按可展开与展开状态取默认 glyph。
   空字符串 `icon` 不绘制图标，consumer 可借此用自己的 overlay 替代默认 chevron。
-- Right text 与 selection 标记右对齐；完整子树选中与仅自身选中使用不同标记，未选中时保留等宽空白，
-  不占缩进与图标之间的位置。
+- Consumer chunks、right text 与 selection 标记右对齐，合成顺序见 [右对齐区与截断](render.md#右对齐区与截断)；
+  完整子树选中与仅自身选中使用不同标记。Frame 有选择时未选中行保留等宽空白，没有选择时不保留；
+  标记不占缩进与图标之间的位置。Label 被右对齐区或窗口边缘截断时以 `truncated` 标记结尾。
 
 View 选项 `glyphs` 覆盖以下默认值，Explorer 在用途切换时替换两个 selection 标记：
 
@@ -45,6 +46,7 @@ View 选项 `glyphs` 覆盖以下默认值，Explorer 在用途切换时替换�
 | `error`         | `!`  | 加载失败的节点                        |
 | `selected`      | `●`  | 子树完整选中                          |
 | `self_selected` | `◐`  | 仅自身选中                            |
+| `truncated`     | `…`  | label 被截断时可见部分的末格          |
 
 Highlight groups 均以 `default = true` 定义并在 ColorScheme 后重新应用；consumer 通过 `winhighlight` 映射到自身主题组
 （Explorer 将三个 guide 组映射到 `m_ex_indent*`）：

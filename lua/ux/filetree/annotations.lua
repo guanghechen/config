@@ -3,7 +3,6 @@ local __module_name__ = "ux.filetree.annotations" ---@type string
 
 local async = require("ux.treeview.async")
 local Future = require("stl.c.future")
-local namespace = vim.api.nvim_create_namespace("ux.filetree.annotations")
 local views = setmetatable({}, { __mode = "v" }) ---@type table<integer, ux.filetree.View>
 local M = {}
 
@@ -255,51 +254,14 @@ local function chunks(value)
   return result
 end
 
-vim.api.nvim_set_decoration_provider(namespace, {
-  on_win = function(_, winnr, bufnr)
-    local view = views[bufnr]
-    local cache = view and view._filetree_annotations
-    return view ~= nil
-      and not view._closed
-      and not view._desynced
-      and not view._publishing
-      and view.winnr == winnr
-      and view._frame ~= nil
-      and cache ~= nil
-      and cache.frame == view._frame:id()
-  end,
-  on_range = function(_, winnr, bufnr, first, _, last, end_col)
-    local view = views[bufnr]
-    local cache = view and view._filetree_annotations
-    if
-      not cache
-      or view.winnr ~= winnr
-      or view._closed
-      or view._desynced
-      or view._publishing
-      or not view._frame
-      or cache.frame ~= view._frame:id()
-    then
-      return
-    end
-    first, last =
-      math.max(first, cache.first - 1), math.min(last + (end_col > 0 and 1 or 0), cache.first + #cache.rows - 1)
-    for row = first, last - 1 do
-      local value = cache.rows[row - cache.first + 2]
-      if value then
-        local text = chunks(value)
-        if #text > 0 then
-          vim.api.nvim_buf_set_extmark(bufnr, namespace, row, 0, {
-            ephemeral = true,
-            virt_text = text,
-            virt_text_pos = "right_align",
-            hl_mode = "combine",
-            priority = 90,
-          })
-        end
-      end
-    end
-  end,
-})
+---Diagnostics and Git status of a row the Treeview is decorating, as right-aligned chunks.
+---@param view                          ux.filetree.View
+---@param row                           integer 0-based buffer row.
+---@return table[]|nil
+function M.right_chunks(view, row)
+  local cache = view._filetree_annotations
+  local value = cache and cache.frame == view._decorations.frame and cache.rows[row - cache.first + 2]
+  return value and chunks(value) or nil
+end
 
 return M

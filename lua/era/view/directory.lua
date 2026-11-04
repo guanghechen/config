@@ -368,6 +368,13 @@ function M:decorate_row(view, frame, row, id, col, label, expanded)
   end
 end
 
+---Directory rows have no right-aligned chunks; previews call this on any owner.
+---@param _                             ux.treeview.INode|nil
+---@return nil
+function M:right_chunks(_)
+  return nil
+end
+
 ---@param winnr                         integer
 ---@param bufnr                         integer
 ---@param on_frame                      fun(frame: yoz.ux.treeview.Frame): nil
