@@ -1,5 +1,10 @@
 packages:
   - packages/*
 
-allowBuilds:
-  esbuild: true
+nodeLinker: isolated
+minimumReleaseAge: 1440
+trustPolicy: no-downgrade
+trustPolicyExclude:
+  # Official 6.x backport of CVE-2022-25883 (pinned by Babel 7), published without provenance
+  # after 7.5.x had it.
+  - semver@6.3.1
