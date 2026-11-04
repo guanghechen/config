@@ -47,11 +47,11 @@ local function fake_image(props)
   return image
 end
 
----@param image                         table
+---@param image                         table|fun(src: string): table
 ---@return table
 local function load_placement(image)
   t:patch_table(package.loaded, "era.m.image.image", {
-    new = function()
+    new = type(image) == "function" and image or function()
       return image
     end,
   })
@@ -136,6 +136,34 @@ t:test("a viewer shows its image again after its buffer returns to a window", fu
   t.assert_true(count_marks(bufnr, Placement.ns, PLACEHOLDER) > 0, "render after returning")
 end)
 
+t:test("window events leave a viewer that no window shows alone", function()
+  local image = fake_image({ ready = true })
+  local Placement = load_placement(image)
+  local bufnr = shown_buf()
+  shown_buf()
+  local placement = Placement.new(bufnr, image.src, { conceal = true, auto_resize = true })
+  t:defer(function()
+    placement:close()
+  end)
+  vim.wait(50)
+  local updates = 0 ---@type integer
+  placement.update = function()
+    updates = updates + 1
+  end
+
+  vim.api.nvim_exec_autocmds("WinEnter", {})
+  vim.api.nvim_exec_autocmds("WinResized", {})
+  vim.wait(50)
+  t.assert_eq(0, updates, "hidden viewer")
+
+  vim.api.nvim_win_set_buf(0, bufnr)
+  vim.wait(50)
+  updates = 0
+  vim.api.nvim_exec_autocmds("WinResized", {})
+  vim.wait(50)
+  t.assert_eq(1, updates, "shown viewer")
+end)
+
 t:test("the loading spinner leaves only its own mark once the image is ready", function()
   local props = { ready = false }
   local image = fake_image(props)
@@ -198,6 +226,105 @@ t:test("a document keeps one placement for an image that failed to convert", fun
   end
 
   t.assert_eq(1, vim.tbl_count(inline.imgs), "placements")
+end)
+
+---Images are lines `img:<name>`, so the document follows the buffer text without a parser.
+---@type era.m.image.inline.IDocument
+local line_document = {
+  find_visible = function(bufnr, cb)
+    local matches = {} ---@type era.m.image.match[]
+    for row, line in ipairs(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)) do
+      local name = line:match("^img:(%w+)$")
+      if name then
+        matches[#matches + 1] = {
+          id = tostring(row),
+          src = name,
+          pos = { row, 0 },
+          range = { row, 0, row, #line },
+          lang = "markdown",
+          type = "image",
+        }
+      end
+    end
+    cb(matches)
+  end,
+  math_enabled = function()
+    return false
+  end,
+}
+
+---@param lines                         string[]
+---@return string, integer
+local function edited_file(lines)
+  local file = t:tempdir() .. "/doc.md" ---@type string
+  vim.fn.writefile(lines, file)
+  vim.cmd.edit(file)
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+  t:defer(function()
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
+  end)
+  return file, bufnr
+end
+
+t:test("a document reloaded from disk keeps following its edits", function()
+  local images = {} ---@type table<string, table>
+  load_placement(function(src)
+    images[src] = images[src] or vim.tbl_extend("force", fake_image({ ready = false, failed = true }), { src = src })
+    return images[src]
+  end)
+  local Inline = assert(loadfile("lua/era/m/image/inline.lua"))()
+  local file, bufnr = edited_file({ "img:a" })
+  local inline = Inline.new(bufnr, line_document)
+  t:defer(function()
+    inline:dispose()
+  end)
+
+  ---@return string[]
+  local function shown()
+    local srcs = {} ---@type string[]
+    for _, placement in pairs(inline.imgs) do
+      srcs[#srcs + 1] = placement.img.src
+    end
+    table.sort(srcs)
+    return srcs
+  end
+
+  inline:update()
+  t.assert_same({ "a" }, shown(), "first read")
+
+  vim.fn.writefile({ "img:a", "img:b" }, file)
+  local later = os.time() + 10 ---@type integer
+  vim.uv.fs_utime(file, later, later)
+  vim.cmd("checktime")
+  t.wait_until(function()
+    return vim.deep_equal({ "a", "b" }, shown())
+  end, 2000, "reloaded text")
+
+  vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, { "img:c" })
+  t.wait_until(function()
+    return vim.deep_equal({ "a", "b", "c" }, shown())
+  end, 2000, "edit after the reload")
+end)
+
+t:test("unloading a document disposes its renderer", function()
+  load_placement(fake_image({ ready = false, failed = true }))
+  local Inline = assert(loadfile("lua/era/m/image/inline.lua"))()
+  local file, bufnr = edited_file({ "img:a" })
+
+  for _, unload in ipairs({ "edit!", "bdelete" }) do
+    vim.cmd.edit(file)
+    local inline = Inline.new(bufnr, line_document)
+    inline:update()
+    t.assert_eq(1, vim.tbl_count(inline.imgs), unload .. ": placements")
+
+    vim.cmd(unload)
+
+    t.assert_true(inline.disposed == true, unload .. ": disposed")
+    t.assert_eq(0, vim.tbl_count(inline.imgs), unload .. ": placements closed")
+    t.assert_false(pcall(vim.api.nvim_get_autocmds, { group = "era.m.image.inline." .. bufnr }), unload .. ": autocmds")
+  end
 end)
 
 t:run()

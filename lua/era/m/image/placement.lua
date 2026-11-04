@@ -66,6 +66,38 @@ setmetatable(positions, {
 ---@type integer
 local next_placement_id = 10
 
+---@type boolean
+local watching_windows = false
+
+---Viewers follow the size of the windows showing them. One listener serves them all and visits only the buffers the
+---current tab shows, so a window event costs the same however many images were opened.
+---@return nil
+local function watch_windows()
+  if watching_windows then
+    return
+  end
+  watching_windows = true
+  vim.api.nvim_create_autocmd({ "WinClosed", "WinNew", "WinEnter", "WinResized" }, {
+    group = vim.api.nvim_create_augroup(__module_name__ .. ".windows", { clear = true }),
+    callback = function()
+      local seen = {} ---@type table<integer, boolean>
+      for _, winnr in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+        local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+        if not seen[bufnr] then
+          seen[bufnr] = true
+          for _, placement in pairs(placements[bufnr] or {}) do
+            if placement.opts.auto_resize then
+              vim.schedule(function()
+                placement:update()
+              end)
+            end
+          end
+        end
+      end
+    end,
+  })
+end
+
 M.ns = ns
 
 ---@param bufnr                          ?integer
@@ -111,14 +143,7 @@ function M.new(bufnr, src, opts)
         end)
       end,
     })
-    vim.api.nvim_create_autocmd({ "WinClosed", "WinNew", "WinEnter", "WinResized" }, {
-      group = self.augroup,
-      callback = function()
-        vim.schedule(function()
-          self:update()
-        end)
-      end,
-    })
+    watch_windows()
   end
   placements[self.bufnr] = placements[self.bufnr] or {}
   placements[self.bufnr][self.id] = self

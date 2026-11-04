@@ -11,7 +11,6 @@ bootstrap.with_runtime(t, {
         return left .. "/" .. right
       end,
     },
-    var = { N_IMAGE_ATTACHED = "image_ownership_attached" },
   },
   stl = {
     env = {
@@ -178,6 +177,36 @@ t:test("document injects its query contract into inline rendering", function()
   document.attach(bufnr)
 
   t.assert_eq(document, provider, "document provider")
+end)
+
+t:test("a document keeps one inline renderer until it is disposed", function()
+  local created = {} ---@type table[]
+  t:patch_table(dot.context.flight, "dressing_image", {
+    snapshot = function()
+      return true
+    end,
+  })
+  t:patch_table(package.loaded, "era.m.image.state", {
+    data = { doc = { inline = true, float = true } },
+    env = { placeholders = true },
+  })
+  t:patch_table(package.loaded, "era.m.image.inline", {
+    new = function(bufnr)
+      created[#created + 1] = { bufnr = bufnr }
+      return created[#created]
+    end,
+  })
+  local document = assert(loadfile("lua/era/m/image/doc.lua"))()
+
+  -- FileType fires again for a buffer that is still attached, e.g. after `:set filetype=markdown`.
+  document.attach(41)
+  document.attach(41)
+  t.assert_eq(1, #created, "attached once")
+
+  -- `:edit` or `:bdelete` unloaded the buffer, which disposed its renderer.
+  created[1].disposed = true
+  document.attach(41)
+  t.assert_eq(2, #created, "attached anew")
 end)
 
 t:run()

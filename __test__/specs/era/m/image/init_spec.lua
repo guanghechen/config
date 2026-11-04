@@ -121,11 +121,16 @@ t:test("dressing attaches existing and future supported buffers", function()
       cleaned[#cleaned + 1] = bufnr or -1
     end,
   })
+  -- Read again before the deferred cleanup ran (`:bdelete | edit`), the buffer keeps its new placements.
+  cleanup_buffer({ buf = 11 })
+  table.remove(scheduled, 1)()
+  buffers[11].loaded = false
   cleanup_buffer({ buf = 11 })
   table.remove(scheduled, 1)()
   cleanup_exit()
   t.assert_eq(11, cleaned[1], "loaded backend cleans deleted buffer")
   t.assert_eq(-1, cleaned[2], "loaded backend cleans all placements on exit")
+  t.assert_eq(2, #cleaned, "a buffer read again keeps its placements")
 end)
 
 t:test("dressing reads the unchanged image buffers that startup read as text", function()
@@ -186,6 +191,58 @@ t:test("dressing reads the unchanged image buffers that startup read as text", f
   assert(loadfile("lua/era/m/image/init.lua"))().dressing()
 
   t.assert_same({ 21, 25 }, reread, "image buffers read again")
+end)
+
+t:test("reading an image buffer again replaces its placements", function()
+  local calls = {} ---@type string[]
+  local read = nil ---@type fun(event: { buf: integer })|nil
+  t:patch_global(
+    "stl",
+    { env = { IS_OSX = true }, nvim = { fn = {
+      augroup = function()
+        return 1
+      end,
+    } } }
+  )
+  t:patch_global("dot", {})
+  t:patch_table(package.loaded, "era.m.image.state", {
+    data = { doc = { enabled = false }, extnames = { ".png" } },
+    did_setup = false,
+    is_support_file = function()
+      return true
+    end,
+    is_support_terminal = function()
+      return true
+    end,
+  })
+  t:patch_table(package.loaded, "era.m.image.placement", {
+    clean = function(bufnr)
+      calls[#calls + 1] = "clean " .. bufnr
+    end,
+    new = function(bufnr)
+      calls[#calls + 1] = "new " .. bufnr
+    end,
+  })
+  t:patch_table(vim.api, "nvim_create_autocmd", function(event, opts)
+    if event == "BufReadCmd" then
+      read = opts.callback
+    end
+    return 1
+  end)
+  t:patch_table(vim.api, "nvim_list_bufs", function()
+    return {}
+  end)
+  t:patch_table(vim.api, "nvim_buf_get_name", function()
+    return "/workspace/a.png"
+  end)
+  t:patch_table(vim.api, "nvim_set_option_value", function() end)
+
+  assert(loadfile("lua/era/m/image/init.lua"))().dressing()
+  -- The first read, then the reload `checktime` does once the file changed on disk.
+  assert(read)({ buf = 31 })
+  assert(read)({ buf = 31 })
+
+  t.assert_same({ "clean 31", "new 31", "clean 31", "new 31" }, calls, "placements per read")
 end)
 
 t:run()

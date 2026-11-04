@@ -25,6 +25,12 @@ state / terminal → env
 - `hidden` 只表示 conceal 状态。没有窗口显示 buffer 时 placement 不渲染，也不改变 `hidden`。
 - inline placement 在转换完成前和失败后都保留一个位置 extmark，`inline` 依此找回并复用它。
 
+## Buffer 生命周期
+
+- 图片 buffer 每次被读取（`:edit`，或 `checktime` 在文件改动后的重新加载）都先关闭已有 placements，再建新的。
+- `doc` 为每个 buffer 只保留一个 `inline`。buffer 卸载（`:edit`、`:bdelete`）时 `inline` 随之 dispose，
+  下次 FileType 时重新创建；`checktime` 的重新加载保留它，读入新文本后重建全部 placements。
+
 ## 版本与缓存
 
 - source 由 path 与 page 标识，版本取文件状态（inode、size、mtime、ctime）；data URI 按内容寻址，没有版本。
@@ -32,5 +38,11 @@ state / terminal → env
   释放它在 terminal 中的图像数据（`d=I`）并删除其转换产物。
 - `placement` 每次 update 先跟随 source 到当前版本，因此改写或后来才创建的文件会重新转换并显示；
   失败结果只在同一版本内复用。
-- 转换产物按 source 版本命名，写入完成标记后才被复用，中断的转换会重新执行。清理只删除缓存目录中由该转换命名的
-  直接子文件，不删除 source。
+- 转换产物按 source 版本命名，写入完成标记后才被复用，中断的转换会重新执行；同一次转换中由前序步骤写出的产物
+  （如 `convert` 顺带写出的 `.info`）直接沿用。清理只删除缓存目录中由该转换命名的直接子文件，不删除 source。
+
+## 转换
+
+- 每个转换步骤最多运行 `convert_timeout`（默认 30s），超时即被终止并按失败处理，转换槽位随之释放。
+- ImageMagick 以 `-limit` 运行：宽高超过 16K 像素的图片直接失败，内存与磁盘 pixel cache 有上限。
+- data URI 按浏览器的宽松规则解码（忽略换行、接受 URL-safe 字符与缺省 padding）；无法解码时只让这一张图失败。

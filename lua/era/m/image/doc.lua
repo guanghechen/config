@@ -112,6 +112,10 @@ local dir_cache = {}
 ---@type table<integer, {tick: integer, [string]: any}>
 local bufnr_cache = {}
 
+---The inline renderer of each buffer; one that was disposed is replaced when its buffer is attached again.
+---@type table<integer, era.m.image.inline>
+local inlines = setmetatable({}, { __mode = "v" })
+
 ---@param bufnr                          integer
 ---@param key                            string
 ---@param fn                             fun(): any
@@ -364,7 +368,6 @@ function M.find(bufnr, cb, opts)
   end
   opts = opts or {}
   local from, to = opts.from, opts.to
-  local link_definitions = M.get_link_definitions(bufnr)
 
   local function parse_callback()
     local ret = {} ---@type era.m.image.match[]
@@ -395,7 +398,9 @@ function M.find(bufnr, cb, opts)
           end
           if ctx.ref then
             local ref_text = vim.treesitter.get_node_text(ctx.ref.node, bufnr):lower():gsub("^%[", ""):gsub("%]$", "")
-            local dest = link_definitions[ref_text]
+            -- Scanned only for a reference image: the definitions can be anywhere, so each edit rescans the whole
+            -- document.
+            local dest = M.get_link_definitions(bufnr)[ref_text]
             if dest then
               ctx.definition = { label = ref_text, dest = dest }
             else
@@ -544,10 +549,10 @@ function M.attach(bufnr)
   if not dot.context.flight.dressing_image:snapshot() then
     return
   end
-  if vim.b[bufnr][dot.var.N_IMAGE_ATTACHED] then
+  local current = inlines[bufnr]
+  if current and not current.disposed then
     return
   end
-  vim.b[bufnr][dot.var.N_IMAGE_ATTACHED] = true
 
   local state_mod = require("era.m.image.state")
   local inline_mod = require("era.m.image.inline")
@@ -561,7 +566,7 @@ function M.attach(bufnr)
   end
 
   if inline then
-    inline_mod.new(bufnr, M)
+    inlines[bufnr] = inline_mod.new(bufnr, M)
   else
     local group = vim.api.nvim_create_augroup(__module_name__ .. ".doc." .. bufnr, { clear = true })
     vim.api.nvim_create_autocmd({ "CursorMoved" }, {

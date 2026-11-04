@@ -5,6 +5,9 @@ local env = require("era.m.image.env")
 ---@field public wo                      ?table<string, any>
 local data = {
   tmpdir = dot.path.join(vim.fn.stdpath("cache"), "image/"),
+  -- Milliseconds a conversion step may run before it is killed, so a converter that hangs (a stalled mount, an
+  -- endless download) cannot keep one of the few conversion slots for good.
+  convert_timeout = 30000,
   wo = {
     wrap = false,
     number = false,

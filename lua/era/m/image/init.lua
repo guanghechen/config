@@ -75,7 +75,8 @@ function M.dressing()
     callback = function(e)
       vim.schedule(function()
         local Placement = package.loaded["era.m.image.placement"]
-        if Placement ~= nil then
+        -- A buffer read again meanwhile (`:bdelete | edit`) already replaced its placements.
+        if Placement ~= nil and not vim.api.nvim_buf_is_loaded(e.buf) then
           Placement.clean(e.buf)
         end
       end)
@@ -114,6 +115,8 @@ function M.dressing()
         vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
         vim.api.nvim_set_option_value("modified", false, { buf = bufnr })
         vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
+        -- `:edit`, or the reload `checktime` does once the file changed on disk, reads the image again.
+        Placement.clean(bufnr)
         Placement.new(bufnr, filename, { conceal = true, auto_resize = true })
       end
     end,

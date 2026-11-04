@@ -29,6 +29,7 @@ end
 ---@field public code                   ?number
 ---@field public signal                 ?number
 ---@field public timer                  ?uv.uv_timer_t
+---@field public timed_out              ?boolean
 ---@field public aborted                ?boolean
 ---@field public data                   table<uv.uv_pipe_t, string[]>
 local M = {}
@@ -150,6 +151,7 @@ function M:run()
   if self.opts.timeout then
     self.timer = assert(vim.uv.new_timer())
     self.timer:start(self.opts.timeout, 0, function()
+      self.timed_out = true
       self:kill("sigterm")
     end)
   end

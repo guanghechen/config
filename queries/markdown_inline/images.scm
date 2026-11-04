@@ -9,9 +9,10 @@
   (#gsub! @image.src ">$" "")
 ) @image
 
-; Short reference style: ![ref][]
+; Short reference style: ![ref][] or ![ref], where the description is the last child; anchoring keeps
+; images with a destination or a label out, which would otherwise each look up the link definitions
 ((image
-  (image_description) @image.ref))
+  (image_description) @image.ref .) @image)
 
 ; Full reference style: ![alt][ref]
 ((image

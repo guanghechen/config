@@ -9,6 +9,7 @@ local __module_name__ = "era.m.image.inline" ---@type string
 ---@field public bufnr                    integer
 ---@field public imgs                     table<integer, era.m.image.Placement>
 ---@field public idx                      table<integer, era.m.image.Placement>
+---@field public disposed               ?boolean
 ---@field protected __call_debounced__    fun(self: era.m.image.inline): nil
 ---@field protected _debounced            ?stl.timer.IDisposableCallable
 ---@field protected _document             era.m.image.inline.IDocument
@@ -55,7 +56,21 @@ function M.new(bufnr, document)
   })
   vim.api.nvim_buf_attach(bufnr, false, {
     on_lines = function()
+      if self.disposed then
+        return true
+      end
       update()
+    end,
+    -- `checktime` keeps the attachment across a reload but replaces the text before reading the file, so the
+    -- placements are rebuilt once the new text is in.
+    on_reload = function()
+      vim.schedule(function()
+        self:__reload__()
+      end)
+    end,
+    -- Unloading the buffer (`:edit`, `:bdelete`) ends the attachment; `doc` attaches anew once it is read again.
+    on_detach = function()
+      self:dispose()
     end,
   })
 
@@ -84,6 +99,10 @@ end
 
 ---@return nil
 function M:dispose()
+  if self.disposed then
+    return
+  end
+  self.disposed = true
   if self._debounced then
     self._debounced:dispose()
     self._debounced = nil
@@ -170,6 +189,9 @@ end
 
 ---@return nil
 function M:update()
+  if self.disposed then
+    return
+  end
   local s = require("era.m.image.state").data
   local placement = require("era.m.image.placement")
 
@@ -232,6 +254,20 @@ function M:__call_debounced__()
   if self._debounced then
     self._debounced()
   end
+end
+
+---The reloaded text says nothing about where the old images were, so every placement is rebuilt.
+---@return nil
+function M:__reload__()
+  if self.disposed then
+    return
+  end
+  for _, img in pairs(self.imgs) do
+    img:close()
+  end
+  self.imgs = {}
+  self.idx = {}
+  self:update()
 end
 
 return M

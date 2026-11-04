@@ -1,6 +1,5 @@
 ---@class dot.var
 ---@field public N_BUF_DISABLE_LINT     string
----@field public N_IMAGE_ATTACHED       string
 ---@field public N_IMAGE_CONCEAL        string
 ---@field public N_WINLINE_DISABLED     string
 local M = {}
@@ -17,7 +16,6 @@ M.K_CODE_INSERT_SPLITLINE = "g;"
 ----------------------------------------------------------------------------------------------------
 
 M.N_BUF_DISABLE_LINT = "dot_buf_disable_lint"
-M.N_IMAGE_ATTACHED = "dot_image_attached"
 M.N_IMAGE_CONCEAL = "dot_image_conceal"
 M.N_WINLINE_DISABLED = "dot_winline_disabled"
 

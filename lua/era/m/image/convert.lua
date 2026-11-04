@@ -37,6 +37,22 @@ local MATH_INLINE_H = 42
 -- font's descender; small enough that superscript formulas still fit within MATH_INLINE_H.
 local MATH_BASELINE_GAP = 6
 
+-- ImageMagick reads whatever images a document references. With these limits a small file declaring huge
+-- dimensions (a decompression bomb) fails at once instead of filling memory and the disk-backed pixel cache.
+-- stylua: ignore
+local MAGICK_LIMITS = {
+  "-limit", "width", "16KP",
+  "-limit", "height", "16KP",
+  "-limit", "memory", "512MiB",
+  "-limit", "disk", "2GiB",
+}
+
+---@param args                          (string|number)[]
+---@return (string|number)[]
+local function limited(args)
+  return vim.list_extend(vim.deepcopy(MAGICK_LIMITS), args)
+end
+
 ---@class era.m.image.meta
 ---@field public src                     string
 ---@field public info                    ?era.m.image.Info
@@ -136,11 +152,14 @@ local commands = {
     cmd = {
       {
         cmd = "magick",
-        args = { "identify", "-units", "PixelsPerInch", "-format", "%m %[fx:w]x%[fx:h] %xx%y", "{src}[{page}]" },
+        args = vim.list_extend(
+          { "identify" },
+          limited({ "-units", "PixelsPerInch", "-format", "%m %[fx:w]x%[fx:h] %xx%y", "{src}[{page}]" })
+        ),
       },
       {
         cmd = "identify",
-        args = { "-units", "PixelsPerInch", "-format", "%m %[fx:w]x%[fx:h] %xx%y", "{src}[{page}]" },
+        args = limited({ "-units", "PixelsPerInch", "-format", "%m %[fx:w]x%[fx:h] %xx%y", "{src}[{page}]" }),
       },
     },
     on_done = function(step)
@@ -194,8 +213,8 @@ local commands = {
       -- Inline math is additionally padded to a uniform height (MATH_INLINE_H) so that
       -- every formula on a line is down-scaled by the same factor, keeping glyphs like
       -- `≤` a consistent size. `convert` (IM6) lacks `%[fx:]`, so it degrades to a plain crop.
-      local magick_args = { "{src}", "-trim", "+repage" }
-      local convert_args = { "{src}", "-trim", "+repage" }
+      local magick_args = limited({ "{src}", "-trim", "+repage" })
+      local convert_args = limited({ "{src}", "-trim", "+repage" })
       if step.meta.kind == "math" then
         vim.list_extend(magick_args, {
           "-background",
@@ -242,6 +261,7 @@ local commands = {
       args = type(args) == "function" and args() or args
       ---@cast args (string|number)[]
 
+      args = limited(args)
       vim.list_extend(args, { "-write", "{file}", "-identify", "-format", "%m %[fx:w]x%[fx:h] %xx%y", "{file}.info" })
       return {
         { cmd = "magick", args = args },
@@ -306,6 +326,7 @@ end
 ---@field public aborted                 ?boolean
 ---@field public discarded              ?boolean
 ---@field protected _cached             boolean
+---@field protected _started            ?number
 ---@field protected _done                ?boolean
 ---@field protected _err                 ?string
 ---@field protected _future              stl.c.Future
@@ -412,6 +433,8 @@ function Convert:run()
     return self:__on_done__()
   end
 
+  local sec, usec = uv.gettimeofday()
+  self._started = sec + usec / 1e6
   self:__step__()
 end
 
@@ -488,11 +511,20 @@ function Convert:__decode_data_uri__(data_uri, tmpdir)
     return filepath
   end
 
-  local decoded ---@type string
-  if encoding == "base64" then
-    decoded = vim.base64.decode(data)
+  local decoded ---@type string|nil
+  -- `base64` is the last parameter, after any others such as `charset=utf-8`.
+  if (";" .. encoding):find(";base64$") then
+    -- Accept what browsers do: line breaks, the URL-safe alphabet and missing padding.
+    local base64 = data:gsub("%s", ""):gsub("-", "+"):gsub("_", "/") ---@type string
+    base64 = base64 .. string.rep("=", (4 - #base64 % 4) % 4)
+    local ok, result = pcall(vim.base64.decode, base64)
+    decoded = ok and result or nil
   else
     decoded = yoz.uri.decode(data)
+  end
+  -- Undecodable data fails its own conversion, like any URI that is not a file, rather than raising.
+  if decoded == nil then
+    return data_uri
   end
 
   local fd = io.open(filepath, "wb")
@@ -604,8 +636,11 @@ function Convert:__step__()
   assert(self._step <= #self.steps, "No more steps")
 
   local step = self.steps[self._step]
-  -- Another process may have finished this version meanwhile.
-  step.done = step.done or (uv.fs_stat(self.marker) ~= nil)
+  -- An earlier step of this run may have written the output already (`convert` writes the `.info` that `identify`
+  -- would), or another process may have finished this version; an output older than this run may be partial.
+  local stat = uv.fs_stat(step.file)
+  local written = stat ~= nil and stat.mtime.sec + stat.mtime.nsec / 1e9 >= self._started
+  step.done = step.done or written or (uv.fs_stat(self.marker) ~= nil)
   if step.done then
     return self:__on_step__()
   end
@@ -636,14 +671,19 @@ function Convert:__step__()
     end
   end
 
+  local timeout = state.data.convert_timeout ---@type integer
   step.proc = stl.c.Proc.new({
     run = false,
+    timeout = timeout,
     cwd = cmd.cwd and state.tpl(cmd.cwd, data) or nil,
     cmd = cmd.cmd,
     args = args,
     on_exit = function(proc, err)
       schedule()
       local out = vim.trim(proc:out() .. "\n" .. proc:err())
+      if proc.timed_out then
+        out = vim.trim(("%s timed out after %d ms\n%s"):format(cmd.cmd, timeout, out))
+      end
       vim.schedule(function()
         self:__on_step__(err and out or nil)
       end)

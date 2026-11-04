@@ -11,7 +11,6 @@ bootstrap.with_runtime(t, {
         return left .. "/" .. right
       end,
     },
-    var = { N_IMAGE_ATTACHED = "image_failure_attached" },
   },
   stl = {
     env = {
