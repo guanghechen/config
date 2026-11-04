@@ -15,6 +15,9 @@ function _ghc_tmux_popup_ {
   socket_path=$(tmux display-message -p -F "#{socket_path}")
   local popup_session_name="_popup@${current_session_name}"
   local popup_window_name="${current_window_name}"
+  # A `session:name` target misparses names containing `.`/`:` and resolves numeric
+  # names as indexes, so the popup window is addressed by id once resolved.
+  local popup_window_id=""
 
   if [[ "${current_session_name}" == _popup@* ]]; then
     tmux detach-client ${client_name:+-t "$client_name"}
@@ -22,22 +25,24 @@ function _ghc_tmux_popup_ {
     # Check if popup session already exists
     if ! tmux has-session -t "=${popup_session_name}" 2>/dev/null; then
       # Create new popup session and window if it doesn't exist
-      tmux new-session -d -s "${popup_session_name}" -n "${popup_window_name}" -c "${current_pane_path}"
+      popup_window_id=$(tmux new-session -d -P -F '#{window_id}' -s "${popup_session_name}" -n "${popup_window_name}" -c "${current_pane_path}")
     else
-      local exist_target_window=false
-      while IFS= read -r window_name; do
+      local window_id
+      local window_name
+      local window_separator=$'\t'
+      while IFS="${window_separator}" read -r window_id window_name; do
         if [[ "${window_name}" = "${popup_window_name}" ]]; then
-          exist_target_window=true
+          popup_window_id=${window_id}
           break
         fi
-      done < <(tmux list-windows -t "${popup_session_name}" -F '#{window_name}')
+      done < <(tmux list-windows -t "${popup_session_name}" -F "#{window_id}${window_separator}#{window_name}")
 
-      if $exist_target_window; then
+      if [ -n "${popup_window_id}" ]; then
         # Ensure we select the correct window in the popup session
-        tmux select-window -t "${popup_session_name}:${popup_window_name}" 2>/dev/null
+        tmux select-window -t "${popup_window_id}" 2>/dev/null
       else
-        tmux new-window -t "${popup_session_name}" -n "${popup_window_name}" -c "${current_pane_path}"
-        tmux select-window -t "${popup_session_name}:${popup_window_name}"
+        popup_window_id=$(tmux new-window -P -F '#{window_id}' -t "${popup_session_name}" -n "${popup_window_name}" -c "${current_pane_path}")
+        tmux select-window -t "${popup_window_id}"
       fi
     fi
 
@@ -62,24 +67,27 @@ function _ghc_tmux_popup_ {
 
     sleep 0.3 # Sleep 300ms.
 
-    # Check if there's exactly one pane in the popup window.
-    local popup_pane_count
-    popup_pane_count=$(tmux list-panes -t "${popup_session_name}:${popup_window_name}" | wc -l)
+    # Check if there's exactly one pane in the popup window. Without a resolved id an
+    # empty target would resolve to the invoking pane, which must never receive the cd.
+    local popup_pane_count=0
+    if [ -n "${popup_window_id}" ]; then
+      popup_pane_count=$(tmux list-panes -t "${popup_window_id}" | wc -l)
+    fi
     if [ "${popup_pane_count}" -eq 1 ]; then
       local current_popup_pane_path
-      current_popup_pane_path=$(tmux display-message -p -t "${popup_session_name}:${popup_window_name}" -F "#{pane_current_path}")
+      current_popup_pane_path=$(tmux display-message -p -t "${popup_window_id}" -F "#{pane_current_path}")
       local current_pane_path_with_slash="${current_pane_path%/}/"
 
       # Check if the current popup pane is not under or equals with the current_pane_path
       if [[ "${current_popup_pane_path}" != "${current_pane_path}" ]] && [[ "${current_popup_pane_path}" != "${current_pane_path_with_slash}"* ]]; then
         local popup_is_shell
-        popup_is_shell=$(tmux display-message -p -t "${popup_session_name}:${popup_window_name}" -F '#{==:#{pane_current_command},#{b:default-shell}}')
+        popup_is_shell=$(tmux display-message -p -t "${popup_window_id}" -F '#{==:#{pane_current_command},#{b:default-shell}}')
         if [ "${popup_is_shell}" != "1" ]; then
           return 0
         fi
 
         local popup_active_pane_id
-        popup_active_pane_id=$(tmux display-message -p -t "${popup_session_name}:${popup_window_name}" "#{pane_id}")
+        popup_active_pane_id=$(tmux display-message -p -t "${popup_window_id}" "#{pane_id}")
         current_pane_path=$(printf '%q' "$current_pane_path") # Escape the path.
         tmux send-keys -t "${popup_active_pane_id}" "cd ${current_pane_path}" C-m
       fi
