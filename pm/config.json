@@ -50,7 +50,7 @@
       "cmd": "kit-touchpad",
       "autostart": false,
       "lifecycle": {
-        "start": ["start", "--request-permissions"],
+        "start": ["start"],
         "stop": ["stop"],
         "restart": ["restart"],
         "status": ["status", "--json"]
