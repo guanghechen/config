@@ -280,7 +280,7 @@ process and `processes` counts fresh processes.
   [`script/benchmark/`](../script/benchmark/), focused Lua probes, Filetree probes and
   opt-in Rust scan, watch and copy-capacity tests.
 - [Treeview](bench/treeview.md): synthetic projection, `ux::treeview::perf_tests`,
-  real data consumers, guides, result consumers, Diffview and List measurements.
+  real data consumers, guides, result consumers, viewport decorations, Diffview and List measurements.
 - [Yoz Fuzzy](../spec/design/feat/yoz/fuzzy.md#评测): L1 Rust core, L2 FFI and L3 real UI.
 - [Completion](../spec/debug/cmp-benchmark.md): the completion benchmark and reporter.
 
@@ -317,6 +317,16 @@ it is not an isolated ancestry-query measurement. External terminal/compositor p
 in an attached 100×40 UI with virtual file records (no filesystem scan). It reports producer time,
 first complete UI flush, cursor feedback and native confirmation separately, buffer writes during
 cursor movement, retained Lua heap, and collection of the first directory's selected identities.
+
+`nvim -l __test__/bench/treeview_decorations.lua [scenario=all] [processes=5] [iterations=300] [baseline-root] [gc=natural|stopped]`
+compares full-viewport redraws between a baseline checkout and the working tree: the Explorer on this checkout at
+width 30 and a 50,000-row synthetic tree, each without and with a selection, a ResultFiles tree of `git ls-files`, and
+the Git Files Unstaged pane on a fixture repository built from this checkout's files. Each process attaches a UI child
+that loads Lua from one root and this checkout's native library; rounds alternate the variant order. Export a
+baseline with `git archive <rev> lua | tar -x -C <dir>`; without one both variants are the working tree, which
+measures the noise floor. Results summarize forced redraw time (`nvim__redraw` with flush) and Treeview, Filetree
+and Explorer decoration-provider time after 30 warmups, and count ephemeral marks per redraw. GC is natural unless
+`gc` is `stopped`, which stops the Lua collector during the measured redraws to separate work from collection.
 
 `nvim -l __test__/bench/treeview_diffview.lua 10000 10` drives actual Diffview expansion actions in an
 attached 100×40 UI. It separates the header-only first screen and first file materialization from
