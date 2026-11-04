@@ -300,9 +300,12 @@ end
 ---@field public page                    integer
 ---@field public file                    string
 ---@field public prefix                  string
+---@field public marker                 string
 ---@field public meta                    era.m.image.meta
 ---@field public steps                   era.m.image.step[]
 ---@field public aborted                 ?boolean
+---@field public discarded              ?boolean
+---@field protected _cached             boolean
 ---@field protected _done                ?boolean
 ---@field protected _err                 ?string
 ---@field protected _future              stl.c.Future
@@ -311,8 +314,14 @@ end
 local Convert = {}
 Convert.__index = Convert
 
+---@class era.m.image.convert.Source
+---@field public id                     string
+---@field public path                   string
+---@field public page                   integer
+---@field public version                string
+
 ---@class era.m.image.convert.Opts
----@field public src                     string
+---@field public source                 era.m.image.convert.Source
 
 ---@param opts                           era.m.image.convert.Opts
 ---@return era.m.image.Convert
@@ -321,22 +330,28 @@ function Convert.new(opts)
   local s = state.data
   stl.env.mkdirs(s.tmpdir, true)
   local self = setmetatable({}, Convert)
-  opts.src, self.page = state.get_page(opts.src)
-  opts.src = state.norm_src(opts.src)
+  local src = opts.source.path ---@type string
+  self.page = opts.source.page
 
-  if yoz.uri.is_data_uri(opts.src) then
-    opts.src = self:__decode_data_uri__(opts.src, s.tmpdir)
+  if yoz.uri.is_data_uri(src) then
+    src = self:__decode_data_uri__(src, s.tmpdir)
   end
 
   self.opts = opts
-  self.src = opts.src
+  self.src = src
   self._step = 0
   self._future = stl.c.Future.new()
-  local base = vim.fn.fnamemodify(opts.src, ":t:r")
-  self.prefix = vim.fn.sha256(self.opts.src .. self.page):sub(1, 8) .. "-" .. base:gsub("[^%w%.]+", "-")
+  local base = vim.fn.fnamemodify(src, ":t:r")
+  -- Named after the source version: an edited source is converted again rather than read from the cache, and a
+  -- conversion never writes over the files of another version that may still be on screen.
+  local key = src .. self.page .. opts.source.version ---@type string
+  self.prefix = vim.fn.sha256(key):sub(1, 8) .. "-" .. base:gsub("[^%w%.]+", "-")
+  -- Outputs are reused only after a whole pipeline wrote them; an interrupted run leaves files but no marker.
+  self.marker = self:tmpfile("done")
+  self._cached = uv.fs_stat(self.marker) ~= nil
   -- kind is inferred only from module-generated template extensions (.math.tex / .math.typ),
   -- never from a user's direct file, so e.g. a direct `paper.math.pdf` is not treated as math.
-  self.meta = { src = opts.src, kind = opts.src:match("%.(%w+)%.tex$") or opts.src:match("%.(%w+)%.typ$") }
+  self.meta = { src = src, kind = src:match("%.(%w+)%.tex$") or src:match("%.(%w+)%.typ$") }
   self.steps = {}
   local terminal = require("era.m.image.terminal")
   self._tpl_data = {
@@ -417,7 +432,35 @@ function Convert:abort()
   end
 end
 
+---Abort the conversion and delete the files it wrote once no step is writing them.
+---@return nil
+function Convert:discard()
+  if self.discarded then
+    return
+  end
+  self.discarded = true
+  if self:done() then
+    return self:__clean__()
+  end
+  self:abort()
+end
+
 ----------------------------------------------------------------------------------------------------
+
+---Deletes only files this conversion named directly inside the cache directory, never its source.
+---@return nil
+function Convert:__clean__()
+  local tmpdir = require("era.m.image.state").data.tmpdir ---@type string
+  local files = { self.marker } ---@type string[]
+  for _, step in ipairs(self.steps) do
+    files[#files + 1] = step.file
+  end
+  for _, file in ipairs(files) do
+    if file ~= self.src and file == tmpdir .. "/" .. vim.fs.basename(file) then
+      uv.fs_unlink(file)
+    end
+  end
+end
 
 ---@param data_uri                       string
 ---@param tmpdir                         string
@@ -476,7 +519,7 @@ function Convert:__resolve_target__(target)
     file = file,
     ft = self:ft(file),
     meta = self.meta,
-    done = uv.fs_stat(file) ~= nil,
+    done = self._cached,
     cmd = cmd,
   }
   if cmd.pipe ~= false then
@@ -535,6 +578,14 @@ end
 function Convert:__on_done__()
   local step = self:current()
   self._done = true
+  if self.discarded then
+    self:__clean__()
+  elseif not self._err and not self._cached then
+    local fd = io.open(self.marker, "w")
+    if fd then
+      fd:close()
+    end
+  end
   if self._err and config.notify then
     local title = step and ("Conversion failed at step `%s`"):format(step.name) or "Conversion failed"
     stl.reporter.error({
@@ -553,7 +604,8 @@ function Convert:__step__()
   assert(self._step <= #self.steps, "No more steps")
 
   local step = self.steps[self._step]
-  step.done = step.done or (uv.fs_stat(step.file) ~= nil)
+  -- Another process may have finished this version meanwhile.
+  step.done = step.done or (uv.fs_stat(self.marker) ~= nil)
   if step.done then
     return self:__on_step__()
   end
@@ -604,6 +656,21 @@ end
 ---@return era.m.image.Convert
 function M.convert(opts)
   return Convert.new(opts)
+end
+
+---@param path                          string
+---@return string
+function M.version(path)
+  return require("era.m.image.state").version(path)
+end
+
+---@param src                           string
+---@return era.m.image.convert.Source
+function M.source(src)
+  local state = require("era.m.image.state")
+  local path, page = state.get_page(src)
+  path = state.norm_src(path)
+  return { id = path .. "#" .. page, path = path, page = page, version = state.version(path) }
 end
 
 return M

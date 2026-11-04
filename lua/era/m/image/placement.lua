@@ -40,6 +40,7 @@ local __module_name__ = "era.m.image.placement" ---@type string
 ---@field protected _state                ?era.m.image.State
 ---@field protected _extmarks             ?era.m.image.Extmark[]
 ---@field protected _debounced            ?stl.timer.IDisposableCallable
+---@field protected _spinner            ?uv.uv_timer_t
 local M = {}
 M.__index = M
 
@@ -126,15 +127,16 @@ function M.new(bufnr, src, opts)
     vim.schedule(function()
       self:update()
     end)
-  elseif self.img:failed() then
-    self:error()
   elseif self.opts.inline then
+    -- A failed image is anchored as well, so the document finds this placement again instead of adding one.
     self:__render__({
       {
         row = self.opts.pos[1] - 1,
         col = self.opts.pos[2],
       },
     })
+  elseif self.img:failed() then
+    self:error()
   else
     self:__progress__()
   end
@@ -171,6 +173,7 @@ function M:error()
   vim.api.nvim_set_option_value("modifiable", true, { buf = self.bufnr })
   vim.api.nvim_buf_set_lines(self.bufnr, 0, -1, false, lines)
   vim.api.nvim_set_option_value("modifiable", false, { buf = self.bufnr })
+  vim.api.nvim_set_option_value("modified", false, { buf = self.bufnr })
   if not pcall(vim.treesitter.start, self.bufnr, "markdown") then
     vim.api.nvim_set_option_value("syntax", "markdown", { buf = self.bufnr })
   end
@@ -478,6 +481,7 @@ function M:update()
   local state = require("era.m.image.state")
   local s = state.data
   local terminal = require("era.m.image.terminal")
+  self:__refresh__()
   if not self:ready() then
     return
   end
@@ -497,8 +501,8 @@ function M:update()
   end
   self._state = cur_state
 
+  -- Nothing is drawn without a window; a window showing the buffer again changes the state.
   if #cur_state.wins == 0 then
-    self:hide()
     return
   end
   self.img:place(self)
@@ -565,25 +569,39 @@ end
 
 ---@return nil
 function M:__progress__()
-  if self.opts.inline or self:ready() then
+  if self.opts.inline then
     return
   end
   vim.api.nvim_set_option_value("modifiable", true, { buf = self.bufnr })
   vim.api.nvim_buf_set_lines(self.bufnr, 0, -1, false, {})
   vim.api.nvim_set_option_value("modifiable", false, { buf = self.bufnr })
+  vim.api.nvim_set_option_value("modified", false, { buf = self.bufnr })
+  -- A running spinner reads `self.img`, so it also covers an image this placement has switched to.
+  if self:ready() or (self._spinner and not self._spinner:is_closing()) then
+    return
+  end
   local timer = assert(uv.new_timer())
+  local eid = nil ---@type integer|nil
+  self._spinner = timer
   timer:start(
     0,
     80,
     vim.schedule_wrap(function()
-      if self:ready() or self.img:failed() or not vim.api.nvim_buf_is_valid(self.bufnr) then
-        stl.timer.clear_timer(timer)
+      if timer:is_closing() then
         return
       end
-      vim.api.nvim_buf_clear_namespace(self.bufnr, ns, 0, -1)
+      local valid = vim.api.nvim_buf_is_valid(self.bufnr)
+      if self.closed or not valid or self:ready() or self.img:failed() then
+        stl.timer.clear_timer(timer)
+        if eid ~= nil and valid then
+          vim.api.nvim_buf_del_extmark(self.bufnr, ns, eid)
+        end
+        return
+      end
       local current = self.img.convert and self.img.convert:current()
       local name = current and current.name or "image"
-      vim.api.nvim_buf_set_extmark(self.bufnr, ns, 0, 0, {
+      eid = vim.api.nvim_buf_set_extmark(self.bufnr, ns, 0, 0, {
+        id = eid,
         virt_text = {
           { "◐ ", "m_img_spinner" },
           { " " },
@@ -592,6 +610,25 @@ function M:__progress__()
       })
     end)
   )
+end
+
+---Follows the source to its current version, so a rewritten or newly created file is converted and shown.
+---@return nil
+function M:__refresh__()
+  -- `bufnr` is unset while `new` registers this placement, which can already trigger an update.
+  if self.closed or self.bufnr == nil or not vim.api.nvim_buf_is_valid(self.bufnr) then
+    return
+  end
+  local img = self.img:latest()
+  if img == self.img then
+    return
+  end
+  self.img:del(self.id)
+  self.img = img
+  self._state = nil
+  img:place(self)
+  -- Clears a failure message the previous version left in a viewer and shows progress until it is ready.
+  self:__progress__()
 end
 
 ---@param extmarks                       era.m.image.Extmark[]

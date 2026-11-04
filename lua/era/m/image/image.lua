@@ -7,6 +7,8 @@
 ---@field public info                     ?era.m.image.Info
 ---@field public fsize                    ?integer
 ---@field public convert                  ?era.m.image.Convert
+---@field public source                 era.m.image.convert.Source
+---@field public retired                ?boolean
 local M = {}
 M.__index = M
 
@@ -19,6 +21,7 @@ local _id = 30
 ---@type integer
 local nvim_id = 0
 
+---The current version of each source, by source id.
 ---@type table<string, era.m.image.Image>
 local images = {}
 
@@ -56,13 +59,17 @@ end
 ---@param src                            string
 ---@return era.m.image.Image
 function M.new(src)
+  local source = require("era.m.image.convert").source(src)
+  local current = images[source.id]
+  if current and current.source.version == source.version then
+    return current
+  end
   local self = setmetatable({}, M)
   self.src = src
+  self.source = source
+  self.placements = {}
   self.file = self:__convert__()
-  if images[self.file] then
-    return images[self.file]
-  end
-  images[self.file] = self
+  images[source.id] = self
   _id = _id + 1
   local bit = require("bit")
   if nvim_id == 0 then
@@ -70,7 +77,9 @@ function M.new(src)
     nvim_id = bit.band(bit.bxor(pid, bit.rshift(pid, 5), bit.rshift(pid, NVIM_ID_BITS)), 0x3FF)
   end
   self.id = bit.bor(bit.lshift(nvim_id, 24 - NVIM_ID_BITS), _id)
-  self.placements = {}
+  if current then
+    current:__retire__()
+  end
 
   self:run()
   if self:ready() then
@@ -78,6 +87,15 @@ function M.new(src)
   end
 
   return self
+end
+
+---This image while its source is unchanged on disk, otherwise the image of the source's current version.
+---@return era.m.image.Image
+function M:latest()
+  if require("era.m.image.convert").version(self.source.path) == self.source.version then
+    return self
+  end
+  return M.new(self.src)
 end
 
 ---@return boolean
@@ -132,7 +150,11 @@ function M:del(pid)
   end
 
   if not next(self.placements) then
-    terminal.request({ a = "d", d = "i", i = self.id })
+    if self.retired then
+      self:__free__()
+    else
+      terminal.request({ a = "d", d = "i", i = self.id })
+    end
   end
 end
 
@@ -146,7 +168,7 @@ end
 ---@return string
 function M:__convert__()
   local convert = require("era.m.image.convert")
-  self.convert = convert.convert({ src = self.src })
+  self.convert = convert.convert({ source = self.source })
   self.convert:future():finally(function(resolved, c)
     if not resolved then
       return
@@ -168,6 +190,10 @@ end
 
 ---@return nil
 function M:__on_ready__()
+  -- A replaced version that nothing shows any more has been freed.
+  if self.retired and not next(self.placements) then
+    return
+  end
   if not self.sent then
     self.fsize = vim.fn.getfsize(self.file)
     self.info = self.convert and self.convert.meta.info or nil
@@ -198,6 +224,34 @@ function M:__send__()
     data = vim.base64.encode(self.file),
   })
   self:__on_send__()
+end
+
+---A newer version of the source replaced this image; it is freed once no placement shows it.
+---@return nil
+function M:__retire__()
+  self.retired = true
+  if not next(self.placements) then
+    self:__free__()
+  end
+end
+
+---Releases the image data held by the terminal and the conversion outputs of a retired image.
+---@return nil
+function M:__free__()
+  for i, v in ipairs(lru) do
+    if v.img == self then
+      table.remove(lru, i)
+      lru_fsize = lru_fsize - (self.fsize or 0)
+      break
+    end
+  end
+  if self.sent then
+    self.sent = false
+    require("era.m.image.terminal").request({ a = "d", d = "I", i = self.id })
+  end
+  if self.convert then
+    self.convert:discard()
+  end
 end
 
 return M

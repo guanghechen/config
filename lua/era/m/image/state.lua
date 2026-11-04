@@ -94,7 +94,8 @@ local SUPPORTED_EXTNAME_SET = stl.table.to_string_set(data.extnames) ---@type ta
 ---@field public size                    era.m.image.Size
 ---@field public dpi                     era.m.image.Size
 
----@type table<string, era.m.image.Size>
+---Pixel sizes by file, with the file version they were read from.
+---@type table<string, {version: string, size: era.m.image.Size}>
 local dims = {}
 
 ---@class era.m.image.state
@@ -111,8 +112,11 @@ local M = {
 ---@return era.m.image.Size
 function M.dim(file)
   file = dot.path.normalize(file)
-  if dims[file] then
-    return dims[file]
+  -- A PNG rewritten in place keeps its path, so its size is reused only for the same file version.
+  local version = M.version(file)
+  local cached = dims[file]
+  if cached and cached.version == version then
+    return cached.size
   end
   local fd = assert(io.open(file, "rb"), "Failed to open file: " .. file)
   local header = fd:read(24) ---@type string
@@ -120,8 +124,9 @@ function M.dim(file)
   assert(header:sub(1, 8) == "\137PNG\r\n\26\n", "Not a valid PNG file: " .. file)
   local width = header:byte(17) * 16777216 + header:byte(18) * 65536 + header:byte(19) * 256 + header:byte(20)
   local height = header:byte(21) * 16777216 + header:byte(22) * 65536 + header:byte(23) * 256 + header:byte(24)
-  dims[file] = { width = width, height = height }
-  return dims[file]
+  local size = { width = width, height = height } ---@type era.m.image.Size
+  dims[file] = { version = version, size = size }
+  return size
 end
 
 ---@param size                           era.m.image.Size
@@ -203,6 +208,21 @@ function M.get_page(src)
   local parts = vim.split(src, "#page=", { plain = true })
   local page_number = tonumber(parts[2]) or 1
   return parts[1], page_number - 1
+end
+
+---The version of the file at `path` as it is on disk now; a data URI is addressed by its content and has none.
+---@param path                          string
+---@return string
+function M.version(path)
+  if yoz.uri.is_data_uri(path) then
+    return ""
+  end
+  local stat = vim.uv.fs_stat(path)
+  if stat == nil then
+    return "missing"
+  end
+  -- ctime still changes when a tool restores the old mtime, and ino when a rename replaces the file.
+  return table.concat({ stat.ino, stat.size, stat.mtime.sec, stat.mtime.nsec, stat.ctime.sec, stat.ctime.nsec }, ":")
 end
 
 ---@param tpl                            string
