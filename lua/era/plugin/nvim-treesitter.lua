@@ -237,6 +237,14 @@ local M = {
 
 ----------------------------------------------------------------------------------------------------
 
+local install_dir = dot.path.locate_data_filepath("treesitter") ---@type string
+
+-- The installed parsers are on the runtimepath from startup, not only once the plugin loads on VeryLazy: the markdown
+-- and lua ftplugins already parse a file given on the command line, and Neovim memoizes per language whether an
+-- injection finds a parser (`has_parser` in vim/treesitter/languagetree.lua), so a miss lasts until a garbage
+-- collection happens to drop it.
+vim.opt.runtimepath:prepend(install_dir)
+
 ---@type era.m.plugin.IPluginSpec
 M.spec = {
   name = "nvim-treesitter",
@@ -252,9 +260,11 @@ M.spec = {
     folds = { enable = true },
     highlight = { enable = true },
     indent = { enable = true },
-    install_dir = dot.path.locate_data_filepath("treesitter"),
+    install_dir = install_dir,
   },
   config = function(_, opts)
+    -- `setup` puts `install_dir` on the runtimepath once more.
+    vim.opt.runtimepath:remove(opts.install_dir)
     require("nvim-treesitter").setup(opts)
     vim.api.nvim_create_user_command("TreesitterInstallAll", function()
       install("setup", function()

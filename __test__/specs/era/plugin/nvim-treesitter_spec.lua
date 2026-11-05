@@ -63,7 +63,10 @@ local function setup(buffers, windows, winnrs, start, active_languages, parser_a
   end
 
   t:patch_table(package.loaded, "nvim-treesitter", {
-    setup = function() end,
+    -- As nvim-treesitter does, whatever the runtimepath holds already.
+    setup = function(opts)
+      vim.o.runtimepath = opts.install_dir .. "," .. vim.o.runtimepath
+    end,
   })
   t:patch_table(vim.api, "nvim_create_user_command", function() end)
   t:patch_table(vim.api, "nvim_create_autocmd", function(events, opts)
@@ -88,6 +91,8 @@ local function setup(buffers, windows, winnrs, start, active_languages, parser_a
   t:patch_table(vim.api, "nvim_buf_is_loaded", function(bufnr)
     return buffers[bufnr] ~= nil and buffers[bufnr].loaded
   end)
+  -- The runtimepath is real: loading the plugin puts the installed parsers on it.
+  local get_option, set_option = vim.api.nvim_get_option_value, vim.api.nvim_set_option_value
   t:patch_table(vim.api, "nvim_get_option_value", function(name, opts)
     if name == "filetype" then
       return buffers[opts.buf].filetype
@@ -95,9 +100,15 @@ local function setup(buffers, windows, winnrs, start, active_languages, parser_a
     if name == "foldexpr" then
       return windows[opts.win].foldexpr
     end
+    if name == "runtimepath" then
+      return get_option(name, opts)
+    end
     error("unexpected option read: " .. name)
   end)
   t:patch_table(vim.api, "nvim_set_option_value", function(name, value, opts)
+    if name == "runtimepath" then
+      return set_option(name, value, opts)
+    end
     if name == "indentexpr" then
       buffers[opts.buf].indentexpr = value
       return
@@ -115,10 +126,17 @@ local function setup(buffers, windows, winnrs, start, active_languages, parser_a
     return true
   end)
   t:patch_table(vim.treesitter.highlighter, "active", active)
-  t:patch_table(vim.treesitter.query, "get", function(_, name)
-    t.assert_eq("folds", name, "fold availability query")
-    return {}
-  end)
+  -- Like the memoized `query.get`, it has a cache for a runtimepath change to clear.
+  t:patch_table(
+    vim.treesitter.query,
+    "get",
+    setmetatable({ clear = function() end }, {
+      __call = function(_, _, name)
+        t.assert_eq("folds", name, "fold availability query")
+        return {}
+      end,
+    })
+  )
   t:patch_table(vim.treesitter, "start", function(bufnr, lang)
     started[#started + 1] = bufnr
     if start then
@@ -144,6 +162,22 @@ local function setup(buffers, windows, winnrs, start, active_languages, parser_a
   end
   return callbacks, started, stopped, active, registrations
 end
+
+-- First of the cases that load the plugin, which changes the runtimepath.
+t:test("the installed parsers are on the runtimepath once from startup on", function()
+  ---@return integer
+  local function entries()
+    return #vim.tbl_filter(function(path)
+      return path == "/tmp/treesitter"
+    end, vim.opt.runtimepath:get())
+  end
+
+  -- This file requires the spec as the plugin list does at startup, long before the plugin loads.
+  t.assert_eq(1, entries(), "before the plugin loads")
+  ---@diagnostic disable-next-line: missing-parameter
+  setup({}, {}, {})
+  t.assert_eq(1, entries(), "once the plugin has loaded")
+end)
 
 t:test("notepad owns its markdown mapping", function()
   local mappings = {} ---@type table<string, string>
