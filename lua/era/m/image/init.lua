@@ -91,12 +91,15 @@ function M.dressing()
 
   state.did_setup = true
 
-  -- Formulas and charts take their colors from the theme. Its own subscriber, which came first, has applied it by then.
+  -- Formulas and charts take their colors from the theme. Its own subscriber applies them in a callback scheduled with
+  -- this one, which subscribed first: recolor after it.
   stl.fn.observe({ dot.context.theme.theme }, function()
-    local Image = package.loaded["era.m.image.image"]
-    if Image ~= nil then
-      Image.recolor()
-    end
+    vim.schedule(function()
+      local Image = package.loaded["era.m.image.image"]
+      if Image ~= nil then
+        Image.recolor()
+      end
+    end)
   end, true)
 
   local group = stl.nvim.fn.augroup("era.image_dressing")

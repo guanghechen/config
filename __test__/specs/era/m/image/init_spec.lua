@@ -248,4 +248,56 @@ t:test("reading an image buffer again replaces its placements", function()
   t.assert_same({ "clean 31", "new 31", "clean 31", "new 31" }, calls, "placements per read")
 end)
 
+t:test("a theme change recolors after the theme applied its colors, though this subscribed first", function()
+  local on_theme = nil ---@type fun()|nil
+  local recolored, seen = false, nil ---@type boolean, integer|nil
+  t:patch_global("stl", {
+    env = { IS_OSX = true },
+    fn = {
+      observe = function(_, callback)
+        on_theme = callback
+      end,
+    },
+    nvim = { fn = {
+      augroup = function()
+        return 1
+      end,
+    } },
+  })
+  t:patch_global("dot", { context = { theme = {} } })
+  t:patch_table(package.loaded, "era.m.image.state", {
+    data = { doc = { enabled = false }, extnames = { ".png" } },
+    did_setup = false,
+    is_support_file = function()
+      return true
+    end,
+    is_support_terminal = function()
+      return true
+    end,
+  })
+  t:patch_table(package.loaded, "era.m.image.image", {
+    recolor = function()
+      recolored, seen = true, vim.api.nvim_get_hl(0, { name = "m_img_math" }).fg
+    end,
+  })
+  t:patch_table(vim.api, "nvim_create_autocmd", function()
+    return 1
+  end)
+  t:defer(function()
+    vim.api.nvim_set_hl(0, "m_img_math", {})
+  end)
+  assert(loadfile("lua/era/m/image/init.lua"))().dressing()
+
+  -- `stl.fn.observe` schedules each subscriber: this one, then the theme's, which applies the colors.
+  vim.schedule(assert(on_theme))
+  vim.schedule(function()
+    vim.api.nvim_set_hl(0, "m_img_math", { fg = 0x0078D4 })
+  end)
+  t.wait_until(function()
+    return recolored
+  end, 1000, "recolored")
+
+  t.assert_eq(0x0078D4, seen, "the color the theme applied")
+end)
+
 t:run()

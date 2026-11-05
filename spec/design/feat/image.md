@@ -82,7 +82,8 @@ state / terminal → env
 - mermaid 图按背景（亮或暗）分别转换：主题、产物名与缓存都取创建转换时的背景，两种背景各有完成标记。主题改变背景时
   按新背景转换（已缓存则直接取用）。
 - 主题改变颜色后，公式与图表以新 id 发送：以原 id 重新发送的图像会从其 placement 上消失。发送前 placement 以旧 id
-  显示旧颜色，发送后改用新 id（placement 的状态包含 image id），旧 id 随即释放。
+  显示旧颜色，发送后改用新 id（placement 的状态包含 image id），旧 id 随即释放。image 订阅主题早于主题自己应用
+  颜色的订阅，因此重新着色推迟到其后。
 - ImageMagick 以 `-limit` 运行：宽高超过 16K 像素的图片直接失败，内存与磁盘 pixel cache 有上限。
 - ImageMagick 只用文件扩展名对应的解码器读取它（常见位图、SVG 与视频），不按内容判断格式：否则内容是 PostScript 的
   `.png` 会在装有 Ghostscript 时交给它解析。其他格式（如 eps、ps、ai、mvg 与无扩展名的文件）在运行前即失败。
