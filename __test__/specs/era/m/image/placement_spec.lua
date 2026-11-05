@@ -460,6 +460,27 @@ t:test("an image is no wider than the text area of its windows", function()
   t.assert_eq(info.width - info.textoff, Placement.state(placement).loc.width, "image width")
 end)
 
+t:test("an inline formula takes one row and the columns its pixels need at that height", function()
+  local image = fake_image({ ready = true })
+  local Placement = load_placement(image)
+  t:patch_table(package.loaded["era.m.image.terminal"], "size", function()
+    return { cell_width = 18, cell_height = 40, scale = 2.25 }
+  end)
+  local bufnr = shown_buf({ "a $m$ b" })
+
+  -- 42px tall like every inline formula, they are all scaled by 40/42 to fill the row.
+  for _, case in ipairs({ { pixels = 269, columns = 15 }, { pixels = 60, columns = 4 }, { pixels = 23, columns = 2 } }) do
+    image.info = { size = { width = case.pixels, height = 42 }, dpi = { width = 192, height = 192 } }
+    local placement = Placement.new(bufnr, image.src, { inline = true, pos = { 1, 2 }, range = { 1, 2, 1, 5 } })
+    t:defer(function()
+      placement:close()
+    end)
+
+    local loc = Placement.state(placement).loc
+    t.assert_same({ case.columns, 1 }, { loc.width, loc.height }, case.pixels .. "px wide")
+  end
+end)
+
 t:test("an image after wide characters starts at their display width", function()
   local image = fake_image({ ready = true })
   local Placement = load_placement(image)

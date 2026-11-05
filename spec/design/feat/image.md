@@ -34,6 +34,7 @@ state / terminal → env
   且只在当前模式不属于 `concealcursor` 时。
 - Insert 与 Replace 模式下，若当前模式不属于 `concealcursor`，光标所在行上会被 conceal 的新 placement 暂不创建，
   等离开该模式或光标离开该行后再建：逐字输入的公式只转换最终内容，而不是每个中间状态。
+- 前后有文字、不超过两行高的图片（如行内公式）占一行高，宽度按图片宽高比计算：每个公式缩放比例相同，落在同一条基线上。
 
 ## Buffer 生命周期
 

@@ -471,7 +471,14 @@ function M:state()
   end
 
   if size.height <= 2 and is_inline() then
-    size.width = math.ceil(size.width / size.height) + 2
+    -- One row of the text, as wide as the image needs at that height: every formula is scaled alike and sits on the
+    -- same baseline. A box sized in whole rows was too narrow for a long one, which then shrank, and too wide for a
+    -- short one.
+    local cell = require("era.m.image.terminal").size()
+    local info = self.img.info
+    local aspect = (info and info.size.height > 0) and info.size.width / info.size.height
+      or size.width * cell.cell_width / (size.height * cell.cell_height)
+    size.width = math.max(1, math.min(width, math.ceil(aspect * cell.cell_height / cell.cell_width)))
     size.height = 1
   end
 
