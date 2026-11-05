@@ -150,6 +150,15 @@ Visual contract：
 client 同时 attach 到同一 session 时，visual marker 可能由最后一次 reconcile 覆盖。
 这是已接受的显示限制；native `switch-client -l` 仍对每个 client 保持正确。
 
+### 7.2 Session close landing
+
+`detach-on-destroy off` 让被关闭 session 的 client 落到最近活跃的剩余 session，常常是刚用过的
+popup。Session policy 仅在 client 落到 popup/agent session 时由 `client-session-changed[0]`
+启动 `script/leave-hidden-session.sh`。该脚本从 `list-clients` 读取这个 client 自己的字段：
+没有 last session（`switch-client` 会记录）且不是新 client（attach 才是）即为被关闭挤过去，
+随后切到最近活跃的可见 session；没有可见 session 时留在原处。显式 attach 或切换到
+popup/agent session 不受影响。
+
 ## 8. Data flow
 
 ```text
@@ -198,6 +207,7 @@ Render、focus 与 swap 必须调用同一 `ordered_group` path，禁止各自�
 - stale、duplicate、missing-new ids；
 - index focus 与 wrapped prev/next；
 - wrapped swap、single-session no-op、unset order；
+- session close 不把 client 留在 popup/agent session，显式 attach 与 switch 保持不变；
 - concurrent swap serializability 与 CAS conflict；
 - applied marker timeout 后的 committed/unknown outcome reconciliation；
 - order committed / render failed 的 partial-success；

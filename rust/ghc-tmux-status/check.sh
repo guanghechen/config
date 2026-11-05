@@ -10,6 +10,7 @@ cargo test --manifest-path "$manifest"
 cargo clippy --manifest-path "$manifest" --all-targets -- -D warnings
 bash -n \
   "$repo_dir/script/focus-session.sh" \
+  "$repo_dir/script/leave-hidden-session.sh" \
   "$repo_dir/script/load-theme.sh" \
   "$repo_dir/script/swap-session.sh" \
   "$repo_dir/script/status-scheduler.sh" \
@@ -19,6 +20,7 @@ bash -n \
   "$crate_dir/tests/hook-gates-integration.sh" \
   "$crate_dir/tests/renderer-lifecycle-integration.sh" \
   "$crate_dir/tests/running-indicator-integration.sh" \
+  "$crate_dir/tests/session-landing-integration.sh" \
   "$crate_dir/tests/session-names-integration.sh" \
   "$crate_dir/tests/session-prompt-integration.sh" \
   "$crate_dir/tests/status-width-integration.sh" \
@@ -31,6 +33,7 @@ node --test "$crate_dir/tests/build.test.mjs"
 "$crate_dir/tests/hook-gates-integration.sh"
 "$crate_dir/tests/renderer-lifecycle-integration.sh"
 "$crate_dir/tests/running-indicator-integration.sh"
+"$crate_dir/tests/session-landing-integration.sh"
 "$crate_dir/tests/session-names-integration.sh"
 "$crate_dir/tests/session-prompt-integration.sh"
 "$crate_dir/tests/status-width-integration.sh"
