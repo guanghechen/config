@@ -275,4 +275,23 @@ t:test("a Normal mode caller gets no selection, even with text in register v", f
   t.assert_same(registers, register_state(), "registers")
 end)
 
+t:test("has_unsaved_changes counts only modified buffers that writing keeps", function()
+  ---@param buftype                     string
+  ---@param modified                    boolean
+  ---@return integer
+  local function buffer(buftype, modified)
+    local bufnr = create_buffer()
+    vim.api.nvim_set_option_value("buftype", buftype, { buf = bufnr })
+    vim.api.nvim_set_option_value("modified", modified, { buf = bufnr })
+    return bufnr
+  end
+
+  t.assert_true(buf.has_unsaved_changes(buffer("", true)), "modified file buffer")
+  t.assert_true(buf.has_unsaved_changes(buffer("acwrite", true)), "modified acwrite buffer")
+  t.assert_false(buf.has_unsaved_changes(buffer("", false)), "unmodified file buffer")
+  t.assert_false(buf.has_unsaved_changes(buffer("nofile", true)), "modified scratch buffer")
+  t.assert_false(buf.has_unsaved_changes(nil), "no buffer")
+  t.assert_false(buf.has_unsaved_changes(999999), "invalid buffer")
+end)
+
 t:run()

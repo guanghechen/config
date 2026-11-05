@@ -8,10 +8,35 @@ local M = {}
 -- close
 ----------------------------------------------------------------------------------------------------
 
+---Leaves out the buffers whose unsaved changes closing would discard, and reports the ones kept.
+---@param bufnrs                        integer[]
+---@return integer[]
+local function without_unsaved(bufnrs)
+  local closable = {} ---@type integer[]
+  local kept = {} ---@type string[]
+  for _, bufnr in ipairs(bufnrs) do
+    if stl.nvim.buf.has_unsaved_changes(bufnr) then
+      local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+      kept[#kept + 1] = filepath ~= "" and dot.path.relative(dot.path.cwd(), filepath, "/") or "[No Name]"
+    else
+      closable[#closable + 1] = bufnr
+    end
+  end
+  if #kept > 0 then
+    stl.reporter.warn({
+      from = __module_name__,
+      subject = "close",
+      message = "Kept buffers with unsaved changes: " .. table.concat(kept, ", "),
+    })
+  end
+  return closable
+end
+
 ---@param tabnr                         integer
 ---@param bufnrs                        integer[]
 ---@return nil
 local function __close__(tabnr, bufnrs)
+  bufnrs = without_unsaved(bufnrs)
   if #bufnrs < 1 then
     return
   end
@@ -30,18 +55,27 @@ function M.close()
   local winnr = dot.tab.retrieve_winnr_sourcefile(tabnr) ---@type integer|nil
   if winnr == nil then
     local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-    stl.nvim.buf.close(bufnr)
+    if #without_unsaved({ bufnr }) > 0 then
+      stl.nvim.buf.close(bufnr)
+    end
     return
   end
 
   local meta = dot.win.resolve(winnr, false) ---@type dot.win.IMeta|nil
   if meta == nil then
     local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-    stl.nvim.buf.close(bufnr)
+    if #without_unsaved({ bufnr }) > 0 then
+      stl.nvim.buf.close(bufnr)
+    end
     return
   end
 
   local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  -- Stay on a buffer with unsaved changes instead of switching away from it.
+  if #without_unsaved({ bufnr }) < 1 then
+    return
+  end
+
   local history = meta.history ---@type stl.c.History|nil
   if history == nil then
     stl.nvim.buf.close(bufnr)

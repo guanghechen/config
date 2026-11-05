@@ -100,6 +100,17 @@ function M.close(bufnr)
   vim.api.nvim_buf_delete(bufnr, { force = true })
 end
 
+---Whether closing the buffer would discard edits that only writing it keeps, as Vim judges before abandoning one.
+---@param bufnr                         ?integer
+---@return boolean
+function M.has_unsaved_changes(bufnr)
+  if bufnr == nil or bufnr < 1 or not vim.api.nvim_buf_is_valid(bufnr) then
+    return false
+  end
+  local buftype = vim.api.nvim_get_option_value("buftype", { buf = bufnr }) ---@type string
+  return (buftype == "" or buftype == "acwrite") and vim.api.nvim_get_option_value("modified", { buf = bufnr })
+end
+
 ---@param bufnr                         ?integer
 ---@return boolean
 function M.is_editable(bufnr)

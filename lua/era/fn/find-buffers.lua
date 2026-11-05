@@ -186,6 +186,16 @@ picker = era.m.picker.ListComposer.new({
           return
         end
 
+        if stl.nvim.buf.has_unsaved_changes(bufnr) then
+          local filepath = item.data.filepath ---@type string
+          stl.reporter.warn({
+            from = name,
+            subject = "close",
+            message = "Kept a buffer with unsaved changes: " .. (filepath ~= "" and filepath or "[No Name]"),
+          })
+          return
+        end
+
         if not vim.api.nvim_get_option_value("buflisted", { buf = bufnr }) then
           vim.api.nvim_buf_delete(bufnr, { force = true })
           local data = fetch_data()
