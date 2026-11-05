@@ -92,6 +92,15 @@ local function setup()
       resolve = function()
         return nil
       end,
+      refresh = function() end,
+    },
+    path = {
+      cwd = function()
+        return ""
+      end,
+      resolve = function(_, filename)
+        return filename
+      end,
     },
     buf = {
       on_close = function(bufnr)
@@ -163,7 +172,13 @@ local function setup()
       },
     },
   })
-  t:patch_global("yoz", {})
+  t:patch_global("yoz", {
+    path = {
+      is_exist_directory = function()
+        return false
+      end,
+    },
+  })
   t:patch_table(vim, "schedule", function(callback)
     runtime.scheduled[#runtime.scheduled + 1] = callback
   end)
@@ -341,6 +356,27 @@ t:test("VimLeavePre drops deferred window updates after status disposal", functi
 
   t.assert_eq(1, runtime.disposed, "dispose calls")
   t.assert_eq(0, runtime.status_updates, "status updates after dispose")
+end)
+
+t:test("VimEnter reports a working directory deleted before startup", function()
+  local runtime = setup()
+  local reports = {} ---@type stl.reporter.IOptions[]
+  t:patch_table(stl.reporter, "error", function(report)
+    reports[#reports + 1] = report
+  end)
+
+  runtime.autocmds.state_on_VimEnter.callback()
+  run_scheduled(runtime)
+  t.assert_eq(0, #reports, "reports with an existing working directory")
+
+  t:patch_table(vim.uv, "cwd", function()
+    return nil, "ENOENT: no such file or directory", "ENOENT"
+  end)
+  runtime.autocmds.state_on_VimEnter.callback()
+  run_scheduled(runtime)
+  t.assert_eq(1, #reports, "reports with a deleted working directory")
+  t.assert_eq("working directory", reports[1].subject, "subject")
+  t.assert_true(reports[1].message:find("cd $PWD", 1, true) ~= nil, "the message tells how to recover")
 end)
 
 t:run()

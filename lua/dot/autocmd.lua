@@ -130,6 +130,20 @@ vim.api.nvim_create_autocmd("VimEnter", {
   group = stl.nvim.fn.augroup("state_on_VimEnter"),
   callback = function()
     vim.schedule(function()
+      -- Nothing else names this cause: relative paths just fail, so explain it, and outlast the errors that repeat.
+      local _, cwd_error = vim.uv.cwd()
+      if cwd_error ~= nil then
+        stl.reporter.error({
+          from = "dot.autocmd",
+          subject = "working directory",
+          message = "The working directory no longer exists: Neovim was started from a deleted directory, perhaps "
+            .. "recreated since at the same path. Relative paths fail until a restart, as in nvimbar's "
+            .. "`vim/fs: assertion failed!`. Run `cd $PWD` (or cd elsewhere) in the shell, then restart Neovim.",
+          details = { PWD = vim.env.PWD, error = cwd_error },
+          timeout = 100000,
+        })
+      end
+
       local cwd = dot.path.cwd() ---@type string
       local existed_filepaths = {} ---@type table<string, boolean>
       local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
