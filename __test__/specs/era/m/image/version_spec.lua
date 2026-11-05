@@ -153,6 +153,31 @@ t:test("a replaced version releases its terminal data and outputs once nothing s
   t.assert_true(vim.uv.fs_stat(file) ~= nil, "source kept")
 end)
 
+t:test("the terminal lets go of an image no placement shows, which is sent again once one does", function()
+  local Image = require("era.m.image.image")
+  local file = t:tempdir() .. "/g.png" ---@type string
+  write_png(file, 4, 2)
+  local img = Image.new(file)
+  t.wait_until(function()
+    return img.sent == true
+  end, 5000, "image sent")
+  img:place({ id = 921, update = function() end })
+  local before = #requests ---@type integer
+
+  img:del(921)
+
+  t.assert_true(
+    vim.tbl_contains(vim.list_slice(requests, before + 1), function(request)
+      return vim.deep_equal(request, { a = "d", d = "I", i = img.id })
+    end, { predicate = true }),
+    "image data released"
+  )
+  t.assert_eq(img, Image.new(file), "still the current version")
+  t.assert_true(vim.uv.fs_stat(assert(img.convert).marker) ~= nil, "conversion kept")
+  img:place({ id = 922, update = function() end })
+  t.assert_true(img.sent, "sent again")
+end)
+
 t:test("a placement shows an image whose source appears later", function()
   local Placement = require("era.m.image.placement")
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer

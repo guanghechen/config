@@ -172,7 +172,7 @@ function M:del(pid)
     if self.retired then
       self:__free__()
     else
-      terminal.request({ a = "d", d = "i", i = self.id })
+      self:__release__()
     end
   end
 end
@@ -254,9 +254,10 @@ function M:__retire__()
   end
 end
 
----Releases the image data held by the terminal and the conversion outputs of a retired image.
+---Releases the image data the terminal holds once no placement shows the image; a placement showing it again sends it
+---anew. Data `use` marked unsent for its budget is still held, so it goes as well.
 ---@return nil
-function M:__free__()
+function M:__release__()
   for i, v in ipairs(lru) do
     if v.img == self then
       table.remove(lru, i)
@@ -264,10 +265,14 @@ function M:__free__()
       break
     end
   end
-  if self.sent then
-    self.sent = false
-    require("era.m.image.terminal").request({ a = "d", d = "I", i = self.id })
-  end
+  self.sent = false
+  require("era.m.image.terminal").request({ a = "d", d = "I", i = self.id })
+end
+
+---Releases the image data held by the terminal and the conversion outputs of a retired image.
+---@return nil
+function M:__free__()
+  self:__release__()
   ids[self.id] = nil
   if self.convert then
     self.convert:discard()

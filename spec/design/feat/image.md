@@ -62,8 +62,9 @@ state / terminal → env
 ## 版本与缓存
 
 - source 由 path 与 page 标识，版本取文件状态（inode、size、mtime、ctime）；data URI 按内容寻址，没有版本。
-- `image` 为每个 source 只登记当前版本。版本变化时创建新 image，旧版本退役；最后一个 placement 离开后，
-  释放它在 terminal 中的图像数据（`d=I`）并删除其转换产物。
+- `image` 为每个 source 只登记当前版本。版本变化时创建新 image，旧版本退役；最后一个 placement 离开后删除其转换产物。
+- 任一 image 的最后一个 placement 离开时，释放它在 terminal 中的图像数据（`d=I`），再有 placement 显示时重新发送。
+  退出时关闭全部 placements，terminal 因此不再保留本实例发送的图像。
 - `placement` 每次 update 先跟随 source 到当前版本，因此改写或后来才创建的文件会重新转换并显示；
   失败结果只在同一版本内复用。
 - 转换产物按 source 版本命名，写入完成标记后才被复用，中断的转换会重新执行；同一次转换中由前序步骤写出的产物
