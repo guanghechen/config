@@ -10,7 +10,7 @@ end, {
   silent = true,
 })
 
-vim.keymap.set("v", "K", function()
+vim.keymap.set("x", "K", function()
   K.log.preview_json_visual:execute(nil, nil, true)
 end, {
   buffer = bufnr,

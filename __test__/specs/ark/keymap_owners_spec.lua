@@ -50,10 +50,18 @@ local PREFIXES = {
   ["x i"] = "era/keystroke/textobject/keymap.lua",
 } ---@type table<string, string>
 
+-- Select-mode maps that start with a printable key, with their source. Typing over a selection, such as a snippet
+-- placeholder, replaces it with the typed text, so each of these takes its key from the text instead.
+local TYPED = {
+  -- Which-key turns `<` of the maps it reads into a group and puts its trigger there, Select mode included.
+  ["s <lt>"] = "era/dressing/whichkey/input.lua",
+} ---@type table<string, string>
+
 ---@class __test__.specs.ark.keymap_owners.IReport
 ---@field public overrides              ?table<string, string>
 ---@field public shadows                ?table<string, string>
 ---@field public prefixes               ?table<string, string>
+---@field public typed                  ?table<string, string>
 ---@field public missing                ?string[]
 ---@field public error                  ?string
 
@@ -114,7 +122,7 @@ local function assert_recorded(what, expected, actual)
   end
 end
 
----@param name                          "overrides"|"shadows"|"prefixes"
+---@param name                          "overrides"|"shadows"|"prefixes"|"typed"
 ---@return table<string, string>
 local function started(name)
   local data = start()
@@ -135,6 +143,10 @@ end)
 
 t:test("only the recorded mapped keys wait for a longer mapping", function()
   assert_recorded("mapped keys waiting for a longer mapping", PREFIXES, started("prefixes"))
+end)
+
+t:test("Select mode maps only the recorded printable keys", function()
+  assert_recorded("Select-mode maps of printable keys", TYPED, started("typed"))
 end)
 
 t:run()

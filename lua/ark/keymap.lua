@@ -75,8 +75,8 @@ mk({ "n", "x" }, "<C-k>", "<C-u>zz", "scroll: half page up and center")
 
 ---! better join/move
 -- mk({ "n" }, "J", "mzJ`z", "join: merge lines without moving cursor")
-mk({ "v" }, "J", ":m '>+1<cr>gv=gv", "move: move lines down in visual selection")
-mk({ "v" }, "K", ":m '<-2<cr>gv=gv", "move: move lines up in visual selection")
+mk({ "x" }, "J", ":m '>+1<cr>gv=gv", "move: move lines down in visual selection")
+mk({ "x" }, "K", ":m '<-2<cr>gv=gv", "move: move lines up in visual selection")
 
 ---! better jump list
 mk({ "n", "x" }, "<C-i>", "<C-o>", "jump back")

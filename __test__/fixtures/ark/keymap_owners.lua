@@ -256,7 +256,20 @@ local function report(out_path)
     end
   end
 
-  vim.fn.writefile({ vim.json.encode({ overrides = overrides, shadows = shadows, prefixes = prefixes }) }, out_path)
+  -- Select mode types a printable key over the selection, so a map that starts with one takes the key instead.
+  local typed = {} ---@type table<string, string>
+  for _, map in ipairs(vim.list_extend(vim.api.nvim_get_keymap("s"), vim.api.nvim_buf_get_keymap(bufnr, "s"))) do
+    local byte = map.lhsraw:byte(1) ---@type integer|nil
+    if byte ~= nil and ((byte >= 0x20 and byte < 0x7f) or byte >= 0xc2) then
+      local key = "s " .. vim.fn.keytrans(map.lhsraw)
+      typed[key] = (map.buffer ~= 0 and buffer_owner[key] or global_owner[key]) or (defaults[key] and "nvim") or "?"
+    end
+  end
+
+  vim.fn.writefile(
+    { vim.json.encode({ overrides = overrides, shadows = shadows, prefixes = prefixes, typed = typed }) },
+    out_path
+  )
 end
 
 ---@param out_path                      string
