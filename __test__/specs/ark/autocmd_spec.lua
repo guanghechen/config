@@ -167,6 +167,27 @@ t:test("refreshes the filepath cache after a buffer rename", function()
   t.assert_same({ "BufWinEnter", "BufFilePost" }, events, "cache refresh events")
 end)
 
+for _, filetype in ipairs({ "gitcommit", "gitrebase" }) do
+  t:test(filetype .. " starts at the top instead of the position saved for its previous content", function()
+    local runtime = setup()
+    local get_option_value = vim.api.nvim_get_option_value
+    t:patch_table(vim.api, "nvim_get_option_value", function(name, opts)
+      return name == "filetype" and filetype or get_option_value(name, opts)
+    end)
+
+    runtime.autocmds.ark_goto_last_location_read.callback({ buf = 1 })
+    runtime.autocmds.ark_goto_last_location.callback({ buf = 1 })
+    t.assert_eq(0, #runtime.scheduled, "scheduled restorations")
+    t.assert_eq(0, runtime.cursor_updates, "cursor updates")
+  end)
+end
+
+t:test("q stays free for recording macros in a commit message", function()
+  local runtime = setup()
+
+  t.assert_false(vim.tbl_contains(runtime.autocmds.ark_close_filetypes_with_q.pattern, "gitcommit"))
+end)
+
 for _, host in ipairs({ "neovim", "neovide", "vscode", "yozvim", "yuivim" }) do
   t:test(host .. " keeps Python environment setup under the correct owner", function()
     t:patch_table(vim, "g", host == "neovim" and {} or { [host] = true })

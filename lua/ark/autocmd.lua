@@ -107,6 +107,12 @@ vim.api.nvim_create_autocmd("BufWinEnter", {
     if vim.b[bufnr].eve_last_loc ~= false then
       return
     end
+    -- A commit message or rebase list is new content under the same name each time; the saved position is the old one's.
+    local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
+    if filetype == "gitcommit" or filetype == "gitrebase" then
+      vim.b[bufnr].eve_last_loc = true
+      return
+    end
 
     local winnr = vim.api.nvim_get_current_win() ---@type integer
     if vim.api.nvim_win_get_buf(winnr) ~= bufnr then
@@ -161,7 +167,6 @@ vim.api.nvim_create_autocmd("FileType", {
   pattern = {
     "checkhealth",
     "explorer",
-    "gitcommit",
     "help",
     "image-viewer",
     "lazy",
