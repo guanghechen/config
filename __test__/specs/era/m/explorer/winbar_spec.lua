@@ -329,7 +329,10 @@ t:test("replacing an Explorer buffer releases its window and late cleanup preser
       vim.api.nvim_buf_delete(bufnr, { force = true })
     end
   end)
-  vim.api.nvim_win_set_buf(winnr, bufnr)
+  -- 'winfixbuf' refuses a plain switch; :buffer! still forces one.
+  vim.api.nvim_win_call(winnr, function()
+    vim.cmd.buffer({ args = { tostring(bufnr) }, bang = true })
+  end)
   vim.api.nvim_set_option_value("winbar", "other owner", { win = winnr })
   vim.api.nvim_set_option_value("winhighlight", "Normal:Normal", { win = winnr })
   vim.api.nvim_set_option_value("cursorline", false, { win = winnr })
@@ -340,6 +343,7 @@ t:test("replacing an Explorer buffer releases its window and late cleanup preser
   t.assert_eq("other owner", vim.api.nvim_get_option_value("winbar", { win = winnr }))
   t.assert_eq("Normal:Normal", vim.api.nvim_get_option_value("winhighlight", { win = winnr }))
   t.assert_false(vim.api.nvim_get_option_value("cursorline", { win = winnr }))
+  t.assert_false(vim.api.nvim_get_option_value("winfixbuf", { win = winnr }), "the released window is not pinned")
   t.assert_eq(width, vim.api.nvim_win_get_width(winnr))
   t.assert_false(widget:isvisible())
   widget:hide()
@@ -392,7 +396,9 @@ t:test("a replaced loading placeholder cannot be claimed by a late attach", func
     end
   end)
   session = await(opening)
-  vim.api.nvim_win_set_buf(winnr, bufnr)
+  vim.api.nvim_win_call(winnr, function()
+    vim.cmd.buffer({ args = { tostring(bufnr) }, bang = true })
+  end)
   vim.api.nvim_set_option_value("winbar", "loading replacement", { win = winnr })
   widget:render_winbar()
   t.assert_false(widget:isvisible())

@@ -279,6 +279,10 @@ function M:get_winnr(tabnr)
   then
     return winnr
   end
+  -- A forced switch such as :buffer! replaced the Explorer; its pin must not hold the new buffer.
+  if vim.api.nvim_win_is_valid(winnr) and vim.api.nvim_win_get_buf(winnr) ~= self._tab_bufs[tabnr] then
+    vim.api.nvim_set_option_value("winfixbuf", false, { win = winnr })
+  end
   self:_forget_window(tabnr, winnr)
   if view then
     view:detach()
@@ -511,6 +515,8 @@ function M:focus()
     wrap = false,
     spell = false,
     winfixwidth = true,
+    -- Commands such as <C-^> or :buffer would otherwise load a file into the Explorer window.
+    winfixbuf = true,
   }) do
     vim.api.nvim_set_option_value(name, value, { win = winnr })
   end
