@@ -77,7 +77,6 @@ pub struct SessionInfo {
      * They detect drift without copying every full rich-text value into snapshots.
      */
     pub cache_witnesses: [String; 4],
-    pub created: i64,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -88,7 +87,6 @@ pub struct TmuxSnapshot {
     pub current_session_name: String,
     pub client_last_session: String,
     pub host: String,
-    pub session_created: i64,
     pub sessions: Vec<SessionInfo>,
     /// Attached clients as (session_id, client_width); detached sessions are absent.
     pub client_widths: Vec<(String, usize)>,
@@ -229,11 +227,6 @@ pub struct RenderContext {
     pub snapshot: Rc<TmuxSnapshot>,
     pub group: SessionGroupView,
     pub layout: LayoutPlan,
-    /**
-     * Session whose time-dependent widgets are being rendered. This is explicit
-     * because the snapshot's invoking client is not the owner of every session cache.
-     */
-    pub render_session_created: i64,
     /// Resolved target layout for every reconciled (ON, attached) session.
     pub session_layouts: Vec<SessionLayout>,
 }
@@ -254,7 +247,6 @@ pub struct SessionLayout {
     pub current_format_1: String,
     pub current_render_key: String,
     pub current_cache_witnesses: [String; 4],
-    pub session_created: i64,
     pub layout: LayoutPlan,
     /**
      * Widest attached client for this session. Layout rows are resolved from

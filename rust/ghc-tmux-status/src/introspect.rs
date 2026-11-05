@@ -14,8 +14,8 @@ use crate::widget::{decode_cpu_snapshot, decode_memory_snapshot, decode_network_
  * rendered status02 output (duplicates across rows included). Maintained by hand
  * for `dump-state`; kept in sync with the render in composer::render_status02.
  */
-pub const TEMPLATE_WIDGET_PLACEMENTS: usize = 16;
-pub const COMPUTED_WIDGET_PLACEMENTS: usize = 4;
+pub const TEMPLATE_WIDGET_PLACEMENTS: usize = 18;
+pub const COMPUTED_WIDGET_PLACEMENTS: usize = 2;
 pub const CACHED_METRIC_WIDGET_PLACEMENTS: usize = 0;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -587,7 +587,6 @@ mod tests {
             current_session_name: "s".to_string(),
             client_last_session: String::new(),
             host: "h".to_string(),
-            session_created: 1,
             sessions: Vec::new(),
             client_widths: Vec::new(),
             options,

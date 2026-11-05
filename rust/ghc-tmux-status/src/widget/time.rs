@@ -44,7 +44,6 @@ mod tests {
                 current_session_name: "s".to_string(),
                 client_last_session: String::new(),
                 host: "h".to_string(),
-                session_created: 1,
                 sessions: Vec::new(),
                 client_widths: Vec::new(),
                 options: BTreeMap::new(),
@@ -61,7 +60,6 @@ mod tests {
                 target_status: "on".to_string(),
                 key: "02:wide".to_string(),
             },
-            render_session_created: 1,
             session_layouts: Vec::new(),
         }
     }

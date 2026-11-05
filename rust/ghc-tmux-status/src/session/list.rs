@@ -322,7 +322,6 @@ mod tests {
                 format_1: String::new(),
                 render_key: String::new(),
                 cache_witnesses: std::array::from_fn(|_| String::new()),
-                created: 0,
             })
             .collect()
     }

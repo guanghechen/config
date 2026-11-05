@@ -920,7 +920,6 @@ fn current_session_context_from_snapshot(snapshot: TmuxSnapshot) -> Option<Rende
 
 fn context_state_from_snapshot(snapshot: TmuxSnapshot) -> LiveContextState {
     let snapshot = Rc::new(snapshot);
-    let render_session_created = snapshot.session_created;
     let group = ordered_group_from_snapshot(&snapshot);
     let current_layout = LayoutEngine::resolve(
         &snapshot.mode,
@@ -947,7 +946,6 @@ fn context_state_from_snapshot(snapshot: TmuxSnapshot) -> LiveContextState {
         snapshot,
         group,
         layout,
-        render_session_created,
         session_layouts,
     })
 }
@@ -1029,11 +1027,6 @@ fn fallback_render_context(context: &RenderContext) -> RenderContext {
             sessions: Vec::new(),
         },
         layout: context.layout.clone(),
-        /*
-         * A future creation timestamp deterministically renders the neutral "0m"
-         * fallback until an attached session receives its local cache.
-         */
-        render_session_created: i64::MAX,
         session_layouts: Vec::new(),
     }
 }
@@ -1050,7 +1043,6 @@ fn render_session_statuses(
                 snapshot: Rc::clone(&context.snapshot),
                 group: ordered_group_for_session(&context.snapshot, &session_layout.session_name),
                 layout: session_layout.layout.clone(),
-                render_session_created: session_layout.session_created,
                 session_layouts: Vec::new(),
             };
             let status = render_status02(&render_context, metrics_supported)?;
@@ -1099,7 +1091,6 @@ mod tests {
             format_1: String::new(),
             render_key: String::new(),
             cache_witnesses: std::array::from_fn(|_| String::new()),
-            created: 0,
         }
     }
 
@@ -1112,7 +1103,6 @@ mod tests {
             current_session_name: "_popup@x".to_string(),
             client_last_session: String::new(),
             host: "h".to_string(),
-            session_created: 1,
             sessions: vec![
                 session("$1", "_popup@x", "off"),
                 session("$2", "main", "on"),
@@ -1137,7 +1127,6 @@ mod tests {
             current_session_name: "_popup@x".to_string(),
             client_last_session: String::new(),
             host: "h".to_string(),
-            session_created: 1,
             sessions: vec![
                 session("$1", "_popup@x", "off"),
                 session("$2", "main", "on"),
@@ -1150,18 +1139,13 @@ mod tests {
     }
 
     #[test]
-    fn renders_session_owned_cache_for_each_group_and_duration() {
-        let now = crate::util::time::unix_timestamp_seconds() as i64;
-        let mut sessions = vec![
+    fn renders_session_owned_cache_for_each_group() {
+        let sessions = vec![
             session("$1", "main", "on"),
             session("$2", "work", "on"),
             session("$3", "G1-build", "on"),
             session("$4", "G1-test", "on"),
         ];
-        sessions[0].created = now;
-        sessions[1].created = now.saturating_sub(3_600);
-        sessions[2].created = now;
-        sessions[3].created = now;
         let snapshot = Rc::new(TmuxSnapshot {
             mode: "02".to_string(),
             status: "on".to_string(),
@@ -1169,7 +1153,6 @@ mod tests {
             current_session_name: "main".to_string(),
             client_last_session: String::new(),
             host: "host".to_string(),
-            session_created: now,
             sessions,
             client_widths: ["$1", "$2", "$3", "$4"]
                 .map(|id| (id.to_string(), 220))
@@ -1180,7 +1163,6 @@ mod tests {
         let context = RenderContext {
             group: ordered_group_from_snapshot(&snapshot),
             layout: LayoutEngine::resolve("02", "on", 220, 2, RowsOverride::Auto).unwrap(),
-            render_session_created: now,
             snapshot,
             session_layouts,
         };
@@ -1210,8 +1192,14 @@ mod tests {
                 .contains("#{l:G1-build}")
         );
         assert!(!grouped.status.status_left.rich_text.contains("#{l:main}"));
-        assert!(main.status.status_right.rich_text.contains(" 0m "));
-        assert!(work.status.status_right.rich_text.contains(" 1h 00m "));
+        // Session age is drawn by tmux, so same-group right sides no longer differ by age.
+        assert!(
+            main.status
+                .status_right
+                .rich_text
+                .contains("#{E:@GHC_SESSION_DURATION_FMT}")
+        );
+        assert_eq!(main.status.status_right, work.status.status_right);
         assert_eq!(main.session_group_count, 2);
         assert_eq!(work.session_group_count, 2);
         assert_eq!(grouped.session_group_count, 2);

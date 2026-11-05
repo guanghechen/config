@@ -51,7 +51,7 @@ pub fn render_status02(
     let network = template(NetworkWidget).render(context)?;
     let cpu = template(CpuWidget).render(context)?;
     let memory = template(MemoryWidget).render(context)?;
-    let duration = computed(DurationWidget).render(context)?;
+    let duration = template(DurationWidget).render(context)?;
     let date = template(DateWidget).render(context)?;
     let time = template(TimeWidget).render(context)?;
     /*
@@ -614,7 +614,6 @@ mod tests {
             format_1: String::new(),
             render_key: String::new(),
             cache_witnesses: std::array::from_fn(|_| String::new()),
-            created: 1,
         }];
 
         RenderContext {
@@ -625,8 +624,6 @@ mod tests {
                 current_session_name: "main".to_string(),
                 client_last_session: String::new(),
                 host: "h".to_string(),
-                // Far-future start ⇒ saturating duration pins to "0m", no wall-clock drift.
-                session_created: 9_999_999_999,
                 sessions: sessions.clone(),
                 client_widths: Vec::new(),
                 options,
@@ -643,7 +640,6 @@ mod tests {
                 target_status: "on".to_string(),
                 key: "02:wide".to_string(),
             },
-            render_session_created: 9_999_999_999,
             session_layouts: Vec::new(),
         }
     }

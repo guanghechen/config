@@ -255,14 +255,19 @@ pub struct RenderedSegment {
 |---|---|
 | host | prefix indicator |
 | session list | fullscreen |
-| duration | window id |
+|  | window id |
 |  | network |
 |  | CPU |
 |  | memory |
+|  | duration |
 |  | date |
 |  | time |
 
 Metric widget 读取 sampler-owned tmux options；它们不是 cached metric lifecycle。
+Duration 引用 `conf/variable.tmux.conf` 的 `@GHC_SESSION_DURATION_FMT`，由 tmux 在每次
+redraw 时按 `%s` 与 `session_created` 计算，因此 session cache 不含时间相关内容。
+该公式不得内联进 cache：含 `%` 的 format 展开后超过约 8 KiB 时 tmux 会整段渲染为空，
+大 session 组的 right cache 已接近该上限。
 
 ### 7.3 Row composition
 

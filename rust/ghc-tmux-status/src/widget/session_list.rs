@@ -881,7 +881,6 @@ mod tests {
                 current_session_name: current_session_name.to_string(),
                 client_last_session: client_last_session.to_string(),
                 host: "h".to_string(),
-                session_created: 1,
                 sessions: sessions.clone(),
                 client_widths: Vec::new(),
                 options: BTreeMap::new(),
@@ -898,7 +897,6 @@ mod tests {
                 target_status: "on".to_string(),
                 key: "02:wide".to_string(),
             },
-            render_session_created: 1,
             session_layouts: Vec::new(),
         }
     }
@@ -916,7 +914,6 @@ mod tests {
             format_1: String::new(),
             render_key: String::new(),
             cache_witnesses: std::array::from_fn(|_| String::new()),
-            created: 1,
         }
     }
 }

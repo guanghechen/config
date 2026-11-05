@@ -532,7 +532,7 @@ fn snapshot_command_args(
             "display-message".to_string(),
             "-p".to_string(),
             format!(
-                "{CONTEXT_MARK}{FIELD_SEP}#{{client_width}}{FIELD_SEP}#{{session_id}}{FIELD_SEP}#{{session_name}}{FIELD_SEP}#{{client_last_session}}{FIELD_SEP}#{{host}}{FIELD_SEP}#{{session_created}}"
+                "{CONTEXT_MARK}{FIELD_SEP}#{{client_width}}{FIELD_SEP}#{{session_id}}{FIELD_SEP}#{{session_name}}{FIELD_SEP}#{{client_last_session}}{FIELD_SEP}#{{host}}"
             ),
         ],
     );
@@ -553,7 +553,7 @@ fn snapshot_command_args(
          * field as the "1"/"0" has_bell flag, so the shape is unchanged.
          */
         format!(
-            "#{{session_id}}\t#{{session_name}}\t#{{?#{{m:*!*,#{{session_alerts}}}},1,0}}\t#{{status}}\t#{{@GHC_SL_LAYOUT}}\t#{{status-left-length}}\t#{{status-right-length}}\t#{{{STATUS_FORMAT_0_OPTION}}}\t#{{{STATUS_FORMAT_1_OPTION}}}\t#{{{SESSION_RENDER_KEY_OPTION}}}\t{}\t{}\t{}\t{}\t#{{session_created}}",
+            "#{{session_id}}\t#{{session_name}}\t#{{?#{{m:*!*,#{{session_alerts}}}},1,0}}\t#{{status}}\t#{{@GHC_SL_LAYOUT}}\t#{{status-left-length}}\t#{{status-right-length}}\t#{{{STATUS_FORMAT_0_OPTION}}}\t#{{{STATUS_FORMAT_1_OPTION}}}\t#{{{SESSION_RENDER_KEY_OPTION}}}\t{}\t{}\t{}\t{}",
             cache_witness_formats[0],
             cache_witness_formats[1],
             cache_witness_formats[2],
@@ -926,7 +926,7 @@ fn parse_snapshot_output(
     let context_line = lines
         .next()
         .ok_or_else(|| AppError::TmuxParse("missing context section".to_string()))?;
-    let (width, current_session_name, client_last_session, host, session_created) =
+    let (width, current_session_name, client_last_session, host) =
         parse_context_line(context_line)?;
 
     let option_values = parse_option_values(&mut lines, options.len())?;
@@ -971,7 +971,6 @@ fn parse_snapshot_output(
         current_session_name,
         client_last_session,
         host,
-        session_created,
         sessions,
         client_widths,
         options,
@@ -1073,10 +1072,6 @@ fn parse_session_line(line: &str) -> Option<SessionInfo> {
     let format_1 = fields.next().unwrap_or_default().to_string();
     let render_key = fields.next().unwrap_or_default().to_string();
     let cache_witnesses = std::array::from_fn(|_| fields.next().unwrap_or_default().to_string());
-    let created = fields
-        .next()
-        .and_then(|value| value.parse::<i64>().ok())
-        .unwrap_or_default();
 
     Some(SessionInfo {
         id: id.to_string(),
@@ -1090,7 +1085,6 @@ fn parse_session_line(line: &str) -> Option<SessionInfo> {
         format_1,
         render_key,
         cache_witnesses,
-        created,
     })
 }
 
@@ -1108,7 +1102,6 @@ fn parse_navigation_session_line(line: &str) -> Option<SessionInfo> {
         format_1: String::new(),
         render_key: String::new(),
         cache_witnesses: std::array::from_fn(|_| String::new()),
-        created: 0,
     })
 }
 
@@ -1119,7 +1112,7 @@ fn parse_client_line(line: &str) -> Option<(String, usize)> {
     Some((session_id, width))
 }
 
-fn parse_context_line(context_line: &str) -> AppResult<(usize, String, String, String, i64)> {
+fn parse_context_line(context_line: &str) -> AppResult<(usize, String, String, String)> {
     let mut fields = context_line.split(FIELD_SEP);
     let marker = fields.next();
     if marker != Some(CONTEXT_MARK) {
@@ -1142,18 +1135,8 @@ fn parse_context_line(context_line: &str) -> AppResult<(usize, String, String, S
     let current_session_name = fields.next().unwrap_or_default().to_string();
     let client_last_session = fields.next().unwrap_or_default().to_string();
     let host = fields.next().unwrap_or_default().to_string();
-    let session_created = fields
-        .next()
-        .and_then(|value| value.parse::<i64>().ok())
-        .unwrap_or_default();
 
-    Ok((
-        width,
-        current_session_name,
-        client_last_session,
-        host,
-        session_created,
-    ))
+    Ok((width, current_session_name, client_last_session, host))
 }
 
 fn expect_marker(line: Option<&str>, marker: &str) -> AppResult<()> {
@@ -1357,7 +1340,7 @@ mod tests {
         let option_values = vec![""; DIAGNOSTIC_SNAPSHOT_OPTIONS.len()];
         let options = option_section(&option_values);
         let output = format!(
-            "{CONTEXT_MARK}{FIELD_SEP}120{FIELD_SEP}$1{FIELD_SEP}yui{FIELD_SEP}dev{FIELD_SEP}host{FIELD_SEP}42
+            "{CONTEXT_MARK}{FIELD_SEP}120{FIELD_SEP}$1{FIELD_SEP}yui{FIELD_SEP}dev{FIELD_SEP}host
 {options}
 {SESSIONS_MARK}
 $1	yui	0	on	02:wide	64	84
@@ -1397,7 +1380,7 @@ $2	90"
         let option_values = vec![""; DIAGNOSTIC_SNAPSHOT_OPTIONS.len()];
         let options = option_section(&option_values);
         let output = format!(
-            "{CONTEXT_MARK}{FIELD_SEP}120{FIELD_SEP}$2{FIELD_SEP}{FIELD_SEP}yui{FIELD_SEP}host{FIELD_SEP}42
+            "{CONTEXT_MARK}{FIELD_SEP}120{FIELD_SEP}$2{FIELD_SEP}{FIELD_SEP}yui{FIELD_SEP}host
 {options}
 {SESSIONS_MARK}
 $1	yui	0	on
@@ -1416,7 +1399,7 @@ $2	120"
         let option_values = vec![""; DIAGNOSTIC_SNAPSHOT_OPTIONS.len()];
         let options = option_section(&option_values);
         let output = format!(
-            "{CONTEXT_MARK}{FIELD_SEP}120{FIELD_SEP}{FIELD_SEP}{FIELD_SEP}{FIELD_SEP}host{FIELD_SEP}0
+            "{CONTEXT_MARK}{FIELD_SEP}120{FIELD_SEP}{FIELD_SEP}{FIELD_SEP}{FIELD_SEP}host
 {options}
 {SESSIONS_MARK}
 {CLIENTS_MARK}"
@@ -1428,7 +1411,7 @@ $2	120"
     #[test]
     fn parses_session_line_reads_bell_flag_field() {
         let belling = parse_session_line(
-            "$1\tlegacy\t1\ton\t02:wide\t64\t84\tfmt0\tfmt1\t02:wide:v1:abcd\tw0\tw1\tw2\tw3\t123",
+            "$1\tlegacy\t1\ton\t02:wide\t64\t84\tfmt0\tfmt1\t02:wide:v1:abcd\tw0\tw1\tw2\tw3",
         )
         .unwrap();
         assert_eq!(belling.id, "$1");
@@ -1440,7 +1423,6 @@ $2	120"
         assert_eq!(belling.format_1, "fmt1");
         assert_eq!(belling.render_key, "02:wide:v1:abcd");
         assert_eq!(belling.cache_witnesses, ["w0", "w1", "w2", "w3"]);
-        assert_eq!(belling.created, 123);
 
         let quiet = parse_session_line("$2\tdev\t0").unwrap();
         assert!(!quiet.has_bell);
@@ -1683,7 +1665,7 @@ $2	120"
         option_values[network_index] = "1	2	3	4	5";
         let options = option_section(&option_values);
         let output = format!(
-            "{CONTEXT_MARK}{FIELD_SEP}200{FIELD_SEP}$1{FIELD_SEP}yui{FIELD_SEP}{FIELD_SEP}host{FIELD_SEP}42
+            "{CONTEXT_MARK}{FIELD_SEP}200{FIELD_SEP}$1{FIELD_SEP}yui{FIELD_SEP}{FIELD_SEP}host
 {options}
 {SESSIONS_MARK}
 $1	yui	0	off

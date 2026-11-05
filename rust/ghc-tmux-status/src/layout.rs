@@ -119,7 +119,6 @@ pub fn resolve_session_layouts(snapshot: &TmuxSnapshot) -> Vec<SessionLayout> {
             current_format_1: session.format_1.clone(),
             current_render_key: session.render_key.clone(),
             current_cache_witnesses: session.cache_witnesses.clone(),
-            session_created: session.created,
             layout,
             status_length_width,
         });
@@ -166,7 +165,6 @@ mod tests {
             format_1: String::new(),
             render_key: String::new(),
             cache_witnesses: std::array::from_fn(|_| String::new()),
-            created: 0,
         }
     }
 
@@ -183,7 +181,6 @@ mod tests {
             current_session_name: "main".to_string(),
             client_last_session: String::new(),
             host: "h".to_string(),
-            session_created: 1,
             sessions: vec![
                 session("$1", "main", "on"),
                 session("$2", "_popup@x", "off"),
@@ -207,7 +204,6 @@ mod tests {
             current_session_name: "main".to_string(),
             client_last_session: String::new(),
             host: "h".to_string(),
-            session_created: 1,
             sessions: vec![session("$1", "main", "on"), session("$2", "work", "on")],
             client_widths: vec![
                 ("$1".to_string(), 90),
