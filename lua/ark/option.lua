@@ -64,7 +64,8 @@ vim.o.autoindent = true
 vim.o.breakindent = true
 vim.o.shiftround = true
 vim.o.shiftwidth = 2
-vim.o.smartindent = true
+-- On, it keeps >> from shifting lines that start with #, and moves a typed # to column 0 without 'indentexpr'.
+vim.o.smartindent = false
 vim.o.smarttab = true
 vim.o.softtabstop = 2
 vim.o.tabstop = 2
