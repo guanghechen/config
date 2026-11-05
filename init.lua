@@ -17,9 +17,7 @@ ps.sub("ind-app-title", function(body)
 end)
 
 require("git"):setup()
-require("full-border"):setup({
-  type = ui.Border.ROUNDED,
-})
+require("full-border"):setup()
 require("starship"):setup({
   config_file = get_starship_config(),
 })
