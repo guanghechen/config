@@ -418,9 +418,16 @@ function M:render_grid(loc)
     local is_inline = has_before or has_after
     local icons = s.icons
     local icon = icons[self.opts.type or "image"] or icons.image
+    -- Below the line, under the icon that holds its place, but within the narrowest window showing it.
+    local room = math.huge ---@type number
+    for _, winnr in ipairs(self:wins()) do
+      local info = vim.fn.getwininfo(winnr)[1]
+      room = math.min(room, info.width - info.textoff)
+    end
+    local padding = string.rep(" ", math.max(0, math.min(offset, room - width)))
     local virt_lines = {} ---@type {[1]: string, [2]: string}[][]
     for _, l in ipairs(img) do
-      table.insert(virt_lines, { { l, hl } })
+      table.insert(virt_lines, { { padding }, { l, hl } })
     end
     extmarks[#extmarks + 1] = {
       row = range[1] - 1,

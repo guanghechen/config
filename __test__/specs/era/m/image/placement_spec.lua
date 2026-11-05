@@ -481,6 +481,46 @@ t:test("an inline formula takes one row and the columns its pixels need at that 
   end
 end)
 
+t:test("an image too tall for its line sits below it, under its place within the window", function()
+  local image = fake_image({ ready = true })
+  local Placement = load_placement(image)
+  -- Three rows, while text follows on the line: the icon keeps its place, the image goes below.
+  t:patch_table(package.loaded["era.m.image.state"], "fit", function()
+    return { width = 3, height = 3 }
+  end)
+  local info = vim.fn.getwininfo(vim.api.nvim_get_current_win())[1]
+
+  for _, case in ipairs({ { prefix = "abcd ", padding = 5 }, { prefix = string.rep("x", 200) .. " " } }) do
+    local line = case.prefix .. "$m$ cd" ---@type string
+    local bufnr = shown_buf({ line })
+    local room = vim.fn.getwininfo(vim.api.nvim_get_current_win())[1]
+    local placement = Placement.new(bufnr, image.src, {
+      inline = true,
+      conceal = true,
+      pos = { 1, #case.prefix },
+      range = { 1, #case.prefix, 1, #case.prefix + 3 },
+    })
+    t:defer(function()
+      placement:close()
+    end)
+
+    Placement.update(placement)
+
+    local paddings = {} ---@type integer[]
+    for _, mark in ipairs(vim.api.nvim_buf_get_extmarks(bufnr, Placement.ns, 0, -1, { details = true })) do
+      for _, virt_line in ipairs(mark[4].virt_lines or {}) do
+        -- The image right away, or blank columns before it.
+        local first = virt_line[1][1] ---@type string
+        paddings[#paddings + 1] = first:find(PLACEHOLDER, 1, true) and 0 or vim.fn.strdisplaywidth(first)
+      end
+    end
+    -- A prefix wider than the window leaves the image at its right edge.
+    local padding = case.padding or (room.width - room.textoff - 3)
+    t.assert_same({ padding, padding, padding }, paddings, "padding after " .. #case.prefix .. " columns")
+  end
+  t.assert_true(info.width - info.textoff < 200, "the long prefix is wider than the window")
+end)
+
 t:test("an image after wide characters starts at their display width", function()
   local image = fake_image({ ready = true })
   local Placement = load_placement(image)
