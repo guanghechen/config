@@ -59,7 +59,11 @@ end, nil, true)
 
 ---! better copy/paste list
 mk({ "i", "n", "x" }, { "<C-a>a", "<D-a>", "<M-a>" }, "<esc>ggVG", "system: select all")
-mk({ "i", "n", "x" }, { "<C-a>v", "<D-v>", "<M-v>" }, '<esc>"+p', "system: paste from clipboard")
+-- Insert mode pastes at the cursor as an undo step of its own, as text, and stays in Insert mode; Visual mode replaces
+-- the selection and leaves the registers alone.
+mk({ "i" }, { "<C-a>v", "<D-v>", "<M-v>" }, "<C-g>u<C-r><C-o>+", "system: paste from clipboard")
+mk({ "n" }, { "<C-a>v", "<D-v>", "<M-v>" }, '"+p', "system: paste from clipboard")
+mk({ "x" }, { "<C-a>v", "<D-v>", "<M-v>" }, '"+P', "system: paste from clipboard")
 mk({ "x" }, { "<C-a>c", "<D-c>", "<M-c>" }, '"+y', "system: copy to clipboard")
 mk({ "x" }, { "<C-a>x", "<D-x>", "<M-x>" }, '"+x', "system: cut to clipboard")
 
