@@ -53,8 +53,15 @@ end
 ---@field public flush                  fun(index: integer|nil): nil
 ---@field public set_visibility         fun(bufnr: integer, kind: "visible"|"autocmd"|nil): nil
 
+---@class __test__.specs.era.plugin.nvim_lint.ISetupOpts
+---@field public spellcheck             ?boolean
+---@field public linters                ?string[] Linters every filetype resolves to.
+---@field public relative               ?fun(filepath: string): string Workspace-relative path of a buffer name.
+
+---@param opts                          ?__test__.specs.era.plugin.nvim_lint.ISetupOpts
 ---@return __test__.specs.era.plugin.nvim_lint.IContext
-local function setup()
+local function setup(opts)
+  opts = opts or {}
   local ctx = {
     callbacks = {},
     calls = {},
@@ -80,7 +87,7 @@ local function setup()
       end,
     }),
     _resolve_linter_by_ft = function(filetype)
-      return { filetype .. "-lint" }
+      return opts.linters and vim.list_slice(opts.linters) or { filetype .. "-lint" }
     end,
     try_lint = function(names)
       ctx.calls[#ctx.calls + 1] = {
@@ -153,14 +160,14 @@ local function setup()
       lsp = {
         spellcheck = {
           snapshot = function()
-            return true
+            return opts.spellcheck ~= false
           end,
         },
       },
     },
     path = {
-      relative = function()
-        return "relative"
+      relative = function(_, filepath)
+        return opts.relative and opts.relative(filepath) or "relative"
       end,
       workspace = function()
         return vim.fn.getcwd()
@@ -474,6 +481,53 @@ t:test("deleting a buffer or setting up again forgets its last run", function()
   ctx.flush()
   t.assert_eq(1, #ctx.calls, "insert leave after setup ran again")
   t.assert_eq(bufnr, ctx.calls[1].bufnr, "the forgotten buffer")
+end)
+
+t:test("turning spellcheck off skips cspell and keeps the other linters", function()
+  local bufnr = create_buffer("sh")
+  vim.api.nvim_set_current_buf(bufnr)
+
+  local ctx = setup({ spellcheck = false, linters = { "shellcheck", "cspell" } })
+  ctx.flush()
+  t.assert_eq(1, #ctx.calls, "lint without spellcheck")
+  t.assert_same({ "shellcheck" }, ctx.calls[1].names, "linters")
+end)
+
+t:test("exclusions match whole directory names and extensions of the workspace-relative path", function()
+  local cases = {
+    { path = "lua/era/a.lua", linted = true },
+    { path = "metadata/a.lua", linted = true },
+    { path = "git/hooks/a.lua", linted = true },
+    { path = "node_modules/pkg/a.lua", linted = false },
+    { path = "src/.git/a.lua", linted = false },
+    { path = "docs/a.pdf", linted = false },
+  }
+  local relative = {} ---@type table<string, string>
+  local bufnrs = {} ---@type integer[]
+  for index, case in ipairs(cases) do
+    bufnrs[index] = create_buffer("lua")
+    relative[vim.api.nvim_buf_get_name(bufnrs[index])] = case.path
+  end
+  vim.api.nvim_set_current_buf(bufnrs[1])
+
+  local ctx = setup({
+    relative = function(filepath)
+      return relative[filepath] or "relative"
+    end,
+  })
+  ctx.flush()
+  ctx.calls = {}
+  for _, bufnr in ipairs(bufnrs) do
+    ctx.emit(bufnr)
+    ctx.flush()
+  end
+  local linted = {} ---@type table<integer, true>
+  for _, call in ipairs(ctx.calls) do
+    linted[call.bufnr] = true
+  end
+  for index, case in ipairs(cases) do
+    t.assert_eq(case.linted, linted[bufnrs[index]] == true, case.path)
+  end
 end)
 
 t:run()

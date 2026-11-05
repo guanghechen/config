@@ -3,22 +3,27 @@
 local __module_name__ = "era.plugin.nvim-lint" ---@type string
 
 local config = {
+  -- Compared with the directories of the workspace-relative path and with the file extension, not as patterns.
   excluded = {
-    ".git/",
-    ".cache/",
-    ".next/",
-    ".yarn/",
-    "build/",
-    "debug/",
-    "data/",
-    "public/",
-    "node_modules/",
-    "target/",
-    "tmp/",
-    "*.pdf",
-    "*.mkv",
-    "*.mp4",
-    "*.zip",
+    dirnames = {
+      [".git"] = true,
+      [".cache"] = true,
+      [".next"] = true,
+      [".yarn"] = true,
+      build = true,
+      debug = true,
+      data = true,
+      public = true,
+      node_modules = true,
+      target = true,
+      tmp = true,
+    },
+    extensions = {
+      pdf = true,
+      mkv = true,
+      mp4 = true,
+      zip = true,
+    },
   },
 }
 
@@ -85,11 +90,6 @@ end
 
 ---@param bufnr                         integer
 local function do_lint_current(bufnr)
-  local spellcheck = dot.context.lsp.spellcheck:snapshot() ---@type boolean
-  if not spellcheck then
-    return
-  end
-
   if vim.b[bufnr][dot.var.N_BUF_DISABLE_LINT] then
     return
   end
@@ -106,8 +106,13 @@ local function do_lint_current(bufnr)
     return
   end
 
-  for _, pattern in ipairs(config.excluded) do
-    if vim.fn.match(filepath, pattern) ~= -1 then
+  local segments = vim.split(filepath_relative, "/", { plain = true }) ---@type string[]
+  local extension = segments[#segments]:match("%.([^.]+)$") ---@type string|nil
+  if extension ~= nil and config.excluded.extensions[extension] then
+    return
+  end
+  for index = 1, #segments - 1 do
+    if config.excluded.dirnames[segments[index]] then
       return
     end
   end
@@ -132,6 +137,13 @@ local function do_lint_current(bufnr)
 
   -- Add global linters.
   vim.list_extend(names, lint.linters_by_ft["*"] or {})
+
+  -- The spellcheck switch governs cspell alone; the other linters run either way.
+  if not dot.context.lsp.spellcheck:snapshot() then
+    names = vim.tbl_filter(function(name)
+      return name ~= "cspell"
+    end, names)
+  end
 
   -- Filter out linters that don't exist or don't match the condition.
   local ctx = { filename = filepath, dirname = dirpath }
