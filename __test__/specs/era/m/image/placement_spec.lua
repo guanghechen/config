@@ -442,6 +442,41 @@ t:test("a formula that concealcursor shows while typing is drawn at once", funct
   t.assert_same({ "a", "b" }, sources(inline), "both formulas")
 end)
 
+t:test("a formula on the cursor line shows again once concealcursor lets it, set after the mode changed", function()
+  load_placement(function(src)
+    return vim.tbl_extend("force", fake_image({ ready = true }), { src = src })
+  end)
+  t:patch_table(package.loaded["era.m.image.state"].data.doc, "conceal", function(_, kind)
+    return kind == "math"
+  end)
+  local Inline = assert(loadfile("lua/era/m/image/inline.lua"))()
+  local _, bufnr = edited_file({ "math:a" })
+  vim.api.nvim_set_option_value("concealcursor", "nvc", { win = 0, scope = "local" })
+  local inline = Inline.new(bufnr, math_document)
+  t:defer(function()
+    inline:dispose()
+  end)
+  inline:update()
+  local placement = assert(vim.tbl_values(inline.imgs)[1]) ---@type era.m.image.Placement
+  t.wait_until(function()
+    return #placement.eids > 0
+  end, 1000, "image drawn")
+  local mode = "i" ---@type string
+  t:patch_table(vim.fn, "mode", function()
+    return mode
+  end)
+
+  -- As with render-markdown: Insert mode changes concealcursor, which comes back only once Normal mode began.
+  vim.api.nvim_set_option_value("concealcursor", "", { win = 0, scope = "local" })
+  inline:conceal()
+  t.assert_true(placement.hidden == true, "source while typing")
+  mode = "n"
+  inline:conceal()
+  vim.api.nvim_set_option_value("concealcursor", "nvc", { win = 0, scope = "local" })
+
+  t.assert_false(placement.hidden == true, "drawn again in Normal mode")
+end)
+
 t:test("an image is no wider than the text area of its windows", function()
   local image = fake_image({ ready = true })
   local Placement = load_placement(image)

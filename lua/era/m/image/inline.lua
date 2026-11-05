@@ -55,6 +55,16 @@ function M.new(bufnr, document)
       end
     end,
   })
+  -- render-markdown sets concealcursor for the new mode only after ModeChanged, which then read the old one.
+  vim.api.nvim_create_autocmd("OptionSet", {
+    group = self._augroup,
+    pattern = "concealcursor",
+    callback = function()
+      if vim.api.nvim_get_current_buf() == self.bufnr then
+        self:conceal()
+      end
+    end,
+  })
   vim.api.nvim_buf_attach(bufnr, false, {
     on_lines = function()
       if self.disposed then

@@ -31,7 +31,7 @@ state / terminal → env
 - inline placement 在转换完成前和失败后都保留一个位置 extmark，`inline` 依此找回并复用它。
 - `inline` 只在 `doc.find_visible` 查找的行上增删 placement：窗口显示的行，加上其上一行与 `botline`（最后一个完整显示的
   行）之后可能只显示一部分的一行；范围之外的 placement 保留。显示源码（`hidden`）只针对光标或 Visual 选区所在的行，
-  且只在当前模式不属于 `concealcursor` 时。
+  且只在当前模式不属于 `concealcursor` 时；`concealcursor` 改变时（render-markdown 在模式切换之后才设置它）重新判断。
 - Insert 与 Replace 模式下，若当前模式不属于 `concealcursor`，光标所在行上会被 conceal 的新 placement 暂不创建，
   等离开该模式或光标离开该行后再建：逐字输入的公式只转换最终内容，而不是每个中间状态。
 - 前后有文字的公式总在本行，占一行高、宽度按图片宽高比计算，不论多高都缩放进这一行；其他图片超过两行高时放在下一行，
