@@ -123,4 +123,28 @@ t:test("the visible images include the line after the last one shown whole, whic
   t.assert_same({ dir .. "/part.png" }, found, "images")
 end)
 
+t:test("a formula in a line of text is set in text style, a displayed one in display style", function()
+  local document = assert(loadfile("lua/era/m/image/doc.lua"))()
+  t:patch_table(package.loaded, "era.m.image.state", {
+    data = { img_dirs = {}, math = { latex = { tpl = "${content}", packages = {} } } },
+    tpl_env = function(tpl, data)
+      return (tpl:gsub("%${(%w+)}", function(key)
+        return tostring(data[key])
+      end))
+    end,
+  })
+  local bufnr = markdown(t:tempdir(), {})
+
+  for source, latex in pairs({
+    ["$\\frac{a}{b}$"] = "$\\frac{a}{b}$",
+    ["\\(x^2\\)"] = "$x^2$",
+    ["$$\\frac{a}{b}$$"] = "\\[\\frac{a}{b}\\]",
+    ["\\[x^2\\]"] = "\\[x^2\\]",
+  }) do
+    local img = { content = source, ext = "math.tex" } ---@type era.m.image.match
+    document.transforms.latex(img, { bufnr = bufnr })
+    t.assert_eq(latex, img.content, source)
+  end
+end)
+
 t:run()

@@ -55,10 +55,13 @@ M.transforms = {
     local color_val = vim.api.nvim_get_hl(0, { name = "m_img_math" }).fg
     local fg = color_val and string.format("#%06x", color_val) or "#000000"
     local content = vim.trim(img.content or "")
+    -- `$…$` and `\(…\)` sit in a line of text and are set in text style, as a web page does; `$$…$$` and `\[…\]` are
+    -- displayed.
+    local inline = content:find("^%$[^$]") ~= nil or content:find("^\\%(") ~= nil
     content = content:gsub("^%$+`?", ""):gsub("`?%$+$", "")
     content = content:gsub("^\\[%[%(]", ""):gsub("\\[%]%)]$", "")
     if not content:find("^\\begin") then
-      content = ("\\[%s\\]"):format(content)
+      content = (inline and "$%s$" or "\\[%s\\]"):format(content)
     end
     local packages = { "xcolor" }
     vim.list_extend(packages, s.math.latex.packages)

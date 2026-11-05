@@ -477,7 +477,8 @@ function M:state()
     end
   end
 
-  if size.height <= 2 and is_inline() then
+  -- A formula within a line of text stays in it however tall, scaled down to the row; another image may go below.
+  if (size.height <= 2 or self.opts.type == "math") and is_inline() then
     -- One row of the text, as wide as the image needs at that height: every formula is scaled alike and sits on the
     -- same baseline. A box sized in whole rows was too narrow for a long one, which then shrank, and too wide for a
     -- short one.

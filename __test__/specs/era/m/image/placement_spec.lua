@@ -481,6 +481,31 @@ t:test("an inline formula takes one row and the columns its pixels need at that 
   end
 end)
 
+t:test("a formula in a line of text takes one row however tall, where an image goes below", function()
+  local image = fake_image({ ready = true })
+  local Placement = load_placement(image)
+  t:patch_table(package.loaded["era.m.image.terminal"], "size", function()
+    return { cell_width = 18, cell_height = 40, scale = 2.25 }
+  end)
+  -- Three rows at its own size, like `\displaystyle \epsilon = \frac{A}{2}`.
+  t:patch_table(package.loaded["era.m.image.state"], "fit", function()
+    return { width = 3, height = 3 }
+  end)
+  image.info = { size = { width = 88, height = 73 }, dpi = { width = 192, height = 192 } }
+  local bufnr = shown_buf({ "a $m$ b" })
+  local at = { inline = true, pos = { 1, 2 }, range = { 1, 2, 1, 5 } }
+  local formula = Placement.new(bufnr, image.src, vim.tbl_extend("force", at, { type = "math" }))
+  local picture = Placement.new(bufnr, image.src, vim.tbl_extend("force", at, { type = "image" }))
+  t:defer(function()
+    formula:close()
+    picture:close()
+  end)
+
+  local loc = Placement.state(formula).loc
+  t.assert_same({ 3, 1 }, { loc.width, loc.height }, "formula")
+  t.assert_eq(3, Placement.state(picture).loc.height, "image")
+end)
+
 t:test("an image too tall for its line sits below it, under its place within the window", function()
   local image = fake_image({ ready = true })
   local Placement = load_placement(image)
