@@ -147,10 +147,11 @@ t:test("a formula in a line of text is set in text style, a displayed one in dis
   end
 end)
 
-t:test("a formula's source is named after 64 bits of its hash", function()
+t:test("a formula's source is named after 64 bits of its hash and is the same in every theme", function()
   local document = assert(loadfile("lua/era/m/image/doc.lua"))()
   t:patch_table(package.loaded, "era.m.image.state", {
-    data = { img_dirs = {}, tmpdir = t:tempdir(), math = { latex = { tpl = "${content}", packages = {} } } },
+    -- A template that would show a color if the formula were given one.
+    data = { img_dirs = {}, tmpdir = t:tempdir(), math = { latex = { tpl = "${color}${content}", packages = {} } } },
     tpl_env = function(tpl, data)
       return (tpl:gsub("%${(%w+)}", function(key)
         return tostring(data[key])
@@ -165,11 +166,19 @@ t:test("a formula's source is named after 64 bits of its hash", function()
       vim.fn.mkdir(path, "p")
     end,
   })
+  t:defer(function()
+    vim.api.nvim_set_hl(0, "m_img_math", {})
+  end)
   local bufnr = markdown(t:tempdir(), { "```math", "x^2", "```" })
 
-  local name = vim.fs.basename(sources(document, bufnr)[1] or "") ---@type string
+  local names = {} ---@type string[]
+  for _, fg in ipairs({ 0x0078D4, 0xEB6F92 }) do
+    vim.api.nvim_set_hl(0, "m_img_math", { fg = fg })
+    names[#names + 1] = vim.fs.basename(sources(document, bufnr)[1] or "")
+  end
 
-  t.assert_true(name:match("^" .. ("%x"):rep(16) .. "%-content%.math%.tex$") ~= nil, name)
+  t.assert_eq(names[1], names[2], "every theme")
+  t.assert_true(names[1]:match("^" .. ("%x"):rep(16) .. "%-content%.math%.tex$") ~= nil, names[1])
 end)
 
 t:run()

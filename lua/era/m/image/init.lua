@@ -91,6 +91,14 @@ function M.dressing()
 
   state.did_setup = true
 
+  -- Formulas take their color from the theme. Its own subscriber, which came first, has applied it by then.
+  stl.fn.observe({ dot.context.theme.theme }, function()
+    local Image = package.loaded["era.m.image.image"]
+    if Image ~= nil then
+      Image.recolor()
+    end
+  end, true)
+
   local group = stl.nvim.fn.augroup("era.image_dressing")
   vim.api.nvim_create_autocmd({ "BufWipeout", "BufDelete" }, {
     group = group,

@@ -91,6 +91,7 @@ local MAGICK_CODERS = {
 ---@field public on_done                 ?fun(step: era.m.image.step)
 ---@field public on_error                ?fun(step: era.m.image.step): boolean|nil
 ---@field public pipe                    ?boolean
+---@field public atomic                  ?boolean Renamed into place once whole: complete when its file exists, apart from the marker
 
 ---@type table<string, era.m.image.cmd>
 local commands = {
@@ -244,6 +245,33 @@ local commands = {
       }
     end,
   },
+  -- Formulas are typeset in black and take their color last, so a theme change recolors them rather than typesetting
+  -- them again; each color keeps its own file.
+  tint = {
+    atomic = true,
+    file = function(convert, _)
+      return convert:tmpfile(convert.color .. ".tint.png")
+    end,
+    cmd = function()
+      -- The default ink takes the color, a color the formula names stays. The black of an opaque copy is replaced and
+      -- the alpha put back, so the partly transparent edges of antialiasing change with it. Black ink alone is read as
+      -- grayscale, which would turn the color into a gray.
+      -- stylua: ignore
+      local args = limited({
+        "{coder}:{src}", "-colorspace", "sRGB", "-write", "mpr:ink",
+        "-alpha", "off", "-fill", "#{color}", "-opaque", "black",
+        "(", "mpr:ink", "-alpha", "extract", ")",
+        "-compose", "CopyOpacity", "-composite", "PNG:{file}.part",
+      })
+      return {
+        { cmd = "magick", args = args },
+        { cmd = "convert", args = args },
+      }
+    end,
+    on_done = function(step)
+      uv.fs_rename(step.file .. ".part", step.file)
+    end,
+  },
   convert = {
     ft = "png",
     cmd = function(step)
@@ -360,6 +388,7 @@ end
 ---@field public file                    string
 ---@field public prefix                  string
 ---@field public marker                 string
+---@field public color                  ?string
 ---@field public meta                    era.m.image.meta
 ---@field public steps                   era.m.image.step[]
 ---@field public aborted                 ?boolean
@@ -382,6 +411,7 @@ Convert.__index = Convert
 
 ---@class era.m.image.convert.Opts
 ---@field public source                 era.m.image.convert.Source
+---@field public color                  ?string The color formulas are drawn in, as `RRGGBB`
 
 ---@param opts                           era.m.image.convert.Opts
 ---@return era.m.image.Convert
@@ -412,12 +442,14 @@ function Convert.new(opts)
   -- kind is inferred only from the module-generated template extension (.math.tex),
   -- never from a user's direct file, so e.g. a direct `paper.math.pdf` is not treated as math.
   self.meta = { src = src, kind = src:match("%.(%w+)%.tex$") }
+  self.color = self.meta.kind == "math" and opts.color or nil
   self.steps = {}
   local terminal = require("era.m.image.terminal")
   self._tpl_data = {
     tmpdir = s.tmpdir,
     bg = vim.o.background,
     scale = tostring(terminal.size().scale or 1),
+    color = self.color,
   }
   self:__resolve__()
   if self._cached then
@@ -602,13 +634,17 @@ function Convert:__resolve_target__(target)
     self:__resolve_target__(dep)
   end
   local file = cmd.file and cmd.file(self, self.meta) or self:tmpfile(cmd.ft)
+  local done = self._cached ---@type boolean
+  if cmd.atomic then
+    done = uv.fs_stat(file) ~= nil
+  end
   ---@type era.m.image.step
   local step = {
     name = target,
     file = file,
     ft = self:ft(file),
     meta = self.meta,
-    done = self._cached,
+    done = done,
     cmd = cmd,
   }
   if cmd.pipe ~= false then
@@ -634,6 +670,9 @@ function Convert:__resolve__()
     self:__resolve_target__("trim")
   end
   self:__resolve_target__("identify")
+  if self.color then
+    self:__resolve_target__("tint")
+  end
   self.file = self.meta.src
 end
 
@@ -696,8 +735,12 @@ function Convert:__step__()
   -- An earlier step of this run may have written the output already (`convert` writes the `.info` that `identify`
   -- would), or another process may have finished this version; an output older than this run may be partial.
   local stat = uv.fs_stat(step.file)
-  local written = stat ~= nil and stat.mtime.sec + stat.mtime.nsec / 1e9 >= self._started
-  step.done = step.done or written or (uv.fs_stat(self.marker) ~= nil)
+  if step.cmd.atomic then
+    step.done = stat ~= nil
+  else
+    local written = stat ~= nil and stat.mtime.sec + stat.mtime.nsec / 1e9 >= self._started
+    step.done = step.done or written or (uv.fs_stat(self.marker) ~= nil)
+  end
   if step.done then
     return self:__on_step__()
   end

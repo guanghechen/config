@@ -67,6 +67,13 @@ local function use(img)
   table.insert(lru, { img = img, used = now })
 end
 
+---The color formulas are drawn in, as `RRGGBB`.
+---@return string
+local function math_color()
+  local fg = vim.api.nvim_get_hl(0, { name = "m_img_math", link = false }).fg
+  return ("%06X"):format(fg or 0)
+end
+
 ---@param src                            string
 ---@return era.m.image.Image
 function M.new(src)
@@ -115,6 +122,17 @@ function M.resend()
   end
   lru = {}
   lru_fsize = 0
+end
+
+---Draws the formulas placements show in the color the theme gives them now. One still converting, or that nothing
+---shows, takes the color once it is sent.
+---@return nil
+function M.recolor()
+  for _, img in pairs(images) do
+    if next(img.placements) and img:ready() and img:__discolored__() then
+      img:__recolor__()
+    end
+  end
 end
 
 ---@return boolean
@@ -186,25 +204,27 @@ end
 
 ---@return string
 function M:__convert__()
-  local convert = require("era.m.image.convert")
-  self.convert = convert.convert({ source = self.source })
-  self.convert:future():finally(function(resolved, c)
+  local conversion = require("era.m.image.convert").convert({ source = self.source, color = math_color() })
+  self.convert = conversion
+  conversion:future():finally(function(resolved)
     if not resolved then
       return
     end
-    if c:error() then
-      vim.schedule(function()
+    vim.schedule(function()
+      -- `__recolor__` replaced it.
+      if self.convert ~= conversion then
+        return
+      end
+      if conversion:error() then
         for _, p in pairs(self.placements) do
           p:error()
         end
-      end)
-    else
-      vim.schedule(function()
+      else
         self:__on_ready__()
-      end)
-    end
+      end
+    end)
   end)
-  return self.convert.file
+  return conversion.file
 end
 
 ---@return nil
@@ -235,6 +255,9 @@ end
 function M:__send__()
   local terminal = require("era.m.image.terminal")
   assert(not self.sent, "Image already sent")
+  if self:__discolored__() then
+    return self:__recolor__()
+  end
   self.sent = true
   terminal.request({
     t = "f",
@@ -243,6 +266,25 @@ function M:__send__()
     data = vim.base64.encode(self.file),
   })
   self:__on_send__()
+end
+
+---Whether this is a formula the theme has given another color since it converted.
+---@return boolean
+function M:__discolored__()
+  local color = self.convert and self.convert.color
+  return color ~= nil and color ~= math_color()
+end
+
+---Converts a discolored formula again, which runs only the step that colors it; once done, it is sent anew under its
+---id, and its placements show the old color until then.
+---@return nil
+function M:__recolor__()
+  self.file = self:__convert__()
+  self.sent = false
+  self:run()
+  if self:ready() then
+    self:__on_ready__()
+  end
 end
 
 ---A newer version of the source replaced this image; it is freed once no placement shows it.

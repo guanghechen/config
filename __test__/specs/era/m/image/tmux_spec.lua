@@ -22,6 +22,7 @@ for _, scenario in ipairs(scenarios) do
     }
     t:patch_global("stl", {
       env = { IS_OSX = true, IS_TMUX = scenario.tmux ~= false },
+      fn = { observe = function() end },
       nvim = { fn = {
         augroup = function()
           return 1
@@ -33,6 +34,7 @@ for _, scenario in ipairs(scenarios) do
         end,
       },
     })
+    t:patch_global("dot", { context = { theme = {} } })
     t:patch_table(vim, "env", { TMUX_PANE = scenario.pane ~= false and "%7312" or nil })
     t:patch_table(package.loaded, "era.m.image.state", state)
     t:patch_table(vim.api, "nvim_create_autocmd", function()
@@ -102,12 +104,14 @@ for _, case in ipairs({
     local log = {} ---@type string[]
     t:patch_global("stl", {
       env = { IS_OSX = true, IS_TMUX = true },
+      fn = { observe = function() end },
       nvim = { fn = {
         augroup = function()
           return 1
         end,
       } },
     })
+    t:patch_global("dot", { context = { theme = {} } })
     t:patch_table(vim, "env", { TMUX_PANE = "%7312" })
     t:patch_table(package.loaded, "era.m.image.state", {
       did_setup = false,
@@ -165,12 +169,14 @@ t:test("images are sent again once another tmux client shows the pane", function
   local resent, redrawn = 0, 0
   t:patch_global("stl", {
     env = { IS_OSX = true, IS_TMUX = true },
+    fn = { observe = function() end },
     nvim = { fn = {
       augroup = function()
         return 1
       end,
     } },
   })
+  t:patch_global("dot", { context = { theme = {} } })
   t:patch_table(vim, "env", { TMUX_PANE = "%7312" })
   t:patch_table(package.loaded, "era.m.image.state", {
     did_setup = false,

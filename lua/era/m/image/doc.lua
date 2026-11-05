@@ -52,8 +52,6 @@ M.transforms = {
     if not (img.content and img.ext == "math.tex") then
       return
     end
-    local color_val = vim.api.nvim_get_hl(0, { name = "m_img_math" }).fg
-    local fg = color_val and string.format("#%06x", color_val) or "#000000"
     local content = vim.trim(img.content or "")
     -- `$…$` and `\(…\)` sit in a line of text and are set in text style, as a web page does; `$$…$$` and `\[…\]` are
     -- displayed.
@@ -75,11 +73,11 @@ M.transforms = {
       seen[p] = true
       return true
     end, packages)
+    -- No color: the conversion colors a formula last, so its source is the same in every theme.
     img.content = state.tpl_env(s.math.latex.tpl, {
       font_size = s.math.latex.font_size or "large",
       packages = table.concat(packages, ", "),
       header = M.get_header(ctx.bufnr),
-      color = fg:upper():sub(2),
       content = content,
     })
   end,

@@ -65,7 +65,6 @@ local data = {
         \begin{document}
         ${header}
         { \${font_size} \selectfont
-          \color[HTML]{${color}}
         ${content}}
         \end{document}]],
     },

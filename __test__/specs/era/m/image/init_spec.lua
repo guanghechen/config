@@ -33,6 +33,7 @@ t:test("dressing attaches existing and future supported buffers", function()
 
   t:patch_global("stl", {
     env = { IS_OSX = true },
+    fn = { observe = function() end },
     nvim = {
       fn = {
         augroup = function()
@@ -41,7 +42,7 @@ t:test("dressing attaches existing and future supported buffers", function()
       },
     },
   })
-  t:patch_global("dot", {})
+  t:patch_global("dot", { context = { theme = {} } })
   t:patch_table(package.loaded, "era.m.image.state", state)
   t:patch_table(package.loaded, "era.m.image.doc", {
     attach = function(bufnr)
@@ -151,15 +152,16 @@ t:test("dressing reads the unchanged image buffers that startup read as text", f
       return true
     end,
   }
-  t:patch_global(
-    "stl",
-    { env = { IS_OSX = true }, nvim = { fn = {
+  t:patch_global("stl", {
+    env = { IS_OSX = true },
+    fn = { observe = function() end },
+    nvim = { fn = {
       augroup = function()
         return 1
       end,
-    } } }
-  )
-  t:patch_global("dot", {})
+    } },
+  })
+  t:patch_global("dot", { context = { theme = {} } })
   t:patch_table(package.loaded, "era.m.image.state", state)
   t:patch_table(vim.api, "nvim_create_autocmd", function()
     return 1
@@ -196,15 +198,16 @@ end)
 t:test("reading an image buffer again replaces its placements", function()
   local calls = {} ---@type string[]
   local read = nil ---@type fun(event: { buf: integer })|nil
-  t:patch_global(
-    "stl",
-    { env = { IS_OSX = true }, nvim = { fn = {
+  t:patch_global("stl", {
+    env = { IS_OSX = true },
+    fn = { observe = function() end },
+    nvim = { fn = {
       augroup = function()
         return 1
       end,
-    } } }
-  )
-  t:patch_global("dot", {})
+    } },
+  })
+  t:patch_global("dot", { context = { theme = {} } })
   t:patch_table(package.loaded, "era.m.image.state", {
     data = { doc = { enabled = false }, extnames = { ".png" } },
     did_setup = false,

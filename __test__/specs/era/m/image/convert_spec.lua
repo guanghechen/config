@@ -31,7 +31,8 @@ bootstrap.with_runtime(t, {
 })
 
 -- Conversions run this `magick`, which hangs on any file whose name says so. Like the real one, a conversion
--- writes the image after `-write` and its identification to the last argument. Each run logs its arguments.
+-- writes the image after `-write` (unless to memory) and its identification to the last argument, in the format a
+-- prefix may name. Each run logs its arguments.
 local bin = t:tempdir() ---@type string
 vim.fn.writefile({
   "#!/bin/sh",
@@ -45,12 +46,30 @@ vim.fn.writefile({
   "fi",
   'prev=""',
   'for arg in "$@"; do',
-  '  [ "$prev" = "-write" ] && printf png > "$arg"',
+  '  [ "$prev" = "-write" ] && case "$arg" in mpr:*) ;; *) printf png > "$arg" ;; esac',
   '  prev="$arg"',
   "done",
+  'case "$prev" in [A-Z]*:*) prev="${prev#*:}" ;; esac',
   "printf 'PNG 4x2 96x96' > \"$prev\"",
 }, bin .. "/magick")
-vim.fn.setfperm(bin .. "/magick", "rwxr-xr-x")
+-- Formulas are typeset by this `tectonic`, which logs each run, and rasterized by this `pdftocairo`.
+vim.fn.writefile({
+  "#!/bin/sh",
+  "printf '%s\\n' \"$*\" >> '" .. bin .. "/typeset.log'",
+  'prev=""',
+  'for arg in "$@"; do',
+  '  [ "$prev" = "--outdir" ] && outdir="$arg"',
+  '  prev="$arg"',
+  "done",
+  'printf pdf > "$outdir/$(basename "$prev" .tex).pdf"',
+}, bin .. "/tectonic")
+vim.fn.writefile(
+  { "#!/bin/sh", 'for arg in "$@"; do last="$arg"; done', 'printf png > "$last.png"' },
+  bin .. "/pdftocairo"
+)
+for _, name in ipairs({ "magick", "tectonic", "pdftocairo" }) do
+  vim.fn.setfperm(bin .. "/" .. name, "rwxr-xr-x")
+end
 local path_env = vim.env.PATH ---@type string
 vim.env.PATH = bin .. ":" .. path_env
 t:defer(function()
@@ -168,6 +187,12 @@ local function finish(conversion)
   end, 5000, "conversion")
 end
 
+---@return string[]
+local function typesets()
+  local log = bin .. "/typeset.log" ---@type string
+  return vim.fn.filereadable(log) == 1 and vim.fn.readfile(log) or {}
+end
+
 -- PostScript, which ImageMagick would hand to Ghostscript if it went by the content.
 local POSTSCRIPT = { "%!PS-Adobe-3.0", "showpage" } ---@type string[]
 
@@ -244,6 +269,143 @@ t:test("the cache is the account's own and keeps what a conversion used within a
   end
   t.assert_true(vim.uv.fs_stat(reused.marker) ~= nil, "a conversion used within the month is kept")
   t.assert_true(vim.uv.fs_stat(foreign) ~= nil, "a file the cache did not name is kept")
+end)
+
+t:test("a formula is typeset once, and each color only recolors it", function()
+  local file = t:tempdir() .. "/0123456789abcdef-content.math.tex" ---@type string
+  vim.fn.writefile({ "x" }, file)
+  local source = convert.source(file)
+  local typeset, skip = #typesets(), #magick_runs(0)
+
+  local blue = convert.convert({ source = source, color = "0078D4" })
+  finish(blue)
+  local pink = convert.convert({ source = source, color = "EB6F92" })
+  finish(pink)
+  finish(convert.convert({ source = source, color = "0078D4" }))
+
+  t.assert_nil(pink:error(), "conversion error")
+  t.assert_eq(typeset + 1, #typesets(), "typeset once")
+  local recolors = vim.tbl_filter(function(run)
+    return run:find("-opaque black", 1, true) ~= nil
+  end, magick_runs(skip))
+  t.assert_eq(2, #recolors, "each color recolored once")
+  t.assert_true(recolors[2]:find("-fill #EB6F92", 1, true) ~= nil, recolors[2])
+  t.assert_true(blue.file ~= pink.file, "a file per color")
+  for _, conversion in ipairs({ blue, pink }) do
+    t.assert_true(vim.uv.fs_stat(conversion.file) ~= nil, "kept: " .. conversion.file)
+  end
+end)
+
+t:test("a new theme color redraws a formula under its id without typesetting it again", function()
+  local Image = require("era.m.image.image")
+  local transmitted = {} ---@type table[]
+  t:patch_table(package.loaded["era.m.image.terminal"], "request", function(opts)
+    if opts.t == "f" then
+      transmitted[#transmitted + 1] = opts
+    end
+  end)
+  t:defer(function()
+    vim.api.nvim_set_hl(0, "m_img_math", {})
+  end)
+  vim.api.nvim_set_hl(0, "m_img_math", { fg = 0x0078D4 })
+  local file = t:tempdir() .. "/fedcba9876543210-content.math.tex" ---@type string
+  vim.fn.writefile({ "y" }, file)
+  local img = Image.new(file)
+  img:place({ id = 931, update = function() end })
+  t.wait_until(function()
+    return img.sent == true
+  end, 5000, "formula sent")
+  local typeset = #typesets() ---@type integer
+
+  vim.api.nvim_set_hl(0, "m_img_math", { fg = 0xEB6F92 })
+  Image.recolor()
+  t.wait_until(function()
+    return img.sent == true and vim.endswith(img.file, ".EB6F92.tint.png")
+  end, 5000, "formula recolored")
+
+  t.assert_eq(typeset, #typesets(), "not typeset again")
+  t.assert_eq(img, Image.new(file), "the same image")
+  t.assert_eq(2, #transmitted, "sent again")
+  t.assert_eq(img.id, transmitted[2].i, "under its id")
+  t.assert_eq(vim.base64.encode(img.file), transmitted[2].data, "in the new color")
+end)
+
+t:test("a formula nothing shows is left alone by a theme change and takes the new color once shown", function()
+  local Image = require("era.m.image.image")
+  local transmitted = {} ---@type table[]
+  t:patch_table(package.loaded["era.m.image.terminal"], "request", function(opts)
+    if opts.t == "f" then
+      transmitted[#transmitted + 1] = opts
+    end
+  end)
+  t:defer(function()
+    vim.api.nvim_set_hl(0, "m_img_math", {})
+  end)
+  vim.api.nvim_set_hl(0, "m_img_math", { fg = 0x0078D4 })
+  local file = t:tempdir() .. "/0f1e2d3c4b5a6978-content.math.tex" ---@type string
+  vim.fn.writefile({ "z" }, file)
+  local img = Image.new(file)
+  img:place({ id = 941, update = function() end })
+  t.wait_until(function()
+    return img.sent == true
+  end, 5000, "formula sent")
+  img:del(941)
+
+  vim.api.nvim_set_hl(0, "m_img_math", { fg = 0xEB6F92 })
+  Image.recolor()
+
+  t.assert_eq("0078D4", assert(img.convert).color, "not converted again")
+  t.assert_eq(1, #transmitted, "not sent")
+  img:place({ id = 942, update = function() end })
+  t.wait_until(function()
+    return img.sent == true
+  end, 5000, "formula shown again")
+  t.assert_true(vim.endswith(img.file, ".EB6F92.tint.png"), img.file)
+  t.assert_eq(vim.base64.encode(img.file), transmitted[#transmitted].data, "sent in the new color")
+end)
+
+t:test("a formula in black ink alone takes the color", function()
+  -- The ImageMagick installed, which reads such an image as grayscale.
+  local previous = vim.env.PATH ---@type string
+  t:defer(function()
+    vim.env.PATH = previous
+  end)
+  vim.env.PATH = path_env
+  if vim.fn.executable("magick") == 0 then
+    t.skip("needs ImageMagick")
+  end
+  local tex_bin = t:tempdir() ---@type string
+  local ink = tex_bin .. "/ink.png" ---@type string
+  local drawn = vim
+    .system({ "magick", "-size", "40x20", "xc:none", "-fill", "black", "-draw", "rectangle 5,5 30,15", "PNG32:" .. ink })
+    :wait()
+  t.assert_eq(0, drawn.code, drawn.stderr)
+  vim.uv.fs_copyfile(bin .. "/tectonic", tex_bin .. "/tectonic")
+  vim.fn.writefile(
+    { "#!/bin/sh", 'for arg in "$@"; do last="$arg"; done', "cp '" .. ink .. '\' "$last.png"' },
+    tex_bin .. "/pdftocairo"
+  )
+  for _, name in ipairs({ "tectonic", "pdftocairo" }) do
+    vim.fn.setfperm(tex_bin .. "/" .. name, "rwxr-xr-x")
+  end
+  vim.env.PATH = tex_bin .. ":" .. path_env
+  local file = t:tempdir() .. "/8899aabbccddeeff-content.math.tex" ---@type string
+  vim.fn.writefile({ "ink" }, file)
+
+  local conversion = convert.convert({ source = convert.source(file), color = "005FB8" })
+  finish(conversion)
+
+  t.assert_nil(conversion:error(), "conversion error")
+  local histogram = vim
+    .system({ "magick", conversion.file, "-depth", "8", "-format", "%c", "histogram:info:-" }, { text = true })
+    :wait().stdout or "" ---@type string
+  local colors = {} ---@type table<string, boolean>
+  for rgb, alpha in histogram:gmatch("#(%x%x%x%x%x%x)(%x%x)") do
+    if alpha ~= "00" then
+      colors[rgb] = true
+    end
+  end
+  t.assert_same({ ["005FB8"] = true }, colors, histogram)
 end)
 
 t:run()
