@@ -7,7 +7,7 @@ local modes_map = {
   ["no"] = { "normal", "NORMAL (no)" },
   ["nov"] = { "normal", "NORMAL (nov)" },
   ["noV"] = { "normal", "NORMAL (noV)" },
-  ["noCTRL-V"] = { "normal", "NORMAL" },
+  ["no\22"] = { "normal", "NORMAL" },
   ["niI"] = { "normal", "NORMAL i" },
   ["niR"] = { "normal", "NORMAL r" },
   ["niV"] = { "normal", "NORMAL v" },
@@ -76,7 +76,8 @@ local linked_mode = nil ---@type string|nil
 ---@return string
 function M.resolve_mode()
   local mode = vim.api.nvim_get_mode().mode ---@type string
-  local m = modes_map[mode]
+  -- A mode missing here, such as one Neovim adds later, takes the base mode of its first character (`:h mode()`).
+  local m = modes_map[mode] or modes_map[mode:sub(1, 1)]
   return m[1], m[2]
 end
 

@@ -341,6 +341,37 @@ t:test("common highlights use the selected mode palette and relink on mode chang
   t.assert_eq("mf_b_bg0_insert", vim.api.nvim_get_hl(0, { name = "mf_b_bg0", link = true }).link)
 end)
 
+t:test("every mode that mode() documents resolves to its category", function()
+  local common = require("dot.theme.hlgroup.common")
+  local mode = "n" ---@type string
+  t:patch_table(vim.api, "nvim_get_mode", function()
+    return { mode = mode, blocking = false }
+  end)
+
+  -- From `:h mode()`, where "\22" is CTRL-V and "\19" is CTRL-S.
+  -- stylua: ignore
+  local categories = {
+    n = "normal", no = "normal", nov = "normal", noV = "normal", ["no\22"] = "normal",
+    niI = "normal", niR = "normal", niV = "normal", nt = "nterminal", ntT = "nterminal",
+    v = "visual", vs = "visual", V = "visual", Vs = "visual", ["\22"] = "visual", ["\22s"] = "visual",
+    s = "select", S = "select", ["\19"] = "select",
+    i = "insert", ic = "insert", ix = "insert",
+    R = "replace", Rc = "replace", Rx = "replace", Rv = "replace", Rvc = "replace", Rvx = "replace",
+    c = "command", cr = "command", cv = "command", cvr = "command",
+    r = "confirm", rm = "confirm", ["r?"] = "confirm", ["!"] = "terminal", t = "terminal",
+  }
+  local mismatches = {} ---@type string[]
+  for value, category in pairs(categories) do
+    mode = value
+    local ok, resolved = pcall(common.resolve_mode)
+    if not ok or resolved ~= category then
+      mismatches[#mismatches + 1] = vim.fn.strtrans(value) .. ": " .. tostring(resolved)
+    end
+  end
+  table.sort(mismatches)
+  t.assert_same({}, mismatches, "modes resolved to another category or not at all")
+end)
+
 t:test("mode changes within a category leave highlights untouched and theme reloads keep the category", function()
   local common = require("dot.theme.hlgroup.common")
   local context = context_for("vsc-dark-modern")
