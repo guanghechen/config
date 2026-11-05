@@ -2,7 +2,7 @@
 
 function _ghc_tmux_swap_session_ {
   local direction=$1
-  local status_renderer="$HOME/.config/tmux/rust/ghc-tmux-status/target/release/ghc-tmux-status"
+  local status_renderer="$HOME/.config/tmux/bin/ghc-tmux-status"
   if [ ! -x "$status_renderer" ]; then
     tmux display-message "Session swap unavailable" >/dev/null 2>&1 || true
     return 0

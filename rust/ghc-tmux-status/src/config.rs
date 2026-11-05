@@ -1,3 +1,10 @@
+/*
+ * Version of the script/renderer contract, shared with the scripts. The loader
+ * runs status02 only with a renderer reporting the current value, so bump it with
+ * any change that scripts and the renderer must ship together.
+ */
+pub const RENDERER_PROTOCOL: &str = include_str!("../../../script/renderer-protocol").trim_ascii();
+
 pub const STATUS_LEFT_OPTION: &str = "status-left";
 pub const STATUS_RIGHT_OPTION: &str = "status-right";
 pub const STATUS_POSITION_OPTION: &str = "status-position";
@@ -73,7 +80,13 @@ pub const METRIC_ERROR_COUNT_OPTION: &str = "@GHC_SL_METRIC_ERR_COUNT";
 
 #[cfg(test)]
 mod tests {
-    use super::{STATUS_LEFT_FORMAT, STATUS_SESSION_FORMAT};
+    use super::{RENDERER_PROTOCOL, STATUS_LEFT_FORMAT, STATUS_SESSION_FORMAT};
+
+    #[test]
+    fn renderer_protocol_is_a_bare_version_number() {
+        assert!(!RENDERER_PROTOCOL.is_empty());
+        assert!(RENDERER_PROTOCOL.bytes().all(|byte| byte.is_ascii_digit()));
+    }
 
     #[test]
     fn fail_closed_scheduler_driver_is_present_once_in_one_and_two_row_formats() {

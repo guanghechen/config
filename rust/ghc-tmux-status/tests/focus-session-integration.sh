@@ -23,7 +23,7 @@ fail() {
 }
 
 test_home="$tmp/home"
-renderer="$test_home/.config/tmux/rust/ghc-tmux-status/target/release/ghc-tmux-status"
+renderer="$test_home/.config/tmux/bin/ghc-tmux-status"
 mkdir -p "$(dirname "$renderer")" "$tmp/bin"
 
 cat >"$renderer" <<'EOF'

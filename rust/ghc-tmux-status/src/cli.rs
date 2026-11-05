@@ -18,6 +18,7 @@ pub enum CliCommand {
         session_count: usize,
         rows: RowsOverride,
     },
+    Protocol,
     Help,
 }
 
@@ -38,6 +39,7 @@ pub fn parse(args: Vec<String>) -> AppResult<CliCommand> {
         })),
         ["scheduler-tick"] => Ok(CliCommand::SchedulerTick),
         ["dump-state"] => Ok(CliCommand::DumpState),
+        ["protocol"] => Ok(CliCommand::Protocol),
         ["render", "status02"] => Ok(CliCommand::RenderStatus02),
         ["session", "focus", target] => FocusTarget::parse(target)
             .map(CliCommand::FocusSession)
@@ -105,6 +107,7 @@ fn usage_error(command: &str) -> AppError {
         "apply" => "apply [event]",
         "scheduler-tick" => "scheduler-tick",
         "dump-state" => "dump-state",
+        "protocol" => "protocol",
         "render" => "render status02",
         "session" => "session <focus|swap> <prev|next|index>",
         "layout" => "layout <mode> <status> <width> <session-count> [rows: auto|1|2]",
@@ -179,9 +182,15 @@ mod tests {
     }
 
     #[test]
+    fn parses_protocol_without_arguments() {
+        assert_eq!(parse(args(&["protocol"])).unwrap(), CliCommand::Protocol);
+    }
+
+    #[test]
     fn rejects_trailing_arguments() {
         assert!(parse(args(&["apply", "manual-apply", "extra"])).is_err());
         assert!(parse(args(&["dump-state", "extra"])).is_err());
+        assert!(parse(args(&["protocol", "extra"])).is_err());
         assert!(parse(args(&["render", "status02", "extra"])).is_err());
     }
 

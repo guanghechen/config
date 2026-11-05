@@ -32,10 +32,11 @@ repo, tmp, socket = Path(sys.argv[1]), Path(sys.argv[2]), sys.argv[3]
 home = tmp / "home"
 root = home / ".config/tmux"
 calls = tmp / "renderer-calls"
-renderer = root / "rust/ghc-tmux-status/target/release/ghc-tmux-status"
+renderer = root / "bin/ghc-tmux-status"
 for directory in [root / "script", root / "conf/theme", renderer.parent]:
     directory.mkdir(parents=True)
 shutil.copy(repo / "script/load-theme.sh", root / "script/load-theme.sh")
+shutil.copy(repo / "script/renderer-protocol", root / "script/renderer-protocol")
 shutil.copy(repo / "conf/theme.tmux.conf", root / "conf/theme.tmux.conf")
 for name in ["status01", "status02", "panestatus01", "panestatus02"]:
     shutil.copy(repo / f"conf/theme/{name}.tmux.conf", root / f"conf/theme/{name}.tmux.conf")
@@ -43,6 +44,7 @@ driver = root / "script/status-scheduler.sh"
 driver.write_text("#!/bin/sh\nexit 0\n")
 renderer.write_text(
     "#!/bin/sh\n"
+    f'if [ "$1" = protocol ]; then cat "{root / "script/renderer-protocol"}"; exit 0; fi\n'
     f'if [ "$1" = apply ] && [ "$2" != theme-loaded ]; then echo "$2" >>"{calls}"; fi\n'
     "exit 0\n"
 )

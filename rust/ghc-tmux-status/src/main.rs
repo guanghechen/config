@@ -24,6 +24,7 @@ use std::process::ExitCode;
 use std::time::Duration;
 
 use crate::cli::CliCommand;
+use crate::config::RENDERER_PROTOCOL;
 use crate::error::{AppError, AppResult};
 use crate::layout::LayoutEngine;
 use crate::process::ProcessWatchdog;
@@ -80,6 +81,10 @@ fn run() -> AppResult<()> {
             session_count,
             rows,
         } => run_layout(&mode, &status, width, session_count, rows),
+        CliCommand::Protocol => {
+            println!("{RENDERER_PROTOCOL}");
+            Ok(())
+        }
         CliCommand::Help => {
             print_help();
             Ok(())
@@ -135,6 +140,7 @@ USAGE:
   ghc-tmux-status session focus <prev|next|index>
   ghc-tmux-status session swap <prev|next>
   ghc-tmux-status layout <mode> <status> <width> <session-count> [rows: auto|1|2]
-  ghc-tmux-status dump-state"
+  ghc-tmux-status dump-state
+  ghc-tmux-status protocol"
     );
 }

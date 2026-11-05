@@ -14,7 +14,7 @@ readonly active_option='@GHC_SL_SCHED_ACTIVE'
 readonly generation_option='@GHC_SL_SCHED_GEN'
 readonly session_states_option='@GHC_SL_SESSION_STATES'
 readonly recovery_owner_option='@GHC_SL_LOCK_RECOVERY_OWNER'
-readonly renderer="$HOME/.config/tmux/rust/ghc-tmux-status/target/release/ghc-tmux-status"
+readonly renderer="$HOME/.config/tmux/bin/ghc-tmux-status"
 # A renderer prints this line, and nothing else, once it owns the tick's session-state
 # publication; it must match the renderer's SESSION_STATES_ACK.
 readonly session_states_ack='__GHC_SESSION_STATES_V2_TAKEN__'

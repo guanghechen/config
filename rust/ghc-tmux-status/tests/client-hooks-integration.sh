@@ -180,12 +180,13 @@ server_env=$(tmux_server display-message -p '#{socket_path},#{pid},0')
 
 loader_home="$tmp/loader-home"
 loader_root="$loader_home/.config/tmux"
-renderer="$loader_root/rust/ghc-tmux-status/target/release/ghc-tmux-status"
+renderer="$loader_root/bin/ghc-tmux-status"
 mkdir -p \
   "$loader_root/script" \
   "$loader_root/conf/theme" \
   "$(dirname "$renderer")"
 cp "$repo_dir/script/load-theme.sh" "$loader_root/script/load-theme.sh"
+cp "$repo_dir/script/renderer-protocol" "$loader_root/script/renderer-protocol"
 cp "$repo_dir/conf/theme.tmux.conf" "$loader_root/conf/theme.tmux.conf"
 cp "$repo_dir/conf/theme/"{status01,status02,panestatus01,panestatus02}.tmux.conf \
   "$loader_root/conf/theme/"

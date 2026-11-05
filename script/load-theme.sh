@@ -19,9 +19,13 @@ function _ghc_tmux_set_status_ {
 }
 
 
+# script/build.mjs deploys the renderer. A build for another script/renderer-protocol,
+# including one that predates the `protocol` command, counts as missing.
 function _ghc_tmux_status_renderer_bin_ {
-  local status_renderer="$HOME/.config/tmux/rust/ghc-tmux-status/target/release/ghc-tmux-status"
-  if [ -x "$status_renderer" ]; then
+  local status_renderer="$HOME/.config/tmux/bin/ghc-tmux-status"
+  local protocol_file="$HOME/.config/tmux/script/renderer-protocol"
+  if [ -x "$status_renderer" ] && [ -r "$protocol_file" ] \
+    && [ "$("$status_renderer" protocol 2>/dev/null)" = "$(<"$protocol_file")" ]; then
     printf '%s\n' "$status_renderer"
   fi
 }
@@ -278,7 +282,7 @@ function _ghc_tmux_load_theme_ {
 
       if [ -z "$status_renderer" ] || [ -z "$status_driver" ]; then
         _ghc_tmux_load_status01_ "$status_position"
-        tmux display-message "Status renderer or scheduler driver missing; fallback to status01" 2>/dev/null || true
+        tmux display-message "Status renderer or scheduler driver unavailable (build: node ~/.config/tmux/script/build.mjs); fallback to status01" 2>/dev/null || true
       elif [ -z "$(tmux list-sessions -F '#{session_id}' 2>/dev/null)" ]; then
         # A fresh server loads tmux.conf before creating its first session, so
         # status02 has no render context yet. Keep the usable fallback and let

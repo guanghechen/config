@@ -92,6 +92,7 @@ tmux event / status tick
 | session virtual order | `@GHC_SL_SESSION_ORDER` | session swap command |
 | palette/symbols | generated theme options | external theme generator |
 | native window list | tmux | tmux |
+| deployed renderer | `bin/ghc-tmux-status` 与 build receipt | `script/build.mjs` |
 
 禁止以下反向依赖：
 
@@ -169,7 +170,7 @@ Session policy 是 `tmux.conf` 中的 `session-created[0]`，以纯 tmux 命令�
 以下情况加载 `status01`：
 
 - mode 为 `01` / `11`；
-- Rust binary 或 scheduler driver 不存在；
+- deployed renderer 不存在或 protocol 不匹配（§4.5），或 scheduler driver 不存在；
 - bootstrap apply 失败；
 - scheduler activation 失败。
 
@@ -179,6 +180,31 @@ Fresh server 在首个 session 创建前没有 render context。Loader 此时保
 
 Session-local `status off` 始终由 session policy 持有，loader 与 renderer 均不得把它
 误改为 `on`。
+
+### 4.5 Renderer 部署
+
+Scripts 只执行不入库的 `bin/ghc-tmux-status`；`node script/build.mjs` 是它唯一的
+writer：
+
+1. `cargo build --release --locked` 后复制到 `target/deploy/`，darwin 上 ad-hoc codesign；
+2. staged binary 的 `protocol` 输出必须等于 `script/renderer-protocol`；
+3. build 前后 renderer inputs（crate 内除 `target/` 外的文件与 protocol 文件）的
+   fingerprint 必须一致；
+4. 内容变化（或 `--force`）时以同目录 temp + rename 替换 deployed binary：每次调用都
+   看到完整文件，运行中的进程保留旧 inode；
+5. 写 `bin/ghc-tmux-status.build.json` receipt，记录 artifact SHA-256、input
+   fingerprint、protocol 与 toolchain。
+
+开发构建只写 `target/`，不改变 live renderer；`--output <new-dir>` 在新目录完成同一流程，
+不触碰 checkout；`--force` 清空 target 后重新构建，并无条件替换 deployed binary。部署不
+reload tmux：新调用立即使用新 binary，已发布的 session cache 等到下一次 lifecycle
+event、heartbeat 或 reload 才重新渲染。
+
+`script/renderer-protocol` 是 scripts 与 renderer 之间的 contract 版本，Rust 在编译期
+嵌入。Loader 只接受 `protocol` 输出与该文件一致的 renderer，否则按 §4.4 fallback 并
+提示运行 build script。CLI 参数、environment transport、ack 或 option ownership 的
+不兼容变化必须同时 bump 该值。Protocol 只在 loader 中检查：`git pull` 之后到下一次
+reload 之间，新 scripts 仍可能调用旧 renderer。
 
 ## 5. Snapshot 与 reconcile
 
@@ -570,9 +596,11 @@ ghc-tmux-status session focus <prev|next|index>
 ghc-tmux-status session swap <prev|next>
 ghc-tmux-status layout <mode> <status> <width> <session-count> [auto|1|2]
 ghc-tmux-status dump-state
+ghc-tmux-status protocol
 ```
 
 `layout` 省略 rows 时使用 two-row default；显式 `auto` 才启用 adaptive heuristic。
+`protocol` 输出 script/renderer contract 版本（§4.5）。
 
 ## 14. 系统不变量
 
@@ -602,4 +630,5 @@ rust/ghc-tmux-status/check.sh
 - client attach/detach/resize/session-change convergence；
 - render revision、generation fence、CAS 与 lease recovery；
 - driver crash/hang、timeout-after-commit 与 old-generation isolation；
-- focus fallback 与 session-scoped render ownership。
+- focus fallback 与 session-scoped render ownership；
+- renderer deploy 的 protocol check、atomic replace 与 stale protocol fallback。

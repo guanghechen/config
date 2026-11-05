@@ -412,13 +412,13 @@ assert_equal "" \
 
 # With a valid lifecycle the driver hands its publication to the renderer, which
 # carries it in the tick's first mutation queue; the driver itself only reads the
-# scheduler snapshot. A HOME whose release path points at the freshly built debug
-# binary keeps this check on the current sources.
+# scheduler snapshot. A HOME whose deployed renderer path points at the freshly
+# built debug binary keeps this check on the current sources.
 cargo build --quiet --manifest-path "$crate_dir/Cargo.toml"
 renderer_home="$tmp/home"
-mkdir -p "$renderer_home/.config/tmux/rust/ghc-tmux-status/target/release"
+mkdir -p "$renderer_home/.config/tmux/bin"
 ln -s "$crate_dir/target/debug/ghc-tmux-status" \
-  "$renderer_home/.config/tmux/rust/ghc-tmux-status/target/release/ghc-tmux-status"
+  "$renderer_home/.config/tmux/bin/ghc-tmux-status"
 real_tmux=$(command -v tmux)
 mkdir -p "$tmp/bin"
 cat >"$tmp/bin/tmux" <<'EOF'
@@ -484,10 +484,10 @@ make_renderer_home() {
   local name=$1
   local body=$2
   local home="$tmp/renderer-$name"
-  mkdir -p "$home/.config/tmux/rust/ghc-tmux-status/target/release"
+  mkdir -p "$home/.config/tmux/bin"
   printf '#!/bin/sh\n%s\n' "$body" \
-    >"$home/.config/tmux/rust/ghc-tmux-status/target/release/ghc-tmux-status"
-  chmod +x "$home/.config/tmux/rust/ghc-tmux-status/target/release/ghc-tmux-status"
+    >"$home/.config/tmux/bin/ghc-tmux-status"
+  chmod +x "$home/.config/tmux/bin/ghc-tmux-status"
   printf '%s\n' "$home"
 }
 

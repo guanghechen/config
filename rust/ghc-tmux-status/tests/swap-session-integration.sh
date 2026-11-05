@@ -23,7 +23,7 @@ fail() {
 }
 
 wrapper_home="$tmp/wrapper-home"
-wrapper_renderer="$wrapper_home/.config/tmux/rust/ghc-tmux-status/target/release/ghc-tmux-status"
+wrapper_renderer="$wrapper_home/.config/tmux/bin/ghc-tmux-status"
 wrapper_bin="$tmp/wrapper-bin"
 wrapper_renderer_calls="$tmp/wrapper-renderer-calls"
 wrapper_tmux_calls="$tmp/wrapper-tmux-calls"

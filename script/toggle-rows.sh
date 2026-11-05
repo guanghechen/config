@@ -8,7 +8,7 @@
 # modes (01/11) the value is stored and applies once adaptive mode is active.
 
 function _ghc_tmux_status_renderer_bin_ {
-  local status_renderer="$HOME/.config/tmux/rust/ghc-tmux-status/target/release/ghc-tmux-status"
+  local status_renderer="$HOME/.config/tmux/bin/ghc-tmux-status"
   if [ -x "$status_renderer" ]; then
     printf '%s\n' "$status_renderer"
   fi

@@ -7,7 +7,7 @@ tmp=$(mktemp -d /tmp/ghc-tmux-driver-test.XXXXXX)
 socket="ghc-tmux-driver-test-$$"
 home="$tmp/home"
 lock_tmp="$tmp/locks"
-renderer="$home/.config/tmux/rust/ghc-tmux-status/target/release/ghc-tmux-status"
+renderer="$home/.config/tmux/bin/ghc-tmux-status"
 driver="$home/.config/tmux/script/status-scheduler.sh"
 client_holder=""
 

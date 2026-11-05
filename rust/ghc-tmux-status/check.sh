@@ -24,6 +24,7 @@ bash -n \
   "$crate_dir/tests/status-width-integration.sh" \
   "$crate_dir/tests/swap-session-integration.sh" \
   "$crate_dir/tests/scheduler-integration.sh"
+node --test "$crate_dir/tests/build.test.mjs"
 "$crate_dir/tests/client-hooks-integration.sh"
 "$crate_dir/tests/driver-fault-integration.sh"
 "$crate_dir/tests/focus-session-integration.sh"

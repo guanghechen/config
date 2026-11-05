@@ -250,13 +250,14 @@ loader_root="$loader_home/.config/tmux"
 mkdir -p \
   "$loader_root/script" \
   "$loader_root/conf/theme" \
-  "$loader_root/rust/ghc-tmux-status/target/release"
+  "$loader_root/bin"
 cp "$repo_dir/script/load-theme.sh" "$loader_root/script/load-theme.sh"
+cp "$repo_dir/script/renderer-protocol" "$loader_root/script/renderer-protocol"
 cp "$repo_dir/script/status-scheduler.sh" "$loader_root/script/status-scheduler.sh"
 cp "$repo_dir/conf/theme.tmux.conf" "$loader_root/conf/theme.tmux.conf"
 cp "$repo_dir/conf/theme/"{status01,status02,panestatus01,panestatus02}.tmux.conf \
   "$loader_root/conf/theme/"
-cp "$binary" "$loader_root/rust/ghc-tmux-status/target/release/ghc-tmux-status"
+cp "$binary" "$loader_root/bin/ghc-tmux-status"
 
 # A fresh tmux server loads its config before the first session exists. The
 # loader must keep status01 as a temporary fallback, then retry exactly when a
@@ -324,6 +325,21 @@ if [ "$(tmux -L "$socket" show -qv -t lifecycle status)" != on ]; then
   exit 1
 fi
 tmux -L "$socket" set -g @GHC_SL_MODE 02
+env HOME="$loader_home" TMUX="$server_env" bash "$loader_root/script/load-theme.sh"
+
+# A renderer deployed for another script/renderer-protocol never drives status02:
+# the loader keeps status01 until script/build.mjs deploys a matching build.
+mv "$loader_root/bin/ghc-tmux-status" "$tmp/current-renderer"
+printf '#!/bin/sh\necho 0\n' >"$loader_root/bin/ghc-tmux-status"
+chmod +x "$loader_root/bin/ghc-tmux-status"
+env HOME="$loader_home" TMUX="$server_env" bash "$loader_root/script/load-theme.sh"
+stale_state=$(tmux -L "$socket" display-message -p \
+  '#{@GHC_SL_MODE}	#{@GHC_SL_SCHED_ACTIVE}	#{status-interval}')
+if [ "$stale_state" != $'02\t0\t20' ]; then
+  echo "loader ran status02 with a renderer for another protocol: $stale_state" >&2
+  exit 1
+fi
+mv "$tmp/current-renderer" "$loader_root/bin/ghc-tmux-status"
 env HOME="$loader_home" TMUX="$server_env" bash "$loader_root/script/load-theme.sh"
 
 # A non-empty standard render folds its guarded status refresh into the final
