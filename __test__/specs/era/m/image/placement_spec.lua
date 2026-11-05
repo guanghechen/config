@@ -236,30 +236,49 @@ t:test("a document keeps one placement for an image that failed to convert", fun
   t.assert_eq(1, vim.tbl_count(inline.imgs), "placements")
 end)
 
----Images are lines `img:<name>`, so the document follows the buffer text without a parser.
----@type era.m.image.inline.IDocument
-local line_document = {
-  find_visible = function(bufnr, cb)
-    local matches = {} ---@type era.m.image.match[]
-    for row, line in ipairs(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)) do
-      local name = line:match("^img:(%w+)$")
-      if name then
-        matches[#matches + 1] = {
-          id = tostring(row),
-          src = name,
-          pos = { row, 0 },
-          range = { row, 0, row, #line },
-          lang = "markdown",
-          type = "image",
-        }
+---A document of lines `<prefix>:<name>`, which follows the buffer text without a parser.
+---@param prefix                        string
+---@param kind                          era.m.image.Type
+---@return era.m.image.inline.IDocument
+local function lines_document(prefix, kind)
+  return {
+    find_visible = function(bufnr, cb)
+      local matches = {} ---@type era.m.image.match[]
+      for row, line in ipairs(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)) do
+        local name = line:match("^" .. prefix .. ":(%w+)$")
+        if name then
+          matches[#matches + 1] = {
+            id = tostring(row),
+            src = name,
+            pos = { row, 0 },
+            range = { row, 0, row, #line },
+            lang = kind == "math" and "latex" or "markdown",
+            type = kind,
+          }
+        end
       end
-    end
-    cb(matches)
-  end,
-  math_enabled = function()
-    return false
-  end,
-}
+      cb(matches)
+    end,
+    math_enabled = function()
+      return kind == "math"
+    end,
+  }
+end
+
+-- Images are lines `img:<name>`, formulas lines `math:<name>`.
+local line_document = lines_document("img", "image")
+local math_document = lines_document("math", "math")
+
+---@param inline                        era.m.image.inline
+---@return string[]
+local function sources(inline)
+  local srcs = {} ---@type string[]
+  for _, placement in pairs(inline.imgs) do
+    srcs[#srcs + 1] = placement.img.src
+  end
+  table.sort(srcs)
+  return srcs
+end
 
 ---@param lines                         string[]
 ---@return string, integer
@@ -372,6 +391,55 @@ t:test("an image shows its source only while the cursor is on its line", functio
     inline:conceal()
     t.assert_eq(hidden, placement.hidden == true, "cursor on line " .. row)
   end
+end)
+
+---Formulas concealed like the real ones, in a document being edited in `concealcursor`.
+---@param concealcursor                 string
+---@return era.m.image.inline, integer
+local function typed_formulas(concealcursor)
+  load_placement(function(src)
+    return vim.tbl_extend("force", fake_image({ ready = false }), { src = src })
+  end)
+  t:patch_table(package.loaded["era.m.image.state"].data.doc, "conceal", function(_, kind)
+    return kind == "math"
+  end)
+  local Inline = assert(loadfile("lua/era/m/image/inline.lua"))()
+  local _, bufnr = edited_file({ "math:a", "math:b" })
+  vim.api.nvim_set_option_value("concealcursor", concealcursor, { win = 0, scope = "local" })
+  vim.api.nvim_win_set_cursor(0, { 1, 0 })
+  local inline = Inline.new(bufnr, math_document)
+  t:defer(function()
+    inline:dispose()
+  end)
+  return inline, bufnr
+end
+
+t:test("a formula on the line being typed waits until typing ends", function()
+  local inline, bufnr = typed_formulas("nvc")
+  local mode = "i" ---@type string
+  t:patch_table(vim.fn, "mode", function()
+    return mode
+  end)
+
+  inline:update()
+  t.assert_same({ "b" }, sources(inline), "the formula on the typed line waits")
+
+  mode = "n"
+  vim.api.nvim_exec_autocmds("ModeChanged", { buffer = bufnr })
+  t.wait_until(function()
+    return vim.deep_equal({ "a", "b" }, sources(inline))
+  end, 2000, "drawn once typing ended")
+end)
+
+t:test("a formula that concealcursor shows while typing is drawn at once", function()
+  local inline = typed_formulas("nvic")
+  t:patch_table(vim.fn, "mode", function()
+    return "i"
+  end)
+
+  inline:update()
+
+  t.assert_same({ "a", "b" }, sources(inline), "both formulas")
 end)
 
 t:test("an image is no wider than the text area of its windows", function()

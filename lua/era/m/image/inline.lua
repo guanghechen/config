@@ -15,6 +15,7 @@ local __module_name__ = "era.m.image.inline" ---@type string
 ---@field protected _document             era.m.image.inline.IDocument
 ---@field protected _augroup              integer
 ---@field protected _flag_unsub           ?stl.c.IUnsubscribable
+---@field protected _held                 ?boolean
 local M = {}
 M.__index = M
 
@@ -136,6 +137,11 @@ end
 
 ---@return nil
 function M:conceal()
+  -- Typing has ended or left the line: draw what `update` held back there.
+  if self._held and self:__typing_row__() == nil then
+    self._held = false
+    self:__call_debounced__()
+  end
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   local mode = vim.fn.mode():sub(1, 1):lower() ---@type string
   for _, img in pairs(self.imgs) do
@@ -207,6 +213,8 @@ function M:update()
 
   self._document.find_visible(self.bufnr, function(imgs)
     local visible = self:visible()
+    local typing = self:__typing_row__() ---@type integer|nil
+    self._held = false
     for _, i in ipairs(imgs) do
       local img ---@type era.m.image.Placement|nil
       for v, o in pairs(visible) do
@@ -216,7 +224,16 @@ function M:update()
           break
         end
       end
-      if not img then
+      local concealed = vim.b[self.bufnr][dot.var.N_IMAGE_CONCEAL] or conceal(i.lang, i.type) ---@type boolean
+      if img then
+        img.opts.pos = i.pos
+        img.opts.range = i.range
+        img:update()
+      elseif concealed and typing ~= nil and i.range[1] <= typing and typing <= i.range[3] then
+        -- The line being typed shows its source (see `conceal`): a formula there waits until typing ends, instead of
+        -- converting every state it passes through.
+        self._held = true
+      else
         img = placement.new(
           self.bufnr,
           i.src,
@@ -224,7 +241,7 @@ function M:update()
             pos = i.pos,
             range = i.range,
             inline = true,
-            conceal = vim.b[self.bufnr][dot.var.N_IMAGE_CONCEAL] or conceal(i.lang, i.type),
+            conceal = concealed,
             type = i.type,
             ---@param p era.m.image.Placement
             on_update = function(p)
@@ -238,10 +255,6 @@ function M:update()
           self.idx[eid] = img
         end
         self.imgs[img.id] = img
-      else
-        img.opts.pos = i.pos
-        img.opts.range = i.range
-        img:update()
       end
     end
     for _, img in pairs(visible) do
@@ -249,6 +262,22 @@ function M:update()
       self.imgs[img.id] = nil
     end
   end)
+end
+
+---The line typed on in this buffer's window when `conceal` shows it as source: Insert or Replace mode without
+---`concealcursor` for it.
+---@protected
+---@return integer|nil
+function M:__typing_row__()
+  if vim.api.nvim_get_current_buf() ~= self.bufnr then
+    return nil
+  end
+  local mode = vim.fn.mode():sub(1, 1):lower() ---@type string
+  local concealcursor = vim.api.nvim_get_option_value("concealcursor", { win = 0 }) ---@type string
+  if (mode ~= "i" and mode ~= "r") or concealcursor:find(mode, 1, true) then
+    return nil
+  end
+  return vim.api.nvim_win_get_cursor(0)[1]
 end
 
 ----------------------------------------------------------------------------------------------------

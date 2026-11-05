@@ -19,10 +19,10 @@ local config = {
     return { "-i", "{src}", "-o", "{file}", "-b", "transparent", "-t", theme, "-s", "{scale}" }
   end,
   magick = {
-    default = { "{src}[0]", "-scale", "1920x1080>" },
-    vector = { "-density", 192, "{src}[{page}]" },
-    math = { "-density", 192, "{src}[{page}]", "-trim" },
-    pdf = { "-density", 192, "{src}[{page}]", "-background", "white", "-alpha", "remove", "-trim" },
+    default = { "{coder}:{src}[0]", "-scale", "1920x1080>" },
+    vector = { "-density", 192, "{coder}:{src}[{page}]" },
+    math = { "-density", 192, "{coder}:{src}[{page}]", "-trim" },
+    pdf = { "-density", 192, "{coder}:{src}[{page}]", "-background", "white", "-alpha", "remove", "-trim" },
   },
 }
 
@@ -52,6 +52,15 @@ local MAGICK_LIMITS = {
 local function limited(args)
   return vim.list_extend(vim.deepcopy(MAGICK_LIMITS), args)
 end
+
+-- ImageMagick otherwise decodes a file as whatever its content says, so a `.png` holding PostScript would run
+-- Ghostscript on it once that is installed. Named by extension, a file decodes only as these formats, or not at all.
+-- stylua: ignore
+local MAGICK_CODERS = {
+  avif = "AVIF", bmp = "BMP", gif = "GIF", heic = "HEIC", heif = "HEIF", ico = "ICO", jpeg = "JPEG", jpg = "JPEG",
+  png = "PNG", psd = "PSD", svg = "SVG", tga = "TGA", tif = "TIFF", tiff = "TIFF", webp = "WEBP",
+  avi = "AVI", mkv = "MKV", mov = "MOV", mp4 = "MP4", webm = "WEBM",
+}
 
 ---@class era.m.image.meta
 ---@field public src                     string
@@ -154,12 +163,12 @@ local commands = {
         cmd = "magick",
         args = vim.list_extend(
           { "identify" },
-          limited({ "-units", "PixelsPerInch", "-format", "%m %[fx:w]x%[fx:h] %xx%y", "{src}[{page}]" })
+          limited({ "-units", "PixelsPerInch", "-format", "%m %[fx:w]x%[fx:h] %xx%y", "{coder}:{src}[{page}]" })
         ),
       },
       {
         cmd = "identify",
-        args = limited({ "-units", "PixelsPerInch", "-format", "%m %[fx:w]x%[fx:h] %xx%y", "{src}[{page}]" }),
+        args = limited({ "-units", "PixelsPerInch", "-format", "%m %[fx:w]x%[fx:h] %xx%y", "{coder}:{src}[{page}]" }),
       },
     },
     on_done = function(step)
@@ -213,8 +222,8 @@ local commands = {
       -- Inline math is additionally padded to a uniform height (MATH_INLINE_H) so that
       -- every formula on a line is down-scaled by the same factor, keeping glyphs like
       -- `≤` a consistent size. `convert` (IM6) lacks `%[fx:]`, so it degrades to a plain crop.
-      local magick_args = limited({ "{src}", "-trim", "+repage" })
-      local convert_args = limited({ "{src}", "-trim", "+repage" })
+      local magick_args = limited({ "{coder}:{src}", "-trim", "+repage" })
+      local convert_args = limited({ "{coder}:{src}", "-trim", "+repage" })
       if step.meta.kind == "math" then
         vim.list_extend(magick_args, {
           "-background",
@@ -239,11 +248,11 @@ local commands = {
     ft = "png",
     cmd = function(step)
       local formats = vim.deepcopy(config.magick or {})
-      local args = formats.default or { "{src}[{page}]" }
+      local args = formats.default or { "{coder}:{src}[{page}]" }
       local info = step.meta.info
       local format = info and info.format or vim.fs.ext(step.meta.src)
 
-      local vector = vim.list_contains({ "pdf", "svg", "eps", "ai", "mvg" }, format)
+      local vector = vim.list_contains({ "pdf", "svg" }, format)
       if vector then
         args = formats.vector or args
       end
@@ -314,6 +323,36 @@ local function get_cmd(step)
   end
 end
 
+-- How long the cache keeps a file that no conversion has used.
+local CACHE_DAYS = 30
+
+---@type boolean
+local cache_prepared = false
+
+---Readies the cache before the first conversion of a session looks into it. The cache holds renders of the documents
+---opened and the source of their formulas, so it is for this account only; what no conversion used for CACHE_DAYS
+---goes, which is only what a hash names (see `Convert:__touch__`).
+---@param dir                           string
+---@return nil
+local function prepare_cache(dir)
+  if cache_prepared then
+    return
+  end
+  cache_prepared = true
+  stl.env.mkdirs(dir, true)
+  uv.fs_chmod(dir, tonumber("700", 8))
+  local expired = os.time() - CACHE_DAYS * 24 * 3600 ---@type integer
+  for name, kind in vim.fs.dir(dir) do
+    if kind == "file" and name:find("^%x%x%x%x%x%x%x%x") then
+      local path = dir .. "/" .. name ---@type string
+      local stat = uv.fs_stat(path)
+      if stat ~= nil and stat.mtime.sec < expired then
+        uv.fs_unlink(path)
+      end
+    end
+  end
+end
+
 ---@class era.m.image.Convert
 ---@field public opts                    era.m.image.convert.Opts
 ---@field public src                     string
@@ -349,7 +388,7 @@ Convert.__index = Convert
 function Convert.new(opts)
   local state = require("era.m.image.state")
   local s = state.data
-  stl.env.mkdirs(s.tmpdir, true)
+  prepare_cache(s.tmpdir)
   local self = setmetatable({}, Convert)
   local src = opts.source.path ---@type string
   self.page = opts.source.page
@@ -381,7 +420,21 @@ function Convert.new(opts)
     scale = tostring(terminal.size().scale or 1),
   }
   self:__resolve__()
+  if self._cached then
+    self:__touch__()
+  end
   return self
+end
+
+---Marks the outputs of a reused conversion as used, so that `prepare_cache` keeps them. The source keeps its times,
+---which make its version.
+---@return nil
+function Convert:__touch__()
+  local now = os.time() ---@type integer
+  uv.fs_utime(self.marker, now, now)
+  for _, step in ipairs(self.steps) do
+    uv.fs_utime(step.file, now, now)
+  end
 end
 
 ---@return era.m.image.step|nil
@@ -501,8 +554,12 @@ function Convert:__decode_data_uri__(data_uri, tmpdir)
       ext = "jpg"
     elseif ext == "svg+xml" then
       ext = "svg"
+    elseif ext == "x-icon" or ext == "vnd.microsoft.icon" then
+      ext = "ico"
     end
   end
+  -- The type is the document's to write: it may name a format, never a path.
+  ext = ext:gsub("%W", "")
 
   local hash = vim.fn.sha256(data):sub(1, 12)
   local filepath = tmpdir .. "/" .. hash .. "." .. ext
@@ -654,6 +711,7 @@ function Convert:__step__()
   ---@cast args (number|string)[]
   args = vim.deepcopy(args)
 
+  local ext = vim.fs.ext(step.meta.src):lower() ---@type string
   local data = vim.tbl_extend("keep", {
     file = step.file,
     basename = vim.fs.basename(step.file),
@@ -661,12 +719,17 @@ function Convert:__step__()
     stem = vim.fn.fnamemodify(step.file, ":r"),
     dirname = vim.fs.dirname(step.meta.src),
     src = step.meta.src,
+    coder = MAGICK_CODERS[ext],
     page = self.page,
     page1 = self.page + 1,
   }, self._tpl_data)
 
   for a, arg in ipairs(args) do
     if type(arg) == "string" then
+      -- ImageMagick reads nothing but the formats it is named for here.
+      if data.coder == nil and arg:find("{coder}", 1, true) then
+        return self:__on_step__(("Unsupported image format `%s`"):format(ext == "" and "(no extension)" or "." .. ext))
+      end
       args[a] = state.tpl(arg, data)
     end
   end
