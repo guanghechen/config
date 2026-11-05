@@ -124,8 +124,8 @@ function M.resend()
   lru_fsize = 0
 end
 
----Draws the formulas placements show in the color the theme gives them now. One still converting, or that nothing
----shows, takes the color once it is sent.
+---Draws the images placements show in the colors the theme gives them now. One still converting, or that nothing
+---shows, takes them once it is sent.
 ---@return nil
 function M.recolor()
   for _, img in pairs(images) do
@@ -268,15 +268,19 @@ function M:__send__()
   self:__on_send__()
 end
 
----Whether this is a formula the theme has given another color since it converted.
+---Whether the theme has changed the colors of this image since it converted: of a formula its color, of a chart its
+---background.
 ---@return boolean
 function M:__discolored__()
-  local color = self.convert and self.convert.color
-  return color ~= nil and color ~= math_color()
+  local c = self.convert
+  if c == nil then
+    return false
+  end
+  return (c.color ~= nil and c.color ~= math_color()) or (c.background ~= nil and c.background ~= vim.o.background)
 end
 
----Converts a discolored formula again, which runs only the step that colors it; once done, it is sent anew under its
----id, and its placements show the old color until then.
+---Converts a discolored image again, which for a formula runs only the step that colors it; once done, it is sent anew
+---under its id, and its placements show the old colors until then.
 ---@return nil
 function M:__recolor__()
   self.file = self:__convert__()

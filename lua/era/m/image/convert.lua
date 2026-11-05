@@ -6,7 +6,7 @@ local M = {}
 
 local uv = vim.uv
 
----@alias era.m.image.args        (number|string)[] | fun(): ((number|string)[])
+---@alias era.m.image.args        (number|string)[] | fun(convert?: era.m.image.Convert): ((number|string)[])
 
 ---@class era.m.image.convert.IConfig
 ---@field public notify                  boolean
@@ -14,8 +14,8 @@ local uv = vim.uv
 ---@field public magick                  ?table<string, era.m.image.args>
 local config = {
   notify = false,
-  mermaid = function()
-    local theme = vim.o.background == "light" and "neutral" or "dark"
+  mermaid = function(convert)
+    local theme = assert(convert).background == "light" and "neutral" or "dark"
     return { "-i", "{src}", "-o", "{file}", "-b", "transparent", "-t", theme, "-s", "{scale}" }
   end,
   magick = {
@@ -151,7 +151,7 @@ local commands = {
       args = config.mermaid,
     },
     file = function(convert, _)
-      return convert:tmpfile(vim.o.background .. ".png")
+      return convert:tmpfile(convert.background .. ".png")
     end,
   },
   identify = {
@@ -389,6 +389,7 @@ end
 ---@field public prefix                  string
 ---@field public marker                 string
 ---@field public color                  ?string
+---@field public background             ?string
 ---@field public meta                    era.m.image.meta
 ---@field public steps                   era.m.image.step[]
 ---@field public aborted                 ?boolean
@@ -432,9 +433,12 @@ function Convert.new(opts)
   self._step = 0
   self._future = stl.c.Future.new()
   local base = vim.fn.fnamemodify(src, ":t:r")
+  -- A chart is drawn for the background, light or dark, which its theme, name and cache all follow: there is nothing
+  -- for the two to share, so each has a conversion of its own.
+  self.background = vim.fs.ext(src):lower() == "mmd" and vim.o.background or nil
   -- Named after the source version: an edited source is converted again rather than read from the cache, and a
   -- conversion never writes over the files of another version that may still be on screen.
-  local key = src .. self.page .. opts.source.version ---@type string
+  local key = src .. self.page .. opts.source.version .. (self.background or "") ---@type string
   self.prefix = vim.fn.sha256(key):sub(1, 8) .. "-" .. base:gsub("[^%w%.]+", "-")
   -- Outputs are reused only after a whole pipeline wrote them; an interrupted run leaves files but no marker.
   self.marker = self:tmpfile("done")
@@ -750,7 +754,7 @@ function Convert:__step__()
     return self:__on_step__("No command available")
   end
 
-  local args = type(cmd.args) == "function" and cmd.args() or cmd.args
+  local args = type(cmd.args) == "function" and cmd.args(self) or cmd.args
   ---@cast args (number|string)[]
   args = vim.deepcopy(args)
 

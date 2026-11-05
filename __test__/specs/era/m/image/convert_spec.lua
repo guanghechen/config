@@ -67,7 +67,18 @@ vim.fn.writefile(
   { "#!/bin/sh", 'for arg in "$@"; do last="$arg"; done', 'printf png > "$last.png"' },
   bin .. "/pdftocairo"
 )
-for _, name in ipairs({ "magick", "tectonic", "pdftocairo" }) do
+-- Charts are drawn by this `mmdc`, which logs each run.
+vim.fn.writefile({
+  "#!/bin/sh",
+  "printf '%s\\n' \"$*\" >> '" .. bin .. "/charts.log'",
+  'prev=""',
+  'for arg in "$@"; do',
+  '  [ "$prev" = "-o" ] && out="$arg"',
+  '  prev="$arg"',
+  "done",
+  'printf png > "$out"',
+}, bin .. "/mmdc")
+for _, name in ipairs({ "magick", "tectonic", "pdftocairo", "mmdc" }) do
   vim.fn.setfperm(bin .. "/" .. name, "rwxr-xr-x")
 end
 local path_env = vim.env.PATH ---@type string
@@ -185,6 +196,12 @@ local function finish(conversion)
   t.wait_until(function()
     return conversion:done()
   end, 5000, "conversion")
+end
+
+---@return string[]
+local function charts()
+  local log = bin .. "/charts.log" ---@type string
+  return vim.fn.filereadable(log) == 1 and vim.fn.readfile(log) or {}
 end
 
 ---@return string[]
@@ -312,6 +329,9 @@ t:test("a new theme color redraws a formula under its id without typesetting it 
   vim.fn.writefile({ "y" }, file)
   local img = Image.new(file)
   img:place({ id = 931, update = function() end })
+  t:defer(function()
+    img:del()
+  end)
   t.wait_until(function()
     return img.sent == true
   end, 5000, "formula sent")
@@ -346,6 +366,9 @@ t:test("a formula nothing shows is left alone by a theme change and takes the ne
   vim.fn.writefile({ "z" }, file)
   local img = Image.new(file)
   img:place({ id = 941, update = function() end })
+  t:defer(function()
+    img:del()
+  end)
   t.wait_until(function()
     return img.sent == true
   end, 5000, "formula sent")
@@ -406,6 +429,75 @@ t:test("a formula in black ink alone takes the color", function()
     end
   end
   t.assert_same({ ["005FB8"] = true }, colors, histogram)
+end)
+
+t:test("a chart is drawn once for each background, in the style of the one it was asked for", function()
+  local background = vim.o.background ---@type string
+  t:defer(function()
+    vim.o.background = background
+  end)
+  local file = t:tempdir() .. "/0123456789abcdef-content.chart.mmd" ---@type string
+  vim.fn.writefile({ "graph TD; A-->B" }, file)
+  local source = convert.source(file)
+  local drawn = #charts() ---@type integer
+
+  vim.o.background = "dark"
+  local dark = convert.convert({ source = source })
+  finish(dark)
+  vim.o.background = "light"
+  local light = convert.convert({ source = source })
+  -- The background changes again before the chart is drawn.
+  vim.o.background = "dark"
+  finish(light)
+  finish(convert.convert({ source = source }))
+
+  t.assert_nil(light:error(), "conversion error")
+  local runs = vim.list_slice(charts(), drawn + 1) ---@type string[]
+  t.assert_eq(2, #runs, "drawn once for each background")
+  t.assert_true(runs[2]:find("-t neutral", 1, true) ~= nil, runs[2])
+  t.assert_true(dark.file ~= light.file, "a file for each background")
+  for _, conversion in ipairs({ dark, light }) do
+    t.assert_true(vim.uv.fs_stat(conversion.file) ~= nil, "kept: " .. conversion.file)
+  end
+end)
+
+t:test("a new background draws a chart again under its id", function()
+  local Image = require("era.m.image.image")
+  local transmitted = {} ---@type table[]
+  t:patch_table(package.loaded["era.m.image.terminal"], "request", function(opts)
+    if opts.t == "f" then
+      transmitted[#transmitted + 1] = opts
+    end
+  end)
+  local background = vim.o.background ---@type string
+  t:defer(function()
+    vim.o.background = background
+  end)
+  vim.o.background = "dark"
+  local file = t:tempdir() .. "/fedcba9876543210-content.chart.mmd" ---@type string
+  vim.fn.writefile({ "graph LR; A-->B" }, file)
+  local img = Image.new(file)
+  img:place({ id = 951, update = function() end })
+  t:defer(function()
+    img:del()
+  end)
+  t.wait_until(function()
+    return img.sent == true
+  end, 5000, "chart sent")
+
+  vim.o.background = "light"
+  Image.recolor()
+  t.wait_until(function()
+    return img.sent == true and vim.endswith(img.file, ".light.png")
+  end, 5000, "chart drawn again")
+
+  -- Formulas earlier cases left on screen may be recolored as well.
+  local sent = vim.tbl_filter(function(request)
+    return request.i == img.id
+  end, transmitted)
+  t.assert_eq(img, Image.new(file), "the same image")
+  t.assert_eq(2, #sent, "sent again under its id")
+  t.assert_eq(vim.base64.encode(img.file), sent[2].data, "for the new background")
 end)
 
 t:run()

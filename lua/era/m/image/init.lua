@@ -91,7 +91,7 @@ function M.dressing()
 
   state.did_setup = true
 
-  -- Formulas take their color from the theme. Its own subscriber, which came first, has applied it by then.
+  -- Formulas and charts take their colors from the theme. Its own subscriber, which came first, has applied it by then.
   stl.fn.observe({ dot.context.theme.theme }, function()
     local Image = package.loaded["era.m.image.image"]
     if Image ~= nil then
