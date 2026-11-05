@@ -81,7 +81,7 @@ mean   60.178 -> 54.437 ms
 ### 4.3 Split render and diagnostic snapshots
 
 - Apply hot path：15 options。
-- `dump-state`：37 options。
+- `dump-state`：完整诊断集（测量时 37 options）。
 - Sequential live no-op median：`16.660 -> 14.993 ms`。
 
 Diagnostic completeness 不得重新进入 render hot path。

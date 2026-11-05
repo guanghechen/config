@@ -90,10 +90,7 @@ function _ghc_tmux_defer_status_bootstrap_ {
 function _ghc_tmux_unset_status_layout_hooks_ {
   local -a args=()
   local layout_hook
-  # Also remove retired hooks: the bell reconcile hook from the previous state
-  # transport, and window-changed, whose render never read window state.
-  for layout_hook in $(_ghc_tmux_status_layout_hooks_) \
-    'alert-bell[40]' 'session-window-changed[40]'; do
+  for layout_hook in $(_ghc_tmux_status_layout_hooks_); do
     if [ "${#args[@]}" -gt 0 ]; then
       args+=(';')
     fi
@@ -158,8 +155,6 @@ function _ghc_tmux_fence_scheduler_ {
     if tmux set -s @GHC_SL_SCHED_ACTIVE 0 ';' \
             set -s @GHC_SL_SCHED_GEN "$generation" ';' \
             set -s @GHC_SL_RENDER_REV "fenced:$generation" ';' \
-            set -su @GHC_SL_RUNNING_SESSIONS ';' \
-            set -gu @GHC_RUNNING_SESSIONS_FMT ';' \
             set -s @GHC_SL_SESSION_STATES ""; then
       _GHC_TMUX_STATUS_FENCED_GENERATION=$generation
       return 0

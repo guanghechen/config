@@ -1,6 +1,4 @@
-use crate::error::AppResult;
 use crate::model::{RenderContext, RenderedSegment, SessionInfo};
-use crate::status_widget::ComputedWidget;
 
 const LIST_SURFACE_BG: &str = "default";
 /*
@@ -51,33 +49,14 @@ const ARROW_LITERAL: char = '\u{e0b0}';
 const UNNAMED_LITERAL: char = '\u{f07e2}';
 const STATE_LITERAL: char = '\u{00a4}';
 
-pub struct SessionListWidget;
-
-impl SessionListWidget {
-    /**
-     * Returns the rendered selection and the same visible sessions for layout
-     * accounting. Overflow items do not contribute sampled state width.
-     */
-    pub fn render_with_visible_sessions<'a>(
-        &self,
-        context: &'a RenderContext,
-    ) -> (RenderedSegment, &'a [SessionInfo]) {
-        render_session_list(context)
-    }
-}
-
-impl ComputedWidget for SessionListWidget {
-    fn render_computed(&self, context: &RenderContext) -> AppResult<RenderedSegment> {
-        Ok(render_session_list(context).0)
-    }
-}
-
 /**
- * Rebuilds one session-owned cache and returns its visible slice. Active styling
- * is baked for the owner to bound large groups. Last-focus remains per-client
- * because clients sharing a session may have different navigation history.
+ * Rebuilds one session-owned cache and returns its visible slice, which layout
+ * accounting reuses: overflow items contribute no sampled state width. Active
+ * styling is baked for the owner to bound large groups. Last-focus remains
+ * per-client because clients sharing a session may have different navigation
+ * history.
  */
-fn render_session_list(context: &RenderContext) -> (RenderedSegment, &[SessionInfo]) {
+pub fn session_list(context: &RenderContext) -> (RenderedSegment, &[SessionInfo]) {
     if context.group.sessions.is_empty() {
         return (RenderedSegment::empty(), &context.group.sessions);
     }
@@ -435,20 +414,15 @@ fn session_state_prefix(session_id: &str, bell_prefix: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::BTreeMap;
-    use std::rc::Rc;
-
     use super::{
         MAX_SESSION_LIST_RICH_BYTES, MAX_SESSION_NAME_FORMAT_BYTES, RenderedSegment,
         active_item_body, bounded_session_name, compare_literal, display_literal,
         inactive_item_body_with_last_focus, render_item_body_with_last_focus,
-        render_join_separator, render_left_edge, render_right_edge,
-        render_session_list as render_session_list_with_visible_sessions, session_state_prefix,
+        render_join_separator, render_left_edge, render_right_edge, session_list,
+        session_state_prefix,
     };
-    use crate::model::{
-        LayoutKind, LayoutPlan, RenderContext, SessionGroupView, SessionInfo, StatusMode,
-        StatusPosition, TmuxSnapshot,
-    };
+    use crate::model::{RenderContext, SessionInfo, TmuxSnapshot};
+    use crate::test_support::{render_context, session as session_info, snapshot};
     use crate::util::width::display_width;
 
     #[test]
@@ -535,11 +509,7 @@ mod tests {
     fn item_bodies_use_draw_safe_display_and_expand_safe_compare() {
         let context = context_with_session_infos(
             "a#b",
-            "",
-            vec![
-                session_info("$1", "a#b", false),
-                session_info("$2", "c#d", false),
-            ],
+            vec![session_info("$1", "a#b"), session_info("$2", "c#d")],
         );
         let segment = render_session_list(&context);
 
@@ -556,13 +526,9 @@ mod tests {
 
     #[test]
     fn unnamed_session_shows_symbol_and_id_without_last_focus() {
-        let sessions = vec![
-            session_info("$1", "main", false),
-            session_info("$2", "", false),
-        ];
+        let sessions = vec![session_info("$1", "main"), session_info("$2", "")];
 
-        let on_main =
-            render_session_list(&context_with_session_infos("main", "", sessions.clone()));
+        let on_main = render_session_list(&context_with_session_infos("main", sessions.clone()));
         assert!(
             on_main
                 .rich_text
@@ -574,7 +540,7 @@ mod tests {
             "\u{e0b0} ¤ main | 1 \u{e0b0} ¤ \u{f07e2} $2  2 \u{e0b0} "
         );
 
-        let on_unnamed = render_session_list(&context_with_session_infos("", "main", sessions));
+        let on_unnamed = render_session_list(&context_with_session_infos("", sessions));
         assert!(
             on_unnamed
                 .rich_text
@@ -682,11 +648,7 @@ mod tests {
 
     #[test]
     fn rendered_list_emits_per_client_last_focus_marker() {
-        let context = context_with_session_states_and_last(
-            "dev",
-            "yui",
-            [("$1", "dev", false), ("$2", "yui", false)],
-        );
+        let context = context_with_sessions("dev", [("$1", "dev"), ("$2", "yui")]);
         let segment = render_session_list(&context);
 
         assert!(segment.rich_text.contains("@GHC_SL_FG_SESSION_ITEM_LAST"));
@@ -704,8 +666,7 @@ mod tests {
 
     #[test]
     fn rendered_list_includes_independent_state_prefixes_and_literal_width() {
-        let context =
-            context_with_session_states("dev", [("$1", "dev", false), ("$2", "yui", false)]);
+        let context = context_with_sessions("dev", [("$1", "dev"), ("$2", "yui")]);
         let segment = render_session_list(&context);
 
         assert!(segment.rich_text.contains("@GHC_SYM_WIN_BELL"));
@@ -720,9 +681,9 @@ mod tests {
     #[test]
     fn session_owned_cache_stays_bounded_and_keeps_current_global_index() {
         let sessions = (1..=40)
-            .map(|index| session_info(&format!("${index}"), &format!("s{index:02}"), false))
+            .map(|index| session_info(&format!("${index}"), &format!("s{index:02}")))
             .collect();
-        let context = context_with_session_infos("s20", "", sessions);
+        let context = context_with_session_infos("s20", sessions);
 
         let segment = render_session_list(&context);
 
@@ -744,11 +705,11 @@ mod tests {
     #[test]
     fn bounded_window_keeps_current_at_group_edges() {
         let sessions = (1..=40)
-            .map(|index| session_info(&format!("${index}"), &format!("s{index:02}"), false))
+            .map(|index| session_info(&format!("${index}"), &format!("s{index:02}")))
             .collect::<Vec<_>>();
 
-        let first = render_session_list(&context_with_session_infos("s01", "", sessions.clone()));
-        let last = render_session_list(&context_with_session_infos("s40", "", sessions));
+        let first = render_session_list(&context_with_session_infos("s01", sessions.clone()));
+        let last = render_session_list(&context_with_session_infos("s40", sessions));
 
         assert!(
             first
@@ -766,10 +727,10 @@ mod tests {
     #[test]
     fn visible_sessions_match_the_rendered_ranges_after_bounding() {
         let sessions = (1..=40)
-            .map(|index| session_info(&format!("${index}"), &format!("s{index:02}"), false))
+            .map(|index| session_info(&format!("${index}"), &format!("s{index:02}")))
             .collect();
-        let context = context_with_session_infos("s20", "", sessions);
-        let (segment, visible) = render_session_list_with_visible_sessions(&context);
+        let context = context_with_session_infos("s20", sessions);
+        let (segment, visible) = session_list(&context);
 
         assert!(visible.len() < context.group.sessions.len());
         assert!(visible.iter().any(|session| session.name == "s20"));
@@ -786,8 +747,7 @@ mod tests {
     #[test]
     fn oversized_current_session_name_is_truncated_to_budget() {
         let long_name = "#".repeat(MAX_SESSION_LIST_RICH_BYTES * 2);
-        let context =
-            context_with_session_infos(&long_name, "", vec![session_info("$1", &long_name, false)]);
+        let context = context_with_session_infos(&long_name, vec![session_info("$1", &long_name)]);
 
         let segment = render_session_list(&context);
 
@@ -822,11 +782,7 @@ mod tests {
         let long_name = "#".repeat(MAX_SESSION_LIST_RICH_BYTES * 2);
         let context = context_with_session_infos(
             "main",
-            &long_name,
-            vec![
-                session_info("$1", "main", false),
-                session_info("$2", &long_name, false),
-            ],
+            vec![session_info("$1", "main"), session_info("$2", &long_name)],
         );
 
         let segment = render_session_list(&context);
@@ -837,83 +793,32 @@ mod tests {
     }
 
     fn render_session_list(context: &RenderContext) -> RenderedSegment {
-        render_session_list_with_visible_sessions(context).0
+        session_list(context).0
     }
 
     fn context_with_sessions<const N: usize>(
         current_session_name: &str,
         sessions: [(&str, &str); N],
     ) -> RenderContext {
-        let sessions = sessions.map(|(id, name)| (id, name, false));
-        context_with_session_states(current_session_name, sessions)
-    }
-
-    fn context_with_session_states<const N: usize>(
-        current_session_name: &str,
-        sessions: [(&str, &str, bool); N],
-    ) -> RenderContext {
-        context_with_session_states_and_last(current_session_name, "", sessions)
-    }
-
-    fn context_with_session_states_and_last<const N: usize>(
-        current_session_name: &str,
-        client_last_session: &str,
-        sessions: [(&str, &str, bool); N],
-    ) -> RenderContext {
         let sessions = sessions
             .into_iter()
-            .map(|(id, name, has_bell)| session_info(id, name, has_bell))
+            .map(|(id, name)| session_info(id, name))
             .collect::<Vec<_>>();
 
-        context_with_session_infos(current_session_name, client_last_session, sessions)
+        context_with_session_infos(current_session_name, sessions)
     }
 
     fn context_with_session_infos(
         current_session_name: &str,
-        client_last_session: &str,
         sessions: Vec<SessionInfo>,
     ) -> RenderContext {
-        RenderContext {
-            snapshot: Rc::new(TmuxSnapshot {
-                mode: "02".to_string(),
-                status: "on".to_string(),
-                width: 200,
+        render_context(
+            TmuxSnapshot {
                 current_session_name: current_session_name.to_string(),
-                client_last_session: client_last_session.to_string(),
-                host: "h".to_string(),
                 sessions: sessions.clone(),
-                client_widths: Vec::new(),
-                options: BTreeMap::new(),
-            }),
-            group: SessionGroupView {
-                current_session_name: current_session_name.to_string(),
-                sessions,
+                ..snapshot()
             },
-            layout: LayoutPlan {
-                mode: StatusMode::TopAdaptive,
-                position: StatusPosition::Top,
-                kind: LayoutKind::Wide,
-                rows: 1,
-                target_status: "on".to_string(),
-                key: "02:wide".to_string(),
-            },
-            session_layouts: Vec::new(),
-        }
-    }
-
-    fn session_info(id: &str, name: &str, has_bell: bool) -> SessionInfo {
-        SessionInfo {
-            id: id.to_string(),
-            name: name.to_string(),
-            has_bell,
-            status: "on".to_string(),
-            layout_key: String::new(),
-            left_length: String::new(),
-            right_length: String::new(),
-            format_0: String::new(),
-            format_1: String::new(),
-            render_key: String::new(),
-            cache_witnesses: std::array::from_fn(|_| String::new()),
-        }
+            sessions,
+        )
     }
 }

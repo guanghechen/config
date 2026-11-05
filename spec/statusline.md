@@ -70,13 +70,12 @@ tmux event / status tick
 | `tmux` | tmux subprocess、framing、guards 与 mutation |
 | `layout` | 计算 position、rows、target status、layout key 与 per-session layout reconcile |
 | `session` | 分组、排序（含 snapshot 的 ordered group）、focus 与 swap 的纯 domain logic |
-| `status_widget` | 约束 template/computed widget 的统一接口 |
-| `widget` | 产出独立 status fragment 与 width shadow |
+| `widget` | 以纯函数产出独立 status fragment 与 width shadow |
 | `composer` | 组合 fragments 与 responsive metric guards |
 | `status_length` | 计算左右 status length 上限 |
 | `commit` | 生成 idempotent tmux command plan |
 | `scheduler` | task cadence、claim、lease、completion 与 outcome encoding |
-| `metric` / `platform` | platform detection、metrics sampling 与 publish policy（freshness、health） |
+| `metric` | macOS metrics sampling、sample state 编码与 publish policy（freshness、health） |
 | `process` | timeout、capture limit、watchdog、process-group reap |
 | `introspect` / `observability` | read-only diagnostics 与 opt-in trace |
 
@@ -159,7 +158,7 @@ session 窗口），必须同步放宽对应 gate。较早的 tmux 不保证 att
 
 Hook 仅发送 background reconcile notification。其 stdout、stderr 和非零退出均被隔离，
 避免 tmux 进入 view mode；下一次 event 负责重试。Render 不读取 window 状态，因此不注册
-`session-window-changed`；loader 会移除旧版本留下的该 hook。
+`session-window-changed`。
 
 Session policy 是 `tmux.conf` 中的 `session-created[0]`，以纯 tmux 命令在 server 内执行，
 早于 renderer hook：popup / agent session 设为 `status off` 与 `detach-on-destroy on`，
@@ -271,9 +270,9 @@ pub struct RenderedSegment {
 - `literal_text` 是无 style 的可见字符 shadow，用于 steady-layout width calculation；
   dynamic maximum reserve 可由对应 length policy 单独补充。
 - `rich_text` 是最终 tmux format fragment。
-- `TemplateWidget` 只组合 cheap native tmux templates。
-- `ComputedWidget` 只执行 cheap in-process computation。
-- Widget render 不得采样 metrics，也不得执行任意外部 IO。
+- Widget 是纯函数：template widget 只组合 cheap native tmux templates，computed widget
+  只执行 cheap in-process computation；均不得采样 metrics，也不得执行任意外部 IO。
+- 共用 pill 形状的 widget 由同一定义同时生成 `rich_text` 与 `literal_text`。
 
 ### 7.2 Widget 分类
 
@@ -386,8 +385,7 @@ Session list 的 group、order、focus 与 last-session 语义由 `session-navig
   redraw；
   没有 queue 执行的普通出口（not-due、snapshot 读取失败、inactive）单独发布。携带发布的
   queue 无论 skipped、失败或 timeout 都只算已尝试，不重发；ack 后、首个 queue 前崩溃时该
-  tick 不发布，由 TTL 兜底。Direct `scheduler-tick` 与不认识版本化请求的旧 renderer 都
-  不发布。
+  tick 不发布，由 TTL 兜底。Direct `scheduler-tick` 不发布。
 - Driver 不启动 renderer 的出口（snapshot 读取失败、inactive 或非法 generation）由 driver
   单独发布。Renderer 以 status 0/1 结束后，driver 在最终 wait 后读取 ack：只有确认 renderer
   未接管（ack 文件为空，或读到非 ack 的完整行）时才补发一次，采样晚于正常 prelude；完整 ack、
@@ -411,8 +409,7 @@ Session list 的 group、order、focus 与 last-session 语义由 `session-navig
   接受由此产生的 window-list reflow tradeoff。Bell 与 zoom 从 index 后移到 title prefix，
   各自的 glyph count 和 palette 不变。
 - Sampled `R/B` values 与 frame 不进入 Rust snapshot、render key 或 session cache；cache 中
-  仅保存按可见 session IDs 生成的动态表达式。Indicator 与预算均不消费既有
-  `SessionInfo.has_bell` transport，状态变化不触发 renderer apply/commit。
+  仅保存按可见 session IDs 生成的动态表达式；状态变化不触发 renderer apply/commit。
 - Session item 与 active-scheduler terminal title 是上述 session 定义的 freshness-bounded
   projection：sample 更新前可能暂时保留上一状态，且 consumer 不额外执行 `S/W/P` traversal。
   Scheduler inactive 时 terminal title 改用 live aggregation。Lifecycle fence 清空 sampled
@@ -580,7 +577,6 @@ Trace 仅写 stderr，默认关闭，不改变 status output。
 - mode、status、width、current session、group、layout 与 target rows；
 - lifecycle generation 与 scheduler health；
 - metric freshness、health 与 consecutive errors；
-- widget lifecycle placement count；
 - visible ordered sessions。
 
 `ghc-tmux-status render status02` 输出 rich/literal segments 与左右 length，且不 commit。

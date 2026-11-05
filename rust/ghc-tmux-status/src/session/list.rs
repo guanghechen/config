@@ -160,6 +160,7 @@ mod tests {
     use super::{focus_target, ordered_sessions, swap_current};
     use crate::model::SessionInfo;
     use crate::session::{FocusTarget, MoveDirection, SwapOutcome};
+    use crate::test_support::session;
 
     #[test]
     fn applies_order_and_appends_new_sessions() {
@@ -310,19 +311,7 @@ mod tests {
     fn sessions<const N: usize>(items: [(&str, &str); N]) -> Vec<SessionInfo> {
         items
             .into_iter()
-            .map(|(id, name)| SessionInfo {
-                id: id.to_string(),
-                name: name.to_string(),
-                has_bell: false,
-                status: "on".to_string(),
-                layout_key: String::new(),
-                left_length: String::new(),
-                right_length: String::new(),
-                format_0: String::new(),
-                format_1: String::new(),
-                render_key: String::new(),
-                cache_witnesses: std::array::from_fn(|_| String::new()),
-            })
+            .map(|(id, name)| session(id, name))
             .collect()
     }
 

@@ -2,35 +2,24 @@ use std::rc::Rc;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant};
 
-use crate::commit::{CommitPlanner, TmuxCommandPlan};
+use crate::commit::{self, TmuxCommandPlan};
 use crate::composer::{render_cache_key, render_status02};
 use crate::config::{
-    CPU_NOW_OPTION, CPU_SAMPLE_STATE_OPTION, MEMORY_NOW_OPTION, MEMORY_SAMPLE_STATE_OPTION,
-    METRIC_ERROR_COUNT_OPTION, NETWORK_NOW_OPTION, NETWORK_SAMPLE_STATE_OPTION,
-    SCHEDULER_ACTIVE_OPTION, SCHEDULER_GENERATION_OPTION,
+    CPU_SAMPLE_STATE_OPTION, MEMORY_SAMPLE_STATE_OPTION, METRIC_ERROR_COUNT_OPTION,
+    NETWORK_SAMPLE_STATE_OPTION, SCHEDULER_ACTIVE_OPTION, SCHEDULER_GENERATION_OPTION,
 };
 use crate::error::{AppError, AppResult};
-use crate::introspect::{
-    CACHED_METRIC_WIDGET_PLACEMENTS, COMPUTED_WIDGET_PLACEMENTS, TEMPLATE_WIDGET_PLACEMENTS,
-    metric_health_state, metric_sample_states, scheduler_state_lines,
-};
-use crate::layout::{LayoutEngine, resolve_session_layouts, rows_override};
-use crate::metric::publish::{
-    MetricPublishSummary, is_recent_sample, metric_health_sets, parse_metric_error_count,
-};
-use crate::metric::{
-    NET_INTERFACE_OPTION, normalize_network_interface, provider_for_current_platform,
-};
+use crate::introspect::{metric_health_state, metric_sample_states, scheduler_state_lines};
+use crate::layout::{resolve_layout, resolve_session_layouts, rows_override};
+use crate::metric::publish::{MetricInputs, collect_sample};
+use crate::metric::{METRICS_SUPPORTED, NET_INTERFACE_OPTION};
 use crate::model::{
-    RenderContext, RenderEvent, RenderEventKind, SessionGroupView, SessionRenderedStatus,
-    TmuxSnapshot,
+    RenderContext, RenderEvent, SessionGroupView, SessionRenderedStatus, TmuxSnapshot,
 };
 use crate::observability::{duration_ms, trace_enabled, trace_line};
-use crate::platform::current_platform;
 use crate::process::{OperationDeadline, output_with_timeout};
 use crate::scheduler::{
     ClaimPlan, SchedulerSnapshot, SchedulerTask, SessionStatesPublish, plan_claim,
-    scheduler_outcome_value,
 };
 use crate::session::{
     FocusTarget, MoveDirection, SESSION_ORDER_OPERATION_OPTION, SESSION_ORDER_OPTION,
@@ -42,13 +31,8 @@ use crate::tmux::{
     CompareAndSetOutcome, GlobalOptionCas, GuardedMutationOutcome, SchedulerClaimMutation,
     SchedulerCompletionMutation, TmuxAdapter, TmuxOptionGuard, TmuxOptionScope,
 };
-use crate::util::format::format_percent_width_2;
 use crate::util::time::unix_timestamp_seconds;
 use crate::util::width::display_width;
-use crate::widget::{
-    decode_cpu_snapshot, decode_memory_snapshot, decode_network_snapshot, encode_cpu_snapshot,
-    encode_memory_snapshot, encode_network_snapshot, format_memory_now, format_network_now,
-};
 
 pub struct StatusRuntime {
     tmux: TmuxAdapter,
@@ -68,14 +52,53 @@ const METRIC_INPUT_OPTIONS: &[(TmuxOptionScope, &str)] = &[
 #[derive(Clone, Copy)]
 enum ApplyMode<'a> {
     Standard,
+    // The loader's bootstrap, fenced to the generation it just wrote.
     Bootstrap {
-        expected_generation: u64,
+        generation: &'a str,
     },
     Scheduler {
         claim: &'a ClaimPlan,
+        generation: &'a str,
         deadline: &'a OperationDeadline,
     },
 }
+
+impl<'a> ApplyMode<'a> {
+    /*
+     * Guards for the snapshot read. A standard render learns the lifecycle
+     * generation from that snapshot and adds it to its commit guards only.
+     */
+    fn snapshot_guards(self) -> Vec<TmuxOptionGuard<'a>> {
+        match self {
+            Self::Standard => vec![ACTIVE_LIFECYCLE_GUARD],
+            Self::Bootstrap { generation } => vec![
+                TmuxOptionGuard {
+                    option: SCHEDULER_ACTIVE_OPTION,
+                    expected: "0",
+                },
+                TmuxOptionGuard {
+                    option: SCHEDULER_GENERATION_OPTION,
+                    expected: generation,
+                },
+            ],
+            Self::Scheduler {
+                claim, generation, ..
+            } => scheduler_guards(claim, generation, &claim.claimed_state).to_vec(),
+        }
+    }
+
+    fn check_deadline(self, phase: &str) -> AppResult<()> {
+        match self {
+            Self::Scheduler { deadline, .. } => deadline.check(phase),
+            Self::Standard | Self::Bootstrap { .. } => Ok(()),
+        }
+    }
+}
+
+const ACTIVE_LIFECYCLE_GUARD: TmuxOptionGuard<'static> = TmuxOptionGuard {
+    option: SCHEDULER_ACTIVE_OPTION,
+    expected: "1",
+};
 
 impl StatusRuntime {
     pub fn live() -> Self {
@@ -91,13 +114,12 @@ impl StatusRuntime {
     pub fn bootstrap_theme(&self, expected_generation: u64) -> AppResult<()> {
         const MAX_BOOTSTRAP_ATTEMPTS: usize = 3;
 
+        let generation = expected_generation.to_string();
         for _ in 0..MAX_BOOTSTRAP_ATTEMPTS {
             let outcome = self.apply_inner(
-                RenderEvent {
-                    kind: RenderEventKind::ThemeLoaded,
-                },
+                RenderEvent::ThemeLoaded,
                 ApplyMode::Bootstrap {
-                    expected_generation,
+                    generation: &generation,
                 },
             )?;
             if outcome == GuardedMutationOutcome::Applied {
@@ -115,168 +137,60 @@ impl StatusRuntime {
         event: RenderEvent,
         mode: ApplyMode<'_>,
     ) -> AppResult<GuardedMutationOutcome> {
-        check_apply_deadline(mode, "start")?;
-        let total_start = Instant::now();
-        let context_start = Instant::now();
+        mode.check_deadline("start")?;
+        let started = Instant::now();
         let render_revision = next_render_revision();
-        let Some(snapshot) = self.read_apply_snapshot(render_revision, mode)? else {
-            self.trace_apply(|| {
+        let Some(snapshot) = self
+            .tmux
+            .read_snapshot_for_render(render_revision, &mode.snapshot_guards())?
+        else {
+            trace_apply(|| {
                 format!(
                     "event={} action=lifecycle-skipped total_ms={:.2}",
-                    event.kind.as_str(),
-                    duration_ms(total_start.elapsed())
+                    event.as_str(),
+                    duration_ms(started.elapsed())
                 )
             });
             return Ok(GuardedMutationOutcome::Skipped);
         };
         let lifecycle_generation = lifecycle_generation(&snapshot)?;
         let context_state = context_state_from_snapshot(snapshot);
-        check_apply_deadline(mode, "read-context")?;
-        let context_ms = duration_ms(context_start.elapsed());
-        let context = match context_state {
-            LiveContextState::Active(context) => context,
-            LiveContextState::Inactive(snapshot) => {
-                let plan_start = Instant::now();
-                let plan = CommitPlanner::plan_inactive(&snapshot);
-                let plan_commands = plan.commands.len();
-                let plan_ms = duration_ms(plan_start.elapsed());
-                let commit_start = Instant::now();
-                let result = self.commit_plan(&plan, render_revision, mode, &lifecycle_generation);
-                self.trace_apply(|| {
-                    format!(
-                        "event={} active=false context_ms={context_ms:.2} plan_ms={plan_ms:.2} commit_ms={:.2} total_ms={:.2} plan_commands={plan_commands}",
-                        event.kind.as_str(),
-                        duration_ms(commit_start.elapsed()),
-                        duration_ms(total_start.elapsed())
-                    )
-                });
-                return result;
-            }
-        };
+        mode.check_deadline("read-context")?;
+        let context_ms = duration_ms(started.elapsed());
 
         let render_start = Instant::now();
-        let metrics_supported = current_platform().supports_metrics();
-        let fallback_context = fallback_render_context(&context);
-        let fallback_status = render_status02(&fallback_context, metrics_supported)?;
-        let session_statuses = render_session_statuses(&context, metrics_supported)?;
-        check_apply_deadline(mode, "render")?;
-        let render_ms = duration_ms(render_start.elapsed());
-        let plan_start = Instant::now();
-        let plan = CommitPlanner::plan(&fallback_status, &session_statuses, &context, &event);
-        let plan_commands = plan.commands.len();
-        let plan_ms = duration_ms(plan_start.elapsed());
-        let is_noop = plan.is_empty();
-        if is_noop {
-            let result = self.commit_plan(
-                &TmuxCommandPlan::default(),
-                render_revision,
-                mode,
-                &lifecycle_generation,
-            );
-            self.trace_apply(|| {
-                format!(
-                    "event={} active=true noop=true layout={} session_count={} context_ms={context_ms:.2} render_ms={render_ms:.2} total_ms={:.2}",
-                    event.kind.as_str(),
+        let (plan, scope) = match context_state {
+            LiveContextState::Inactive(snapshot) => {
+                (commit::plan_inactive(&snapshot), "active=false".to_string())
+            }
+            LiveContextState::Active(context) => {
+                let fallback_status =
+                    render_status02(&fallback_render_context(&context), METRICS_SUPPORTED);
+                let session_statuses = render_session_statuses(&context, METRICS_SUPPORTED);
+                mode.check_deadline("render")?;
+                let plan = commit::plan(&fallback_status, &session_statuses, &context);
+                let scope = format!(
+                    "active=true layout={} session_count={}",
                     context.layout.key,
-                    context.group.sessions.len(),
-                    duration_ms(total_start.elapsed())
-                )
-            });
-            return result;
-        }
+                    context.group.sessions.len()
+                );
+                (plan, scope)
+            }
+        };
+        let render_ms = duration_ms(render_start.elapsed());
 
         let commit_start = Instant::now();
         let result = self.commit_plan(&plan, render_revision, mode, &lifecycle_generation);
-        self.trace_apply(|| {
+        trace_apply(|| {
             format!(
-                "event={} active=true noop=false layout={} session_count={} context_ms={context_ms:.2} render_ms={render_ms:.2} plan_ms={plan_ms:.2} commit_ms={:.2} total_ms={:.2} plan_commands={plan_commands}",
-                event.kind.as_str(),
-                context.layout.key,
-                context.group.sessions.len(),
+                "event={} {scope} plan_commands={} context_ms={context_ms:.2} render_ms={render_ms:.2} commit_ms={:.2} total_ms={:.2}",
+                event.as_str(),
+                plan.commands.len(),
                 duration_ms(commit_start.elapsed()),
-                duration_ms(total_start.elapsed())
+                duration_ms(started.elapsed())
             )
         });
         result
-    }
-
-    fn collect_metrics_sample(
-        &self,
-        previous_cpu_state: &str,
-        previous_memory_state: &str,
-        previous_network_state: &str,
-        network_interface: Option<&str>,
-        previous_error_count: u64,
-    ) -> CollectedMetricSample {
-        let previous_cpu = decode_cpu_snapshot(previous_cpu_state);
-        let previous_memory = decode_memory_snapshot(previous_memory_state);
-        let previous_network = decode_network_snapshot(previous_network_state);
-        let provider = provider_for_current_platform(network_interface);
-        let mut summary = MetricPublishSummary::default();
-        let mut set_values: Vec<(&'static str, String)> = Vec::new();
-
-        match provider.sample_cpu(previous_cpu.as_ref().map(|snapshot| &snapshot.sample)) {
-            Ok(snapshot) => {
-                set_values.push((CPU_SAMPLE_STATE_OPTION, encode_cpu_snapshot(&snapshot)));
-                if is_recent_sample(
-                    previous_cpu
-                        .as_ref()
-                        .map(|snapshot| snapshot.timestamp_seconds),
-                    snapshot.timestamp_seconds,
-                ) {
-                    set_values.push((CPU_NOW_OPTION, format_percent_width_2(snapshot.percent)));
-                    summary.cpu_published = true;
-                }
-            }
-            Err(error) => summary.errors.push(format!("cpu:{error}")),
-        }
-
-        match provider.sample_memory() {
-            Ok(snapshot) => {
-                set_values.push((
-                    MEMORY_SAMPLE_STATE_OPTION,
-                    encode_memory_snapshot(&snapshot),
-                ));
-                set_values.push((MEMORY_NOW_OPTION, format_memory_now(&snapshot)));
-                summary.memory_published = true;
-            }
-            Err(error) => {
-                if previous_memory.is_none() {
-                    summary.errors.push(format!("memory:{error}"));
-                } else {
-                    summary.errors.push(format!("memory:{error}:kept-last"));
-                }
-            }
-        }
-
-        match provider.sample_network(previous_network.as_ref().map(|snapshot| &snapshot.sample)) {
-            Ok(snapshot) => {
-                set_values.push((
-                    NETWORK_SAMPLE_STATE_OPTION,
-                    encode_network_snapshot(&snapshot),
-                ));
-                if is_recent_sample(
-                    previous_network
-                        .as_ref()
-                        .map(|snapshot| snapshot.sample.timestamp_seconds()),
-                    snapshot.sample.timestamp_seconds(),
-                ) {
-                    set_values.push((NETWORK_NOW_OPTION, format_network_now(&snapshot)));
-                    summary.network_published = true;
-                }
-            }
-            Err(error) => summary.errors.push(format!("network:{error}")),
-        }
-
-        set_values.extend(metric_health_sets(
-            &summary,
-            previous_error_count,
-            unix_timestamp_seconds(),
-        ));
-        CollectedMetricSample {
-            summary,
-            set_values,
-        }
     }
 
     /**
@@ -294,7 +208,7 @@ impl StatusRuntime {
         if let Some(publish) = publish
             && let Err(error) = self.tmux.publish_session_states(&publish)
         {
-            self.trace_apply(|| {
+            trace_apply(|| {
                 format!("event=scheduler-tick action=publish-session-states error={error}")
             });
         }
@@ -317,31 +231,25 @@ impl StatusRuntime {
         let now_seconds = unix_timestamp_seconds();
         let mut failures = Vec::new();
 
-        if current_platform().supports_metrics()
-            && let Err(error) = self.run_scheduler_task(
-                SchedulerTask::Metrics,
+        for task in SchedulerTask::ALL {
+            if task == SchedulerTask::Metrics && !METRICS_SUPPORTED {
+                continue;
+            }
+            if let Err(error) = self.run_scheduler_task(
+                task,
                 generation,
-                snapshot.state_for(SchedulerTask::Metrics),
+                snapshot.state_for(task),
                 now_seconds,
                 publish,
-            )
-        {
-            self.trace_apply(|| {
-                format!("event=scheduler-tick task=metrics action=error error={error}")
-            });
-            failures.push(format!("metrics:{error}"));
-        }
-        if let Err(error) = self.run_scheduler_task(
-            SchedulerTask::Heartbeat,
-            generation,
-            snapshot.state_for(SchedulerTask::Heartbeat),
-            now_seconds,
-            publish,
-        ) {
-            self.trace_apply(|| {
-                format!("event=scheduler-tick task=heartbeat action=error error={error}")
-            });
-            failures.push(format!("heartbeat:{error}"));
+            ) {
+                trace_apply(|| {
+                    format!(
+                        "event=scheduler-tick task={} action=error error={error}",
+                        task.as_str()
+                    )
+                });
+                failures.push(format!("{}:{error}", task.as_str()));
+            }
         }
 
         if failures.is_empty() {
@@ -491,27 +399,24 @@ impl StatusRuntime {
             )));
         };
         deadline.check("sample-metrics")?;
-        let sample = self.collect_metrics_sample(
+        let sample = collect_sample(&MetricInputs {
             cpu_state,
             memory_state,
             network_state,
-            normalize_network_interface(Some(network_interface)),
-            parse_metric_error_count(Some(error_count)),
-        );
+            network_interface,
+            error_count,
+        });
         deadline.check("publish-metrics")?;
         let generation = claim.generation.to_string();
         let guards = scheduler_guards(claim, &generation, &claim.observed_state);
         let completed_at = unix_timestamp_seconds();
-        let completion_outcome = scheduler_outcome_value(
-            completed_at,
-            claim.generation,
-            claim.sequence,
-            "complete",
-            "known",
-            "ok",
-        );
+        let completion_outcome = claim.outcome(completed_at, "complete", "known", "ok");
         let started_at = claim.started_at_seconds.to_string();
-        let mut sets = sample.set_refs();
+        let mut sets = sample
+            .sets
+            .iter()
+            .map(|(name, value)| (*name, value.as_str()))
+            .collect::<Vec<_>>();
         sets.push((claim.task.last_attempt_option(), &started_at));
         sets.push((claim.task.last_outcome_option(), &completion_outcome));
         // The commit is the tick's first mutation queue, so it carries the publication.
@@ -522,7 +427,7 @@ impl StatusRuntime {
             &scheduler_completion(claim, completed_at),
             publish.as_ref(),
         )?;
-        self.trace_apply(|| {
+        trace_apply(|| {
             format!(
                 "event=scheduler-tick task=metrics action={} cpu_published={} memory_published={} network_published={} errors={}",
                 if outcome == GuardedMutationOutcome::Applied {
@@ -541,34 +446,26 @@ impl StatusRuntime {
 
     fn execute_scheduled_heartbeat(&self, claim: &ClaimPlan) -> AppResult<()> {
         let deadline = claim.deadline();
+        let generation = claim.generation.to_string();
         self.apply_inner(
-            RenderEvent {
-                kind: RenderEventKind::Heartbeat,
-            },
+            RenderEvent::Heartbeat,
             ApplyMode::Scheduler {
                 claim,
+                generation: &generation,
                 deadline: &deadline,
             },
         )?;
         deadline.check("complete-heartbeat")?;
-        let generation = claim.generation.to_string();
         let guards = scheduler_guards(claim, &generation, &claim.claimed_state);
         let completed_at = unix_timestamp_seconds();
-        let completion_outcome = scheduler_outcome_value(
-            completed_at,
-            claim.generation,
-            claim.sequence,
-            "complete",
-            "known",
-            "ok",
-        );
+        let completion_outcome = claim.outcome(completed_at, "complete", "known", "ok");
         let outcome = self.tmux.finish_scheduler_task(
             &guards,
             &[(claim.task.last_outcome_option(), &completion_outcome)],
             &scheduler_completion(claim, completed_at),
             None,
         )?;
-        self.trace_apply(|| {
+        trace_apply(|| {
             format!(
                 "event=scheduler-tick task=heartbeat action={}",
                 if outcome == GuardedMutationOutcome::Applied {
@@ -591,10 +488,8 @@ impl StatusRuntime {
     ) {
         let generation = claim.generation.to_string();
         let guards = scheduler_guards(claim, &generation, expected_state);
-        let outcome = scheduler_outcome_value(
+        let outcome = claim.outcome(
             unix_timestamp_seconds(),
-            claim.generation,
-            claim.sequence,
             phase,
             "unknown",
             &error.to_string(),
@@ -603,7 +498,7 @@ impl StatusRuntime {
             self.tmux
                 .record_scheduler_outcome(&guards, claim.task.last_outcome_option(), &outcome)
         {
-            self.trace_apply(|| {
+            trace_apply(|| {
                 format!(
                     "event=scheduler-outcome task={} action=record-error error={record_error}",
                     claim.task.as_str()
@@ -614,16 +509,20 @@ impl StatusRuntime {
 
     pub fn render_status02_stdout(&self) -> AppResult<()> {
         let context = self.live_context()?;
-        let rendered = render_status02(&context, current_platform().supports_metrics())?;
+        let rendered = render_status02(&context, METRICS_SUPPORTED);
         println!("status-left={}", rendered.status_left.rich_text);
         println!("status-right={}", rendered.status_right.rich_text);
         println!(
             "status-left-length={}",
-            status_left_length(&rendered, &context)
+            status_left_length(
+                &rendered,
+                context.snapshot.width,
+                context.group.sessions.len()
+            )
         );
         println!(
             "status-right-length={}",
-            status_right_length(&rendered, &context)
+            status_right_length(&rendered, context.snapshot.width)
         );
         println!(
             "@GHC_SL_STATUS02_SESSION_FORMAT={}",
@@ -655,10 +554,6 @@ impl StatusRuntime {
         println!("status={}", context.snapshot.status);
         println!("width={}", context.snapshot.width);
         println!("current_session={}", context.snapshot.current_session_name);
-        println!(
-            "client_last_session={}",
-            context.snapshot.client_last_session
-        );
         println!("group_count={}", context.group.sessions.len());
         println!("layout={}", context.layout.key);
         println!("rows={}", context.layout.rows);
@@ -667,13 +562,6 @@ impl StatusRuntime {
         for line in scheduler_state_lines(&context.snapshot) {
             println!("  {line}");
         }
-        println!("widget_lifecycles:");
-        println!("  template_placements={}", TEMPLATE_WIDGET_PLACEMENTS);
-        println!("  computed_placements={}", COMPUTED_WIDGET_PLACEMENTS);
-        println!(
-            "  cached_metric_placements={}",
-            CACHED_METRIC_WIDGET_PLACEMENTS
-        );
         println!("metric_health:");
         println!("  {}", metric_health_state(&context.snapshot).format_line());
         println!("metric_samples:");
@@ -789,61 +677,26 @@ impl StatusRuntime {
         mode: ApplyMode<'_>,
         lifecycle_generation: &str,
     ) -> AppResult<GuardedMutationOutcome> {
+        let mut guards = mode.snapshot_guards();
         match mode {
-            ApplyMode::Standard => self.tmux.commit_plan_guarded(
-                plan,
-                render_revision,
-                &[
-                    TmuxOptionGuard {
-                        option: SCHEDULER_ACTIVE_OPTION,
-                        expected: "1",
-                    },
-                    TmuxOptionGuard {
-                        option: SCHEDULER_GENERATION_OPTION,
-                        expected: lifecycle_generation,
-                    },
-                ],
-            ),
-            ApplyMode::Bootstrap {
-                expected_generation,
-            } => {
-                let expected_generation = expected_generation.to_string();
-                if lifecycle_generation != expected_generation {
-                    return Err(AppError::TmuxParse(format!(
-                        "theme bootstrap generation drifted: expected {expected_generation}, got {lifecycle_generation}"
-                    )));
-                }
-                self.tmux.commit_plan_guarded(
-                    plan,
-                    render_revision,
-                    &[
-                        TmuxOptionGuard {
-                            option: SCHEDULER_ACTIVE_OPTION,
-                            expected: "0",
-                        },
-                        TmuxOptionGuard {
-                            option: SCHEDULER_GENERATION_OPTION,
-                            expected: &expected_generation,
-                        },
-                    ],
-                )
+            ApplyMode::Standard => guards.push(TmuxOptionGuard {
+                option: SCHEDULER_GENERATION_OPTION,
+                expected: lifecycle_generation,
+            }),
+            ApplyMode::Bootstrap { generation } if generation != lifecycle_generation => {
+                return Err(AppError::TmuxParse(format!(
+                    "theme bootstrap generation drifted: expected {generation}, got {lifecycle_generation}"
+                )));
             }
-            ApplyMode::Scheduler { claim, deadline } => {
+            ApplyMode::Bootstrap { .. } => {}
+            ApplyMode::Scheduler { deadline, .. } => {
                 deadline.check("commit-render")?;
-                let generation = claim.generation.to_string();
-                let guards = scheduler_guards(claim, &generation, &claim.claimed_state);
-                self.tmux
-                    .commit_plan_scheduler_guarded(plan, render_revision, &guards, deadline)
+                return self
+                    .tmux
+                    .commit_plan(plan, render_revision, &guards, Some(deadline));
             }
         }
-    }
-
-    fn trace_apply(&self, message: impl FnOnce() -> String) {
-        if !trace_enabled() {
-            return;
-        }
-
-        trace_line("apply", message());
+        self.tmux.commit_plan(plan, render_revision, &guards, None)
     }
 
     fn live_context(&self) -> AppResult<RenderContext> {
@@ -851,53 +704,11 @@ impl StatusRuntime {
         current_session_context_from_snapshot(snapshot)
             .ok_or_else(|| AppError::Render("status02 layout is not active".to_string()))
     }
-
-    fn read_apply_snapshot(
-        &self,
-        render_revision: u64,
-        mode: ApplyMode<'_>,
-    ) -> AppResult<Option<TmuxSnapshot>> {
-        match mode {
-            ApplyMode::Standard => self.tmux.read_snapshot_for_render(
-                render_revision,
-                &[TmuxOptionGuard {
-                    option: SCHEDULER_ACTIVE_OPTION,
-                    expected: "1",
-                }],
-            ),
-            ApplyMode::Bootstrap {
-                expected_generation,
-            } => {
-                let expected_generation = expected_generation.to_string();
-                self.tmux.read_snapshot_for_render(
-                    render_revision,
-                    &[
-                        TmuxOptionGuard {
-                            option: SCHEDULER_ACTIVE_OPTION,
-                            expected: "0",
-                        },
-                        TmuxOptionGuard {
-                            option: SCHEDULER_GENERATION_OPTION,
-                            expected: &expected_generation,
-                        },
-                    ],
-                )
-            }
-            ApplyMode::Scheduler { claim, .. } => {
-                let generation = claim.generation.to_string();
-                self.tmux.read_snapshot_for_render(
-                    render_revision,
-                    &scheduler_guards(claim, &generation, &claim.claimed_state),
-                )
-            }
-        }
-    }
 }
 
-fn check_apply_deadline(mode: ApplyMode<'_>, phase: &str) -> AppResult<()> {
-    match mode {
-        ApplyMode::Scheduler { deadline, .. } => deadline.check(phase),
-        ApplyMode::Standard | ApplyMode::Bootstrap { .. } => Ok(()),
+fn trace_apply(message: impl FnOnce() -> String) {
+    if trace_enabled() {
+        trace_line("apply", message());
     }
 }
 
@@ -916,10 +727,7 @@ fn scheduler_guards<'a>(
     expected_state: &'a str,
 ) -> [TmuxOptionGuard<'a>; 3] {
     [
-        TmuxOptionGuard {
-            option: SCHEDULER_ACTIVE_OPTION,
-            expected: "1",
-        },
+        ACTIVE_LIFECYCLE_GUARD,
         TmuxOptionGuard {
             option: SCHEDULER_GENERATION_OPTION,
             expected: generation,
@@ -949,7 +757,7 @@ fn current_session_context_from_snapshot(snapshot: TmuxSnapshot) -> Option<Rende
     let LiveContextState::Active(mut context) = context_state_from_snapshot(snapshot) else {
         return None;
     };
-    context.layout = LayoutEngine::resolve(
+    context.layout = resolve_layout(
         &context.snapshot.mode,
         &context.snapshot.status,
         context.snapshot.width,
@@ -962,7 +770,7 @@ fn current_session_context_from_snapshot(snapshot: TmuxSnapshot) -> Option<Rende
 fn context_state_from_snapshot(snapshot: TmuxSnapshot) -> LiveContextState {
     let snapshot = Rc::new(snapshot);
     let group = ordered_group_from_snapshot(&snapshot);
-    let current_layout = LayoutEngine::resolve(
+    let current_layout = resolve_layout(
         &snapshot.mode,
         &snapshot.status,
         snapshot.width,
@@ -994,20 +802,6 @@ fn context_state_from_snapshot(snapshot: TmuxSnapshot) -> LiveContextState {
 enum LiveContextState {
     Active(RenderContext),
     Inactive(TmuxSnapshot),
-}
-
-struct CollectedMetricSample {
-    summary: MetricPublishSummary,
-    set_values: Vec<(&'static str, String)>,
-}
-
-impl CollectedMetricSample {
-    fn set_refs(&self) -> Vec<(&str, &str)> {
-        self.set_values
-            .iter()
-            .map(|(name, value)| (*name, value.as_str()))
-            .collect()
-    }
 }
 
 static RENDER_REVISION_COUNTER: AtomicU64 = AtomicU64::new(0);
@@ -1075,24 +869,24 @@ fn fallback_render_context(context: &RenderContext) -> RenderContext {
 fn render_session_statuses(
     context: &RenderContext,
     metrics_supported: bool,
-) -> AppResult<Vec<SessionRenderedStatus>> {
+) -> Vec<SessionRenderedStatus> {
     context
         .session_layouts
         .iter()
         .map(|session_layout| {
             let render_context = RenderContext {
                 snapshot: Rc::clone(&context.snapshot),
-                group: ordered_group_for_session(&context.snapshot, &session_layout.session_name),
+                group: ordered_group_for_session(&context.snapshot, &session_layout.session.name),
                 layout: session_layout.layout.clone(),
                 session_layouts: Vec::new(),
             };
-            let status = render_status02(&render_context, metrics_supported)?;
-            Ok(SessionRenderedStatus {
+            let status = render_status02(&render_context, metrics_supported);
+            SessionRenderedStatus {
                 session_layout: session_layout.clone(),
                 session_group_count: render_context.group.sessions.len(),
                 render_key: render_cache_key(&status),
                 status,
-            })
+            }
         })
         .collect()
 }
@@ -1106,7 +900,6 @@ fn focus_missing_message(target: FocusTarget) -> String {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::BTreeMap;
     use std::rc::Rc;
     use std::time::Duration;
 
@@ -1116,110 +909,82 @@ mod tests {
         render_session_statuses, resolve_session_layouts, run_bounded_command,
     };
     use crate::error::AppError;
-    use crate::layout::LayoutEngine;
+    use crate::layout::resolve_layout;
     use crate::model::{RenderContext, RowsOverride, SessionInfo, TmuxSnapshot};
+    use crate::test_support::{session, snapshot};
 
-    fn session(id: &str, name: &str, status: &str) -> SessionInfo {
-        SessionInfo {
-            id: id.to_string(),
-            name: name.to_string(),
-            has_bell: false,
-            status: status.to_string(),
-            layout_key: String::new(),
-            left_length: String::new(),
-            right_length: String::new(),
-            format_0: String::new(),
-            format_1: String::new(),
-            render_key: String::new(),
-            cache_witnesses: std::array::from_fn(|_| String::new()),
+    // A popup session is off by policy and shares one 120-column client with `main`.
+    fn popup_snapshot() -> TmuxSnapshot {
+        TmuxSnapshot {
+            status: "off".to_string(),
+            width: 120,
+            current_session_name: "_popup@x".to_string(),
+            sessions: vec![
+                SessionInfo {
+                    status: "off".to_string(),
+                    ..session("$1", "_popup@x")
+                },
+                session("$2", "main"),
+            ],
+            client_widths: vec![("$1".to_string(), 120), ("$2".to_string(), 120)],
+            ..snapshot()
         }
     }
 
     #[test]
     fn off_invoking_session_does_not_block_other_session_reconcile() {
-        let snapshot = TmuxSnapshot {
-            mode: "02".to_string(),
-            status: "off".to_string(),
-            width: 120,
-            current_session_name: "_popup@x".to_string(),
-            client_last_session: String::new(),
-            host: "h".to_string(),
-            sessions: vec![
-                session("$1", "_popup@x", "off"),
-                session("$2", "main", "on"),
-            ],
-            client_widths: vec![("$1".to_string(), 120), ("$2".to_string(), 120)],
-            options: BTreeMap::new(),
-        };
+        let snapshot = popup_snapshot();
 
         let LiveContextState::Active(context) = context_state_from_snapshot(snapshot) else {
             panic!("another attached active session must keep the reconcile active");
         };
         assert_eq!(context.session_layouts.len(), 1);
-        assert_eq!(context.session_layouts[0].session_id, "$2");
+        assert_eq!(context.session_layouts[0].session.id, "$2");
     }
 
     #[test]
     fn off_invoking_session_is_inactive_for_diagnostic_context() {
-        let snapshot = TmuxSnapshot {
-            mode: "02".to_string(),
-            status: "off".to_string(),
-            width: 120,
-            current_session_name: "_popup@x".to_string(),
-            client_last_session: String::new(),
-            host: "h".to_string(),
-            sessions: vec![
-                session("$1", "_popup@x", "off"),
-                session("$2", "main", "on"),
-            ],
-            client_widths: vec![("$1".to_string(), 120), ("$2".to_string(), 120)],
-            options: BTreeMap::new(),
-        };
+        let snapshot = popup_snapshot();
 
         assert!(current_session_context_from_snapshot(snapshot).is_none());
     }
 
     #[test]
     fn renders_session_owned_cache_for_each_group() {
-        let sessions = vec![
-            session("$1", "main", "on"),
-            session("$2", "work", "on"),
-            session("$3", "G1-build", "on"),
-            session("$4", "G1-test", "on"),
-        ];
         let snapshot = Rc::new(TmuxSnapshot {
-            mode: "02".to_string(),
-            status: "on".to_string(),
             width: 220,
             current_session_name: "main".to_string(),
-            client_last_session: String::new(),
-            host: "host".to_string(),
-            sessions,
+            sessions: vec![
+                session("$1", "main"),
+                session("$2", "work"),
+                session("$3", "G1-build"),
+                session("$4", "G1-test"),
+            ],
             client_widths: ["$1", "$2", "$3", "$4"]
                 .map(|id| (id.to_string(), 220))
                 .to_vec(),
-            options: BTreeMap::new(),
+            ..snapshot()
         });
         let session_layouts = resolve_session_layouts(&snapshot);
         let context = RenderContext {
             group: ordered_group_from_snapshot(&snapshot),
-            layout: LayoutEngine::resolve("02", "on", 220, 2, RowsOverride::Auto).unwrap(),
+            layout: resolve_layout("02", "on", 220, 2, RowsOverride::Auto).unwrap(),
             snapshot,
             session_layouts,
         };
 
-        let rendered = render_session_statuses(&context, false).unwrap();
+        let rendered = render_session_statuses(&context, false);
         let main = rendered
             .iter()
-            .find(|target| target.session_layout.session_id == "$1")
+            .find(|target| target.session_layout.session.id == "$1")
             .unwrap();
         let work = rendered
             .iter()
-            .find(|target| target.session_layout.session_id == "$2")
+            .find(|target| target.session_layout.session.id == "$2")
             .unwrap();
         let grouped = rendered
             .iter()
-            .find(|target| target.session_layout.session_id == "$3")
+            .find(|target| target.session_layout.session.id == "$3")
             .unwrap();
 
         assert!(main.status.status_left.rich_text.contains("#{l:main}"));

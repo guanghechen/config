@@ -16,8 +16,7 @@ cargo build --quiet --manifest-path "$crate_dir/Cargo.toml"
 env -u TMUX tmux -L "$socket" -f /dev/null new-session -d -s scheduler -x 120 -y 30
 server_env=$(tmux -L "$socket" display-message -p '#{socket_path},#{pid},0')
 
-# Retired recursive commands must fail before touching tmux. The proxy records
-# every adapter invocation, including any attempt to enqueue a successor job.
+# The proxy records every adapter invocation.
 real_tmux=$(command -v tmux)
 mkdir -p "$tmp/bin"
 cat >"$tmp/bin/tmux" <<'EOF'
@@ -27,62 +26,21 @@ case "$*" in *"${GHC_TMUX_FAIL_MATCH:-__never__}"*) exit 1 ;; esac
 exec "$GHC_TMUX_REAL_TMUX" "$@"
 EOF
 chmod +x "$tmp/bin/tmux"
-tmux_call_log="$tmp/legacy-tmux-calls"
+tmux_call_log="$tmp/tmux-calls"
 : >"$tmux_call_log"
 
 tmux -L "$socket" set -s @GHC_SL_SCHED_ACTIVE 1 ';' \
   set -s @GHC_SL_SCHED_GEN 777 ';' \
   set -s @GHC_SL_METRIC_SCHED '777:9:9999999999:0' ';' \
-  set -s @GHC_SL_HEARTBEAT_SCHED '777:11:9999999999:0' ';' \
-  set -s @GHC_SL_METRIC_GEN 7 ';' \
-  set -s @GHC_SL_HEARTBEAT_GEN 7 ';' \
-  set -g @GHC_SL_CPU_GEN 7
+  set -s @GHC_SL_HEARTBEAT_SCHED '777:11:9999999999:0'
 
-legacy_state() {
+scheduler_state() {
   printf '%s\n' \
     "$(tmux -L "$socket" show -sqv @GHC_SL_SCHED_ACTIVE)" \
     "$(tmux -L "$socket" show -sqv @GHC_SL_SCHED_GEN)" \
     "$(tmux -L "$socket" show -sqv @GHC_SL_METRIC_SCHED)" \
-    "$(tmux -L "$socket" show -sqv @GHC_SL_HEARTBEAT_SCHED)" \
-    "$(tmux -L "$socket" show -sqv @GHC_SL_METRIC_GEN)" \
-    "$(tmux -L "$socket" show -sqv @GHC_SL_HEARTBEAT_GEN)" \
-    "$(tmux -L "$socket" show -gqv @GHC_SL_CPU_GEN)"
+    "$(tmux -L "$socket" show -sqv @GHC_SL_HEARTBEAT_SCHED)"
 }
-
-legacy_state_before=$(legacy_state)
-while read -r command generation; do
-  stdout="$tmp/$command.stdout"
-  stderr="$tmp/$command.stderr"
-  if env \
-    TMUX="$server_env" \
-    PATH="$tmp/bin:$PATH" \
-    GHC_TMUX_REAL_TMUX="$real_tmux" \
-    GHC_TMUX_TMUX_CALL_LOG="$tmux_call_log" \
-    "$binary" "$command" "$generation" >"$stdout" 2>"$stderr"; then
-    echo "retired command unexpectedly succeeded: $command" >&2
-    exit 1
-  fi
-  error=$(cat "$stderr")
-  if [ -s "$stdout" ] || [ "$error" != "ghc-tmux-status: unknown command: $command" ]; then
-    echo "retired command did not return its usage error: $command" >&2
-    cat "$stdout" "$stderr" >&2
-    exit 1
-  fi
-done <<'EOF'
-heartbeat 7
-metrics-sample 7
-cpu-sample 7
-EOF
-
-if [ -s "$tmux_call_log" ]; then
-  echo "retired command reached tmux or enqueued a successor" >&2
-  cat "$tmux_call_log" >&2
-  exit 1
-fi
-if [ "$(legacy_state)" != "$legacy_state_before" ]; then
-  echo "retired command mutated scheduler or generation state" >&2
-  exit 1
-fi
 
 # The production driver already owns one atomic scheduler snapshot. Reusing a
 # valid, not-due snapshot must not issue a second tmux query from Rust.
@@ -107,12 +65,12 @@ fi
 
 # A preloaded due witness may race another scheduler. The exact state guard
 # must skip rather than overwrite the newer authoritative value.
-snapshot_state_before=$(legacy_state)
+snapshot_state_before=$(scheduler_state)
 env \
   TMUX="$server_env" \
   GHC_TMUX_STATUS_SCHEDULER_SNAPSHOT=$'1\t'"777"$'\t'"$metric_not_due"$'\t777:10:0:0' \
   "$binary" scheduler-tick
-if [ "$(legacy_state)" != "$snapshot_state_before" ]; then
+if [ "$(scheduler_state)" != "$snapshot_state_before" ]; then
   echo "stale preloaded scheduler snapshot overwrote authoritative state" >&2
   exit 1
 fi
@@ -196,10 +154,6 @@ expect_unowned_request() {
 run_owned_tick $'1\t777\t'"$metric_not_due"$'\t'"$heartbeat_not_due" \
   GHC_TMUX_STATUS_SESSION_STATES_PREFIX_V2=bad
 expect_unowned_request "malformed request"
-run_owned_tick $'1\t777\t'"$metric_not_due"$'\t'"$heartbeat_not_due" \
-  GHC_TMUX_STATUS_SESSION_STATES_PREFIX_V2= \
-  "GHC_TMUX_STATUS_SESSION_STATES_PREFIX=$publish_prefix"
-expect_unowned_request "unversioned request"
 
 # An acknowledgement that cannot be written forfeits the tick before any work. A
 # pipe whose reader is already closed makes the write fail with EPIPE.

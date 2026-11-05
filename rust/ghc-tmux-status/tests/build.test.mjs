@@ -1,5 +1,6 @@
 // Run with: node --test rust/ghc-tmux-status/tests/build.test.mjs
 import assert from "node:assert/strict"
+import { spawnSync } from "node:child_process"
 import {
   chmodSync,
   closeSync,
@@ -11,11 +12,13 @@ import {
   readdirSync,
   rmSync,
   statSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import test from "node:test"
+import { fileURLToPath } from "node:url"
 
 import { rendererInputs, replaceFileIfChanged, verifyRenderer } from "../../../script/build.mjs"
 
@@ -32,6 +35,18 @@ function writeRenderer(filepath, body) {
   writeFileSync(filepath, `#!/bin/sh\n${body}\n`)
   chmodSync(filepath, 0o755)
 }
+
+test("build.mjs runs its CLI when invoked through a symlinked directory", () => {
+  withTempDir((dir) => {
+    const link = join(dir, "script")
+    symlinkSync(fileURLToPath(new URL("../../../script/", import.meta.url)), link)
+
+    // An unknown option fails only if the CLI ran; a skipped main exits 0 silently.
+    const result = spawnSync(process.execPath, [join(link, "build.mjs"), "--bogus"], { encoding: "utf8" })
+    assert.equal(result.status, 1)
+    assert.match(result.stderr, /bogus/)
+  })
+})
 
 test("verifyRenderer accepts a renderer reporting the expected protocol", () => {
   withTempDir((dir) => {

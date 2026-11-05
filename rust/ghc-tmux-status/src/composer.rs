@@ -1,11 +1,6 @@
-use crate::error::AppResult;
 use crate::model::{RenderContext, RenderedSegment, RenderedStatus, SessionInfo};
-use crate::status_widget::{StatusWidget, computed, template};
 use crate::util::width::display_width;
-use crate::widget::{
-    CpuWidget, DateWidget, DurationWidget, FullscreenWidget, HostWidget, MemoryWidget,
-    NetworkWidget, PrefixIndicatorWidget, SessionListWidget, TimeWidget, WindowIdWidget,
-};
+use crate::widget;
 
 /*
  * Responsive metric priority: a higher keep_rank is dropped later. `responsive_metric_segment`
@@ -24,36 +19,16 @@ const RANK_TIME: u8 = 6;
  * Purely renders the status02 layout. Dynamic metrics are sampler-owned indirect
  * tmux references, not render-time samples or composer-owned cache writes.
  *
- * Each widget type is instantiated exactly once. The single-row and two-row
- * layouts share the rendered sub-segments (prefix / window indicators / metrics):
- * segment concatenation is associative, so composing the shared pieces is
- * byte-identical to rendering each row independently.
+ * Each widget renders once. The single-row and two-row layouts share the rendered
+ * sub-segments (prefix / window indicators / metrics): segment concatenation is
+ * associative, so composing the shared pieces is byte-identical to rendering each
+ * row independently.
  */
-pub fn render_status02(
-    context: &RenderContext,
-    metrics_supported: bool,
-) -> AppResult<RenderedStatus> {
-    let host_segment = computed(HostWidget).render(context)?;
-    let (session_segment, visible_sessions) =
-        SessionListWidget.render_with_visible_sessions(context);
-    let status_left = concat_segments(&[&host_segment, &session_segment]);
-
-    let mut prefix = template(PrefixIndicatorWidget);
-    let mut prefix_widgets: [&mut dyn StatusWidget; 1] = [&mut prefix];
-    let prefix_segment = render_widgets(&mut prefix_widgets, context)?;
-
-    let mut fullscreen = template(FullscreenWidget);
-    let mut window_id = template(WindowIdWidget);
-    let mut window_indicator_widgets: [&mut dyn StatusWidget; 2] =
-        [&mut fullscreen, &mut window_id];
-    let window_indicator_segment = render_widgets(&mut window_indicator_widgets, context)?;
-
-    let network = template(NetworkWidget).render(context)?;
-    let cpu = template(CpuWidget).render(context)?;
-    let memory = template(MemoryWidget).render(context)?;
-    let duration = template(DurationWidget).render(context)?;
-    let date = template(DateWidget).render(context)?;
-    let time = template(TimeWidget).render(context)?;
+pub fn render_status02(context: &RenderContext, metrics_supported: bool) -> RenderedStatus {
+    let (session_segment, visible_sessions) = widget::session_list(context);
+    let status_left = concat_segments(&[&widget::host(context), &session_segment]);
+    let prefix_segment = widget::prefix_indicator();
+    let window_indicator_segment = concat_segments(&[&widget::fullscreen(), &widget::window_id()]);
     /*
      * Display order left→right; keep_rank carries the responsive priority. time has the
      * max rank and stays unconditional, so it is the last metric standing before tmux
@@ -61,15 +36,19 @@ pub fn render_status02(
      * macOS) never publish CPU/memory/network values, so those pills are omitted entirely
      * here; the width-priority drop then applies to whatever metrics remain.
      */
-    let mut metrics: Vec<(RenderedSegment, u8)> = Vec::new();
+    let mut metrics = Vec::with_capacity(6);
     if metrics_supported {
-        metrics.push((network, RANK_NETWORK));
-        metrics.push((cpu, RANK_CPU));
-        metrics.push((memory, RANK_MEMORY));
+        metrics.extend([
+            (widget::network(), RANK_NETWORK),
+            (widget::cpu(), RANK_CPU),
+            (widget::memory(), RANK_MEMORY),
+        ]);
     }
-    metrics.push((duration, RANK_DURATION));
-    metrics.push((date, RANK_DATE));
-    metrics.push((time, RANK_TIME));
+    metrics.extend([
+        (widget::duration(), RANK_DURATION),
+        (widget::date(), RANK_DATE),
+        (widget::time(), RANK_TIME),
+    ]);
     /*
      * The baseline reserves host, visible sessions with one state prefix each,
      * and the client-prefix indicator. Guards add the live second-prefix width
@@ -93,12 +72,12 @@ pub fn render_status02(
         rich_text: format_current_format(&window_indicator_segment.rich_text),
     };
 
-    Ok(RenderedStatus {
+    RenderedStatus {
         status_left,
         status_right,
         session_right: row0_right,
         current_format,
-    })
+    }
 }
 
 /**
@@ -114,12 +93,7 @@ pub fn render_cache_key(status: &RenderedStatus) -> String {
 
     let mut hash = FNV_OFFSET_BASIS;
     hash_byte(&mut hash, VERSION, FNV_PRIME);
-    for value in [
-        &status.status_left.rich_text,
-        &status.status_right.rich_text,
-        &status.session_right.rich_text,
-        &status.current_format.rich_text,
-    ] {
+    for value in status.cache_values() {
         for byte in (value.len() as u64).to_le_bytes() {
             hash_byte(&mut hash, byte, FNV_PRIME);
         }
@@ -256,23 +230,6 @@ fn escape_conditional_branch(rich: &str) -> String {
     out
 }
 
-fn render_widgets(
-    widgets: &mut [&mut dyn StatusWidget],
-    context: &RenderContext,
-) -> AppResult<RenderedSegment> {
-    let mut literal_text = String::new();
-    let mut rich_text = String::new();
-    for widget in widgets {
-        let segment = widget.render(context)?;
-        literal_text.push_str(&segment.literal_text);
-        rich_text.push_str(&segment.rich_text);
-    }
-    Ok(RenderedSegment {
-        literal_text,
-        rich_text,
-    })
-}
-
 fn format_current_format(row_right: &str) -> String {
     format!(
         "#[default]\
@@ -296,7 +253,6 @@ fn native_window_list_format() -> &'static str {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::BTreeMap;
     use std::rc::Rc;
 
     use super::{
@@ -305,10 +261,8 @@ mod tests {
         responsive_metric_segment,
     };
     use crate::config::STATUS_SESSION_FORMAT;
-    use crate::model::{
-        LayoutKind, LayoutPlan, RenderContext, RenderedSegment, RenderedStatus, SessionGroupView,
-        SessionInfo, StatusMode, StatusPosition, TmuxSnapshot,
-    };
+    use crate::model::{RenderContext, RenderedSegment, RenderedStatus, TmuxSnapshot};
+    use crate::test_support::{render_context, session, snapshot};
 
     fn metric_seg(tag: &str) -> RenderedSegment {
         // ASCII tags keep display_width == byte length, so thresholds are hand-checkable.
@@ -467,7 +421,7 @@ mod tests {
     #[test]
     fn render_status02_keeps_large_left_out_of_session_right_cache() {
         let context = contract_context();
-        let rendered = render_status02(&context, true).unwrap();
+        let rendered = render_status02(&context, true);
 
         assert!(
             !rendered
@@ -482,7 +436,7 @@ mod tests {
     #[test]
     fn render_status02_shares_metric_tail_across_both_rows() {
         let context = contract_context();
-        let rendered = render_status02(&context, true).unwrap();
+        let rendered = render_status02(&context, true);
 
         /*
          * Associativity witness: the metric block is rendered once and is the tail of
@@ -517,7 +471,7 @@ mod tests {
     #[test]
     fn render_status02_routes_window_indicators_into_status_right_only() {
         let context = contract_context();
-        let rendered = render_status02(&context, true).unwrap();
+        let rendered = render_status02(&context, true);
 
         /*
          * The window indicators (fullscreen + window_id) belong to status_right and the
@@ -533,7 +487,7 @@ mod tests {
     #[test]
     fn render_status02_wraps_rows_with_default_and_align() {
         let context = contract_context();
-        let rendered = render_status02(&context, true).unwrap();
+        let rendered = render_status02(&context, true);
 
         assert!(rendered.status_right.rich_text.starts_with("#[default] "));
         assert!(rendered.status_right.rich_text.ends_with("#[default]"));
@@ -546,7 +500,7 @@ mod tests {
     #[test]
     fn render_status02_orders_metrics_left_to_right() {
         let context = contract_context();
-        let rendered = render_status02(&context, true).unwrap();
+        let rendered = render_status02(&context, true);
         let rich = &rendered.status_right.rich_text;
 
         /*
@@ -572,7 +526,7 @@ mod tests {
     #[test]
     fn render_status02_omits_metric_pills_without_provider() {
         let context = contract_context();
-        let rendered = render_status02(&context, false).unwrap();
+        let rendered = render_status02(&context, false);
         let rich = &rendered.status_right.rich_text;
 
         /*
@@ -589,59 +543,27 @@ mod tests {
     #[test]
     fn sampled_session_states_do_not_change_rendered_cache() {
         let mut context = contract_context();
-        let before = render_status02(&context, true).unwrap();
+        let before = render_status02(&context, true);
         Rc::make_mut(&mut context.snapshot).options.insert(
             "@GHC_SL_SESSION_STATES".to_string(),
             "sample:|R$1||B$1|".to_string(),
         );
-        let after = render_status02(&context, true).unwrap();
+        let after = render_status02(&context, true);
 
         assert_eq!(before, after);
         assert_eq!(render_cache_key(&before), render_cache_key(&after));
     }
 
     fn contract_context() -> RenderContext {
-        let options = BTreeMap::new();
-        let sessions = vec![SessionInfo {
-            id: "$1".to_string(),
-            name: "main".to_string(),
-            has_bell: false,
-            status: "on".to_string(),
-            layout_key: "02:wide".to_string(),
-            left_length: "64".to_string(),
-            right_length: "84".to_string(),
-            format_0: String::new(),
-            format_1: String::new(),
-            render_key: String::new(),
-            cache_witnesses: std::array::from_fn(|_| String::new()),
-        }];
-
-        RenderContext {
-            snapshot: Rc::new(TmuxSnapshot {
-                mode: "02".to_string(),
-                status: "on".to_string(),
-                width: 200,
+        let sessions = vec![session("$1", "main")];
+        render_context(
+            TmuxSnapshot {
                 current_session_name: "main".to_string(),
-                client_last_session: String::new(),
-                host: "h".to_string(),
                 sessions: sessions.clone(),
-                client_widths: Vec::new(),
-                options,
-            }),
-            group: SessionGroupView {
-                current_session_name: "main".to_string(),
-                sessions,
+                ..snapshot()
             },
-            layout: LayoutPlan {
-                mode: StatusMode::TopAdaptive,
-                position: StatusPosition::Top,
-                kind: LayoutKind::Wide,
-                rows: 1,
-                target_status: "on".to_string(),
-                key: "02:wide".to_string(),
-            },
-            session_layouts: Vec::new(),
-        }
+            sessions,
+        )
     }
 
     fn rendered_status(value: &str) -> RenderedStatus {

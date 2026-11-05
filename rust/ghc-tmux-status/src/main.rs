@@ -8,13 +8,13 @@ mod layout;
 mod metric;
 mod model;
 mod observability;
-mod platform;
 mod process;
 mod runtime;
 mod scheduler;
 mod session;
 mod status_length;
-mod status_widget;
+#[cfg(test)]
+mod test_support;
 mod tmux;
 mod util;
 mod widget;
@@ -26,7 +26,7 @@ use std::time::Duration;
 use crate::cli::CliCommand;
 use crate::config::RENDERER_PROTOCOL;
 use crate::error::{AppError, AppResult};
-use crate::layout::LayoutEngine;
+use crate::layout::resolve_layout;
 use crate::process::ProcessWatchdog;
 use crate::runtime::StatusRuntime;
 use crate::scheduler::{
@@ -109,7 +109,7 @@ fn run_layout(
     session_count: usize,
     rows: crate::model::RowsOverride,
 ) -> AppResult<()> {
-    match LayoutEngine::resolve(mode, status, width, session_count, rows) {
+    match resolve_layout(mode, status, width, session_count, rows) {
         Some(plan) => {
             println!(
                 "mode={} position={} kind={} rows={} status={}",

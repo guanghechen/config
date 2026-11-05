@@ -143,56 +143,29 @@ where
         }
     };
 
-    let stdout = match receive_reader(stdout_reader, deadline) {
+    let mut receive = |reader, stream| match receive_reader(reader, deadline) {
         Ok(CapturedOutput {
             bytes,
             exceeded: false,
-        }) => bytes,
-        Ok(CapturedOutput { exceeded: true, .. }) => {
+        }) => Ok(bytes),
+        failure => {
             terminate_process_group(&mut child, process_group_id);
-            return Err(AppError::CommandOutputTooLarge {
-                command,
-                stream: "stdout",
-                limit_bytes: max_capture_bytes,
-            });
-        }
-        Err(ReaderReceiveError::Timeout) => {
-            terminate_process_group(&mut child, process_group_id);
-            return Err(AppError::CommandTimeout {
-                command,
-                timeout_ms: timeout.as_millis(),
-            });
-        }
-        Err(ReaderReceiveError::Io(error)) => {
-            terminate_process_group(&mut child, process_group_id);
-            return Err(error.into());
+            Err(match failure {
+                Ok(_) => AppError::CommandOutputTooLarge {
+                    command: command.clone(),
+                    stream,
+                    limit_bytes: max_capture_bytes,
+                },
+                Err(ReaderReceiveError::Timeout) => AppError::CommandTimeout {
+                    command: command.clone(),
+                    timeout_ms: timeout.as_millis(),
+                },
+                Err(ReaderReceiveError::Io(error)) => error.into(),
+            })
         }
     };
-    let stderr = match receive_reader(stderr_reader, deadline) {
-        Ok(CapturedOutput {
-            bytes,
-            exceeded: false,
-        }) => bytes,
-        Ok(CapturedOutput { exceeded: true, .. }) => {
-            terminate_process_group(&mut child, process_group_id);
-            return Err(AppError::CommandOutputTooLarge {
-                command,
-                stream: "stderr",
-                limit_bytes: max_capture_bytes,
-            });
-        }
-        Err(ReaderReceiveError::Timeout) => {
-            terminate_process_group(&mut child, process_group_id);
-            return Err(AppError::CommandTimeout {
-                command,
-                timeout_ms: timeout.as_millis(),
-            });
-        }
-        Err(ReaderReceiveError::Io(error)) => {
-            terminate_process_group(&mut child, process_group_id);
-            return Err(error.into());
-        }
-    };
+    let stdout = receive(stdout_reader, "stdout")?;
+    let stderr = receive(stderr_reader, "stderr")?;
     Ok(Output {
         status,
         stdout,

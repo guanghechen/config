@@ -3,8 +3,6 @@ use std::collections::BTreeMap;
 use crate::model::{SessionGroupView, SessionInfo, TmuxSnapshot};
 use crate::session::list::{SESSION_ORDER_OPTION, ordered_sessions};
 
-pub struct SessionGrouper;
-
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub enum SessionGroupKey {
     Popup,
@@ -13,50 +11,25 @@ pub enum SessionGroupKey {
     Default,
 }
 
-impl SessionGrouper {
-    pub fn group(current_session_name: &str, sessions: &[SessionInfo]) -> SessionGroupView {
-        let current_key = Self::key(current_session_name);
-        let sessions = sessions
-            .iter()
-            .filter(|session| Self::key(&session.name) == current_key)
-            .cloned()
-            .collect();
-
-        SessionGroupView {
-            current_session_name: current_session_name.to_string(),
-            sessions,
-        }
+pub fn group_key(session_name: &str) -> SessionGroupKey {
+    if session_name.starts_with("_popup@") {
+        return SessionGroupKey::Popup;
     }
-
-    #[cfg(test)]
-    pub fn count(current_session_name: &str, sessions: &[SessionInfo]) -> usize {
-        let current_key = Self::key(current_session_name);
-        sessions
-            .iter()
-            .filter(|session| Self::key(&session.name) == current_key)
-            .count()
+    if is_agent_session(session_name) {
+        return SessionGroupKey::Agent;
     }
-
-    pub fn counts(sessions: &[SessionInfo]) -> BTreeMap<SessionGroupKey, usize> {
-        let mut counts = BTreeMap::new();
-        for session in sessions {
-            *counts.entry(Self::key(&session.name)).or_default() += 1;
-        }
-        counts
+    if let Some(group_id) = grouped_session_id(session_name) {
+        return SessionGroupKey::Numbered(group_id.to_string());
     }
+    SessionGroupKey::Default
+}
 
-    pub fn key(session_name: &str) -> SessionGroupKey {
-        if session_name.starts_with("_popup@") {
-            return SessionGroupKey::Popup;
-        }
-        if is_agent_session(session_name) {
-            return SessionGroupKey::Agent;
-        }
-        if let Some(group_id) = grouped_session_id(session_name) {
-            return SessionGroupKey::Numbered(group_id.to_string());
-        }
-        SessionGroupKey::Default
+pub fn group_counts(sessions: &[SessionInfo]) -> BTreeMap<SessionGroupKey, usize> {
+    let mut counts = BTreeMap::new();
+    for session in sessions {
+        *counts.entry(group_key(&session.name)).or_default() += 1;
     }
+    counts
 }
 
 pub fn ordered_group_from_snapshot(snapshot: &TmuxSnapshot) -> SessionGroupView {
@@ -76,9 +49,16 @@ pub fn ordered_group(
     sessions: &[SessionInfo],
     order_value: Option<&str>,
 ) -> SessionGroupView {
-    let mut group = SessionGrouper::group(session_name, sessions);
-    group.sessions = ordered_sessions(&group.sessions, order_value);
-    group
+    let key = group_key(session_name);
+    let members = sessions
+        .iter()
+        .filter(|session| group_key(&session.name) == key)
+        .cloned()
+        .collect::<Vec<_>>();
+    SessionGroupView {
+        current_session_name: session_name.to_string(),
+        sessions: ordered_sessions(&members, order_value),
+    }
 }
 
 fn session_order_value(snapshot: &TmuxSnapshot) -> Option<&str> {
@@ -86,11 +66,6 @@ fn session_order_value(snapshot: &TmuxSnapshot) -> Option<&str> {
         .options
         .get(SESSION_ORDER_OPTION)
         .map(String::as_str)
-}
-
-#[cfg(test)]
-pub fn same_session_group(current_session_name: &str, session_name: &str) -> bool {
-    SessionGrouper::key(current_session_name) == SessionGrouper::key(session_name)
 }
 
 fn is_agent_session(session_name: &str) -> bool {
@@ -113,8 +88,12 @@ fn grouped_session_id(session_name: &str) -> Option<&str> {
 
 #[cfg(test)]
 mod tests {
-    use super::{SessionGrouper, same_session_group};
-    use crate::model::SessionInfo;
+    use super::{SessionGroupKey, group_counts, group_key};
+    use crate::test_support::session;
+
+    fn same_session_group(current_session_name: &str, session_name: &str) -> bool {
+        group_key(current_session_name) == group_key(session_name)
+    }
 
     #[test]
     fn popup_sessions_are_grouped_together() {
@@ -144,26 +123,15 @@ mod tests {
     }
 
     #[test]
-    fn counts_without_building_a_group_view() {
+    fn counts_sessions_per_group() {
         let sessions = ["main", "work", "G1-build"]
             .into_iter()
             .enumerate()
-            .map(|(index, name)| SessionInfo {
-                id: format!("${index}"),
-                name: name.to_string(),
-                has_bell: false,
-                status: "on".to_string(),
-                layout_key: String::new(),
-                left_length: String::new(),
-                right_length: String::new(),
-                format_0: String::new(),
-                format_1: String::new(),
-                render_key: String::new(),
-                cache_witnesses: std::array::from_fn(|_| String::new()),
-            })
+            .map(|(index, name)| session(&format!("${index}"), name))
             .collect::<Vec<_>>();
 
-        assert_eq!(SessionGrouper::count("main", &sessions), 2);
-        assert_eq!(SessionGrouper::count("G1-test", &sessions), 1);
+        let counts = group_counts(&sessions);
+        assert_eq!(counts.get(&SessionGroupKey::Default), Some(&2));
+        assert_eq!(counts.get(&group_key("G1-test")), Some(&1));
     }
 }

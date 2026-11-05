@@ -8,10 +8,9 @@ use crate::config::{
     STATUS_SESSION_FORMAT,
 };
 use crate::model::{
-    RenderContext, RenderEvent, RenderEventKind, RenderedStatus, SessionLayout,
-    SessionRenderedStatus, TmuxSnapshot,
+    RenderContext, RenderedStatus, SessionLayout, SessionRenderedStatus, TmuxSnapshot,
 };
-use crate::status_length::{status_left_length_for_width, status_right_length_for_width};
+use crate::status_length::{status_left_length, status_right_length};
 
 // Reset interval when status02 is inactive; status01 also sets 20 on load.
 const DEFAULT_STATUS_INTERVAL_SECONDS: &str = "20";
@@ -34,9 +33,6 @@ pub enum TmuxCommand {
         target: String,
         name: String,
         value: String,
-    },
-    UnsetGlobal {
-        name: String,
     },
     UnsetSessionTarget {
         target: String,
@@ -65,9 +61,6 @@ impl TmuxCommand {
                 name.clone(),
                 value.clone(),
             ],
-            Self::UnsetGlobal { name } => {
-                vec!["set".to_string(), "-gu".to_string(), name.clone()]
-            }
             Self::UnsetSessionTarget { target, name } => vec![
                 "set".to_string(),
                 "-q".to_string(),
@@ -109,11 +102,34 @@ impl TmuxCommandPlan {
     pub fn is_empty(&self) -> bool {
         self.commands.is_empty()
     }
+
+    fn set_global_if_changed(
+        &mut self,
+        options: &BTreeMap<String, String>,
+        name: &str,
+        value: &str,
+    ) {
+        if options.get(name).is_some_and(|current| current == value) {
+            return;
+        }
+        self.commands.push(TmuxCommand::SetGlobal {
+            name: name.to_string(),
+            value: value.to_string(),
+        });
+    }
+
+    fn set_session(&mut self, target: &str, name: &str, value: &str) {
+        self.commands.push(TmuxCommand::SetSessionTarget {
+            target: target.to_string(),
+            name: name.to_string(),
+            value: value.to_string(),
+        });
+    }
 }
 
-pub(crate) fn tmux_command_string(args: &[String]) -> String {
+pub(crate) fn tmux_command_string<S: AsRef<str>>(args: &[S]) -> String {
     args.iter()
-        .map(|argument| tmux_quote(argument))
+        .map(|argument| tmux_quote(argument.as_ref()))
         .collect::<Vec<_>>()
         .join(" ")
 }
@@ -142,196 +158,102 @@ fn tmux_quote(value: &str) -> String {
     quoted
 }
 
-pub struct CommitPlanner;
+pub fn plan_inactive(snapshot: &TmuxSnapshot) -> TmuxCommandPlan {
+    let mut plan = TmuxCommandPlan::default();
+    plan.set_global_if_changed(
+        &snapshot.options,
+        STATUS_INTERVAL_OPTION,
+        DEFAULT_STATUS_INTERVAL_SECONDS,
+    );
+    plan
+}
 
-impl CommitPlanner {
-    pub fn plan_inactive(snapshot: &TmuxSnapshot) -> TmuxCommandPlan {
-        let mut plan = TmuxCommandPlan::default();
-        push_global_if_changed(
-            &mut plan,
-            &snapshot.options,
-            STATUS_INTERVAL_OPTION,
-            DEFAULT_STATUS_INTERVAL_SECONDS,
-        );
-        plan
+pub fn plan(
+    fallback_status: &RenderedStatus,
+    session_statuses: &[SessionRenderedStatus],
+    context: &RenderContext,
+) -> TmuxCommandPlan {
+    let mut plan = TmuxCommandPlan::default();
+    let options = &context.snapshot.options;
+
+    for (name, value) in SESSION_CACHE_OPTIONS
+        .into_iter()
+        .zip(fallback_status.cache_values())
+    {
+        plan.set_global_if_changed(options, name, value);
+    }
+    /*
+     * STYLE stays global: templates + redraw cadence + position/justify apply to
+     * every client identically. LAYOUT (rows, lengths, @GHC_SL_LAYOUT) is per-session.
+     */
+    for (name, value) in [
+        (STATUS_LEFT_OPTION, STATUS_LEFT_FORMAT),
+        (STATUS_INTERVAL_OPTION, STATUS_REDRAW_INTERVAL_SECONDS_STR),
+        (STATUS_RIGHT_OPTION, STATUS_RIGHT_FORMAT),
+        (STATUS_POSITION_OPTION, context.layout.position.as_str()),
+        (STATUS_JUSTIFY_OPTION, STATUS_JUSTIFY_VALUE),
+    ] {
+        plan.set_global_if_changed(options, name, value);
     }
 
-    pub fn plan(
-        fallback_status: &RenderedStatus,
-        session_statuses: &[SessionRenderedStatus],
-        context: &RenderContext,
-        event: &RenderEvent,
-    ) -> TmuxCommandPlan {
-        let mut plan = TmuxCommandPlan::default();
-        let options = &context.snapshot.options;
-
-        push_global_if_changed(
-            &mut plan,
-            options,
-            "@GHC_SL_STATUS02_LEFT",
-            &fallback_status.status_left.rich_text,
-        );
-        push_global_if_changed(
-            &mut plan,
-            options,
-            "@GHC_SL_STATUS02_RIGHT",
-            &fallback_status.status_right.rich_text,
-        );
-        push_global_if_changed(
-            &mut plan,
-            options,
-            "@GHC_SL_STATUS02_SESSION_FORMAT",
-            &fallback_status.session_right.rich_text,
-        );
-        push_global_if_changed(
-            &mut plan,
-            options,
-            "@GHC_SL_STATUS02_CURRENT_FORMAT",
-            &fallback_status.current_format.rich_text,
-        );
-
+    /*
+     * Session-dependent output has exactly one writer: the target session's
+     * local options. Global values above are only a stable fallback for a
+     * newly attached session before its first reconcile.
+     */
+    for rendered in session_statuses {
+        let session_layout = &rendered.session_layout;
+        let session = &session_layout.session;
+        let target = &session.id;
+        let status = &rendered.status;
         /*
-         * STYLE stays global: templates + redraw cadence + position/justify apply to
-         * every client identically. LAYOUT (rows, lengths, @GHC_SL_LAYOUT) is per-session.
+         * Only the one-row global status-format trims by status-*-length; the
+         * two-row session format draws both caches untrimmed.
          */
-        push_global_if_changed(&mut plan, options, STATUS_LEFT_OPTION, STATUS_LEFT_FORMAT);
-        push_global_if_changed(
-            &mut plan,
-            options,
-            STATUS_INTERVAL_OPTION,
-            STATUS_REDRAW_INTERVAL_SECONDS_STR,
+        let one_row = session_layout.layout.rows == 1;
+        let left_length = status_left_length(
+            status,
+            session_layout.status_length_width,
+            rendered.session_group_count,
         );
-        push_global_if_changed(&mut plan, options, STATUS_RIGHT_OPTION, STATUS_RIGHT_FORMAT);
-        push_global_if_changed(
-            &mut plan,
-            options,
-            STATUS_POSITION_OPTION,
-            context.layout.position.as_str(),
-        );
-        push_global_if_changed(
-            &mut plan,
-            options,
-            STATUS_JUSTIFY_OPTION,
-            STATUS_JUSTIFY_VALUE,
-        );
-
-        /*
-         * Session-dependent output has exactly one writer: the target session's
-         * local options. Global values above are only a stable fallback for a
-         * newly attached session before its first reconcile.
-         */
-        for rendered_session in session_statuses {
-            let session_layout = &rendered_session.session_layout;
-            let status = &rendered_session.status;
-            let session_target = &session_layout.session_id;
-            /*
-             * Only the one-row global status-format trims by status-*-length; the
-             * two-row session format draws both caches untrimmed.
-             */
-            let writes_lengths = session_layout.layout.rows == 1;
-            let left_length = status_left_length_for_width(
-                status,
-                session_layout.status_length_width,
-                rendered_session.session_group_count,
-            );
-            let right_length =
-                status_right_length_for_width(status, session_layout.status_length_width);
-            if session_render_state_settled(session_layout, &rendered_session.render_key, options) {
-                if writes_lengths && session_layout.current_left_length != left_length {
-                    push_set_session_target(
-                        &mut plan,
-                        session_target,
-                        "status-left-length",
-                        &left_length,
-                    );
-                }
-                if writes_lengths && session_layout.current_right_length != right_length {
-                    push_set_session_target(
-                        &mut plan,
-                        session_target,
-                        "status-right-length",
-                        &right_length,
-                    );
-                }
-                continue;
+        let right_length = status_right_length(status, session_layout.status_length_width);
+        if session_render_state_settled(session_layout, &rendered.render_key, options) {
+            if one_row && session.left_length != left_length {
+                plan.set_session(target, "status-left-length", &left_length);
             }
-            let render_key = target_render_key(session_layout, &rendered_session.render_key);
-            for (name, value) in SESSION_CACHE_OPTIONS.iter().zip([
-                &status.status_left.rich_text,
-                &status.status_right.rich_text,
-                &status.session_right.rich_text,
-                &status.current_format.rich_text,
-            ]) {
-                push_set_session_target(
-                    &mut plan,
-                    session_target,
-                    name,
-                    &cache_value(&rendered_session.render_key, value),
-                );
+            if one_row && session.right_length != right_length {
+                plan.set_session(target, "status-right-length", &right_length);
             }
-            push_set_session_target(
-                &mut plan,
-                session_target,
-                SESSION_RENDER_KEY_OPTION,
-                &render_key,
-            );
-            push_set_session_target(
-                &mut plan,
-                session_target,
-                "@GHC_SL_LAYOUT",
-                &session_layout.layout.key,
-            );
-            if writes_lengths {
-                push_set_session_target(
-                    &mut plan,
-                    session_target,
-                    "status-left-length",
-                    &left_length,
-                );
-                push_set_session_target(
-                    &mut plan,
-                    session_target,
-                    "status-right-length",
-                    &right_length,
-                );
-            }
-            push_set_session_target(
-                &mut plan,
-                session_target,
-                "status",
-                &session_layout.layout.target_status,
-            );
-            if session_layout.layout.rows == 1 {
-                plan.commands.push(TmuxCommand::UnsetSessionTarget {
-                    target: session_target.clone(),
-                    name: "status-format".to_string(),
-                });
-            } else {
-                push_set_session_target(
-                    &mut plan,
-                    session_target,
-                    "status-format[0]",
-                    STATUS_SESSION_FORMAT,
-                );
-                push_set_session_target(
-                    &mut plan,
-                    session_target,
-                    "status-format[1]",
-                    STATUS_CURRENT_FORMAT,
-                );
-            }
+            continue;
         }
 
-        if event.kind == RenderEventKind::ThemeLoaded {
-            for name in LEGACY_WIDGET_CACHE_OPTIONS {
-                plan.commands.push(TmuxCommand::UnsetGlobal {
-                    name: name.to_string(),
-                });
-            }
+        let witness = cache_witness(&rendered.render_key);
+        for (name, value) in SESSION_CACHE_OPTIONS.into_iter().zip(status.cache_values()) {
+            plan.set_session(target, name, &format!("{witness}{value}"));
         }
-
-        plan
+        plan.set_session(
+            target,
+            SESSION_RENDER_KEY_OPTION,
+            &target_render_key(session_layout, &rendered.render_key),
+        );
+        plan.set_session(target, "@GHC_SL_LAYOUT", &session_layout.layout.key);
+        if one_row {
+            plan.set_session(target, "status-left-length", &left_length);
+            plan.set_session(target, "status-right-length", &right_length);
+        }
+        plan.set_session(target, "status", session_layout.layout.target_status);
+        if one_row {
+            plan.commands.push(TmuxCommand::UnsetSessionTarget {
+                target: target.clone(),
+                name: "status-format".to_string(),
+            });
+        } else {
+            plan.set_session(target, "status-format[0]", STATUS_SESSION_FORMAT);
+            plan.set_session(target, "status-format[1]", STATUS_CURRENT_FORMAT);
+        }
     }
+
+    plan
 }
 
 /*
@@ -343,19 +265,16 @@ fn session_render_state_settled(
     render_key: &str,
     global_options: &BTreeMap<String, String>,
 ) -> bool {
-    let target_cache_witness = cache_witness(render_key);
-    session_layout.current_layout_key == session_layout.layout.key
-        && session_layout.current_status == session_layout.layout.target_status
-        && session_layout.current_render_key == target_render_key(session_layout, render_key)
-        && session_layout
-            .current_cache_witnesses
+    let session = &session_layout.session;
+    let witness = cache_witness(render_key);
+    session.layout_key == session_layout.layout.key
+        && session.status == session_layout.layout.target_status
+        && session.render_key == target_render_key(session_layout, render_key)
+        && session
+            .cache_witnesses
             .iter()
-            .all(|current| current == &target_cache_witness)
+            .all(|current| current == &witness)
         && session_formats_settled(session_layout, global_options)
-}
-
-fn cache_value(render_key: &str, value: &str) -> String {
-    format!("{}{value}", cache_witness(render_key))
 }
 
 pub(crate) fn cache_witness(render_key: &str) -> String {
@@ -372,73 +291,28 @@ fn session_formats_settled(
     session_layout: &SessionLayout,
     global_options: &BTreeMap<String, String>,
 ) -> bool {
+    let session = &session_layout.session;
     if session_layout.layout.rows == 2 {
-        return session_layout.current_format_0 == STATUS_SESSION_FORMAT
-            && session_layout.current_format_1 == STATUS_CURRENT_FORMAT;
+        return session.format_0 == STATUS_SESSION_FORMAT
+            && session.format_1 == STATUS_CURRENT_FORMAT;
     }
-
-    session_layout.current_format_0
-        == global_options
-            .get(STATUS_FORMAT_0_OPTION)
+    let global = |name| {
+        global_options
+            .get(name)
             .map(String::as_str)
             .unwrap_or_default()
-        && session_layout.current_format_1
-            == global_options
-                .get(STATUS_FORMAT_1_OPTION)
-                .map(String::as_str)
-                .unwrap_or_default()
+    };
+    session.format_0 == global(STATUS_FORMAT_0_OPTION)
+        && session.format_1 == global(STATUS_FORMAT_1_OPTION)
 }
-
-fn push_global_if_changed(
-    plan: &mut TmuxCommandPlan,
-    options: &BTreeMap<String, String>,
-    name: &str,
-    value: &str,
-) {
-    if options.get(name).is_some_and(|current| current == value) {
-        return;
-    }
-    push_set_global(plan, name, value);
-}
-
-fn push_set_global(plan: &mut TmuxCommandPlan, name: &str, value: &str) {
-    plan.commands.push(TmuxCommand::SetGlobal {
-        name: name.to_string(),
-        value: value.to_string(),
-    });
-}
-
-fn push_set_session_target(plan: &mut TmuxCommandPlan, target: &str, name: &str, value: &str) {
-    plan.commands.push(TmuxCommand::SetSessionTarget {
-        target: target.to_string(),
-        name: name.to_string(),
-        value: value.to_string(),
-    });
-}
-
-// External tmux option names keep COMPONENT for compatibility with existing cached values.
-const LEGACY_WIDGET_CACHE_OPTIONS: &[&str] = &[
-    "@GHC_STATUS_COMPONENT_CACHE_host",
-    "@GHC_STATUS_COMPONENT_CACHE_prefix_indicator",
-    "@GHC_STATUS_COMPONENT_CACHE_session_bell",
-    "@GHC_STATUS_COMPONENT_CACHE_date",
-    "@GHC_STATUS_COMPONENT_CACHE_time",
-    "@GHC_STATUS_COMPONENT_CACHE_fullscreen",
-    "@GHC_STATUS_COMPONENT_CACHE_window_id",
-    "@GHC_STATUS_COMPONENT_CACHE_session_list",
-    "@GHC_STATUS_COMPONENT_CACHE_duration",
-    "@GHC_STATUS_COMPONENT_CACHE_system_metrics",
-    "@GHC_STATUS_COMPONENT_CACHE_cpu",
-    "@GHC_STATUS_COMPONENT_CACHE_memory",
-    "@GHC_STATUS_COMPONENT_CACHE_network",
-];
 
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeMap;
-    use std::rc::Rc;
 
-    use super::{CommitPlanner, TmuxCommand, TmuxCommandPlan, cache_witness, tmux_command_string};
+    use super::{
+        TmuxCommand, TmuxCommandPlan, cache_witness, plan, plan_inactive, tmux_command_string,
+    };
     use crate::composer::render_cache_key;
     use crate::config::{
         STATUS_CURRENT_FORMAT, STATUS_INTERVAL_OPTION, STATUS_JUSTIFY_OPTION, STATUS_JUSTIFY_VALUE,
@@ -447,10 +321,10 @@ mod tests {
         STATUS_SESSION_FORMAT,
     };
     use crate::model::{
-        LayoutKind, LayoutPlan, RenderContext, RenderEvent, RenderEventKind, RenderedSegment,
-        RenderedStatus, SessionGroupView, SessionInfo, SessionLayout, SessionRenderedStatus,
-        StatusMode, StatusPosition, TmuxSnapshot,
+        LayoutKind, LayoutPlan, RenderContext, RenderedSegment, RenderedStatus, SessionInfo,
+        SessionLayout, SessionRenderedStatus, TmuxSnapshot,
     };
+    use crate::test_support::{render_context, session, snapshot, wide_layout};
 
     #[test]
     fn command_string_quotes_tmux_special_characters() {
@@ -477,39 +351,39 @@ mod tests {
     fn session_layout(
         session_id: &str,
         kind: LayoutKind,
-        target_status: &str,
+        target_status: &'static str,
         target_key: &str,
         current_status: &str,
         current_key: &str,
     ) -> SessionLayout {
         let render_key = render_cache_key(&rendered_status("body"));
+        let narrow = kind == LayoutKind::Narrow;
+        let session_format = |format: &str| {
+            if narrow {
+                format.to_string()
+            } else {
+                String::new()
+            }
+        };
         SessionLayout {
-            session_id: session_id.to_string(),
-            session_name: "work".to_string(),
-            current_status: current_status.to_string(),
-            current_layout_key: current_key.to_string(),
-            // Defaults match status_*_length_for_width(rendered_status("body"), 200).
-            current_left_length: "64".to_string(),
-            current_right_length: "84".to_string(),
-            current_format_0: if kind == LayoutKind::Narrow {
-                STATUS_SESSION_FORMAT.to_string()
-            } else {
-                String::new()
+            session: SessionInfo {
+                status: current_status.to_string(),
+                layout_key: current_key.to_string(),
+                // Defaults match status_*_length_for_width(rendered_status("body"), 200).
+                left_length: "64".to_string(),
+                right_length: "84".to_string(),
+                format_0: session_format(STATUS_SESSION_FORMAT),
+                format_1: session_format(STATUS_CURRENT_FORMAT),
+                render_key: format!("{target_key}:{render_key}"),
+                cache_witnesses: std::array::from_fn(|_| cache_witness(&render_key)),
+                ..session(session_id, "work")
             },
-            current_format_1: if kind == LayoutKind::Narrow {
-                STATUS_CURRENT_FORMAT.to_string()
-            } else {
-                String::new()
-            },
-            current_render_key: format!("{target_key}:{render_key}"),
-            current_cache_witnesses: std::array::from_fn(|_| cache_witness(&render_key)),
             layout: LayoutPlan {
-                mode: StatusMode::TopAdaptive,
-                position: StatusPosition::Top,
                 kind,
-                rows: if kind == LayoutKind::Wide { 1 } else { 2 },
-                target_status: target_status.to_string(),
+                rows: if narrow { 2 } else { 1 },
+                target_status,
                 key: target_key.to_string(),
+                ..wide_layout()
             },
             status_length_width: 200,
         }
@@ -531,24 +405,10 @@ mod tests {
             ),
             ("@GHC_SL_LAYOUT".to_string(), "02:wide".to_string()),
         ]));
-        let plan = plan(&status, &context, &RenderEvent::manual_apply());
+        let plan = plan_for(&status, &context);
         assert!(!plan.commands.iter().any(|command| matches!(
             command,
             TmuxCommand::SetGlobal { name, .. } if name == "@GHC_SL_STATUS02_LEFT"
-        )));
-    }
-
-    #[test]
-    fn includes_theme_loaded_legacy_widget_cache_cleanup() {
-        let status = rendered_status("new");
-        let context = context_with_options(BTreeMap::new());
-        let event = RenderEvent {
-            kind: RenderEventKind::ThemeLoaded,
-        };
-        let plan = plan(&status, &context, &event);
-        assert!(plan.commands.iter().any(|command| matches!(
-            command,
-            TmuxCommand::UnsetGlobal { name } if name == "@GHC_STATUS_COMPONENT_CACHE_duration"
         )));
     }
 
@@ -574,11 +434,7 @@ mod tests {
                 STATUS_REDRAW_INTERVAL_SECONDS_STR.to_string(),
             ),
         ]);
-        let plan = plan(
-            &status,
-            &context_with_options(options),
-            &RenderEvent::manual_apply(),
-        );
+        let plan = plan_for(&status, &context_with_options(options));
 
         assert!(!plan.commands.iter().any(|command| matches!(
             command,
@@ -627,7 +483,7 @@ mod tests {
             "on",
             "02:wide",
         )];
-        let plan = plan(&status, &context, &RenderEvent::manual_apply());
+        let plan = plan_for(&status, &context);
 
         assert!(plan.commands.iter().any(|command| matches!(
             command,
@@ -663,7 +519,7 @@ mod tests {
             "2",
             "02:narrow",
         )];
-        let plan = plan(&status, &context, &RenderEvent::manual_apply());
+        let plan = plan_for(&status, &context);
 
         assert!(plan.commands.iter().any(|command| matches!(
             command,
@@ -684,7 +540,7 @@ mod tests {
             "on",
             "02:wide",
         )];
-        let plan = plan(&status, &context, &RenderEvent::manual_apply());
+        let plan = plan_for(&status, &context);
 
         assert!(!plan.commands.iter().any(|command| matches!(
             command,
@@ -702,10 +558,10 @@ mod tests {
         let status = rendered_status("body");
         let mut session_layout =
             session_layout("$2", LayoutKind::Wide, "on", "02:wide", "on", "02:wide");
-        session_layout.current_left_length = "40".to_string();
+        session_layout.session.left_length = "40".to_string();
         let mut context = context_with_options(BTreeMap::new());
         context.session_layouts = vec![session_layout];
-        let plan = plan(&status, &context, &RenderEvent::manual_apply());
+        let plan = plan_for(&status, &context);
 
         let session_commands = session_commands_for_target(&plan, "$2");
         assert_eq!(session_commands.len(), 1);
@@ -730,7 +586,7 @@ mod tests {
             "02:wide",
         )];
 
-        let plan = plan(&status, &context, &RenderEvent::manual_apply());
+        let plan = plan_for(&status, &context);
 
         assert!(plan.commands.iter().any(|command| matches!(
             command,
@@ -744,10 +600,10 @@ mod tests {
         let status = rendered_status("body");
         let mut session_layout =
             session_layout("$5", LayoutKind::Wide, "on", "02:wide", "on", "02:wide");
-        session_layout.current_right_length = "40".to_string();
+        session_layout.session.right_length = "40".to_string();
         let mut context = context_with_options(BTreeMap::new());
         context.session_layouts = vec![session_layout];
-        let plan = plan(&status, &context, &RenderEvent::manual_apply());
+        let plan = plan_for(&status, &context);
 
         let session_commands = session_commands_for_target(&plan, "$5");
         assert_eq!(session_commands.len(), 1);
@@ -763,11 +619,11 @@ mod tests {
         let status = rendered_status("body");
         let mut session_layout =
             session_layout("$6", LayoutKind::Wide, "on", "02:wide", "on", "02:wide");
-        session_layout.current_left_length = "40".to_string();
-        session_layout.current_right_length = "40".to_string();
+        session_layout.session.left_length = "40".to_string();
+        session_layout.session.right_length = "40".to_string();
         let mut context = context_with_options(BTreeMap::new());
         context.session_layouts = vec![session_layout];
-        let plan = plan(&status, &context, &RenderEvent::manual_apply());
+        let plan = plan_for(&status, &context);
 
         let session_commands = session_commands_for_target(&plan, "$6");
         assert_eq!(session_commands.len(), 2);
@@ -787,13 +643,13 @@ mod tests {
         let status = rendered_status("body");
         let mut settled =
             session_layout("$4", LayoutKind::Narrow, "2", "02:narrow", "2", "02:narrow");
-        settled.current_left_length = "40".to_string();
-        settled.current_right_length = "40".to_string();
+        settled.session.left_length = "40".to_string();
+        settled.session.right_length = "40".to_string();
         let changed = session_layout("$7", LayoutKind::Narrow, "2", "02:narrow", "on", "02:wide");
         let mut context = context_with_options(BTreeMap::new());
         context.session_layouts = vec![settled, changed];
 
-        let plan = plan(&status, &context, &RenderEvent::manual_apply());
+        let plan = plan_for(&status, &context);
 
         assert!(session_commands_for_target(&plan, "$4").is_empty());
         assert!(!session_commands_for_target(&plan, "$7").is_empty());
@@ -818,17 +674,17 @@ mod tests {
             let mut session_layout =
                 session_layout("$7", LayoutKind::Wide, "on", "02:wide", "on", "02:wide");
             match drift {
-                "cache-witness" => session_layout.current_cache_witnesses[0].clear(),
-                "render-key" => session_layout.current_render_key.clear(),
-                "layout-key" => session_layout.current_layout_key = "02:narrow".to_string(),
-                "status" => session_layout.current_status = "2".to_string(),
-                "format-0" => session_layout.current_format_0 = "BROKEN".to_string(),
-                "format-1" => session_layout.current_format_1 = "BROKEN".to_string(),
+                "cache-witness" => session_layout.session.cache_witnesses[0].clear(),
+                "render-key" => session_layout.session.render_key.clear(),
+                "layout-key" => session_layout.session.layout_key = "02:narrow".to_string(),
+                "status" => session_layout.session.status = "2".to_string(),
+                "format-0" => session_layout.session.format_0 = "BROKEN".to_string(),
+                "format-1" => session_layout.session.format_1 = "BROKEN".to_string(),
                 _ => unreachable!(),
             }
             let mut context = context_with_options(BTreeMap::new());
             context.session_layouts = vec![session_layout];
-            let plan = plan(&status, &context, &RenderEvent::manual_apply());
+            let plan = plan_for(&status, &context);
 
             assert_full_wide_reconcile_bundle(&plan, "$7", drift);
         }
@@ -839,11 +695,11 @@ mod tests {
         let status = rendered_status("body");
         let mut session_layout =
             session_layout("$4", LayoutKind::Narrow, "2", "02:narrow", "2", "02:narrow");
-        session_layout.current_format_1 = "BROKEN".to_string();
+        session_layout.session.format_1 = "BROKEN".to_string();
         let mut context = context_with_options(BTreeMap::new());
         context.session_layouts = vec![session_layout];
 
-        let plan = plan(&status, &context, &RenderEvent::manual_apply());
+        let plan = plan_for(&status, &context);
 
         assert!(plan.commands.iter().any(|command| matches!(
             command,
@@ -867,7 +723,7 @@ mod tests {
             "02:narrow",
         )];
 
-        let plan = plan(&status, &context, &RenderEvent::manual_apply());
+        let plan = plan_for(&status, &context);
 
         for option in [
             "@GHC_SL_STATUS02_LEFT",
@@ -898,11 +754,11 @@ mod tests {
         let status = rendered_status("body");
         let mut session_layout =
             session_layout("$8", LayoutKind::Wide, "on", "02:wide", "on", "02:wide");
-        session_layout.current_cache_witnesses[2].clear();
+        session_layout.session.cache_witnesses[2].clear();
         let mut context = context_with_options(BTreeMap::new());
         context.session_layouts = vec![session_layout];
 
-        let plan = plan(&status, &context, &RenderEvent::manual_apply());
+        let plan = plan_for(&status, &context);
 
         assert_eq!(
             plan.commands
@@ -929,7 +785,7 @@ mod tests {
             "status-interval".to_string(),
             "20".to_string(),
         )]));
-        let plan = plan(&status, &context, &RenderEvent::manual_apply());
+        let plan = plan_for(&status, &context);
 
         assert!(plan.commands.iter().any(|command| matches!(
             command,
@@ -945,7 +801,7 @@ mod tests {
             "status-interval".to_string(),
             "1".to_string(),
         )]));
-        let plan = plan(&status, &context, &RenderEvent::manual_apply());
+        let plan = plan_for(&status, &context);
 
         assert!(!plan.commands.iter().any(|command| matches!(
             command,
@@ -959,7 +815,7 @@ mod tests {
             "status-interval".to_string(),
             "1".to_string(),
         )]));
-        let plan = CommitPlanner::plan_inactive(&snapshot);
+        let plan = plan_inactive(&snapshot);
 
         assert!(plan.commands.iter().any(|command| matches!(
             command,
@@ -970,7 +826,7 @@ mod tests {
         snapshot
             .options
             .insert("status-interval".to_string(), "20".to_string());
-        let plan = CommitPlanner::plan_inactive(&snapshot);
+        let plan = plan_inactive(&snapshot);
         assert!(plan.is_empty());
     }
 
@@ -988,29 +844,16 @@ mod tests {
     }
 
     fn context_with_options(options: BTreeMap<String, String>) -> RenderContext {
-        RenderContext {
-            snapshot: Rc::new(tmux_snapshot(options)),
-            group: SessionGroupView {
-                current_session_name: "s".to_string(),
-                sessions: Vec::new(),
+        render_context(
+            TmuxSnapshot {
+                options,
+                ..snapshot()
             },
-            layout: LayoutPlan {
-                mode: StatusMode::TopAdaptive,
-                position: StatusPosition::Top,
-                kind: LayoutKind::Wide,
-                rows: 1,
-                target_status: "on".to_string(),
-                key: "02:wide".to_string(),
-            },
-            session_layouts: Vec::new(),
-        }
+            Vec::new(),
+        )
     }
 
-    fn plan(
-        status: &RenderedStatus,
-        context: &RenderContext,
-        event: &RenderEvent,
-    ) -> TmuxCommandPlan {
+    fn plan_for(status: &RenderedStatus, context: &RenderContext) -> TmuxCommandPlan {
         let render_key = render_cache_key(status);
         let session_statuses = context
             .session_layouts
@@ -1023,7 +866,7 @@ mod tests {
                 status: status.clone(),
             })
             .collect::<Vec<_>>();
-        CommitPlanner::plan(status, &session_statuses, context, event)
+        plan(status, &session_statuses, context)
     }
 
     fn session_commands_for_target<'a>(
@@ -1035,7 +878,7 @@ mod tests {
             .filter(|command| match command {
                 TmuxCommand::SetSessionTarget { target, .. }
                 | TmuxCommand::UnsetSessionTarget { target, .. } => target == expected_target,
-                TmuxCommand::SetGlobal { .. } | TmuxCommand::UnsetGlobal { .. } => false,
+                TmuxCommand::SetGlobal { .. } => false,
             })
             .collect()
     }
@@ -1077,31 +920,12 @@ mod tests {
 
     fn tmux_snapshot(options: BTreeMap<String, String>) -> TmuxSnapshot {
         TmuxSnapshot {
-            mode: "02".to_string(),
-            status: "on".to_string(),
-            width: 200,
-            current_session_name: "s".to_string(),
-            client_last_session: String::new(),
-            host: "h".to_string(),
-            sessions: Vec::new(),
-            client_widths: Vec::new(),
             options,
+            ..snapshot()
         }
     }
 
     fn session_info(index: usize) -> SessionInfo {
-        SessionInfo {
-            id: format!("${index}"),
-            name: format!("s{index}"),
-            has_bell: false,
-            status: "on".to_string(),
-            layout_key: String::new(),
-            left_length: String::new(),
-            right_length: String::new(),
-            format_0: String::new(),
-            format_1: String::new(),
-            render_key: String::new(),
-            cache_witnesses: std::array::from_fn(|_| String::new()),
-        }
+        session(&format!("${index}"), &format!("s{index}"))
     }
 }

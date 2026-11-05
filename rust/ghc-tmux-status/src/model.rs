@@ -1,8 +1,8 @@
 use std::collections::BTreeMap;
 use std::rc::Rc;
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
-pub enum RenderEventKind {
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum RenderEvent {
     Heartbeat,
     ThemeLoaded,
     ClientResized,
@@ -13,7 +13,7 @@ pub enum RenderEventKind {
     ManualApply,
 }
 
-impl RenderEventKind {
+impl RenderEvent {
     pub fn as_str(self) -> &'static str {
         match self {
             Self::Heartbeat => "heartbeat",
@@ -42,24 +42,10 @@ impl RenderEventKind {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct RenderEvent {
-    pub kind: RenderEventKind,
-}
-
-impl RenderEvent {
-    pub fn manual_apply() -> Self {
-        Self {
-            kind: RenderEventKind::ManualApply,
-        }
-    }
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct SessionInfo {
     pub id: String,
     pub name: String,
-    pub has_bell: bool,
     /// This session's effective `status` option (`on` / `2` / `off`), read per-session.
     pub status: String,
     /// This session's effective `@GHC_SL_LAYOUT` (global fallback when no override).
@@ -79,13 +65,12 @@ pub struct SessionInfo {
     pub cache_witnesses: [String; 4],
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct TmuxSnapshot {
     pub mode: String,
     pub status: String,
     pub width: usize,
     pub current_session_name: String,
-    pub client_last_session: String,
     pub host: String,
     pub sessions: Vec<SessionInfo>,
     /// Attached clients as (session_id, client_width); detached sessions are absent.
@@ -190,7 +175,7 @@ pub struct LayoutPlan {
     pub position: StatusPosition,
     pub kind: LayoutKind,
     pub rows: usize,
-    pub target_status: String,
+    pub target_status: &'static str,
     pub key: String,
 }
 
@@ -221,6 +206,18 @@ pub struct RenderedStatus {
     pub current_format: RenderedSegment,
 }
 
+impl RenderedStatus {
+    /// Rich texts in renderer-owned cache order: left, right, session format, current format.
+    pub fn cache_values(&self) -> [&str; 4] {
+        [
+            &self.status_left.rich_text,
+            &self.status_right.rich_text,
+            &self.session_right.rich_text,
+            &self.current_format.rich_text,
+        ]
+    }
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct RenderContext {
     /// One immutable snapshot is shared by all per-session render contexts in an apply.
@@ -233,20 +230,11 @@ pub struct RenderContext {
 
 /**
  * The per-session reconcile unit: a session's resolved target layout plus the
- * current per-session values used to short-circuit a no-op write.
+ * session as read, whose current values short-circuit a no-op write.
  */
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SessionLayout {
-    pub session_id: String,
-    pub session_name: String,
-    pub current_status: String,
-    pub current_layout_key: String,
-    pub current_left_length: String,
-    pub current_right_length: String,
-    pub current_format_0: String,
-    pub current_format_1: String,
-    pub current_render_key: String,
-    pub current_cache_witnesses: [String; 4],
+    pub session: SessionInfo,
     pub layout: LayoutPlan,
     /**
      * Widest attached client for this session. Layout rows are resolved from
@@ -270,30 +258,27 @@ pub struct SessionRenderedStatus {
 
 #[cfg(test)]
 mod tests {
-    use super::RenderEventKind;
-    use super::RowsOverride;
-
-    const ALL_EVENT_KINDS: &[RenderEventKind] = &[
-        RenderEventKind::Heartbeat,
-        RenderEventKind::ThemeLoaded,
-        RenderEventKind::ClientResized,
-        RenderEventKind::SessionChanged,
-        RenderEventKind::SessionCreated,
-        RenderEventKind::SessionClosed,
-        RenderEventKind::SessionRenamed,
-        RenderEventKind::ManualApply,
-    ];
+    use super::{RenderEvent, RowsOverride};
 
     #[test]
-    fn event_kind_as_str_parse_round_trips() {
-        for kind in ALL_EVENT_KINDS {
-            assert_eq!(RenderEventKind::parse(kind.as_str()), Some(*kind));
+    fn event_as_str_parse_round_trips() {
+        for event in [
+            RenderEvent::Heartbeat,
+            RenderEvent::ThemeLoaded,
+            RenderEvent::ClientResized,
+            RenderEvent::SessionChanged,
+            RenderEvent::SessionCreated,
+            RenderEvent::SessionClosed,
+            RenderEvent::SessionRenamed,
+            RenderEvent::ManualApply,
+        ] {
+            assert_eq!(RenderEvent::parse(event.as_str()), Some(event));
         }
     }
 
     #[test]
-    fn parse_rejects_unknown_event_kind() {
-        assert_eq!(RenderEventKind::parse("not-an-event"), None);
+    fn parse_rejects_unknown_event() {
+        assert_eq!(RenderEvent::parse("not-an-event"), None);
     }
 
     #[test]

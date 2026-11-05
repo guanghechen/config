@@ -93,14 +93,18 @@ impl TmuxOptionScope {
     }
 }
 
+/// One tmux command's argv. A queue runs several in one invocation.
+type Command = Vec<String>;
+
 impl TmuxAdapter {
     pub fn new() -> Self {
         Self
     }
 
     pub fn read_snapshot(&self) -> AppResult<TmuxSnapshot> {
-        let output = self.tmux_output(snapshot_command_args(None, DIAGNOSTIC_SNAPSHOT_OPTIONS))?;
-        parse_snapshot_output(&output, DIAGNOSTIC_SNAPSHOT_OPTIONS)
+        let options = diagnostic_snapshot_options();
+        let output = self.tmux_output(queue_argv(snapshot_commands(None, &options)))?;
+        parse_snapshot_output(&output, &options)
     }
 
     /**
@@ -113,12 +117,11 @@ impl TmuxAdapter {
         revision: u64,
         guards: &[TmuxOptionGuard<'_>],
     ) -> AppResult<Option<TmuxSnapshot>> {
-        let args = if guards.is_empty() {
-            snapshot_command_args(Some(revision), RENDER_SNAPSHOT_OPTIONS)
-        } else {
-            guarded_snapshot_command_args(revision, guards)
-        };
-        let output = self.tmux_output(args)?;
+        let output = self.tmux_output(option_guarded_command_args(
+            guards,
+            queue_string(&snapshot_commands(Some(revision), RENDER_SNAPSHOT_OPTIONS)),
+            marker_command(RENDER_SKIPPED_MARK),
+        ))?;
         if output == RENDER_SKIPPED_MARK {
             return Ok(None);
         }
@@ -126,25 +129,85 @@ impl TmuxAdapter {
     }
 
     pub fn read_session_navigation(&self) -> AppResult<SessionNavigationSnapshot> {
-        let output = self.tmux_output(session_navigation_command_args())?;
+        let output = self.tmux_output(queue_argv(session_navigation_commands()))?;
         parse_session_navigation_output(&output)
     }
 
-    pub fn commit_plan_guarded(
+    /**
+     * Commits `plan` behind the render revision and `guards`. A standard commit
+     * folds its status refresh into the final chunk and retries a failed chunk
+     * one idempotent command at a time. A scheduler commit, bounded by its task
+     * `deadline`, does neither: each committed `set` already redraws attached
+     * clients, while any `refresh-client` makes tmux SIGTERM and restart running
+     * `#()` status jobs, including the driver awaiting this task's completion.
+     */
+    pub fn commit_plan(
         &self,
         plan: &TmuxCommandPlan,
         expected_revision: u64,
         guards: &[TmuxOptionGuard<'_>],
+        deadline: Option<&OperationDeadline>,
     ) -> AppResult<GuardedMutationOutcome> {
-        self.commit_plan_with_guards(plan, expected_revision, guards, true, None)
+        if plan.is_empty() {
+            return Ok(GuardedMutationOutcome::Applied);
+        }
+
+        let standard = deadline.is_none();
+        let chunks = serialized_plan_chunks(plan, MAX_PLAN_CHUNK_BYTES);
+        let final_chunk_index = chunks.len() - 1;
+        let mut refresh_separately = false;
+
+        for (chunk_index, chunk) in chunks.iter().enumerate() {
+            if let Some(deadline) = deadline {
+                deadline.check("commit-plan")?;
+            }
+            let fold_refresh = standard && chunk_index == final_chunk_index;
+            match self.render_guarded_mutation(
+                expected_revision,
+                &chunk.command_list,
+                guards,
+                fold_refresh,
+            ) {
+                Ok(GuardedMutationOutcome::Applied) => continue,
+                Ok(GuardedMutationOutcome::Skipped) => {
+                    return Ok(GuardedMutationOutcome::Skipped);
+                }
+                Err(error) if !standard => return Err(error),
+                Err(_) => refresh_separately |= fold_refresh,
+            }
+
+            /*
+             * Commands are idempotent. A chunk-level parser/argv failure can be
+             * retried one command at a time without allowing a stale writer: both
+             * guards are rebuilt around every individual mutation.
+             */
+            for command in &plan.commands[chunk.range.clone()] {
+                let outcome = self.render_guarded_mutation(
+                    expected_revision,
+                    &command.to_command_string(),
+                    guards,
+                    false,
+                )?;
+                if outcome == GuardedMutationOutcome::Skipped {
+                    return Ok(GuardedMutationOutcome::Skipped);
+                }
+            }
+        }
+
+        if refresh_separately {
+            let refresh = tmux_command_string(&["refresh-client", "-S"]);
+            let _ = self.tmux_status(nested_render_guard_args(
+                expected_revision,
+                &refresh,
+                guards,
+                false,
+            ));
+        }
+        Ok(GuardedMutationOutcome::Applied)
     }
 
     pub fn switch_client(&self, target_session_id: &str) -> AppResult<()> {
-        self.tmux_status([
-            "switch-client".to_string(),
-            "-t".to_string(),
-            target_session_id.to_string(),
-        ])
+        self.tmux_status(command(&["switch-client", "-t", target_session_id]))
     }
 
     /**
@@ -156,28 +219,24 @@ impl TmuxAdapter {
         &self,
         mutation: GlobalOptionCas<'_>,
     ) -> AppResult<CompareAndSetOutcome> {
-        let command_list = tmux_command_sequence(&[
-            tmux_command_string(&[
-                "set".to_string(),
-                "-g".to_string(),
-                mutation.option.to_string(),
-                mutation.next_value.to_string(),
+        let command_list = queue_string(&[
+            command(&["set", "-g", mutation.option, mutation.next_value]),
+            command(&[
+                "set",
+                "-s",
+                mutation.revision_option,
+                mutation.next_revision,
             ]),
-            tmux_command_string(&[
-                "set".to_string(),
-                "-s".to_string(),
-                mutation.revision_option.to_string(),
-                mutation.next_revision.to_string(),
+            command(&[
+                "set",
+                "-s",
+                mutation.operation_option,
+                mutation.operation_token,
             ]),
-            tmux_command_string(&[
-                "set".to_string(),
-                "-s".to_string(),
-                mutation.operation_option.to_string(),
-                mutation.operation_token.to_string(),
-            ]),
-            marker_command(SCHEDULER_APPLIED_MARK),
+            marker(SCHEDULER_APPLIED_MARK),
         ]);
         let result = self.guarded_mutation(
+            None,
             &[TmuxOptionGuard {
                 option: mutation.revision_option,
                 expected: mutation.expected_revision,
@@ -229,7 +288,7 @@ impl TmuxAdapter {
      * without falling back to the current session's effective option lookup.
      */
     pub fn show_options(&self, options: &[(TmuxOptionScope, &str)]) -> AppResult<Vec<String>> {
-        let output = self.tmux_output(options_command_args(options))?;
+        let output = self.tmux_output(queue_argv(option_read_commands(options)))?;
         parse_options_output(&output, options.len())
     }
 
@@ -244,10 +303,13 @@ impl TmuxAdapter {
         claim: &SchedulerClaimMutation<'_>,
         publish: Option<&SessionStatesPublish>,
     ) -> AppResult<GuardedMutationOutcome> {
-        let mut commands = scheduler_claim_commands(claim);
-        commands.push(marker_command(SCHEDULER_APPLIED_MARK));
-        let command_list = tmux_command_sequence(&commands);
-        self.guarded_mutation_after(publish, guards, command_list)
+        let now = claim.now_seconds.to_string();
+        let command_list = queue_string(&[
+            command(&["set", "-g", claim.last_attempt_option, &now]),
+            command(&["set", "-s", claim.state_option, claim.claimed_state]),
+            marker(SCHEDULER_APPLIED_MARK),
+        ]);
+        self.guarded_mutation(publish, guards, command_list)
     }
 
     /**
@@ -259,13 +321,12 @@ impl TmuxAdapter {
         guards: &[TmuxOptionGuard<'_>],
         options: &[(TmuxOptionScope, &str)],
     ) -> AppResult<Option<Vec<String>>> {
-        let mut commands = vec![marker_command(SCHEDULER_APPLIED_MARK)];
-        commands.extend(serialized_option_commands(options));
-        let skipped = marker_command(SCHEDULER_SKIPPED_MARK);
+        let mut commands = vec![marker(SCHEDULER_APPLIED_MARK)];
+        commands.extend(option_read_commands(options));
         let output = self.tmux_output(option_guarded_command_args(
             guards,
-            tmux_command_sequence(&commands),
-            Some(skipped),
+            queue_string(&commands),
+            marker_command(SCHEDULER_SKIPPED_MARK),
         ))?;
         match parse_guarded_options_output(&output, options.len())? {
             (GuardedMutationOutcome::Applied, values) => Ok(Some(values)),
@@ -293,36 +354,26 @@ impl TmuxAdapter {
         completion: &SchedulerCompletionMutation<'_>,
         publish: Option<&SessionStatesPublish>,
     ) -> AppResult<GuardedMutationOutcome> {
+        let now = completion.now_seconds.to_string();
         let mut commands = global_sets
             .iter()
-            .map(|(name, value)| {
-                tmux_command_string(&[
-                    "set".to_string(),
-                    "-g".to_string(),
-                    (*name).to_string(),
-                    (*value).to_string(),
-                ])
-            })
+            .map(|(name, value)| command(&["set", "-g", name, value]))
             .collect::<Vec<_>>();
-        commands.push(tmux_command_string(&[
-            "set".to_string(),
-            "-g".to_string(),
-            completion.last_complete_option.to_string(),
-            completion.now_seconds.to_string(),
+        commands.push(command(&[
+            "set",
+            "-g",
+            completion.last_complete_option,
+            &now,
         ]));
         // The state is the completion witness and must be the final mutation.
-        commands.push(tmux_command_string(&[
-            "set".to_string(),
-            "-s".to_string(),
-            completion.state_option.to_string(),
-            completion.completed_state.to_string(),
+        commands.push(command(&[
+            "set",
+            "-s",
+            completion.state_option,
+            completion.completed_state,
         ]));
-        commands.push(tmux_command_string(&[
-            "display-message".to_string(),
-            "-p".to_string(),
-            SCHEDULER_APPLIED_MARK.to_string(),
-        ]));
-        self.guarded_mutation_after(publish, guards, tmux_command_sequence(&commands))
+        commands.push(marker(SCHEDULER_APPLIED_MARK));
+        self.guarded_mutation(publish, guards, queue_string(&commands))
     }
 
     pub fn record_scheduler_outcome(
@@ -331,105 +382,15 @@ impl TmuxAdapter {
         outcome_option: &str,
         outcome: &str,
     ) -> AppResult<GuardedMutationOutcome> {
-        let command_list = tmux_command_sequence(&[
-            tmux_command_string(&[
-                "set".to_string(),
-                "-g".to_string(),
-                outcome_option.to_string(),
-                outcome.to_string(),
-            ]),
-            tmux_command_string(&[
-                "display-message".to_string(),
-                "-p".to_string(),
-                SCHEDULER_APPLIED_MARK.to_string(),
-            ]),
+        let command_list = queue_string(&[
+            command(&["set", "-g", outcome_option, outcome]),
+            marker(SCHEDULER_APPLIED_MARK),
         ]);
-        self.guarded_mutation(guards, command_list)
-    }
-
-    pub fn commit_plan_scheduler_guarded(
-        &self,
-        plan: &TmuxCommandPlan,
-        expected_revision: u64,
-        guards: &[TmuxOptionGuard<'_>],
-        deadline: &OperationDeadline,
-    ) -> AppResult<GuardedMutationOutcome> {
-        self.commit_plan_with_guards(plan, expected_revision, guards, false, Some(deadline))
+        self.guarded_mutation(None, guards, command_list)
     }
 
     pub fn display_message(&self, message: &str) -> AppResult<()> {
-        self.tmux_status(["display-message".to_string(), message.to_string()])
-    }
-
-    fn commit_plan_with_guards(
-        &self,
-        plan: &TmuxCommandPlan,
-        expected_revision: u64,
-        guards: &[TmuxOptionGuard<'_>],
-        retry_individual_commands: bool,
-        deadline: Option<&OperationDeadline>,
-    ) -> AppResult<GuardedMutationOutcome> {
-        if plan.is_empty() {
-            return Ok(GuardedMutationOutcome::Applied);
-        }
-
-        let chunks = serialized_plan_chunks(plan, MAX_PLAN_CHUNK_BYTES);
-        let final_chunk_index = chunks.len() - 1;
-        /*
-         * Scheduler commits never refresh: each committed `set` already redraws
-         * attached clients, while any `refresh-client` makes tmux SIGTERM and
-         * restart running `#()` status jobs, including the driver awaiting this
-         * commit's task completion.
-         */
-        let mut refresh_separately = false;
-
-        for (chunk_index, chunk) in chunks.iter().enumerate() {
-            if let Some(deadline) = deadline {
-                deadline.check("commit-plan")?;
-            }
-            let fold_refresh = retry_individual_commands && chunk_index == final_chunk_index;
-            match self.render_guarded_mutation(
-                expected_revision,
-                &chunk.command_list,
-                guards,
-                fold_refresh,
-            ) {
-                Ok(GuardedMutationOutcome::Applied) => continue,
-                Ok(GuardedMutationOutcome::Skipped) => {
-                    return Ok(GuardedMutationOutcome::Skipped);
-                }
-                Err(error) if !retry_individual_commands => return Err(error),
-                Err(_) => refresh_separately |= fold_refresh,
-            }
-
-            /*
-             * Commands are idempotent. A chunk-level parser/argv failure can be
-             * retried one command at a time without allowing a stale writer: both
-             * guards are rebuilt around every individual mutation.
-             */
-            for command in &plan.commands[chunk.range.clone()] {
-                let outcome = self.render_guarded_mutation(
-                    expected_revision,
-                    &command.to_command_string(),
-                    guards,
-                    false,
-                )?;
-                if outcome == GuardedMutationOutcome::Skipped {
-                    return Ok(GuardedMutationOutcome::Skipped);
-                }
-            }
-        }
-
-        if refresh_separately {
-            let refresh = tmux_command_string(&["refresh-client".to_string(), "-S".to_string()]);
-            let _ = self.tmux_status(nested_render_guard_args(
-                expected_revision,
-                &refresh,
-                guards,
-                false,
-            ));
-        }
-        Ok(GuardedMutationOutcome::Applied)
+        self.tmux_status(command(&["display-message", message]))
     }
 
     fn render_guarded_mutation(
@@ -456,26 +417,17 @@ impl TmuxAdapter {
 
     fn guarded_mutation(
         &self,
-        guards: &[TmuxOptionGuard<'_>],
-        command_list: String,
-    ) -> AppResult<GuardedMutationOutcome> {
-        self.guarded_mutation_after(None, guards, command_list)
-    }
-
-    fn guarded_mutation_after(
-        &self,
         publish: Option<&SessionStatesPublish>,
         guards: &[TmuxOptionGuard<'_>],
         command_list: String,
     ) -> AppResult<GuardedMutationOutcome> {
-        let skipped = tmux_command_string(&[
-            "display-message".to_string(),
-            "-p".to_string(),
-            SCHEDULER_SKIPPED_MARK.to_string(),
-        ]);
         let output = self.tmux_output(with_session_states_publish(
             publish,
-            option_guarded_command_args(guards, command_list, Some(skipped)),
+            option_guarded_command_args(
+                guards,
+                command_list,
+                marker_command(SCHEDULER_SKIPPED_MARK),
+            ),
         ))?;
         match output.trim() {
             SCHEDULER_APPLIED_MARK => Ok(GuardedMutationOutcome::Applied),
@@ -486,11 +438,7 @@ impl TmuxAdapter {
         }
     }
 
-    fn tmux_output<I>(&self, args: I) -> AppResult<String>
-    where
-        I: IntoIterator<Item = String>,
-    {
-        let args = args.into_iter().collect::<Vec<_>>();
+    fn tmux_output(&self, args: Vec<String>) -> AppResult<String> {
         let output = output_with_timeout("tmux", &args, TMUX_COMMAND_TIMEOUT)?;
         if !output.status.success() {
             return Err(AppError::TmuxCommand {
@@ -503,186 +451,104 @@ impl TmuxAdapter {
             .to_string())
     }
 
-    fn tmux_status<I>(&self, args: I) -> AppResult<()>
-    where
-        I: IntoIterator<Item = String>,
-    {
-        let args = args.into_iter().collect::<Vec<_>>();
-        let output = output_with_timeout("tmux", &args, TMUX_COMMAND_TIMEOUT)?;
-        if !output.status.success() {
-            return Err(AppError::TmuxCommand {
-                command: format!("tmux {}", args.join(" ")),
-                stderr: String::from_utf8_lossy(&output.stderr).trim().to_string(),
-            });
-        }
-        Ok(())
+    fn tmux_status(&self, args: Vec<String>) -> AppResult<()> {
+        self.tmux_output(args).map(drop)
     }
 }
 
-fn snapshot_command_args(
+fn command(args: &[&str]) -> Command {
+    args.iter().map(|arg| (*arg).to_string()).collect()
+}
+
+fn marker(text: &str) -> Command {
+    command(&["display-message", "-p", text])
+}
+
+fn marker_command(text: &str) -> String {
+    tmux_command_string(&marker(text))
+}
+
+/// The argv of one tmux invocation that runs `commands` as a queue.
+fn queue_argv(commands: Vec<Command>) -> Vec<String> {
+    let mut argv = Vec::new();
+    for command in commands {
+        if !argv.is_empty() {
+            argv.push(";".to_string());
+        }
+        argv.extend(command);
+    }
+    argv
+}
+
+/// The same queue as one command list, for a branch of a guarding `if-shell`.
+fn queue_string(commands: &[Command]) -> String {
+    commands
+        .iter()
+        .map(|command| tmux_command_string(command))
+        .collect::<Vec<_>>()
+        .join("; ")
+}
+
+fn snapshot_commands(
     render_revision: Option<u64>,
     options: &[(TmuxOptionScope, &str)],
-) -> Vec<String> {
-    let mut args = Vec::new();
-    let cache_witness_formats = SESSION_CACHE_OPTIONS.map(cache_witness_format);
+) -> Vec<Command> {
+    let mut commands = Vec::new();
     if let Some(revision) = render_revision {
-        push_tmux_command(
-            &mut args,
-            [
-                "set".to_string(),
-                "-s".to_string(),
-                RENDER_REVISION_OPTION.to_string(),
-                revision.to_string(),
-            ],
-        );
+        commands.push(command(&[
+            "set",
+            "-s",
+            RENDER_REVISION_OPTION,
+            &revision.to_string(),
+        ]));
     }
-    push_tmux_command(
-        &mut args,
-        [
-            "display-message".to_string(),
-            "-p".to_string(),
-            format!(
-                "{CONTEXT_MARK}{FIELD_SEP}#{{client_width}}{FIELD_SEP}#{{session_id}}{FIELD_SEP}#{{session_name}}{FIELD_SEP}#{{client_last_session}}{FIELD_SEP}#{{host}}"
-            ),
-        ],
-    );
-    append_options_commands(&mut args, options);
-    args.extend([
-        ";".to_string(),
-        "display-message".to_string(),
-        "-p".to_string(),
-        SESSIONS_MARK.to_string(),
-        ";".to_string(),
-        "list-sessions".to_string(),
-        "-F".to_string(),
-        /*
-         * bell: #{session_bell_flag} inspects only the session's first window in tmux
-         * releases up to 3.8 (fixed upstream after 3.8 by 2e9189c0), so a bell in any later
-         * window is never reported. Derive has_bell from #{session_alerts} instead, which lists
-         * every alerted window; a '!' in it marks a bell. parse_session_line reads this third
-         * field as the "1"/"0" has_bell flag, so the shape is unchanged.
-         */
-        format!(
-            "#{{session_id}}\t#{{session_name}}\t#{{?#{{m:*!*,#{{session_alerts}}}},1,0}}\t#{{status}}\t#{{@GHC_SL_LAYOUT}}\t#{{status-left-length}}\t#{{status-right-length}}\t#{{{STATUS_FORMAT_0_OPTION}}}\t#{{{STATUS_FORMAT_1_OPTION}}}\t#{{{SESSION_RENDER_KEY_OPTION}}}\t{}\t{}\t{}\t{}",
-            cache_witness_formats[0],
-            cache_witness_formats[1],
-            cache_witness_formats[2],
-            cache_witness_formats[3],
+    commands.push(marker(&format!(
+        "{CONTEXT_MARK}{FIELD_SEP}#{{client_width}}{FIELD_SEP}#{{session_id}}{FIELD_SEP}#{{session_name}}{FIELD_SEP}#{{host}}"
+    )));
+    commands.extend(option_read_commands(options));
+    commands.push(marker(SESSIONS_MARK));
+    commands.push(command(&[
+        "list-sessions",
+        "-F",
+        &format!(
+            "#{{session_id}}\t#{{session_name}}\t#{{status}}\t#{{@GHC_SL_LAYOUT}}\t#{{status-left-length}}\t#{{status-right-length}}\t#{{{STATUS_FORMAT_0_OPTION}}}\t#{{{STATUS_FORMAT_1_OPTION}}}\t#{{{SESSION_RENDER_KEY_OPTION}}}\t{}",
+            SESSION_CACHE_OPTIONS.map(cache_witness_format).join("\t")
         ),
-        ";".to_string(),
-        "display-message".to_string(),
-        "-p".to_string(),
-        CLIENTS_MARK.to_string(),
-        ";".to_string(),
-        "list-clients".to_string(),
-        "-F".to_string(),
-        "#{session_id}\t#{client_width}".to_string(),
-    ]);
-    args
+    ]));
+    commands.push(marker(CLIENTS_MARK));
+    commands.push(command(&[
+        "list-clients",
+        "-F",
+        "#{session_id}\t#{client_width}",
+    ]));
+    commands
 }
 
-fn guarded_snapshot_command_args(
-    render_revision: u64,
-    guards: &[TmuxOptionGuard<'_>],
-) -> Vec<String> {
-    let command_list = tmux_argv_sequence(&snapshot_command_args(
-        Some(render_revision),
-        RENDER_SNAPSHOT_OPTIONS,
-    ));
-    option_guarded_command_args(
-        guards,
-        command_list,
-        Some(marker_command(RENDER_SKIPPED_MARK)),
-    )
+fn session_navigation_commands() -> Vec<Command> {
+    let mut commands = vec![marker(&format!(
+        "{NAVIGATION_MARK}{FIELD_SEP}#{{session_id}}{FIELD_SEP}#{{session_name}}"
+    ))];
+    commands.extend(option_read_commands(&[
+        (TmuxOptionScope::GlobalSession, "@GHC_SL_SESSION_ORDER"),
+        (TmuxOptionScope::Server, "@GHC_SL_SESSION_ORDER_REV"),
+    ]));
+    commands.push(marker(SESSIONS_MARK));
+    commands.push(command(&[
+        "list-sessions",
+        "-F",
+        "#{session_id}\t#{session_name}",
+    ]));
+    commands
 }
 
-fn options_command_args(options: &[(TmuxOptionScope, &str)]) -> Vec<String> {
-    let mut args = Vec::new();
-    append_options_commands(&mut args, options);
-    args
-}
-
-fn session_navigation_command_args() -> Vec<String> {
-    let mut args = Vec::new();
-    push_tmux_command(
-        &mut args,
-        [
-            "display-message".to_string(),
-            "-p".to_string(),
-            format!("{NAVIGATION_MARK}{FIELD_SEP}#{{session_id}}{FIELD_SEP}#{{session_name}}"),
-        ],
-    );
-    append_options_commands(
-        &mut args,
-        &[
-            (TmuxOptionScope::GlobalSession, "@GHC_SL_SESSION_ORDER"),
-            (TmuxOptionScope::Server, "@GHC_SL_SESSION_ORDER_REV"),
-        ],
-    );
-    push_tmux_command(
-        &mut args,
-        [
-            "display-message".to_string(),
-            "-p".to_string(),
-            SESSIONS_MARK.to_string(),
-        ],
-    );
-    push_tmux_command(
-        &mut args,
-        [
-            "list-sessions".to_string(),
-            "-F".to_string(),
-            "#{session_id}\t#{session_name}".to_string(),
-        ],
-    );
-    args
-}
-
-fn append_options_commands(args: &mut Vec<String>, options: &[(TmuxOptionScope, &str)]) {
-    push_tmux_command(
-        args,
-        [
-            "display-message".to_string(),
-            "-p".to_string(),
-            OPTIONS_MARK.to_string(),
-        ],
-    );
+fn option_read_commands(options: &[(TmuxOptionScope, &str)]) -> Vec<Command> {
+    let mut commands = vec![marker(OPTIONS_MARK)];
     for (index, (scope, name)) in options.iter().enumerate() {
-        push_tmux_command(
-            args,
-            [
-                "display-message".to_string(),
-                "-p".to_string(),
-                option_value_mark(index),
-            ],
-        );
-        push_tmux_command(
-            args,
-            [
-                "show".to_string(),
-                scope.show_value_flag().to_string(),
-                (*name).to_string(),
-            ],
-        );
+        commands.push(marker(&option_value_mark(index)));
+        commands.push(command(&["show", scope.show_value_flag(), name]));
     }
-    push_tmux_command(
-        args,
-        [
-            "display-message".to_string(),
-            "-p".to_string(),
-            OPTIONS_END_MARK.to_string(),
-        ],
-    );
-}
-
-fn push_tmux_command<I>(args: &mut Vec<String>, command: I)
-where
-    I: IntoIterator<Item = String>,
-{
-    if !args.is_empty() {
-        args.push(";".to_string());
-    }
-    args.extend(command);
+    commands.push(marker(OPTIONS_END_MARK));
+    commands
 }
 
 fn option_value_mark(index: usize) -> String {
@@ -750,24 +616,23 @@ fn nested_render_guard_args(
     let mut applied_commands = vec![command_list.to_string()];
     if refresh_status {
         applied_commands.push(tmux_command_string(&[
-            "if-shell".to_string(),
-            "-F".to_string(),
-            "#{!=:#{client_name},}".to_string(),
-            tmux_command_string(&["refresh-client".to_string(), "-S".to_string()]),
-            String::new(),
+            "if-shell",
+            "-F",
+            "#{!=:#{client_name},}",
+            &tmux_command_string(&["refresh-client", "-S"]),
+            "",
         ]));
     }
     applied_commands.push(marker_command(RENDER_APPLIED_MARK));
-    let applied_command = tmux_command_sequence(&applied_commands);
-    let render_guard =
-        guarded_command_args(RENDER_REVISION_OPTION, expected_revision, applied_command);
-    if guards.is_empty() {
-        return render_guard;
-    }
+    let render_guard = guarded_command_args(
+        RENDER_REVISION_OPTION,
+        expected_revision,
+        applied_commands.join("; "),
+    );
     option_guarded_command_args(
         guards,
         tmux_command_string(&render_guard),
-        Some(marker_command(RENDER_SKIPPED_MARK)),
+        marker_command(RENDER_SKIPPED_MARK),
     )
 }
 
@@ -784,18 +649,15 @@ fn guarded_command_args(option: &str, expected_value: u64, command_list: String)
 fn option_guarded_command_args(
     guards: &[TmuxOptionGuard<'_>],
     command_list: String,
-    false_command: Option<String>,
+    false_command: String,
 ) -> Vec<String> {
-    let mut args = vec![
+    vec![
         "if-shell".to_string(),
         "-F".to_string(),
         combined_guard_format(guards),
         command_list,
-    ];
-    if let Some(false_command) = false_command {
-        args.push(false_command);
-    }
-    args
+        false_command,
+    ]
 }
 
 /*
@@ -856,45 +718,6 @@ fn with_session_states_publish(
     }
 }
 
-fn scheduler_claim_commands(claim: &SchedulerClaimMutation<'_>) -> Vec<String> {
-    vec![
-        tmux_command_string(&[
-            "set".to_string(),
-            "-g".to_string(),
-            claim.last_attempt_option.to_string(),
-            claim.now_seconds.to_string(),
-        ]),
-        tmux_command_string(&[
-            "set".to_string(),
-            "-s".to_string(),
-            claim.state_option.to_string(),
-            claim.claimed_state.to_string(),
-        ]),
-    ]
-}
-
-fn marker_command(marker: &str) -> String {
-    tmux_command_string(&[
-        "display-message".to_string(),
-        "-p".to_string(),
-        marker.to_string(),
-    ])
-}
-
-fn serialized_option_commands(options: &[(TmuxOptionScope, &str)]) -> Vec<String> {
-    let mut commands = vec![marker_command(OPTIONS_MARK)];
-    for (index, (scope, name)) in options.iter().enumerate() {
-        commands.push(marker_command(&option_value_mark(index)));
-        commands.push(tmux_command_string(&[
-            "show".to_string(),
-            scope.show_value_flag().to_string(),
-            (*name).to_string(),
-        ]));
-    }
-    commands.push(marker_command(OPTIONS_END_MARK));
-    commands
-}
-
 fn combined_guard_format(guards: &[TmuxOptionGuard<'_>]) -> String {
     let mut conditions = guards.iter().map(|guard| {
         format!(
@@ -916,18 +739,6 @@ fn format_literal(value: &str) -> String {
     format!("#{{l:{escaped}}}")
 }
 
-fn tmux_command_sequence(commands: &[String]) -> String {
-    commands.join("; ")
-}
-
-fn tmux_argv_sequence(args: &[String]) -> String {
-    args.split(|argument| argument == ";")
-        .filter(|command| !command.is_empty())
-        .map(tmux_command_string)
-        .collect::<Vec<_>>()
-        .join("; ")
-}
-
 fn parse_snapshot_output(
     output: &str,
     options: &[(TmuxOptionScope, &str)],
@@ -936,8 +747,7 @@ fn parse_snapshot_output(
     let context_line = lines
         .next()
         .ok_or_else(|| AppError::TmuxParse("missing context section".to_string()))?;
-    let (width, current_session_name, client_last_session, host) =
-        parse_context_line(context_line)?;
+    let (width, current_session_name, host) = parse_context_line(context_line)?;
 
     let option_values = parse_option_values(&mut lines, options.len())?;
     let options = options
@@ -979,7 +789,6 @@ fn parse_snapshot_output(
         status,
         width,
         current_session_name,
-        client_last_session,
         host,
         sessions,
         client_widths,
@@ -1073,7 +882,6 @@ fn parse_session_line(line: &str) -> Option<SessionInfo> {
     let mut fields = line.split('\t');
     let id = fields.next()?;
     let name = fields.next()?;
-    let has_bell = fields.next() == Some("1");
     let status = fields.next().unwrap_or_default().to_string();
     let layout_key = fields.next().unwrap_or_default().to_string();
     let left_length = fields.next().unwrap_or_default().to_string();
@@ -1086,7 +894,6 @@ fn parse_session_line(line: &str) -> Option<SessionInfo> {
     Some(SessionInfo {
         id: id.to_string(),
         name: name.to_string(),
-        has_bell,
         status,
         layout_key,
         left_length,
@@ -1103,15 +910,7 @@ fn parse_navigation_session_line(line: &str) -> Option<SessionInfo> {
     Some(SessionInfo {
         id: id.to_string(),
         name: name.to_string(),
-        has_bell: false,
-        status: String::new(),
-        layout_key: String::new(),
-        left_length: String::new(),
-        right_length: String::new(),
-        format_0: String::new(),
-        format_1: String::new(),
-        render_key: String::new(),
-        cache_witnesses: std::array::from_fn(|_| String::new()),
+        ..SessionInfo::default()
     })
 }
 
@@ -1122,7 +921,7 @@ fn parse_client_line(line: &str) -> Option<(String, usize)> {
     Some((session_id, width))
 }
 
-fn parse_context_line(context_line: &str) -> AppResult<(usize, String, String, String)> {
+fn parse_context_line(context_line: &str) -> AppResult<(usize, String, String)> {
     let mut fields = context_line.split(FIELD_SEP);
     let marker = fields.next();
     if marker != Some(CONTEXT_MARK) {
@@ -1143,10 +942,9 @@ fn parse_context_line(context_line: &str) -> AppResult<(usize, String, String, S
         ));
     }
     let current_session_name = fields.next().unwrap_or_default().to_string();
-    let client_last_session = fields.next().unwrap_or_default().to_string();
     let host = fields.next().unwrap_or_default().to_string();
 
-    Ok((width, current_session_name, client_last_session, host))
+    Ok((width, current_session_name, host))
 }
 
 fn expect_marker(line: Option<&str>, marker: &str) -> AppResult<()> {
@@ -1202,31 +1000,10 @@ const RENDER_SNAPSHOT_OPTIONS: &[(TmuxOptionScope, &str)] = &[
     (TmuxOptionScope::Server, SCHEDULER_GENERATION_OPTION),
 ];
 
-// Read-only diagnostics retain the complete state surface used by dump-state.
-const DIAGNOSTIC_SNAPSHOT_OPTIONS: &[(TmuxOptionScope, &str)] = &[
-    (TmuxOptionScope::GlobalSession, "@GHC_SL_MODE"),
-    (TmuxOptionScope::GlobalSession, ROWS_OVERRIDE_OPTION),
-    (TmuxOptionScope::GlobalSession, "@GHC_SL_STATUS02_LEFT"),
-    (TmuxOptionScope::GlobalSession, "@GHC_SL_STATUS02_RIGHT"),
-    (
-        TmuxOptionScope::GlobalSession,
-        "@GHC_SL_STATUS02_SESSION_FORMAT",
-    ),
-    (
-        TmuxOptionScope::GlobalSession,
-        "@GHC_SL_STATUS02_CURRENT_FORMAT",
-    ),
-    (TmuxOptionScope::GlobalSession, STATUS_LEFT_OPTION),
-    (TmuxOptionScope::GlobalSession, STATUS_RIGHT_OPTION),
-    (TmuxOptionScope::GlobalSession, STATUS_POSITION_OPTION),
-    (TmuxOptionScope::GlobalSession, STATUS_JUSTIFY_OPTION),
-    (TmuxOptionScope::GlobalSession, STATUS_INTERVAL_OPTION),
-    (TmuxOptionScope::GlobalSession, STATUS_FORMAT_0_OPTION),
-    (TmuxOptionScope::GlobalSession, STATUS_FORMAT_1_OPTION),
-    (TmuxOptionScope::GlobalSession, "@GHC_SL_SESSION_ORDER"),
+// Read-only diagnostics add the scheduler and metric state dump-state reports.
+const DIAGNOSTIC_EXTRA_OPTIONS: &[(TmuxOptionScope, &str)] = &[
     (TmuxOptionScope::GlobalSession, "@GHC_SL_NET_IFACE"),
     (TmuxOptionScope::Server, SCHEDULER_ACTIVE_OPTION),
-    (TmuxOptionScope::Server, SCHEDULER_GENERATION_OPTION),
     (TmuxOptionScope::Server, METRIC_SCHEDULER_STATE_OPTION),
     (TmuxOptionScope::Server, HEARTBEAT_SCHEDULER_STATE_OPTION),
     (TmuxOptionScope::GlobalSession, CPU_SAMPLE_STATE_OPTION),
@@ -1256,32 +1033,24 @@ const DIAGNOSTIC_SNAPSHOT_OPTIONS: &[(TmuxOptionScope, &str)] = &[
         TmuxOptionScope::GlobalSession,
         HEARTBEAT_LAST_EXEC_OUTCOME_OPTION,
     ),
-    (
-        TmuxOptionScope::GlobalSession,
-        "@GHC_STATUS_COMPONENT_CACHE_cpu",
-    ),
-    (
-        TmuxOptionScope::GlobalSession,
-        "@GHC_STATUS_COMPONENT_CACHE_memory",
-    ),
-    (
-        TmuxOptionScope::GlobalSession,
-        "@GHC_STATUS_COMPONENT_CACHE_network",
-    ),
 ];
+
+fn diagnostic_snapshot_options() -> Vec<(TmuxOptionScope, &'static str)> {
+    [RENDER_SNAPSHOT_OPTIONS, DIAGNOSTIC_EXTRA_OPTIONS].concat()
+}
 
 #[cfg(test)]
 mod tests {
     use super::{
-        CONTEXT_MARK, DIAGNOSTIC_SNAPSHOT_OPTIONS, FIELD_SEP, GuardedMutationOutcome,
-        NAVIGATION_MARK, OPTIONS_END_MARK, OPTIONS_MARK, RENDER_APPLIED_MARK, RENDER_SKIPPED_MARK,
-        RENDER_SNAPSHOT_OPTIONS, SCHEDULER_APPLIED_MARK, SCHEDULER_SKIPPED_MARK, SESSIONS_MARK,
-        TmuxOptionGuard, TmuxOptionScope, cache_witness_format, combined_guard_format,
-        format_literal, guarded_snapshot_command_args, nested_render_guard_args, option_value_mark,
-        options_command_args, parse_client_line, parse_guarded_options_output,
+        CONTEXT_MARK, FIELD_SEP, GuardedMutationOutcome, NAVIGATION_MARK, OPTIONS_END_MARK,
+        OPTIONS_MARK, RENDER_APPLIED_MARK, RENDER_SKIPPED_MARK, RENDER_SNAPSHOT_OPTIONS,
+        SCHEDULER_APPLIED_MARK, SCHEDULER_SKIPPED_MARK, SESSIONS_MARK, TmuxOptionGuard,
+        TmuxOptionScope, cache_witness_format, combined_guard_format, diagnostic_snapshot_options,
+        format_literal, marker_command, nested_render_guard_args, option_guarded_command_args,
+        option_read_commands, option_value_mark, parse_client_line, parse_guarded_options_output,
         parse_options_output, parse_session_line, parse_session_navigation_output,
-        parse_snapshot_output, serialized_plan_chunks, session_states_publish_args,
-        snapshot_command_args, with_session_states_publish,
+        parse_snapshot_output, queue_string, serialized_plan_chunks, session_states_publish_args,
+        snapshot_commands, with_session_states_publish,
     };
     use crate::commit::{TmuxCommand, TmuxCommandPlan};
     use crate::config::RENDER_REVISION_OPTION;
@@ -1347,28 +1116,27 @@ mod tests {
 
     #[test]
     fn parses_snapshot_output() {
-        let option_values = vec![""; DIAGNOSTIC_SNAPSHOT_OPTIONS.len()];
+        let diagnostic_options = diagnostic_snapshot_options();
+        let option_values = vec![""; diagnostic_options.len()];
         let options = option_section(&option_values);
         let output = format!(
-            "{CONTEXT_MARK}{FIELD_SEP}120{FIELD_SEP}$1{FIELD_SEP}yui{FIELD_SEP}dev{FIELD_SEP}host
+            "{CONTEXT_MARK}{FIELD_SEP}120{FIELD_SEP}$1{FIELD_SEP}yui{FIELD_SEP}host
 {options}
 {SESSIONS_MARK}
-$1	yui	0	on	02:wide	64	84
-$2	dev	1	2	02:narrow	120	120
+$1	yui	on	02:wide	64	84
+$2	dev	2	02:narrow	120	120
 {CLIENTS_MARK}
 $1	200
 $2	120
 $2	90"
         );
 
-        let snapshot = parse_snapshot_output(&output, DIAGNOSTIC_SNAPSHOT_OPTIONS).unwrap();
+        let snapshot = parse_snapshot_output(&output, &diagnostic_options).unwrap();
         assert_eq!(snapshot.width, 120);
         assert_eq!(snapshot.status, "on");
         assert_eq!(snapshot.current_session_name, "yui");
-        assert_eq!(snapshot.client_last_session, "dev");
+        assert_eq!(snapshot.host, "host");
         assert_eq!(snapshot.sessions.len(), 2);
-        assert!(!snapshot.sessions[0].has_bell);
-        assert!(snapshot.sessions[1].has_bell);
         assert_eq!(snapshot.sessions[0].status, "on");
         assert_eq!(snapshot.sessions[0].layout_key, "02:wide");
         assert_eq!(snapshot.sessions[0].left_length, "64");
@@ -1387,57 +1155,57 @@ $2	90"
 
     #[test]
     fn snapshot_accepts_an_unnamed_current_session() {
-        let option_values = vec![""; DIAGNOSTIC_SNAPSHOT_OPTIONS.len()];
+        let diagnostic_options = diagnostic_snapshot_options();
+        let option_values = vec![""; diagnostic_options.len()];
         let options = option_section(&option_values);
         let output = format!(
-            "{CONTEXT_MARK}{FIELD_SEP}120{FIELD_SEP}$2{FIELD_SEP}{FIELD_SEP}yui{FIELD_SEP}host
+            "{CONTEXT_MARK}{FIELD_SEP}120{FIELD_SEP}$2{FIELD_SEP}{FIELD_SEP}host
 {options}
 {SESSIONS_MARK}
-$1	yui	0	on
-$2		0	2
+$1	yui	on
+$2		2
 {CLIENTS_MARK}
 $2	120"
         );
 
-        let snapshot = parse_snapshot_output(&output, DIAGNOSTIC_SNAPSHOT_OPTIONS).unwrap();
+        let snapshot = parse_snapshot_output(&output, &diagnostic_options).unwrap();
         assert_eq!(snapshot.current_session_name, "");
         assert_eq!(snapshot.status, "2");
     }
 
     #[test]
     fn snapshot_rejects_an_unresolved_session() {
-        let option_values = vec![""; DIAGNOSTIC_SNAPSHOT_OPTIONS.len()];
+        let diagnostic_options = diagnostic_snapshot_options();
+        let option_values = vec![""; diagnostic_options.len()];
         let options = option_section(&option_values);
         let output = format!(
-            "{CONTEXT_MARK}{FIELD_SEP}120{FIELD_SEP}{FIELD_SEP}{FIELD_SEP}{FIELD_SEP}host
+            "{CONTEXT_MARK}{FIELD_SEP}120{FIELD_SEP}{FIELD_SEP}{FIELD_SEP}host
 {options}
 {SESSIONS_MARK}
 {CLIENTS_MARK}"
         );
 
-        assert!(parse_snapshot_output(&output, DIAGNOSTIC_SNAPSHOT_OPTIONS).is_err());
+        assert!(parse_snapshot_output(&output, &diagnostic_options).is_err());
     }
 
     #[test]
-    fn parses_session_line_reads_bell_flag_field() {
-        let belling = parse_session_line(
-            "$1\tlegacy\t1\ton\t02:wide\t64\t84\tfmt0\tfmt1\t02:wide:v1:abcd\tw0\tw1\tw2\tw3",
+    fn parses_session_line_fields_in_transport_order() {
+        let session = parse_session_line(
+            "$1\tmain\ton\t02:wide\t64\t84\tfmt0\tfmt1\t02:wide:v1:abcd\tw0\tw1\tw2\tw3",
         )
         .unwrap();
-        assert_eq!(belling.id, "$1");
-        assert_eq!(belling.name, "legacy");
-        assert!(belling.has_bell);
-        assert_eq!(belling.status, "on");
-        assert_eq!(belling.layout_key, "02:wide");
-        assert_eq!(belling.format_0, "fmt0");
-        assert_eq!(belling.format_1, "fmt1");
-        assert_eq!(belling.render_key, "02:wide:v1:abcd");
-        assert_eq!(belling.cache_witnesses, ["w0", "w1", "w2", "w3"]);
+        assert_eq!(session.id, "$1");
+        assert_eq!(session.name, "main");
+        assert_eq!(session.status, "on");
+        assert_eq!(session.layout_key, "02:wide");
+        assert_eq!(session.format_0, "fmt0");
+        assert_eq!(session.format_1, "fmt1");
+        assert_eq!(session.render_key, "02:wide:v1:abcd");
+        assert_eq!(session.cache_witnesses, ["w0", "w1", "w2", "w3"]);
 
-        let quiet = parse_session_line("$2\tdev\t0").unwrap();
-        assert!(!quiet.has_bell);
-        assert_eq!(quiet.status, "");
-        assert_eq!(quiet.layout_key, "");
+        let partial = parse_session_line("$2\tdev").unwrap();
+        assert_eq!(partial.status, "");
+        assert_eq!(partial.layout_key, "");
     }
 
     #[test]
@@ -1476,18 +1244,14 @@ $2	120"
 
     #[test]
     fn render_snapshot_starts_revision_in_the_same_tmux_queue() {
-        let args = snapshot_command_args(Some(42), RENDER_SNAPSHOT_OPTIONS);
-        assert_eq!(&args[..4], ["set", "-s", RENDER_REVISION_OPTION, "42"]);
-        assert_eq!(args[4], ";");
+        let commands = snapshot_commands(Some(42), RENDER_SNAPSHOT_OPTIONS);
+        assert_eq!(commands[0], ["set", "-s", RENDER_REVISION_OPTION, "42"]);
+        assert!(commands[1][2].starts_with(CONTEXT_MARK));
     }
 
     #[test]
     fn render_snapshot_excludes_diagnostic_metric_and_health_options() {
         let names = RENDER_SNAPSHOT_OPTIONS
-            .iter()
-            .map(|(_, name)| *name)
-            .collect::<Vec<_>>();
-        let diagnostic_names = DIAGNOSTIC_SNAPSHOT_OPTIONS
             .iter()
             .map(|(_, name)| *name)
             .collect::<Vec<_>>();
@@ -1512,15 +1276,13 @@ $2	120"
                 "@GHC_SL_SCHED_GEN",
             ]
         );
-        assert_eq!(DIAGNOSTIC_SNAPSHOT_OPTIONS.len(), 37);
-        assert!(names.iter().all(|name| diagnostic_names.contains(name)));
+        assert_eq!(diagnostic_snapshot_options().len(), 34);
         for diagnostic_only in [
             "@GHC_SL_NET_IFACE",
             "@GHC_SL_METRIC_SCHED",
             "@GHC_SL_CPU_SAMPLE",
             "@GHC_SL_METRIC_LAST_ERR",
             "@GHC_SL_HEARTBEAT_LAST_EXEC_OUTCOME",
-            "@GHC_STATUS_COMPONENT_CACHE_cpu",
         ] {
             assert!(!names.contains(&diagnostic_only));
         }
@@ -1528,12 +1290,13 @@ $2	120"
 
     #[test]
     fn guarded_render_snapshot_checks_lifecycle_before_replacing_revision() {
-        let args = guarded_snapshot_command_args(
-            42,
+        let args = option_guarded_command_args(
             &[TmuxOptionGuard {
                 option: "@GHC_SL_SCHED_ACTIVE",
                 expected: "1",
             }],
+            queue_string(&snapshot_commands(Some(42), RENDER_SNAPSHOT_OPTIONS)),
+            marker_command(RENDER_SKIPPED_MARK),
         );
 
         assert_eq!(args[0], "if-shell");
@@ -1577,7 +1340,15 @@ $2	120"
 
     #[test]
     fn folded_status_refresh_is_guarded_and_precedes_the_applied_marker() {
-        let args = nested_render_guard_args(9, "set -g @VALUE new", &[], true);
+        let args = nested_render_guard_args(
+            9,
+            "set -g @VALUE new",
+            &[TmuxOptionGuard {
+                option: "@GHC_SL_SCHED_ACTIVE",
+                expected: "1",
+            }],
+            true,
+        );
         let applied_branch = &args[3];
         let refresh = applied_branch.find("refresh-client").unwrap();
         let marker = applied_branch.find(RENDER_APPLIED_MARK).unwrap();
@@ -1666,24 +1437,25 @@ $2	120"
 
     #[test]
     fn parses_current_status_and_tabbed_cache_options() {
-        let mut option_values = vec![""; DIAGNOSTIC_SNAPSHOT_OPTIONS.len()];
+        let diagnostic_options = diagnostic_snapshot_options();
+        let mut option_values = vec![""; diagnostic_options.len()];
         option_values[0] = "02";
-        let network_index = DIAGNOSTIC_SNAPSHOT_OPTIONS
+        let network_index = diagnostic_options
             .iter()
             .position(|(_, name)| *name == "@GHC_SL_NET_SAMPLE")
             .unwrap();
         option_values[network_index] = "1	2	3	4	5";
         let options = option_section(&option_values);
         let output = format!(
-            "{CONTEXT_MARK}{FIELD_SEP}200{FIELD_SEP}$1{FIELD_SEP}yui{FIELD_SEP}{FIELD_SEP}host
+            "{CONTEXT_MARK}{FIELD_SEP}200{FIELD_SEP}$1{FIELD_SEP}yui{FIELD_SEP}host
 {options}
 {SESSIONS_MARK}
-$1	yui	0	off
+$1	yui	off
 {CLIENTS_MARK}
 $1	200"
         );
 
-        let snapshot = parse_snapshot_output(&output, DIAGNOSTIC_SNAPSHOT_OPTIONS).unwrap();
+        let snapshot = parse_snapshot_output(&output, &diagnostic_options).unwrap();
         assert_eq!(snapshot.status, "off");
         assert_eq!(snapshot.mode, "02");
         assert_eq!(
@@ -1694,19 +1466,21 @@ $1	200"
 
     #[test]
     fn option_commands_use_explicit_global_and_server_scopes() {
-        let args = options_command_args(&[
+        let commands = option_read_commands(&[
             (TmuxOptionScope::GlobalSession, "@GLOBAL"),
             (TmuxOptionScope::Server, "@SERVER"),
         ]);
 
-        assert!(
-            args.windows(3)
-                .any(|args| args == ["show", "-gqv", "@GLOBAL"])
-        );
-        assert!(
-            args.windows(3)
-                .any(|args| args == ["show", "-sqv", "@SERVER"])
-        );
+        assert!(commands.contains(&vec![
+            "show".to_string(),
+            "-gqv".to_string(),
+            "@GLOBAL".to_string()
+        ]));
+        assert!(commands.contains(&vec![
+            "show".to_string(),
+            "-sqv".to_string(),
+            "@SERVER".to_string()
+        ]));
     }
 
     #[test]

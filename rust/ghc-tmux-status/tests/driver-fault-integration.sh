@@ -130,6 +130,12 @@ env -u TMUX tmux -L "$socket" display-message -p '#{pid}:alive' >/dev/null
 
 # A normal application error must preserve lease-based scheduler recovery.
 env -u TMUX tmux -L "$socket" set -g status-left ALIVE
+# A status job started while status-left still ran the driver may hold the lock
+# through its delay; let it finish so the direct run below owns its tick.
+for _ in $(seq 1 200); do
+  [ ! -e "$scheduler_lock" ] && break
+  sleep 0.05
+done
 cat >"$renderer" <<EOF
 #!/bin/sh
 printf '%s\n' "\$*" >'$tmp/normal-renderer-args'
@@ -366,8 +372,7 @@ if [ -e "$stale_lock" ]; then
   echo "scheduler lock was not released after hung renderer termination" >&2
   exit 1
 fi
-mkdir "$stale_lock"
-printf '%s\n' 999999 >"$stale_lock/owner"
+printf '%s\n' 999999 >"$stale_lock"
 env -u TMUX tmux -L "$socket" set -s @GHC_SL_SCHED_GEN 48 ';' \
   set -s @GHC_SL_SCHED_ACTIVE 1
 driver_pids=()
@@ -439,7 +444,7 @@ if [ ! -f "$tmp/expired-owner-renderer-ran" ] || [ -e "$stale_lock" ]; then
 fi
 env -u TMUX tmux -L "$socket" set -s @GHC_SL_SCHED_ACTIVE 0
 
-# Empty/corrupt legacy state is conservatively retained. New lock acquisition
+# Empty or corrupt lock state is conservatively retained. New lock acquisition
 # cannot publish an empty owner because candidate content is written before link(2).
 : >"$stale_lock"
 env HOME="$home" TMPDIR="$lock_tmp" TMUX="$server_env" \

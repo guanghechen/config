@@ -1,12 +1,14 @@
 mod darwin;
 pub mod publish;
-mod unsupported;
+pub mod state;
 
-use crate::error::AppResult;
-use crate::platform::{Platform, current_platform};
+pub use darwin::{sample_cpu, sample_memory, sample_network};
 
-pub use darwin::DarwinMetricsProvider;
-pub use unsupported::UnsupportedMetricsProvider;
+/*
+ * Live CPU/memory/network sampling is implemented for macOS only. Elsewhere the
+ * metric pills are omitted and the scheduler never runs the metrics task.
+ */
+pub const METRICS_SUPPORTED: bool = cfg!(target_os = "macos");
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CpuSample {
@@ -54,30 +56,6 @@ pub struct NetworkSnapshot {
     pub rx_bytes_per_second: u64,
     pub tx_bytes_per_second: u64,
     pub sample: NetworkSample,
-}
-
-/**
- * Read-only sampling boundary. `StatusRuntime` creates one provider per sampler tick
- * and remains the single writer of tmux metric state. Providers do not retry; external
- * commands use the shared bounded process runner. Each method returns `AppError`, and the
- * runtime degrades that metric independently before publishing available values and
- * rescheduling in one tmux invocation.
- */
-pub trait MetricsProvider {
-    fn sample_cpu(&self, previous: Option<&CpuSample>) -> AppResult<CpuSnapshot>;
-    fn sample_memory(&self) -> AppResult<MemorySnapshot>;
-    fn sample_network(&self, previous: Option<&NetworkSample>) -> AppResult<NetworkSnapshot>;
-}
-
-pub fn provider_for_current_platform(interface: Option<&str>) -> Box<dyn MetricsProvider> {
-    provider_for(current_platform(), interface)
-}
-
-pub fn provider_for(platform: Platform, interface: Option<&str>) -> Box<dyn MetricsProvider> {
-    match platform {
-        Platform::Osx => Box::new(DarwinMetricsProvider::new(interface)),
-        Platform::Win | Platform::Wsl | Platform::Nix => Box::new(UnsupportedMetricsProvider),
-    }
 }
 
 // tmux option overriding the auto-detected primary network interface.

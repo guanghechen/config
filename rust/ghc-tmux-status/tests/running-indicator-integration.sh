@@ -476,10 +476,10 @@ assert_equal "1" "$(count_calls bash 'run-shell -bC -d ')" \
 assert_equal "0" "$(count_calls ghc-tmux-status '')" \
   "renderer calls after snapshot failure"
 
-# Fake renderers model each side of the handoff: a renderer that predates the
-# versioned request never acknowledges it, so a normal exit hands publication back
-# to the driver; an acknowledgement transfers it for good; an abnormal exit keeps
-# the generation fence and never falls back.
+# Fake renderers model each side of the handoff: a normal exit without an
+# acknowledgement hands publication back to the driver; an acknowledgement
+# transfers it for good; an abnormal exit keeps the generation fence and never
+# falls back.
 make_renderer_home() {
   local name=$1
   local body=$2
@@ -491,17 +491,17 @@ make_renderer_home() {
   printf '%s\n' "$home"
 }
 
-for legacy_status in 0 1; do
-  legacy_home=$(make_renderer_home "legacy-$legacy_status" "exit $legacy_status")
+for silent_status in 0 1; do
+  silent_home=$(make_renderer_home "silent-$silent_status" "exit $silent_status")
   before=$(tmux_server show-option -sqv @GHC_SL_SESSION_STATES)
-  publish_through_driver HOME="$legacy_home"
+  publish_through_driver HOME="$silent_home"
   after=$(tmux_server show-option -sqv @GHC_SL_SESSION_STATES)
-  assert_contains "$after" "|R${alpha_id}|" "fallback after legacy renderer exit $legacy_status"
+  assert_contains "$after" "|R${alpha_id}|" "fallback after silent renderer exit $silent_status"
   if [ "$after" = "$before" ]; then
-    fail "legacy renderer exit $legacy_status did not refresh the sample"
+    fail "silent renderer exit $silent_status did not refresh the sample"
   fi
   assert_equal "1" "$(count_calls bash 'run-shell -bC -d ')" \
-    "driver fallbacks after legacy renderer exit $legacy_status"
+    "driver fallbacks after silent renderer exit $silent_status"
 done
 
 ack_home=$(make_renderer_home ack-only "printf '%s\\n' __GHC_SESSION_STATES_V2_TAKEN__")

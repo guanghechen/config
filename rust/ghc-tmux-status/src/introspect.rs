@@ -4,19 +4,10 @@ use crate::config::{
     METRIC_SAMPLE_STALE_LIMIT_SECONDS, NETWORK_NOW_OPTION, NETWORK_SAMPLE_STATE_OPTION,
     SCHEDULER_ACTIVE_OPTION, SCHEDULER_GENERATION_OPTION,
 };
+use crate::metric::METRICS_SUPPORTED;
+use crate::metric::state::{decode_cpu_snapshot, decode_memory_snapshot, decode_network_snapshot};
 use crate::model::TmuxSnapshot;
-use crate::platform::current_platform;
 use crate::scheduler::{ScheduleState, SchedulerTask};
-use crate::widget::{decode_cpu_snapshot, decode_memory_snapshot, decode_network_snapshot};
-
-/*
- * Placement counts describe how many times each widget lifecycle appears in the
- * rendered status02 output (duplicates across rows included). Maintained by hand
- * for `dump-state`; kept in sync with the render in composer::render_status02.
- */
-pub const TEMPLATE_WIDGET_PLACEMENTS: usize = 18;
-pub const COMPUTED_WIDGET_PLACEMENTS: usize = 2;
-pub const CACHED_METRIC_WIDGET_PLACEMENTS: usize = 0;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct MetricHealthState {
@@ -139,7 +130,7 @@ pub fn scheduler_state_lines(snapshot: &TmuxSnapshot) -> Vec<String> {
     scheduler_state_lines_at(
         snapshot,
         crate::util::time::unix_timestamp_seconds(),
-        current_platform().supports_metrics(),
+        METRICS_SUPPORTED,
     )
 }
 
@@ -363,6 +354,7 @@ mod tests {
         SCHEDULER_ACTIVE_OPTION, SCHEDULER_GENERATION_OPTION,
     };
     use crate::model::TmuxSnapshot;
+    use crate::test_support::snapshot;
 
     #[test]
     fn metric_sample_state_reports_missing_state() {
@@ -581,15 +573,8 @@ mod tests {
 
     fn snapshot_with_options(options: BTreeMap<String, String>) -> TmuxSnapshot {
         TmuxSnapshot {
-            mode: "02".to_string(),
-            status: "on".to_string(),
-            width: 200,
-            current_session_name: "s".to_string(),
-            client_last_session: String::new(),
-            host: "h".to_string(),
-            sessions: Vec::new(),
-            client_widths: Vec::new(),
             options,
+            ..snapshot()
         }
     }
 }

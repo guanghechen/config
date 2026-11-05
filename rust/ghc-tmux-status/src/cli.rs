@@ -1,5 +1,5 @@
 use crate::error::{AppError, AppResult};
-use crate::model::{RenderEvent, RenderEventKind, RowsOverride};
+use crate::model::{RenderEvent, RowsOverride};
 use crate::session::{FocusTarget, MoveDirection};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -26,17 +26,16 @@ pub fn parse(args: Vec<String>) -> AppResult<CliCommand> {
     let values = args.iter().map(String::as_str).collect::<Vec<_>>();
     match values.as_slice() {
         [] | ["help" | "--help" | "-h"] => Ok(CliCommand::Help),
-        ["apply"] => Ok(CliCommand::Apply(RenderEvent::manual_apply())),
+        ["apply"] => Ok(CliCommand::Apply(RenderEvent::ManualApply)),
         ["apply", "theme-loaded", generation] => {
             parse_generation(generation).map(CliCommand::BootstrapTheme)
         }
         ["apply", "theme-loaded"] => Err(AppError::Usage(
             "expected: apply theme-loaded <generation>".to_string(),
         )),
-        ["apply", event] => Ok(CliCommand::Apply(RenderEvent {
-            kind: RenderEventKind::parse(event)
-                .ok_or_else(|| AppError::Usage(format!("unknown render event: {event}")))?,
-        })),
+        ["apply", event] => RenderEvent::parse(event)
+            .map(CliCommand::Apply)
+            .ok_or_else(|| AppError::Usage(format!("unknown render event: {event}"))),
         ["scheduler-tick"] => Ok(CliCommand::SchedulerTick),
         ["dump-state"] => Ok(CliCommand::DumpState),
         ["protocol"] => Ok(CliCommand::Protocol),
@@ -127,33 +126,11 @@ mod tests {
     }
 
     #[test]
-    fn rejects_retired_heartbeat_command() {
+    fn rejects_unknown_commands_and_events() {
         assert_eq!(
             parse(args(&["heartbeat", "42"])).unwrap_err().to_string(),
             "unknown command: heartbeat"
         );
-    }
-
-    #[test]
-    fn rejects_retired_metrics_sample_command() {
-        assert_eq!(
-            parse(args(&["metrics-sample", "42"]))
-                .unwrap_err()
-                .to_string(),
-            "unknown command: metrics-sample"
-        );
-    }
-
-    #[test]
-    fn rejects_retired_cpu_sample_command() {
-        assert_eq!(
-            parse(args(&["cpu-sample", "42"])).unwrap_err().to_string(),
-            "unknown command: cpu-sample"
-        );
-    }
-
-    #[test]
-    fn rejects_retired_window_changed_event() {
         assert_eq!(
             parse(args(&["apply", "window-changed"]))
                 .unwrap_err()
@@ -198,7 +175,7 @@ mod tests {
     fn defaults_apply_to_manual_event() {
         assert_eq!(
             parse(args(&["apply"])).unwrap(),
-            CliCommand::Apply(RenderEvent::manual_apply())
+            CliCommand::Apply(RenderEvent::ManualApply)
         );
     }
 

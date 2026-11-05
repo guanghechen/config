@@ -72,10 +72,7 @@ impl SchedulerTask {
         }
     }
 
-    /*
-     * Metrics never write their claim (see the runtime), so their lease only
-     * bounds clock-skew repair and honours claims left by older renderers.
-     */
+    // Metrics never write their claim (see the runtime): this lease only bounds clock-skew repair.
     pub fn lease_seconds(self) -> u64 {
         match self {
             Self::Metrics => METRIC_EXECUTION_LEASE_SECONDS,
@@ -157,8 +154,8 @@ fn has_transport_shape(value: &str) -> bool {
 }
 
 /*
- * Versioned so renderers that predate the acknowledgement ignore the request and
- * leave publication with the driver.
+ * The driver's publication request. These names belong to the script/renderer
+ * protocol and must match script/status-scheduler.sh.
  */
 pub const SESSION_STATES_PREFIX_ENV: &str = "GHC_TMUX_STATUS_SESSION_STATES_PREFIX_V2";
 pub const SESSION_STATE_TTL_ENV: &str = "GHC_TMUX_STATUS_SESSION_STATE_TTL_SECONDS";
@@ -246,6 +243,24 @@ impl ClaimPlan {
             self.task.execution_budget(),
         )
     }
+
+    /// This claim's record for the task's last-outcome option.
+    pub fn outcome(
+        &self,
+        timestamp_seconds: u64,
+        phase: &str,
+        certainty: &str,
+        message: &str,
+    ) -> String {
+        scheduler_outcome_value(
+            timestamp_seconds,
+            self.generation,
+            self.sequence,
+            phase,
+            certainty,
+            message,
+        )
+    }
 }
 
 pub fn plan_claim(
@@ -311,7 +326,7 @@ fn is_due(
     now_seconds >= state.next_due_seconds && now_seconds >= state.lease_until_seconds
 }
 
-pub fn scheduler_outcome_value(
+fn scheduler_outcome_value(
     timestamp_seconds: u64,
     generation: u64,
     sequence: u64,

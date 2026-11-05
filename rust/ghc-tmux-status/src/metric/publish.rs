@@ -1,8 +1,15 @@
 use crate::config::{
+    CPU_NOW_OPTION, CPU_SAMPLE_STATE_OPTION, MEMORY_NOW_OPTION, MEMORY_SAMPLE_STATE_OPTION,
     METRIC_ERROR_COUNT_OPTION, METRIC_LAST_ERROR_OPTION, METRIC_LAST_OK_OPTION,
-    METRIC_SAMPLE_STALE_LIMIT_SECONDS,
+    METRIC_SAMPLE_STALE_LIMIT_SECONDS, NETWORK_NOW_OPTION, NETWORK_SAMPLE_STATE_OPTION,
 };
+use crate::metric::state::{
+    decode_cpu_snapshot, decode_memory_snapshot, decode_network_snapshot, encode_cpu_snapshot,
+    encode_memory_snapshot, encode_network_snapshot, format_network_now, format_percent,
+};
+use crate::metric::{normalize_network_interface, sample_cpu, sample_memory, sample_network};
 use crate::util::format::sanitize_option_text;
+use crate::util::time::unix_timestamp_seconds;
 
 #[derive(Default)]
 pub struct MetricPublishSummary {
@@ -12,7 +19,90 @@ pub struct MetricPublishSummary {
     pub errors: Vec<String>,
 }
 
-pub fn is_recent_sample(
+/// The persisted option values one metrics tick starts from.
+pub struct MetricInputs<'a> {
+    pub cpu_state: &'a str,
+    pub memory_state: &'a str,
+    pub network_state: &'a str,
+    pub network_interface: &'a str,
+    pub error_count: &'a str,
+}
+
+/// The option writes a metrics completion carries, and what they published.
+pub struct MetricSample {
+    pub summary: MetricPublishSummary,
+    pub sets: Vec<(&'static str, String)>,
+}
+
+/**
+ * Samples every metric against its previous persisted state. Each metric
+ * degrades on its own: a failed sample keeps the last published value, and CPU
+ * and network publish a rate only from a recent baseline. Health options then
+ * summarize the tick.
+ */
+pub fn collect_sample(inputs: &MetricInputs<'_>) -> MetricSample {
+    let previous_cpu = decode_cpu_snapshot(inputs.cpu_state);
+    let previous_memory = decode_memory_snapshot(inputs.memory_state);
+    let previous_network = decode_network_snapshot(inputs.network_state);
+    let mut summary = MetricPublishSummary::default();
+    let mut sets = Vec::new();
+
+    match sample_cpu(previous_cpu.as_ref().map(|snapshot| &snapshot.sample)) {
+        Ok(snapshot) => {
+            sets.push((CPU_SAMPLE_STATE_OPTION, encode_cpu_snapshot(&snapshot)));
+            if is_recent_sample(
+                previous_cpu.map(|previous| previous.timestamp_seconds),
+                snapshot.timestamp_seconds,
+            ) {
+                sets.push((CPU_NOW_OPTION, format_percent(snapshot.percent)));
+                summary.cpu_published = true;
+            }
+        }
+        Err(error) => summary.errors.push(format!("cpu:{error}")),
+    }
+
+    match sample_memory() {
+        Ok(snapshot) => {
+            sets.push((
+                MEMORY_SAMPLE_STATE_OPTION,
+                encode_memory_snapshot(&snapshot),
+            ));
+            sets.push((MEMORY_NOW_OPTION, format_percent(snapshot.percent)));
+            summary.memory_published = true;
+        }
+        Err(error) if previous_memory.is_none() => summary.errors.push(format!("memory:{error}")),
+        Err(error) => summary.errors.push(format!("memory:{error}:kept-last")),
+    }
+
+    match sample_network(
+        previous_network.as_ref().map(|snapshot| &snapshot.sample),
+        normalize_network_interface(Some(inputs.network_interface)),
+    ) {
+        Ok(snapshot) => {
+            sets.push((
+                NETWORK_SAMPLE_STATE_OPTION,
+                encode_network_snapshot(&snapshot),
+            ));
+            if is_recent_sample(
+                previous_network.map(|previous| previous.sample.timestamp_seconds()),
+                snapshot.sample.timestamp_seconds(),
+            ) {
+                sets.push((NETWORK_NOW_OPTION, format_network_now(&snapshot)));
+                summary.network_published = true;
+            }
+        }
+        Err(error) => summary.errors.push(format!("network:{error}")),
+    }
+
+    sets.extend(metric_health_sets(
+        &summary,
+        parse_metric_error_count(Some(inputs.error_count)),
+        unix_timestamp_seconds(),
+    ));
+    MetricSample { summary, sets }
+}
+
+fn is_recent_sample(
     previous_timestamp_seconds: Option<u64>,
     current_timestamp_seconds: u64,
 ) -> bool {
@@ -22,13 +112,13 @@ pub fn is_recent_sample(
     })
 }
 
-pub fn parse_metric_error_count(value: Option<&str>) -> u64 {
+fn parse_metric_error_count(value: Option<&str>) -> u64 {
     value
         .and_then(|value| value.parse::<u64>().ok())
         .unwrap_or_default()
 }
 
-pub fn metric_health_sets(
+fn metric_health_sets(
     summary: &MetricPublishSummary,
     previous_error_count: u64,
     now_seconds: u64,

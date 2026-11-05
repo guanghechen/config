@@ -18,9 +18,6 @@ readonly renderer="$HOME/.config/tmux/bin/ghc-tmux-status"
 # A renderer prints this line, and nothing else, once it owns the tick's session-state
 # publication; it must match the renderer's SESSION_STATES_ACK.
 readonly session_states_ack='__GHC_SESSION_STATES_V2_TAKEN__'
-# Only the versioned request below hands publication over. Renderers that predate
-# it ignore that request, so an inherited unversioned request must not reach them.
-unset GHC_TMUX_STATUS_SESSION_STATES_PREFIX
 
 if [ "$recover_only" = "0" ]; then
   printf '\n'
@@ -33,13 +30,11 @@ if ! [[ "$server_pid" =~ ^[0-9]+$ ]]; then
 fi
 
 # Candidate content is written before the atomic hard-link acquisition, so the
-# published lock never has an empty owner window. A legacy directory lock from
-# the previous implementation remains readable/recoverable during upgrade.
+# published lock never has an empty owner window.
 lock_path="${TMPDIR:-/tmp}/ghc-tmux-status-scheduler-${UID}-${server_pid}.lock"
 lock_candidate="${lock_path}.candidate.$$"
 lock_update="${lock_path}.update.$$"
 lock_ack="${lock_path}.ack.$$"
-legacy_owner_file="$lock_path/owner"
 owns_lock=0
 owns_recovery_lease=0
 renderer_pid=""
@@ -63,12 +58,6 @@ lock_exists() {
 
 read_lock_owner() {
   lock_owner_value=""
-  if [ -d "$lock_path" ]; then
-    if [ -r "$legacy_owner_file" ]; then
-      IFS= read -r lock_owner_value <"$legacy_owner_file" || true
-    fi
-    return
-  fi
   if [ -f "$lock_path" ] && [ -r "$lock_path" ]; then
     IFS= read -r lock_owner_value <"$lock_path" || true
   fi
@@ -106,8 +95,7 @@ acquire_fresh_lock() {
     cleanup_candidate_files
     return 1
   fi
-  # `link` maps directly to link(2) and never treats a legacy directory target
-  # as a destination directory (unlike `ln source existing-directory`).
+  # `link` maps directly to link(2), which fails instead of replacing a lock.
   if ! link "$lock_candidate" "$lock_path" 2>/dev/null; then
     cleanup_candidate_files
     return 1
@@ -143,14 +131,8 @@ recover_stale_lock() {
     return 1
   fi
   owner_driver=${owner%%:*}
-  if [ -d "$lock_path" ]; then
-    unlink "$legacy_owner_file" 2>/dev/null || return 1
-    rmdir "$lock_path" 2>/dev/null || return 1
-  elif [ -f "$lock_path" ]; then
-    unlink "$lock_path" 2>/dev/null || return 1
-  else
-    return 1
-  fi
+  [ -f "$lock_path" ] || return 1
+  unlink "$lock_path" 2>/dev/null || return 1
   if [[ "$owner_driver" =~ ^[0-9]+$ ]]; then
     unlink "${lock_path}.candidate.${owner_driver}" 2>/dev/null || true
     unlink "${lock_path}.update.${owner_driver}" 2>/dev/null || true
@@ -356,9 +338,9 @@ renderer_pid=""
 
 # Classifies this invocation's ack. `taken`: a complete ack line, so the renderer owned
 # the publication whatever happened afterwards. `declined`: an empty file or another
-# complete line, so the renderer predates the handoff or failed before taking it and
-# never published. `unknown`: the ack could not be opened or fully read; that proves
-# neither, so the tick is left to the TTL rather than risk a second publication.
+# complete line, so the renderer failed before taking it and never published.
+# `unknown`: the ack could not be opened or fully read; that proves neither, so the
+# tick is left to the TTL rather than risk a second publication.
 classify_renderer_publication() {
   local ack_line="" opened=0 read_status=0
   publication_state=unknown

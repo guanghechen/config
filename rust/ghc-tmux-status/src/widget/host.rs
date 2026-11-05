@@ -1,17 +1,11 @@
-use crate::error::AppResult;
 use crate::model::{RenderContext, RenderedSegment};
-use crate::status_widget::ComputedWidget;
 
-pub struct HostWidget;
-
-impl ComputedWidget for HostWidget {
-    fn render_computed(&self, context: &RenderContext) -> AppResult<RenderedSegment> {
-        let host = truncate_chars(&context.snapshot.host, 16);
-        // Reverse keeps the host fill as opaque as the adjoining session arrow.
-        Ok(RenderedSegment {
-            literal_text: format!("{ARROW_RIGHT} {OS_ICON} {host} "),
-            rich_text: "#[fg=#{@GHC_SL_BG_PILL_HOST}#,bg=#{@GHC_SL_BG_SESSION_LIST_SURFACE}#,reverse]#{@GHC_SEP_ARROW_RIGHT}#[fg=#{@GHC_SL_BG_PILL_HOST}#,bg=#{@GHC_SL_FG_PILL_ICON}] #{@GHC_SYM_OS}#[fg=#{@GHC_SL_BG_PILL_HOST}#,bg=#{@GHC_SL_FG_PILL_HOST_TXT}] #{=16:host} #[noreverse]".to_string(),
-        })
+pub fn host(context: &RenderContext) -> RenderedSegment {
+    let host = truncate_chars(&context.snapshot.host, 16);
+    // Reverse keeps the host fill as opaque as the adjoining session arrow.
+    RenderedSegment {
+        literal_text: format!("{ARROW_RIGHT} {OS_ICON} {host} "),
+        rich_text: "#[fg=#{@GHC_SL_BG_PILL_HOST}#,bg=#{@GHC_SL_BG_SESSION_LIST_SURFACE}#,reverse]#{@GHC_SEP_ARROW_RIGHT}#[fg=#{@GHC_SL_BG_PILL_HOST}#,bg=#{@GHC_SL_FG_PILL_ICON}] #{@GHC_SYM_OS}#[fg=#{@GHC_SL_BG_PILL_HOST}#,bg=#{@GHC_SL_FG_PILL_HOST_TXT}] #{=16:host} #[noreverse]".to_string(),
     }
 }
 
@@ -31,50 +25,19 @@ fn truncate_chars(text: &str, limit: usize) -> String {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::BTreeMap;
-    use std::rc::Rc;
-
-    use super::HostWidget;
-    use crate::model::{
-        LayoutKind, LayoutPlan, RenderContext, SessionGroupView, StatusMode, StatusPosition,
-        TmuxSnapshot,
-    };
-    use crate::status_widget::ComputedWidget;
+    use super::host;
+    use crate::model::TmuxSnapshot;
+    use crate::test_support::{render_context, snapshot};
 
     #[test]
     fn literal_text_accounts_for_visible_host_pill_glyphs() {
-        let segment = HostWidget
-            .render_computed(&context_with_host("mbp-m5-64g"))
-            .unwrap();
+        let segment = host(&render_context(
+            TmuxSnapshot {
+                host: "mbp-m5-64g".to_string(),
+                ..snapshot()
+            },
+            Vec::new(),
+        ));
         assert_eq!(segment.literal_text, "  mbp-m5-64g ");
-    }
-
-    fn context_with_host(host: &str) -> RenderContext {
-        RenderContext {
-            snapshot: Rc::new(TmuxSnapshot {
-                mode: "02".to_string(),
-                status: "on".to_string(),
-                width: 200,
-                current_session_name: "s".to_string(),
-                client_last_session: String::new(),
-                host: host.to_string(),
-                sessions: Vec::new(),
-                client_widths: Vec::new(),
-                options: BTreeMap::new(),
-            }),
-            group: SessionGroupView {
-                current_session_name: "s".to_string(),
-                sessions: Vec::new(),
-            },
-            layout: LayoutPlan {
-                mode: StatusMode::TopAdaptive,
-                position: StatusPosition::Top,
-                kind: LayoutKind::Wide,
-                rows: 1,
-                target_status: "on".to_string(),
-                key: "02:wide".to_string(),
-            },
-            session_layouts: Vec::new(),
-        }
     }
 }

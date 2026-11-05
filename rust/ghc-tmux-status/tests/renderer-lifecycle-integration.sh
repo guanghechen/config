@@ -524,11 +524,11 @@ assert_snapshot_witnesses() {
       found = 1
       expected = ""
       if (kind == "valid") {
-        key = $10
+        key = $9
         sub(/^[^:]*:[^:]*:/, "", key)
         expected = "#{?0," key ",}"
       }
-      for (i = 11; i <= 14; i++) {
+      for (i = 10; i <= 13; i++) {
         if ($i != expected) invalid = 1
       }
     }

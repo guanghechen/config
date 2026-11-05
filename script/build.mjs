@@ -176,7 +176,8 @@ function main() {
   console.log(`${BLUE}[tmux build] done${deployed && !output ? "; reload the tmux config to re-render now" : ""}${RESET}`)
 }
 
-if (resolve(process.argv[1] ?? "") === fileURLToPath(import.meta.url)) {
+// import.meta.url is the resolved path, so compare against the resolved argv entry.
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
     main()
   } catch (error) {

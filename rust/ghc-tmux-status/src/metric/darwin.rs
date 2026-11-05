@@ -1,70 +1,55 @@
 use std::time::Duration;
 
 use crate::error::{AppError, AppResult};
-use crate::metric::{
-    CpuSample, CpuSnapshot, MemorySnapshot, MetricsProvider, NetworkSample, NetworkSnapshot,
-};
+use crate::metric::{CpuSample, CpuSnapshot, MemorySnapshot, NetworkSample, NetworkSnapshot};
 use crate::process::output_with_timeout;
 use crate::util::time::{unix_timestamp_millis, unix_timestamp_seconds};
 
-pub struct DarwinMetricsProvider {
-    interface: Option<String>,
+/*
+ * Read-only sampling. Samplers do not retry; external commands use the shared
+ * bounded process runner, and the caller degrades each metric independently.
+ */
+pub fn sample_cpu(previous: Option<&CpuSample>) -> AppResult<CpuSnapshot> {
+    let sample = read_cpu_sample()?;
+    Ok(CpuSnapshot {
+        percent: calculate_cpu_percent(previous, &sample),
+        timestamp_seconds: unix_timestamp_seconds(),
+        sample,
+    })
 }
 
-impl DarwinMetricsProvider {
-    pub fn new(interface: Option<&str>) -> Self {
-        Self {
-            interface: interface.map(str::to_string),
-        }
-    }
+pub fn sample_memory() -> AppResult<MemorySnapshot> {
+    Ok(MemorySnapshot {
+        percent: read_memory_percent()?,
+        timestamp_seconds: unix_timestamp_seconds(),
+    })
 }
 
-impl MetricsProvider for DarwinMetricsProvider {
-    fn sample_cpu(&self, previous: Option<&CpuSample>) -> AppResult<CpuSnapshot> {
-        let sample = read_cpu_sample()?;
-        Ok(CpuSnapshot {
-            percent: calculate_cpu_percent(previous, &sample),
-            timestamp_seconds: unix_timestamp_seconds(),
-            sample,
-        })
-    }
+/// `interface` overrides the default-route interface.
+pub fn sample_network(
+    previous: Option<&NetworkSample>,
+    interface: Option<&str>,
+) -> AppResult<NetworkSnapshot> {
+    let timestamp_millis = unix_timestamp_millis();
+    let interface = interface.map_or_else(default_network_interface, str::to_string);
+    let (rx_bytes, tx_bytes) = read_network_counters(&interface)?;
+    let (rx_bytes_per_second, tx_bytes_per_second) =
+        calculate_speed(previous, &interface, timestamp_millis, rx_bytes, tx_bytes);
 
-    fn sample_memory(&self) -> AppResult<MemorySnapshot> {
-        Ok(MemorySnapshot {
-            percent: read_memory_percent()?,
-            timestamp_seconds: unix_timestamp_seconds(),
-        })
-    }
-
-    fn sample_network(&self, previous: Option<&NetworkSample>) -> AppResult<NetworkSnapshot> {
-        let timestamp_millis = unix_timestamp_millis();
-        let interface = match self.interface.as_deref() {
-            Some(interface) => interface.to_string(),
-            None => default_network_interface(),
-        };
-        let (rx_bytes, tx_bytes) = read_network_counters(&interface)?;
-        let (rx_bytes_per_second, tx_bytes_per_second) =
-            calculate_speed(previous, &interface, timestamp_millis, rx_bytes, tx_bytes);
-
-        Ok(NetworkSnapshot {
-            rx_bytes_per_second,
-            tx_bytes_per_second,
-            sample: NetworkSample {
-                timestamp_millis,
-                rx_bytes,
-                tx_bytes,
-                interface,
-            },
-        })
-    }
-}
-
-fn read_cpu_sample() -> AppResult<CpuSample> {
-    read_cpu_sample_native()
+    Ok(NetworkSnapshot {
+        rx_bytes_per_second,
+        tx_bytes_per_second,
+        sample: NetworkSample {
+            timestamp_millis,
+            rx_bytes,
+            tx_bytes,
+            interface,
+        },
+    })
 }
 
 #[cfg(target_os = "macos")]
-fn read_cpu_sample_native() -> AppResult<CpuSample> {
+fn read_cpu_sample() -> AppResult<CpuSample> {
     let mut info = HostCpuLoadInfo::default();
     let mut count = HOST_CPU_LOAD_INFO_COUNT;
     let result = unsafe {
@@ -90,7 +75,7 @@ fn read_cpu_sample_native() -> AppResult<CpuSample> {
 }
 
 #[cfg(not(target_os = "macos"))]
-fn read_cpu_sample_native() -> AppResult<CpuSample> {
+fn read_cpu_sample() -> AppResult<CpuSample> {
     Err(AppError::Render(
         "native darwin cpu sampling is unavailable".to_string(),
     ))
@@ -123,18 +108,13 @@ fn cpu_percent_from_ticks(user: u64, nice: u64, system: u64, idle: u64) -> f64 {
 }
 
 fn read_memory_percent() -> AppResult<f64> {
-    let total_bytes = read_darwin_system_info()?.memory_bytes as f64;
+    let total_bytes = read_memory_bytes()? as f64;
     let vm_stat = command_output("vm_stat", &[])?;
     parse_vm_stat_memory_percent(&vm_stat, total_bytes)
 }
 
-#[derive(Clone, Debug)]
-struct DarwinSystemInfo {
-    memory_bytes: u64,
-}
-
 #[cfg(target_os = "macos")]
-fn read_darwin_system_info() -> AppResult<DarwinSystemInfo> {
+fn read_memory_bytes() -> AppResult<u64> {
     let mut memory_bytes = 0_u64;
     let mut size = std::mem::size_of_val(&memory_bytes);
     let result = unsafe {
@@ -157,11 +137,11 @@ fn read_darwin_system_info() -> AppResult<DarwinSystemInfo> {
             "sysctlbyname hw.memsize returned invalid data".to_string(),
         ));
     }
-    Ok(DarwinSystemInfo { memory_bytes })
+    Ok(memory_bytes)
 }
 
 #[cfg(not(target_os = "macos"))]
-fn read_darwin_system_info() -> AppResult<DarwinSystemInfo> {
+fn read_memory_bytes() -> AppResult<u64> {
     Err(AppError::Render(
         "native darwin system info is unavailable".to_string(),
     ))
@@ -175,10 +155,6 @@ fn read_network_counters(interface: &str) -> AppResult<(u64, u64)> {
 const FALLBACK_NETWORK_INTERFACE: &str = "en0";
 
 fn default_network_interface() -> String {
-    detect_default_network_interface()
-}
-
-fn detect_default_network_interface() -> String {
     default_interface_from_route_result(command_output("route", &["-n", "get", "default"]))
 }
 
@@ -360,11 +336,9 @@ mod tests {
     use super::{
         calculate_cpu_percent, calculate_speed, cpu_percent_from_ticks,
         default_interface_from_route_result, parse_netstat_counters, parse_route_interface,
-        parse_vm_stat_memory_percent, read_cpu_sample, read_darwin_system_info,
+        parse_vm_stat_memory_percent, read_cpu_sample, read_memory_bytes,
     };
     use crate::error::AppError;
-    #[cfg(target_os = "macos")]
-    use crate::metric::MetricsProvider;
     use crate::metric::{CpuSample, NetworkSample};
 
     #[test]
@@ -413,9 +387,7 @@ mod tests {
     #[cfg(target_os = "macos")]
     #[test]
     fn reads_memory_sample() {
-        let sample = super::DarwinMetricsProvider::new(None)
-            .sample_memory()
-            .unwrap();
+        let sample = super::sample_memory().unwrap();
         assert!((0.0..=100.0).contains(&sample.percent));
         assert!(sample.timestamp_seconds > 0);
     }
@@ -431,9 +403,8 @@ mod tests {
 
     #[cfg(target_os = "macos")]
     #[test]
-    fn parses_darwin_system_info() {
-        let info = read_darwin_system_info().unwrap();
-        assert!(info.memory_bytes > 0);
+    fn reads_memory_bytes() {
+        assert!(read_memory_bytes().unwrap() > 0);
     }
 
     #[test]

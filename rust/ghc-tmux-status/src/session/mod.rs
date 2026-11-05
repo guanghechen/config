@@ -3,7 +3,7 @@ pub mod item;
 pub mod list;
 
 pub use group::{
-    SessionGrouper, ordered_group, ordered_group_for_session, ordered_group_from_snapshot,
+    group_counts, group_key, ordered_group, ordered_group_for_session, ordered_group_from_snapshot,
 };
 pub use item::{FocusTarget, MoveDirection, SwapOutcome};
 pub use list::{
