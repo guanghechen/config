@@ -276,4 +276,38 @@ t:test("add respects count and dot repeat", function()
   end)
 end)
 
+t:test("keymaps come back when :bdelete reopens the same buffer number", function()
+  local path = vim.fn.tempname() .. ".lua"
+  vim.fn.writefile({ "alpha" }, path)
+  local previous_bufnr = vim.api.nvim_get_current_buf() ---@type integer
+  local bufnrs = {} ---@type integer[]
+  t:defer(function()
+    if vim.api.nvim_buf_is_valid(previous_bufnr) then
+      vim.api.nvim_win_set_buf(0, previous_bufnr)
+    end
+    for _, bufnr in ipairs(bufnrs) do
+      if vim.api.nvim_buf_is_valid(bufnr) then
+        vim.api.nvim_buf_delete(bufnr, { force = true })
+      end
+    end
+    vim.fn.delete(path)
+  end)
+  -- Filetype detection is off here; setting it stands in for the detection of a real start.
+  local function open()
+    vim.cmd.edit(vim.fn.fnameescape(path))
+    local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+    vim.api.nvim_set_option_value("filetype", "lua", { buf = bufnr })
+    return bufnr
+  end
+
+  local bufnr = open()
+  bufnrs[#bufnrs + 1] = bufnr
+  t.assert_true(has_keymap(bufnr, "n", "gsa"), "attached")
+  vim.cmd.enew()
+  bufnrs[#bufnrs + 1] = vim.api.nvim_get_current_buf()
+  vim.cmd.bdelete(tostring(bufnr))
+  t.assert_eq(bufnr, open(), "the same buffer number")
+  t.assert_true(has_keymap(bufnr, "n", "gsa"), "attached again")
+end)
+
 t:run()

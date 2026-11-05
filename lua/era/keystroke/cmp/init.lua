@@ -269,7 +269,6 @@ function M.setup()
     group = group,
     callback = function(event)
       Context.forget(event.buf)
-      Keymap.forget(event.buf)
     end,
   })
   vim.api.nvim_create_autocmd("ColorScheme", { group = group, callback = highlights })

@@ -135,4 +135,34 @@ t:test("Tab without a menu or snippet inserts a tab instead of running an Insert
   t.assert_eq("line 50", ui:lua([[return vim.fn.getline(50)]]), "jump target untouched")
 end)
 
+t:test("insert keys come back when :bdelete reopens the same buffer number", function()
+  local path = vim.fn.tempname() .. ".lua"
+  vim.fn.writefile({ "local value = 1" }, path)
+  t:defer(function()
+    vim.fn.delete(path)
+  end)
+  local ui = editor({ "" })
+  -- Entering Insert mode binds the keys; the buffer number tells whose <CR> map is in place.
+  ---@return integer|nil
+  local function enter_mapped_bufnr()
+    ui:rpc("nvim_input", "i<Esc>")
+    wait(ui, "return vim.api.nvim_get_mode().mode == 'n'", "back in Normal mode")
+    return ui:lua([[
+      for _, map in ipairs(vim.api.nvim_buf_get_keymap(0, 'i')) do
+        if map.lhs == '<CR>' then
+          return vim.api.nvim_get_current_buf()
+        end
+      end
+      return nil
+    ]])
+  end
+
+  ui:rpc("nvim_command", "edit " .. vim.fn.fnameescape(path))
+  local bufnr = assert(enter_mapped_bufnr(), "<CR> mapped in the opened file")
+  ui:rpc("nvim_command", "enew")
+  ui:rpc("nvim_command", "bdelete " .. bufnr)
+  ui:rpc("nvim_command", "edit " .. vim.fn.fnameescape(path))
+  t.assert_eq(bufnr, enter_mapped_bufnr(), "<CR> mapped again in the reopened buffer")
+end)
+
 t:run()

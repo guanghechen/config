@@ -4,7 +4,6 @@ local __module_name__ = "era.keystroke.cmp.keymap" ---@type string
 local Context = require("era.keystroke.cmp.context")
 local Cmdline = require("era.keystroke.cmp.cmdline")
 local M = {}
-local bound = {} ---@type table<integer, boolean>
 local cmdline_bound = false
 
 ---@param mode                          string
@@ -76,10 +75,11 @@ end
 ---@param get_session                   fun(): era.keystroke.cmp.Session
 ---@return nil
 function M.bind_insert(bufnr, get_session)
-  if bound[bufnr] then
+  -- A buffer variable goes with the maps: :bdelete and :edit reusing an empty buffer clear both, not the number.
+  if vim.b[bufnr].era_cmp_keymaps then
     return
   end
-  bound[bufnr] = true
+  vim.b[bufnr].era_cmp_keymaps = true
   local actions = {
     ["<CR>"] = function(session)
       return session:accept_explicit()
@@ -235,12 +235,6 @@ function M.bind_cmdline()
     }
   end
   stl.nvim.fn.bindkeys(keymaps, { silent = false, noremap = true })
-end
-
----@param bufnr                         integer
----@return nil
-function M.forget(bufnr)
-  bound[bufnr] = nil
 end
 
 return M

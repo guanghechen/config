@@ -98,6 +98,8 @@ local function attach(bufnr)
     end
   end
   attachments[bufnr] = keymaps
+  -- A buffer variable goes with the maps: :bdelete and :edit reusing an empty buffer clear both, not the number.
+  vim.b[bufnr].era_surrounds_keymaps = true
 end
 
 ---@param bufnr                         integer
@@ -110,13 +112,14 @@ local function detach(bufnr)
     end
   end
   attachments[bufnr] = nil
+  vim.b[bufnr].era_surrounds_keymaps = nil
 end
 
 ---@param bufnr                         integer
 ---@return nil
 function M.refresh(bufnr)
   local available = Buffer.is_available(bufnr) ---@type boolean
-  local attached = attachments[bufnr] ~= nil ---@type boolean
+  local attached = vim.api.nvim_buf_is_valid(bufnr) and vim.b[bufnr].era_surrounds_keymaps == true ---@type boolean
   if available and not attached then
     attach(bufnr)
   elseif not available and attached then
