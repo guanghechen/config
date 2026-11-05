@@ -1,13 +1,15 @@
+import type {
+  IAgentError,
+  IAgentPageAdapter,
+  IAgentPageRegistered,
+  IAgentPageRequest,
+  IAgentPageResponse,
+} from '@/agent/contract'
 import {
   AGENT_PAGE_PORT_NAME,
   AGENT_PROTOCOL_VERSION,
   GENERIC_AGENT_CAPABILITIES,
   isAgentErrorCode,
-  type IAgentError,
-  type IAgentPageAdapter,
-  type IAgentPageRegistered,
-  type IAgentPageRequest,
-  type IAgentPageResponse,
 } from '@/agent/contract'
 import { DomCapabilityRuntime } from './dom'
 
@@ -25,7 +27,7 @@ export function startAgentPage(adapter: IAgentPageAdapter): () => void {
   let reconnectDelayMs = 250
   let reconnectTimer: number | null = null
 
-  const connect = () => {
+  const connect = (): void => {
     if (disposed) return
 
     try {
@@ -44,7 +46,7 @@ export function startAgentPage(adapter: IAgentPageAdapter): () => void {
     }
   }
 
-  const scheduleReconnect = () => {
+  const scheduleReconnect = (): void => {
     if (disposed || reconnectTimer !== null) return
     reconnectTimer = window.setTimeout(() => {
       reconnectTimer = null
@@ -53,12 +55,12 @@ export function startAgentPage(adapter: IAgentPageAdapter): () => void {
     reconnectDelayMs = Math.min(reconnectDelayMs * 2, RECONNECT_MAX_MS)
   }
 
-  const handleDisconnect = () => {
+  const handleDisconnect = (): void => {
     port = null
     scheduleReconnect()
   }
 
-  const handleMessage = (message: unknown) => {
+  const handleMessage = (message: unknown): void => {
     if (isPageRegistered(message)) {
       reconnectDelayMs = 250
       return

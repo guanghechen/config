@@ -1,5 +1,5 @@
-import { vscodeDarkModernTheme } from '@/shared/theme/vscode-dark-modern'
 import type { IWebsiteTheme } from '@/shared/theme/contract'
+import { vscodeDarkModernTheme } from '@/shared/theme/vscode-dark-modern'
 import { redditStyles } from '../styles'
 import { redditTokens } from './tokens'
 

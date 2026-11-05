@@ -25,7 +25,7 @@ export class Reporter {
   private readonly showDate: boolean
   private readonly getLevelPriority: () => LogLevelPriority
 
-  constructor(props: IReporterProps) {
+  public constructor(props: IReporterProps) {
     const { name } = props
     const subject: string = props.subject || ''
     const showDate: boolean = !!props.date

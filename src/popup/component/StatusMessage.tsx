@@ -1,9 +1,11 @@
+import type { ReactElement } from 'react'
+
 interface IStatusMessageProps {
   readonly error: string | null
   readonly message: string
 }
 
-export function StatusMessage({ error, message }: IStatusMessageProps) {
+export function StatusMessage({ error, message }: IStatusMessageProps): ReactElement | null {
   if (!message) return null
 
   return (

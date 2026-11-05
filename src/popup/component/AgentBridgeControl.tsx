@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react'
 import type { AgentGrantKind } from '@/agent/contract'
 import type { IAgentBridgeViewModel } from '../hook/useAgentBridge'
 
@@ -5,7 +6,7 @@ interface IAgentBridgeControlProps {
   readonly bridge: IAgentBridgeViewModel
 }
 
-export function AgentBridgeControl({ bridge }: IAgentBridgeControlProps) {
+export function AgentBridgeControl({ bridge }: IAgentBridgeControlProps): ReactElement {
   return (
     <section className="settings-panel agent-panel" aria-labelledby="agent-bridge-heading">
       <div className="agent-heading">
@@ -98,7 +99,7 @@ interface IAgentGrantRowProps {
   readonly onChange: (grant: AgentGrantKind, allowed: boolean) => void
 }
 
-function AgentGrantRow(props: IAgentGrantRowProps) {
+function AgentGrantRow(props: IAgentGrantRowProps): ReactElement {
   return (
     <label className="agent-grant-row">
       <span className="agent-grant-copy">
@@ -108,6 +109,7 @@ function AgentGrantRow(props: IAgentGrantRowProps) {
       <span className="switch-control">
         <input
           type="checkbox"
+          // biome-ignore lint/a11y/useAriaPropsForRole: native checkbox already exposes its checked state
           role="switch"
           checked={props.checked}
           disabled={props.disabled}

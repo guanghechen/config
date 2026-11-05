@@ -45,7 +45,10 @@ export function subscribePageEnabled(
   const pageKey = resolvePageKey(url)
   if (typeof chrome === 'undefined' || !chrome.storage?.onChanged) return () => undefined
 
-  const listener = (changes: Record<string, chrome.storage.StorageChange>, areaName: string) => {
+  const listener = (
+    changes: Record<string, chrome.storage.StorageChange>,
+    areaName: string,
+  ): void => {
     if (areaName !== 'sync' || !changes[STORAGE_KEY]) return
     onChange(!normalizeDisabledPageKeys(changes[STORAGE_KEY].newValue).has(pageKey))
   }

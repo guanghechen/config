@@ -10,7 +10,7 @@ export class HighlightOverlay {
   private frame: number | null = null
   private target: Element | null = null
   private timer: number | null = null
-  private readonly handleViewportChange = () => {
+  private readonly handleViewportChange = (): void => {
     if (this.frame !== null) return
     this.frame = window.requestAnimationFrame(() => {
       this.frame = null

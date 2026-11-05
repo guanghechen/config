@@ -1,8 +1,8 @@
 import { createGenericAgentAdapter } from '@/agent/adapter/generic'
 import { startAgentPage } from '@/agent/content/runtime'
 import { startPageStyle } from '@/shared/page-style'
-import { layoutTheme } from './theme/layout'
 import { usacoThemes } from './theme'
+import { layoutTheme } from './theme/layout'
 
 const stopAgentPage = startAgentPage(createGenericAgentAdapter('usaco'))
 const stopPageStyle = startPageStyle({

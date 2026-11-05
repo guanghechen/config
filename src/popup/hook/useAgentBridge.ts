@@ -71,7 +71,7 @@ export function useAgentBridge(pageStatus: IActivePageStatus | null): IAgentBrid
       active = false
       window.clearInterval(intervalId)
     }
-  }, [status.connected, status.paired])
+  }, [status.paired])
 
   function pair(): void {
     void run(async () => {

@@ -3,7 +3,7 @@ import type { IAgentPageAdapter } from '@/agent/contract'
 export const codeforcesAgentAdapter: IAgentPageAdapter = {
   website: 'codeforces',
   capabilities: ['codeforces.listProblems', 'codeforces.readProblem', 'codeforces.getContest'],
-  execute(capability, _payload, signal) {
+  execute(capability, _payload, signal): unknown {
     if (signal.aborted) throw Object.assign(new Error('Request cancelled.'), { code: 'TIMEOUT' })
 
     switch (capability) {

@@ -1,9 +1,9 @@
+import fs from 'node:fs'
+import path from 'node:path'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 import replace from '@rollup/plugin-replace'
 import terser from '@rollup/plugin-terser'
 import typescript from '@rollup/plugin-typescript'
-import fs from 'node:fs'
-import path from 'node:path'
 import {
   AGENT_BRIDGE_PORT,
   ROOT_DIR,

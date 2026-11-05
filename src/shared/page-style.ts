@@ -1,9 +1,9 @@
 import { TsukiContentEventNameEnum } from '@/shared/enum/event'
+import type { IAppearanceSettings } from '@/shared/setting/appearance'
 import {
   DEFAULT_APPEARANCE_SETTINGS,
   readAppearanceSettings,
   subscribeAppearanceSettings,
-  type IAppearanceSettings,
 } from '@/shared/setting/appearance'
 import { readPageEnabled, subscribePageEnabled } from '@/shared/setting/page-enabled'
 import type { ColorThemeId, IWebsiteTheme, ThemeKind } from '@/shared/theme/contract'
@@ -36,7 +36,7 @@ export function startPageStyle(options: IPageStyleOptions): () => void {
     markReady = resolve
   })
 
-  const syncStyle = () => {
+  const syncStyle = (): void => {
     if (disposed) return
 
     if (enabled !== true) {
@@ -53,14 +53,14 @@ export function startPageStyle(options: IPageStyleOptions): () => void {
     safelyUpdateStyleElement(THEME_STYLE_ELEMENT_ID, theme?.css ?? '', theme?.id)
   }
 
-  const updateEnabled = (nextValue: boolean) => {
+  const updateEnabled = (nextValue: boolean): void => {
     if (disposed || nextValue === enabled) return
     enabled = nextValue
     syncStyle()
     options.onEnabledChange?.(nextValue)
   }
 
-  const updateAppearanceSettings = (nextValue: IAppearanceSettings) => {
+  const updateAppearanceSettings = (nextValue: IAppearanceSettings): void => {
     if (disposed) return
     appearanceSettings = nextValue
     syncStyle()
@@ -112,7 +112,7 @@ export function startPageStyle(options: IPageStyleOptions): () => void {
     return true
   }
 
-  const handleSystemThemeChange = () => syncStyle()
+  const handleSystemThemeChange = (): void => syncStyle()
   chrome.runtime.onMessage.addListener(handleMessage)
   systemTheme.addEventListener('change', handleSystemThemeChange)
 

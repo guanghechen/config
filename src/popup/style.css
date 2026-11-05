@@ -1,3 +1,5 @@
+/* biome-ignore-all lint/style/noDescendingSpecificity: popup selectors are component-scoped, so cross-component source order is irrelevant */
+
 @import 'tailwindcss';
 
 :root {
@@ -13,13 +15,7 @@
   --switch-off: #b7becb;
   --danger: #b42318;
   font-family:
-    Inter,
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    sans-serif;
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 :root[data-theme='dark'] {

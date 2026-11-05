@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react'
 import type { IAppearanceSettings } from '@/shared/setting/appearance'
 import type { IThemeOption, ThemeId, ThemeKind } from '@/shared/theme/contract'
 import { getThemeOptions } from '@/shared/theme/registry'
@@ -18,7 +19,7 @@ interface IThemeSelectProps {
 const LIGHT_THEME_OPTIONS = getThemeOptions('light')
 const DARK_THEME_OPTIONS = getThemeOptions('dark')
 
-export function ThemeControl({ settings, onChange }: IThemeControlProps) {
+export function ThemeControl({ settings, onChange }: IThemeControlProps): ReactElement {
   return (
     <div className="theme-selectors">
       <ThemeSelect
@@ -39,7 +40,7 @@ export function ThemeControl({ settings, onChange }: IThemeControlProps) {
   )
 }
 
-function ThemeSelect({ kind, label, value, options, onChange }: IThemeSelectProps) {
+function ThemeSelect({ kind, label, value, options, onChange }: IThemeSelectProps): ReactElement {
   return (
     <label className="theme-select-row">
       <span>{label}</span>

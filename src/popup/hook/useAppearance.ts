@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
+import type { AppearanceMode, IAppearanceSettings } from '@/shared/setting/appearance'
 import {
   DEFAULT_APPEARANCE_SETTINGS,
   readAppearanceSettings,
-  type AppearanceMode,
-  type IAppearanceSettings,
   writeAppearanceSettings,
 } from '@/shared/setting/appearance'
 import { writePageEnabled } from '@/shared/setting/page-enabled'
 import type { ThemeKind } from '@/shared/theme/contract'
 import { isThemeIdForKind } from '@/shared/theme/registry'
-import { readActivePageStatus, type IActivePageStatus } from '../service/active-page'
+import type { IActivePageStatus } from '../service/active-page'
+import { readActivePageStatus } from '../service/active-page'
 import { subscribeActivePageChanges } from '../service/active-page-events'
 
 type SavingTarget = 'appearance' | 'page' | null
@@ -40,7 +40,7 @@ export function useAppearance(): IAppearanceViewModel {
     let active = true
     let pageStatusRevision = 0
 
-    const refreshPageStatus = () => {
+    const refreshPageStatus = (): void => {
       const revision = ++pageStatusRevision
       if (active) setPageStatus(null)
       void readActivePageStatus().then(

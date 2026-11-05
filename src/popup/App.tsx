@@ -1,5 +1,6 @@
+import type { ReactElement } from 'react'
 import { AppearanceContainer } from './container/AppearanceContainer'
 
-export function App() {
+export function App(): ReactElement {
   return <AppearanceContainer />
 }

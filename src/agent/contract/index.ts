@@ -118,7 +118,10 @@ export interface IAgentBrokerRequest {
     readonly expectedDocumentId?: string
   }
   readonly capability:
-    AgentCapability | AgentMemoryCapability | 'pages.list' | 'pages.resolveActive'
+    | AgentCapability
+    | AgentMemoryCapability
+    | 'pages.list'
+    | 'pages.resolveActive'
   readonly payload?: unknown
   readonly timeoutMs: number
 }

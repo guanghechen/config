@@ -1,4 +1,6 @@
-export function AppHeader() {
+import type { ReactElement } from 'react'
+
+export function AppHeader(): ReactElement {
   return (
     <header className="app-header">
       <img className="brand-logo" src="/images/icon-48.png" alt="" />

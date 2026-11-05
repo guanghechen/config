@@ -1,15 +1,13 @@
+import type { IAgentBrokerRequest, IAgentBrokerResponse, IAgentError } from '@/agent/contract'
 import {
   AGENT_PROTOCOL_VERSION,
   isAgentActionCapability,
   isAgentCapability,
   isAgentErrorCode,
   isAgentMemoryCapability,
-  type IAgentBrokerRequest,
-  type IAgentBrokerResponse,
-  type IAgentError,
 } from '@/agent/contract'
 import { AgentMemoryStore } from './memory'
-import { PageRegistry } from './page-registry'
+import type { PageRegistry } from './page-registry'
 import type { IAgentSessionState } from './session'
 
 const MAX_REQUEST_BYTES = 64 * 1024
@@ -105,7 +103,8 @@ export class AgentRequestExecutor {
         return brokerError(request.requestId, 'PERMISSION_DENIED', 'Agent memory is not granted.')
       }
       const grantRevision = this.readMemoryGrantRevision(page.origin)
-      const hasMemoryAccess = () => isActive() && this.hasMemoryAccess(page.origin, grantRevision)
+      const hasMemoryAccess = (): boolean =>
+        isActive() && this.hasMemoryAccess(page.origin, grantRevision)
       const pageScopeId = await this.registry.resolvePageMemoryScopeId(page.pageId)
       if (!pageScopeId) {
         return brokerError(request.requestId, 'PAGE_STALE', 'Page document has changed.')

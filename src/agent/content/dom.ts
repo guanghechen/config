@@ -196,7 +196,7 @@ export class DomCapabilityRuntime {
     }
 
     const element = this.snapshot.elements.get(ref)
-    if (!element || !element.isConnected) {
+    if (!element?.isConnected) {
       throw createCapabilityError('STALE_ELEMENT', 'Element is detached or unknown.')
     }
     return element

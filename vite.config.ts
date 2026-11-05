@@ -1,7 +1,7 @@
-import tailwindcss from '@tailwindcss/vite'
-import react from '@vitejs/plugin-react'
 import fs from 'node:fs'
 import path from 'node:path'
+import tailwindcss from '@tailwindcss/vite'
+import react from '@vitejs/plugin-react'
 import type { Plugin } from 'vite'
 import { defineConfig } from 'vite'
 import { AGENT_BRIDGE_PORT, ROOT_DIR, TARGET_DIR, YOZ_SERVER_PORT } from './script/env.mjs'
@@ -9,7 +9,7 @@ import { AGENT_BRIDGE_PORT, ROOT_DIR, TARGET_DIR, YOZ_SERVER_PORT } from './scri
 function manifestPlugin(): Plugin {
   return {
     name: 'manifest-transform',
-    writeBundle() {
+    writeBundle(): void {
       const manifestPath = path.resolve(TARGET_DIR, 'manifest.json')
       const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'))
 

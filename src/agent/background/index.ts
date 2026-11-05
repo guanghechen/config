@@ -1,13 +1,15 @@
-import {
-  isAgentGrantKind,
-  type IAgentControlRequest,
-  type IAgentControlResponse,
+import type {
+  IAgentControlRequest,
+  IAgentControlResponse,
+  IAgentControlStatus,
 } from '@/agent/contract'
+import { isAgentGrantKind } from '@/agent/contract'
 import { AgentBridge } from './bridge'
 import { PageRegistry } from './page-registry'
 
 type BridgeStartupResult =
-  { readonly ok: true; readonly stop: () => void } | { readonly ok: false; readonly error: unknown }
+  | { readonly ok: true; readonly stop: () => void }
+  | { readonly ok: false; readonly error: unknown }
 
 const CONTROL_ACTIONS = new Set(['status', 'pair', 'unpair', 'setGrant'])
 
@@ -62,7 +64,10 @@ export function startAgentBackground(): () => void {
   }
 }
 
-async function handleControlRequest(bridge: AgentBridge, request: IAgentControlRequest) {
+async function handleControlRequest(
+  bridge: AgentBridge,
+  request: IAgentControlRequest,
+): Promise<IAgentControlStatus> {
   switch (request.action) {
     case 'status':
       return bridge.getStatus()

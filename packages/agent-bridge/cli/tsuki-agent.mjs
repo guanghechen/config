@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { serve } from '../src/server.mjs'
 import { request } from '../src/client.mjs'
+import { serve } from '../src/server.mjs'
 
 const [command, ...args] = process.argv.slice(2)
 

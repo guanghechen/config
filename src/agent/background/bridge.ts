@@ -1,20 +1,15 @@
-import {
-  AGENT_PROTOCOL_MISMATCH_CLOSE_CODE,
-  AGENT_PROTOCOL_VERSION,
-  type IAgentControlStatus,
-  type IAgentError,
-  type AgentGrantKind,
-} from '@/agent/contract'
-import { PageRegistry, type PageRegistryEvent } from './page-registry'
+import type { AgentGrantKind, IAgentControlStatus, IAgentError } from '@/agent/contract'
+import { AGENT_PROTOCOL_MISMATCH_CLOSE_CODE, AGENT_PROTOCOL_VERSION } from '@/agent/contract'
+import type { PageRegistry, PageRegistryEvent } from './page-registry'
 import { AgentRequestExecutor } from './request-executor'
-import { parseHttpOrigin } from './website-policy'
+import type { IAgentSessionState } from './session'
 import {
   clearAgentSession,
   readAgentSession,
   updateAgentSessionGrant,
   writeAgentSession,
-  type IAgentSessionState,
 } from './session'
+import { parseHttpOrigin } from './website-policy'
 
 const BROKER_URL = `ws://127.0.0.1:${__AGENT_BRIDGE_PORT__}`
 const HEARTBEAT_INTERVAL_MS = 20_000

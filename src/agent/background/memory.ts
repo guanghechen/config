@@ -225,10 +225,10 @@ export class AgentMemoryStore {
 }
 
 const chromeMemoryStorage: IAgentMemoryStorage = {
-  async read() {
+  async read(): Promise<unknown> {
     return (await chrome.storage.session.get(STORAGE_KEY))[STORAGE_KEY]
   },
-  async write(notes) {
+  async write(notes): Promise<void> {
     await chrome.storage.session.set({ [STORAGE_KEY]: notes })
   },
 }

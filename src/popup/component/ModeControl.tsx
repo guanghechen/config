@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react'
 import type { AppearanceMode } from '@/shared/setting/appearance'
 
 interface IModeOption {
@@ -16,7 +17,7 @@ const MODE_OPTIONS: ReadonlyArray<IModeOption> = [
   { value: 'dark', label: 'Dark' },
 ]
 
-export function ModeControl({ mode, onChange }: IModeControlProps) {
+export function ModeControl({ mode, onChange }: IModeControlProps): ReactElement {
   return (
     <div className="mode-control">
       <span className="control-label">Mode</span>

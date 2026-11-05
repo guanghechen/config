@@ -1,3 +1,5 @@
+import type { ReactElement } from 'react'
+
 interface ISiteControlProps {
   readonly disabled: boolean
   readonly enabled: boolean
@@ -5,7 +7,12 @@ interface ISiteControlProps {
   readonly onChange: (enabled: boolean) => void
 }
 
-export function SiteControl({ disabled, enabled, siteLabel, onChange }: ISiteControlProps) {
+export function SiteControl({
+  disabled,
+  enabled,
+  siteLabel,
+  onChange,
+}: ISiteControlProps): ReactElement {
   return (
     <div className="setting-row">
       <div className="setting-copy">
@@ -17,6 +24,7 @@ export function SiteControl({ disabled, enabled, siteLabel, onChange }: ISiteCon
         <span className="visually-hidden">Use Tsuki on this site</span>
         <input
           type="checkbox"
+          // biome-ignore lint/a11y/useAriaPropsForRole: native checkbox already exposes its checked state
           role="switch"
           checked={enabled}
           disabled={disabled}

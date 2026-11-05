@@ -1,18 +1,20 @@
+import type {
+  AgentCapability,
+  IAgentError,
+  IAgentPageRecord,
+  IAgentPageRegistered,
+  IAgentPageRegistration,
+  IAgentPageRequest,
+  IAgentPageResponse,
+} from '@/agent/contract'
 import {
   AGENT_PAGE_PORT_NAME,
   AGENT_PROTOCOL_VERSION,
   GENERIC_AGENT_CAPABILITIES,
   isAgentCapability,
-  type AgentCapability,
-  type IAgentError,
-  type IAgentPageRecord,
-  type IAgentPageRegistered,
-  type IAgentPageRegistration,
-  type IAgentPageRequest,
-  type IAgentPageResponse,
 } from '@/agent/contract'
-import { sanitizePageTitle, sanitizePageUrl } from './page-url'
 import { createPageMemoryScopeId, resolvePageMemorySourceUrl } from './page-scope'
+import { sanitizePageTitle, sanitizePageUrl } from './page-url'
 import { isWebsiteOriginAllowed } from './website-policy'
 
 const BROWSER_SESSION_KEY = 'tsuki-agent-browser-session-id'
@@ -47,11 +49,14 @@ export class PageRegistry {
   private browserSessionIdPromise: Promise<string> | null = null
 
   public start(): () => void {
-    const handleConnect = (port: chrome.runtime.Port) => {
+    const handleConnect = (port: chrome.runtime.Port): void => {
       if (port.name !== AGENT_PAGE_PORT_NAME) return
       this.handlePort(port)
     }
-    const handleActivated = (activeInfo: { readonly tabId: number; readonly windowId: number }) => {
+    const handleActivated = (activeInfo: {
+      readonly tabId: number
+      readonly windowId: number
+    }): void => {
       for (const entry of this.pages.values()) {
         if (entry.record.windowId !== activeInfo.windowId) continue
         const active = entry.record.tabId === activeInfo.tabId
@@ -64,7 +69,7 @@ export class PageRegistry {
       tabId: number,
       changeInfo: { readonly status?: string; readonly title?: string; readonly url?: string },
       tab: chrome.tabs.Tab,
-    ) => {
+    ): void => {
       if (changeInfo.status === 'loading' || tab.status === 'loading') {
         for (const [pageId, entry] of this.pages) {
           if (entry.record.tabId !== tabId) continue
@@ -224,7 +229,7 @@ export class PageRegistry {
     const requestId = crypto.randomUUID()
     const expiresAt = Date.now() + timeoutMs
     const accessRevision = entry.accessRevision
-    const task = () => {
+    const task = (): Promise<IAgentPageResponse> => {
       if (entry.accessRevision !== accessRevision) {
         return Promise.resolve(
           errorResponse(requestId, 'PERMISSION_DENIED', 'Page access was revoked.'),
@@ -260,7 +265,7 @@ export class PageRegistry {
     let disconnected = false
     let pageId: string | null = null
 
-    const handleMessage = (message: unknown) => {
+    const handleMessage = (message: unknown): void => {
       if (isRegistration(message) && pageId === null) {
         void this.register(port, message)
           .then(id => {
@@ -278,7 +283,7 @@ export class PageRegistry {
       }
       if (isPageResponse(message) && pageId) this.resolvePending(pageId, message)
     }
-    const handleDisconnect = () => {
+    const handleDisconnect = (): void => {
       disconnected = true
       if (!pageId) return
       const entry = this.pages.get(pageId)

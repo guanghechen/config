@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react'
 import { AgentBridgeControl } from '../component/AgentBridgeControl'
 import { AppHeader } from '../component/AppHeader'
 import { ModeControl } from '../component/ModeControl'
@@ -7,7 +8,7 @@ import { ThemeControl } from '../component/ThemeControl'
 import { useAgentBridge } from '../hook/useAgentBridge'
 import { useAppearance } from '../hook/useAppearance'
 
-export function AppearanceContainer() {
+export function AppearanceContainer(): ReactElement {
   const appearance = useAppearance()
   const agentBridge = useAgentBridge(appearance.pageStatus)
 

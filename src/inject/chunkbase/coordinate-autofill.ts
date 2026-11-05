@@ -4,7 +4,7 @@ const COORDINATE_INPUT_SELECTOR =
 export function suppressCoordinateAutofill(): () => void {
   const originalAutocomplete = new Map<HTMLElement, string | null>()
 
-  const disableAutocomplete = (element: HTMLElement) => {
+  const disableAutocomplete = (element: HTMLElement): void => {
     if (!originalAutocomplete.has(element)) {
       originalAutocomplete.set(element, element.getAttribute('autocomplete'))
     }
@@ -13,7 +13,7 @@ export function suppressCoordinateAutofill(): () => void {
     }
   }
 
-  const syncInputs = () => {
+  const syncInputs = (): void => {
     for (const [element, autocomplete] of originalAutocomplete) {
       if (element.isConnected) continue
       // Detached nodes may be reused, so restore them before forgetting their original values.
