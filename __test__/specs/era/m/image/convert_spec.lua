@@ -313,13 +313,24 @@ t:test("a formula is typeset once, and each color only recolors it", function()
   end
 end)
 
-t:test("a new theme color redraws a formula under its id without typesetting it again", function()
-  local Image = require("era.m.image.image")
-  local transmitted = {} ---@type table[]
-  t:patch_table(package.loaded["era.m.image.terminal"], "request", function(opts)
-    if opts.t == "f" then
-      transmitted[#transmitted + 1] = opts
+---The position of the first event `match` accepts, or `math.huge`.
+---@param events                        table[]
+---@param match                         fun(event: table): boolean
+---@return number
+local function position(events, match)
+  for i, event in ipairs(events) do
+    if match(event) then
+      return i
     end
+  end
+  return math.huge
+end
+
+t:test("a new theme color redraws a formula under a new id without typesetting it again", function()
+  local Image = require("era.m.image.image")
+  local events = {} ---@type table[]
+  t:patch_table(package.loaded["era.m.image.terminal"], "request", function(opts)
+    events[#events + 1] = opts
   end)
   t:defer(function()
     vim.api.nvim_set_hl(0, "m_img_math", {})
@@ -328,14 +339,19 @@ t:test("a new theme color redraws a formula under its id without typesetting it 
   local file = t:tempdir() .. "/fedcba9876543210-content.math.tex" ---@type string
   vim.fn.writefile({ "y" }, file)
   local img = Image.new(file)
-  img:place({ id = 931, update = function() end })
+  img:place({
+    id = 931,
+    update = function()
+      events[#events + 1] = { shown = img.id }
+    end,
+  })
   t:defer(function()
     img:del()
   end)
   t.wait_until(function()
     return img.sent == true
   end, 5000, "formula sent")
-  local typeset = #typesets() ---@type integer
+  local old, typeset = img.id, #typesets()
 
   vim.api.nvim_set_hl(0, "m_img_math", { fg = 0xEB6F92 })
   Image.recolor()
@@ -345,9 +361,20 @@ t:test("a new theme color redraws a formula under its id without typesetting it 
 
   t.assert_eq(typeset, #typesets(), "not typeset again")
   t.assert_eq(img, Image.new(file), "the same image")
-  t.assert_eq(2, #transmitted, "sent again")
-  t.assert_eq(img.id, transmitted[2].i, "under its id")
-  t.assert_eq(vim.base64.encode(img.file), transmitted[2].data, "in the new color")
+  t.assert_true(img.id ~= old, "a new id")
+  -- The terminal drops the placements of an image sent anew under its id: the new colors go under the new one, the
+  -- placement shows them, and only then the old colors go.
+  local sent = position(events, function(event)
+    return event.t == "f" and event.i == img.id
+  end)
+  local shown = position(events, function(event)
+    return event.shown == img.id
+  end)
+  local released = position(events, function(event)
+    return event.a == "d" and event.d == "I" and event.i == old
+  end)
+  t.assert_eq(vim.base64.encode(img.file), (events[sent] or {}).data, "in the new color")
+  t.assert_true(sent < shown and shown < released, ("sent %s, shown %s, released %s"):format(sent, shown, released))
 end)
 
 t:test("a formula nothing shows is left alone by a theme change and takes the new color once shown", function()
@@ -461,13 +488,11 @@ t:test("a chart is drawn once for each background, in the style of the one it wa
   end
 end)
 
-t:test("a new background draws a chart again under its id", function()
+t:test("a new background draws a chart again under a new id", function()
   local Image = require("era.m.image.image")
-  local transmitted = {} ---@type table[]
+  local events = {} ---@type table[]
   t:patch_table(package.loaded["era.m.image.terminal"], "request", function(opts)
-    if opts.t == "f" then
-      transmitted[#transmitted + 1] = opts
-    end
+    events[#events + 1] = opts
   end)
   local background = vim.o.background ---@type string
   t:defer(function()
@@ -484,6 +509,7 @@ t:test("a new background draws a chart again under its id", function()
   t.wait_until(function()
     return img.sent == true
   end, 5000, "chart sent")
+  local old = img.id ---@type integer
 
   vim.o.background = "light"
   Image.recolor()
@@ -491,13 +517,16 @@ t:test("a new background draws a chart again under its id", function()
     return img.sent == true and vim.endswith(img.file, ".light.png")
   end, 5000, "chart drawn again")
 
-  -- Formulas earlier cases left on screen may be recolored as well.
-  local sent = vim.tbl_filter(function(request)
-    return request.i == img.id
-  end, transmitted)
   t.assert_eq(img, Image.new(file), "the same image")
-  t.assert_eq(2, #sent, "sent again under its id")
-  t.assert_eq(vim.base64.encode(img.file), sent[2].data, "for the new background")
+  t.assert_true(img.id ~= old, "a new id")
+  local sent = position(events, function(event)
+    return event.t == "f" and event.i == img.id
+  end)
+  local released = position(events, function(event)
+    return event.a == "d" and event.d == "I" and event.i == old
+  end)
+  t.assert_eq(vim.base64.encode(img.file), (events[sent] or {}).data, "for the new background")
+  t.assert_true(sent < released, ("sent %s, released %s"):format(sent, released))
 end)
 
 t:run()

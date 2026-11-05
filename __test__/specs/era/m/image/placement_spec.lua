@@ -144,6 +144,29 @@ t:test("a viewer shows its image again after its buffer returns to a window", fu
   t.assert_true(count_marks(bufnr, Placement.ns, PLACEHOLDER) > 0, "render after returning")
 end)
 
+t:test("a placement draws again when its image goes under another id", function()
+  local image = fake_image({ ready = true })
+  local Placement = load_placement(image)
+  local placed = {} ---@type integer[]
+  t:patch_table(package.loaded["era.m.image.terminal"], "request", function(opts)
+    if opts.a == "p" then
+      placed[#placed + 1] = opts.i
+    end
+  end)
+  local bufnr = shown_buf()
+  local placement = Placement.new(bufnr, image.src, { conceal = true })
+  t:defer(function()
+    placement:close()
+  end)
+  Placement.update(placement)
+
+  image.id = 8
+  Placement.update(placement)
+
+  t.assert_same({ 7, 8 }, placed, "placed under each id")
+  t.assert_eq(8, vim.api.nvim_get_hl(0, { name = "m_img_" .. placement.id }).fg, "placeholders name the new id")
+end)
+
 t:test("window events leave a viewer that no window shows alone", function()
   local image = fake_image({ ready = true })
   local Placement = load_placement(image)

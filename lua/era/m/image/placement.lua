@@ -20,6 +20,7 @@ local __module_name__ = "era.m.image.placement" ---@type string
 ---@field public auto_resize              ?boolean
 
 ---@class era.m.image.State
+---@field public id                       integer The image shown, under the id a recolor changes
 ---@field public hidden                   boolean
 ---@field public loc                      era.m.image.Loc
 ---@field public wins                     integer[]
@@ -492,6 +493,7 @@ function M:state()
 
   ---@type era.m.image.State
   return {
+    id = self.img.id,
     hidden = self.hidden or false,
     loc = {
       pos[1],

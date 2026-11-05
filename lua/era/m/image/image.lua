@@ -9,6 +9,7 @@
 ---@field public convert                  ?era.m.image.Convert
 ---@field public source                 era.m.image.convert.Source
 ---@field public retired                ?boolean
+---@field protected _old_id             ?integer The id placements show the old colors under while new ones convert
 local M = {}
 M.__index = M
 
@@ -249,6 +250,8 @@ function M:__on_send__()
   for _, placement in pairs(self.placements) do
     placement:update()
   end
+  -- The placements show the new colors now, under the id their state holds.
+  self:__release_old_id__()
 end
 
 ---@return nil
@@ -279,10 +282,18 @@ function M:__discolored__()
   return (c.color ~= nil and c.color ~= math_color()) or (c.background ~= nil and c.background ~= vim.o.background)
 end
 
----Converts a discolored image again, which for a formula runs only the step that colors it; once done, it is sent anew
----under its id, and its placements show the old colors until then.
+---Converts a discolored image again, which for a formula runs only the step that colors it. Sent anew under the id it
+---shows with, an image vanishes from its placements, so the new colors go under another id; until they are sent, the
+---placements show the old ones.
 ---@return nil
 function M:__recolor__()
+  if self._old_id == nil then
+    self._old_id = self.id
+  else
+    -- A recolor not sent yet: nothing went out under its id.
+    ids[self.id] = nil
+  end
+  self.id = new_id()
   self.file = self:__convert__()
   self.sent = false
   self:run()
@@ -313,6 +324,17 @@ function M:__release__()
   end
   self.sent = false
   require("era.m.image.terminal").request({ a = "d", d = "I", i = self.id })
+  self:__release_old_id__()
+end
+
+---Releases the old colors of a recolored image (see `__recolor__`).
+---@return nil
+function M:__release_old_id__()
+  if self._old_id ~= nil then
+    require("era.m.image.terminal").request({ a = "d", d = "I", i = self._old_id })
+    ids[self._old_id] = nil
+    self._old_id = nil
+  end
 end
 
 ---Releases the image data held by the terminal and the conversion outputs of a retired image.
