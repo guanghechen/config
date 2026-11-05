@@ -99,7 +99,7 @@ function M.gen_hlgroup_map(context)
     ---module/image
     m_img_anchor = { fg = c.iris },
     m_img_loading = { fg = c.muted },
-    m_img_math = { fg = c.rose, bold = true },
+    m_img_math = { fg = c.foam, bold = true },
     m_img_special = { fg = c.iris },
     m_img_spinner = { fg = c.muted },
 

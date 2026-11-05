@@ -95,7 +95,7 @@ function M.gen_hlgroup_map(context)
     ---module/image
     m_img_anchor = { fg = c.accentPurple },
     m_img_loading = { fg = c.textDim },
-    m_img_math = { fg = u.pink, bold = true },
+    m_img_math = { fg = c.accentBlue, bold = true },
     m_img_special = { fg = c.accentPurple },
     m_img_spinner = { fg = c.textDim },
 
