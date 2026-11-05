@@ -202,12 +202,6 @@ function M:calc_preview_data(context)
   else
     lines = stl.fs.read_file_as_lines({ filepath = os_filepath, silent = true }) or {} ---@type string[]
     highlights = {} ---@type era.m.searcher.IPlainfileViewHighlight[]
-    -- Reading splits at "\n" only; drop the "\r" of CRLF line breaks as the replace preview does.
-    for index, line in ipairs(lines) do
-      if line:byte(-1) == 13 then
-        lines[index] = line:sub(1, -2)
-      end
-    end
 
     if context.filematch ~= nil then
       for _, match in ipairs(context.filematch.matches) do

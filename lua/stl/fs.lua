@@ -206,7 +206,8 @@ end
 function M.read_file_as_lines(params)
   local filepath = params.filepath ---@type string
   local silent = not not params.silent ---@type boolean
-  local file = io.open(filepath, "r")
+  -- Text mode on Windows would translate CRLF and stop at Ctrl-Z; binary mode reads the same bytes everywhere.
+  local file = io.open(filepath, "rb")
   if not file then
     if not silent then
       stl.reporter.error({
@@ -224,6 +225,10 @@ function M.read_file_as_lines(params)
   for line in file:lines() do
     if #lines >= max_lines then
       break
+    end
+    -- Lines end at "\n"; like `readfile()`, drop the "\r" of a CRLF line break.
+    if line:byte(-1) == 13 then
+      line = line:sub(1, -2)
     end
     table.insert(lines, line)
   end
