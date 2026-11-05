@@ -146,6 +146,74 @@ t:test("watcher observes commits from a linked worktree", function()
   end, 3000, "worktree ref update should refresh HEAD")
 end)
 
+t:test("commits on branches beside the current one leave the watcher quiet", function()
+  local root = t:tempdir()
+  local repo = root .. "/main" ---@type string
+  vim.fn.mkdir(repo, "p")
+  t:defer(function()
+    watcher.dispose()
+  end)
+
+  git.run(repo, { "init", "-q" })
+  git.run(repo, { "commit", "--allow-empty", "-qm", "base" })
+  -- Worktrees of one user keep their branches side by side in one ref directory.
+  git.run(repo, { "worktree", "add", "-qb", "user/current", root .. "/current" })
+  git.run(repo, { "worktree", "add", "-qb", "user/sibling", root .. "/sibling" })
+
+  local gitdir = vim.trim(git.run(root .. "/current", { "rev-parse", "--absolute-git-dir" })) ---@type string
+  head_refreshes = 0
+  watcher.update(gitdir, repo .. "/.git")
+  git.run(root .. "/sibling", { "commit", "--allow-empty", "-qm", "sibling" })
+  vim.wait(1000)
+  t.assert_eq(0, head_refreshes, "refreshes after a commit on the sibling branch")
+
+  git.run(root .. "/current", { "commit", "--allow-empty", "-qm", "current" })
+  t.wait_until(function()
+    return head_refreshes > 0
+  end, 3000, "a commit on the current branch should refresh HEAD")
+end)
+
+t:test("the watcher still follows the current ref after gc packs it and removes its directory", function()
+  local repo = git.repo(t)
+  t:defer(function()
+    watcher.dispose()
+  end)
+  git.run(repo, { "commit", "--allow-empty", "-qm", "base" })
+  git.run(repo, { "checkout", "-qb", "user/current" })
+
+  watcher.update(repo .. "/.git")
+  git.run(repo, { "pack-refs", "--all", "--prune" })
+  t.assert_eq(0, vim.fn.isdirectory(repo .. "/.git/refs/heads/user"), "the ref directory is gone")
+  vim.wait(500)
+
+  head_refreshes = 0
+  git.run(repo, { "commit", "--allow-empty", "-qm", "after gc" })
+  t.wait_until(function()
+    return head_refreshes > 0
+  end, 3000, "a commit after gc should refresh HEAD")
+end)
+
+t:test("a ref update clears ignore results once per refresh, not once per file event", function()
+  local repo = git.repo(t)
+  t:defer(function()
+    watcher.dispose()
+  end)
+  git.run(repo, { "commit", "--allow-empty", "-qm", "base" })
+  local clears = 0 ---@type integer
+  t:patch_table(era.m.git.ignore, "clear", function()
+    clears = clears + 1
+  end)
+
+  head_refreshes = 0
+  watcher.update(repo .. "/.git")
+  git.run(repo, { "commit", "--allow-empty", "-qm", "change" })
+  t.wait_until(function()
+    return head_refreshes > 0
+  end, 3000, "a commit should refresh HEAD")
+  vim.wait(500)
+  t.assert_eq(head_refreshes, clears, "ignore clears")
+end)
+
 for _, failure in ipairs({ "start", "callback" }) do
   t:test("watcher polls refs and index after fs_event " .. failure .. " failure", function()
     local repo = git.repo(t)

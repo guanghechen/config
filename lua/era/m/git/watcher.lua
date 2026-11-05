@@ -194,8 +194,8 @@ local function on_fs_event(filename)
   end
 
   if is_head_change(filename) then
+    -- The debounced refresh clears ignore results once; every clear also makes the Explorer evaluate them again.
     pending_head_change = true
-    era.m.git.ignore.clear()
   else
     pending_status_change = true
   end
@@ -406,10 +406,14 @@ local function sync_head_ref_watcher(force)
   if not watch_dir then
     return
   end
+  -- Other branches share the directory, as the worktrees of one user do. Only HEAD's ref counts, or while its
+  -- directory is missing, the entry on the way to it; an event without a name may be either.
+  local relpath = vim.startswith(refpath, watch_dir) and refpath:sub(#watch_dir + 2) or "" ---@type string
+  local entry = relpath:match("^[^/\\]+") ---@type string|nil
 
   local handle ---@type uv.uv_fs_event_t|nil
-  handle = watch_directory(watch_dir, function()
-    if fs_watcher_head_ref ~= handle then
+  handle = watch_directory(watch_dir, function(filename)
+    if fs_watcher_head_ref ~= handle or (filename ~= nil and entry ~= nil and filename ~= entry) then
       return
     end
     local ref = current_head_ref
