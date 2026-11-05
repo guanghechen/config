@@ -77,6 +77,24 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
+---Bytes from the start of line `k` to the start of the next: its content and the line break `parse_lines` skips,
+---which is "\r\n" in CRLF files.
+---@param text                          string
+---@param lwidths                       integer[]
+---@param k                             integer
+---@param offset                        integer
+---@return integer
+local function line_span(text, lwidths, k, offset)
+  local stop = offset + lwidths[k] ---@type integer
+  if text:byte(stop + 1) == 13 then
+    stop = stop + 1
+  end
+  if text:byte(stop + 1) == 10 then
+    stop = stop + 1
+  end
+  return stop - offset
+end
+
 ---@param context                       era.m.searcher.IPlainfileViewContext
 ---@return era.m.searcher.IPlainfileViewData
 function M:calc_preview_data(context)
@@ -142,7 +160,7 @@ function M:calc_preview_data(context)
     local lnum0 = 1 ---@type integer
     local k = 1 ---@type integer
     local offset = 0 ---@type integer
-    local lwidth = lwidths[1] + 1 ---@type integer
+    local lspan = #lwidths > 0 and line_span(preview_text, lwidths, 1, 0) or 0 ---@type integer
 
     local offset_delta = 0 ---@type integer
     local match_offset = 0 ---@type integer
@@ -160,16 +178,22 @@ function M:calc_preview_data(context)
       local l = match.l ---@type integer
       local r = match.r ---@type integer
       while l < r do
-        while l >= offset + lwidth and k < #lwidths do
+        while l >= offset + lspan and k < #lwidths do
+          offset = offset + lspan
           k = k + 1
-          offset = offset + lwidth
-          lwidth = lwidths[k] + 1
+          lspan = line_span(preview_text, lwidths, k, offset)
+        end
+        -- A range past the last line has no row to mark; stopping keeps such input from looping.
+        if l >= offset + lspan then
+          break
         end
 
+        -- A matched line break is marked one column past the content, whatever bytes it has.
+        local lwidth = lwidths[k] ---@type integer
         local lnum = lnum0 + k - 1 ---@type integer
-        local col = l - offset ---@type integer
-        local col_end = math.min(lwidth, r - offset) ---@type integer
-        l = offset + lwidth ---@type integer
+        local col = math.min(l - offset, lwidth) ---@type integer
+        local col_end = math.min(lwidth + 1, r - offset) ---@type integer
+        l = offset + lspan ---@type integer
 
         highlights[#highlights + 1] =
           { offset = match_offset, lnum = lnum, coll = col, colr = col_end, hlname = hlname }
@@ -178,6 +202,10 @@ function M:calc_preview_data(context)
   else
     lines = stl.fs.read_file_as_lines({ filepath = os_filepath, silent = true }) or {} ---@type string[]
     highlights = {} ---@type era.m.searcher.IPlainfileViewHighlight[]
+    -- Reading splits at "\n" only; drop the "\r" of CRLF line breaks as the replace preview does.
+    for index, line in ipairs(lines) do
+      lines[index] = line:gsub("\r$", "")
+    end
 
     if context.filematch ~= nil then
       for _, match in ipairs(context.filematch.matches) do
