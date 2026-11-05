@@ -204,7 +204,9 @@ function M:calc_preview_data(context)
     highlights = {} ---@type era.m.searcher.IPlainfileViewHighlight[]
     -- Reading splits at "\n" only; drop the "\r" of CRLF line breaks as the replace preview does.
     for index, line in ipairs(lines) do
-      lines[index] = line:gsub("\r$", "")
+      if line:byte(-1) == 13 then
+        lines[index] = line:sub(1, -2)
+      end
     end
 
     if context.filematch ~= nil then
