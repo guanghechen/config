@@ -76,3 +76,31 @@ pub fn replace_file_by_matches_advance(
     let locations: Vec<IMatchLocation> = get_locations(&next_text, &next_offsets);
     Ok(IReplaceFileResult { locations })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_support::TempDir;
+    use std::fs;
+
+    #[test]
+    fn t_remaining_matches_keep_their_rows_in_crlf_files() {
+        let dir = TempDir::new();
+        let path = dir.path().join("text");
+        fs::write(&path, "a foo\r\nb foo\r\nc foo\r\n").unwrap();
+        let file = path.to_str().unwrap();
+        let result =
+            replace_file_by_matches_advance(file, "foo", "quux", false, true, &[2], &[9, 16])
+                .unwrap();
+        assert_eq!(
+            fs::read_to_string(&path).unwrap(),
+            "a quux\r\nb foo\r\nc foo\r\n"
+        );
+        let mapped: Vec<(usize, usize, usize)> = result
+            .locations
+            .iter()
+            .map(|location| (location.offset, location.lnum, location.col))
+            .collect();
+        assert_eq!(mapped, vec![(10, 2, 2), (17, 3, 2)]);
+    }
+}
