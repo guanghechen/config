@@ -430,7 +430,7 @@ mod tests {
     #[test]
     fn new_generation_restarts_sequence() {
         let plan = plan_claim(SchedulerTask::Heartbeat, 8, "7:99:1000:1000", 100).unwrap();
-        assert_eq!(plan.claimed_state, "8:1:130:120");
+        assert_eq!(plan.claimed_state, "8:1:400:120");
     }
 
     #[test]

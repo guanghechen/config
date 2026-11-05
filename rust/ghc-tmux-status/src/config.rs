@@ -18,7 +18,12 @@ pub const STATUS_REDRAW_INTERVAL_SECONDS_STR: &str = "1";
  * checks use whole seconds, so any longer interval skips every other tick.
  */
 pub const METRIC_RESAMPLE_INTERVAL_SECONDS: u64 = 4;
-pub const HEARTBEAT_INTERVAL_SECONDS: u64 = 30;
+/*
+ * Session caches hold nothing time-dependent, so a heartbeat only repairs drift
+ * that a missed or failed hook render left behind. Each run still costs three
+ * full client redraws (claim, render revision, completion).
+ */
+pub const HEARTBEAT_INTERVAL_SECONDS: u64 = 300;
 pub const METRIC_EXECUTION_BUDGET_SECONDS: u64 = 8;
 pub const METRIC_EXECUTION_LEASE_SECONDS: u64 = 15;
 pub const HEARTBEAT_EXECUTION_BUDGET_SECONDS: u64 = 10;

@@ -444,11 +444,12 @@ status 与 row formats 全部匹配时，session 才视为 settled。
 | Task | Interval | Execution budget | Lease |
 |---|---:|---:|---:|
 | metrics | 4 s | 8 s | —（不写 claim） |
-| heartbeat | 30 s | 10 s | 20 s |
+| heartbeat | 300 s | 10 s | 20 s |
 
 Driver 约每 4.1 s tick 一次（4 s delay 加启动开销）。Due 按整秒判断，metrics interval
 因此与 tick 对齐；更长的 interval 会隔一拍才到期。Metric 新鲜度上限为 10 s，容忍丢失一次
-tick。
+tick。Session cache 不含时间相关内容，heartbeat 只修复 hook 遗漏或失败留下的偏差，最长
+修复延迟即其 interval；每次 heartbeat 仍有三批写入（claim、render revision、completion）。
 
 Server state：
 
