@@ -388,7 +388,11 @@ t:test("restore writes back the bytes of the commit, CRLF and binary content inc
 
     action.restore_file(session)
     t.wait_until(function()
-      local file = assert(io.open(root .. "/" .. path, "rb"))
+      -- Git replaces the file, which can be missing for a moment.
+      local file = io.open(root .. "/" .. path, "rb")
+      if not file then
+        return false
+      end
       local content = file:read("*a")
       file:close()
       return content == bytes
