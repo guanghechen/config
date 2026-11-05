@@ -317,7 +317,7 @@ local function make_img(ctx)
     stl.env.mkdirs(root, true)
     img.src = root
       .. "/"
-      .. (img.content_id or vim.fn.sha256(img.content):sub(1, 8))
+      .. (img.content_id or vim.fn.sha256(img.content):sub(1, 16))
       .. "-content."
       .. (img.ext or "png")
     if vim.fn.filereadable(img.src) == 0 then

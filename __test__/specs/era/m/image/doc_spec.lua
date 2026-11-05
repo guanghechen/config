@@ -147,4 +147,29 @@ t:test("a formula in a line of text is set in text style, a displayed one in dis
   end
 end)
 
+t:test("a formula's source is named after 64 bits of its hash", function()
+  local document = assert(loadfile("lua/era/m/image/doc.lua"))()
+  t:patch_table(package.loaded, "era.m.image.state", {
+    data = { img_dirs = {}, tmpdir = t:tempdir(), math = { latex = { tpl = "${content}", packages = {} } } },
+    tpl_env = function(tpl, data)
+      return (tpl:gsub("%${(%w+)}", function(key)
+        return tostring(data[key])
+      end))
+    end,
+  })
+  t:patch_table(document, "math_enabled", function()
+    return true
+  end)
+  t:patch_table(stl, "env", {
+    mkdirs = function(path)
+      vim.fn.mkdir(path, "p")
+    end,
+  })
+  local bufnr = markdown(t:tempdir(), { "```math", "x^2", "```" })
+
+  local name = vim.fs.basename(sources(document, bufnr)[1] or "") ---@type string
+
+  t.assert_true(name:match("^" .. ("%x"):rep(16) .. "%-content%.math%.tex$") ~= nil, name)
+end)
+
 t:run()
