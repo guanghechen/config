@@ -46,6 +46,14 @@ pub struct SchedulerClaimMutation<'a> {
     pub now_seconds: u64,
 }
 
+/// The task-state transition a scheduler completion commits behind its guards.
+pub struct SchedulerCompletionMutation<'a> {
+    pub state_option: &'a str,
+    pub completed_state: &'a str,
+    pub last_complete_option: &'a str,
+    pub now_seconds: u64,
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum GuardedMutationOutcome {
     Applied,
@@ -243,27 +251,26 @@ impl TmuxAdapter {
     }
 
     /**
-     * Claims a scheduler task and snapshots its execution inputs in the same
-     * tmux command queue. A timeout after the state mutation remains ambiguous:
-     * callers must not retry; the claimed lease is the recovery boundary. The
-     * optional publication follows the `claim_scheduler_task` contract.
+     * Reads options in one queue only while the guards hold; `None` means a guard
+     * no longer matched. Unlike any option write, a read redraws no client.
      */
-    pub fn claim_scheduler_task_with_options(
+    pub fn read_guarded_options(
         &self,
         guards: &[TmuxOptionGuard<'_>],
-        claim: &SchedulerClaimMutation<'_>,
         options: &[(TmuxOptionScope, &str)],
-        publish: Option<&SessionStatesPublish>,
-    ) -> AppResult<(GuardedMutationOutcome, Vec<String>)> {
-        let mut commands = scheduler_claim_commands(claim);
-        commands.push(marker_command(SCHEDULER_APPLIED_MARK));
+    ) -> AppResult<Option<Vec<String>>> {
+        let mut commands = vec![marker_command(SCHEDULER_APPLIED_MARK)];
         commands.extend(serialized_option_commands(options));
         let skipped = marker_command(SCHEDULER_SKIPPED_MARK);
-        let output = self.tmux_output(with_session_states_publish(
-            publish,
-            option_guarded_command_args(guards, tmux_command_sequence(&commands), Some(skipped)),
+        let output = self.tmux_output(option_guarded_command_args(
+            guards,
+            tmux_command_sequence(&commands),
+            Some(skipped),
         ))?;
-        parse_guarded_options_output(&output, options.len())
+        match parse_guarded_options_output(&output, options.len())? {
+            (GuardedMutationOutcome::Applied, values) => Ok(Some(values)),
+            (GuardedMutationOutcome::Skipped, _) => Ok(None),
+        }
     }
 
     /**
@@ -274,14 +281,17 @@ impl TmuxAdapter {
         self.tmux_status(session_states_publish_args(publish))
     }
 
+    /**
+     * A timeout after the completion remains ambiguous: callers must not retry,
+     * and the next tick observes either state. The optional publication follows
+     * the `claim_scheduler_task` contract.
+     */
     pub fn finish_scheduler_task(
         &self,
         guards: &[TmuxOptionGuard<'_>],
         global_sets: &[(&str, &str)],
-        state_option: &str,
-        completed_state: &str,
-        last_complete_option: &str,
-        now_seconds: u64,
+        completion: &SchedulerCompletionMutation<'_>,
+        publish: Option<&SessionStatesPublish>,
     ) -> AppResult<GuardedMutationOutcome> {
         let mut commands = global_sets
             .iter()
@@ -297,22 +307,22 @@ impl TmuxAdapter {
         commands.push(tmux_command_string(&[
             "set".to_string(),
             "-g".to_string(),
-            last_complete_option.to_string(),
-            now_seconds.to_string(),
+            completion.last_complete_option.to_string(),
+            completion.now_seconds.to_string(),
         ]));
         // The state is the completion witness and must be the final mutation.
         commands.push(tmux_command_string(&[
             "set".to_string(),
             "-s".to_string(),
-            state_option.to_string(),
-            completed_state.to_string(),
+            completion.state_option.to_string(),
+            completion.completed_state.to_string(),
         ]));
         commands.push(tmux_command_string(&[
             "display-message".to_string(),
             "-p".to_string(),
             SCHEDULER_APPLIED_MARK.to_string(),
         ]));
-        self.guarded_mutation(guards, tmux_command_sequence(&commands))
+        self.guarded_mutation_after(publish, guards, tmux_command_sequence(&commands))
     }
 
     pub fn record_scheduler_outcome(

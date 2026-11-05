@@ -91,7 +91,8 @@ Diagnostic completeness 不得重新进入 render hot path。
 Metric claim 与 execution-input snapshot 共用一个 guarded tmux queue。Execution deadline
 在该 queue 前启动，因此优化不会放宽 task budget。
 
-20-run due-tick A/B：`58.5 -> 49.9 ms` median。
+20-run due-tick A/B：`58.5 -> 49.9 ms` median。§4.10 之后 metrics 不再写 claim，该 queue
+只保留 guarded input read。
 
 ### 4.5 Length-only reconcile
 
@@ -265,6 +266,27 @@ redraw），扣除后为每 tick 约 3.2 → 2.2 次 full redraw。Server CPU �
 `1.22 → 0.68%` 与 `0.70 → 0.62%`，每 tick process-tree CPU 的 12 组配对 median 为
 `44 → 48 ms`，均处于噪声范围，不构成 CPU 结论。单次 full redraw 字节数随屏幕内容、尺寸与
 client 数增长，结果不外推到其他 workload。
+
+### 4.10 Commit metrics without a claim
+
+§4.9 之后正常 metrics tick 仍有两批写入：claim（携带发布）与 finish。Driver lock 已保证
+single-flight，因此 metrics 改为 guarded input read（不写 option）→ sampling → 一次 guarded
+completion：比较 observed state，并携带发布（契约见 `statusline.md` §10.2）。Heartbeat 保留
+claim 与 lease。中断的 metrics tick 不改变状态，下一次 tick 直接重跑；并发 worker 由
+completion 的 exact-state guard 保证只提交一次。
+
+2026-11-05，macOS、tmux next-3.9、isolated server、真实 driver、284×70 client、3 个铺满
+彩色文本的 pane。Old 为 claim 版 release renderer，new 为同源码去掉 metrics claim 的 debug
+renderer，每侧单个 40 秒窗口、两轮：
+
+| Workload | Old | New |
+|---|---:|---:|
+| 终端输出 | 8.15 / 8.18 KiB/s | 4.43 / 4.75 KiB/s |
+| full redraws / metrics tick（含 heartbeat 摊销） | 2.20 / 2.10 | 1.33 / 1.20 |
+
+New 的剩余 full redraw 为每个 metrics tick 一次，加每次 heartbeat 的 claim、render revision
+与 completion。窗口短、仅一个 client，结果为 directional evidence，不外推到其他屏幕内容与
+client 数。
 
 ## 5. 明确拒绝或延后的方向
 

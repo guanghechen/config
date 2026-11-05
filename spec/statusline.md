@@ -356,7 +356,8 @@ Session list 的 group、order、focus 与 last-session 语义由 `session-navig
   分别表示 running/bell evidence，contender 不采样。Driver 以版本化 env 请求 renderer
   接管发布；renderer 校验请求后先向 stdout 写出并 flush 固定 ack 行，成功后才进入任何
   发布路径，写失败则放弃整个 tick。接管后，renderer 将发布置于该 tick 首个 mutation queue
-  的 guard 之前（metrics claim，否则 heartbeat claim），与 claim 共享一次 client redraw；
+  的 guard 之前（metrics completion，否则 heartbeat claim），与该 queue 共享一次 client
+  redraw；
   没有 queue 执行的普通出口（not-due、snapshot 读取失败、inactive）单独发布。携带发布的
   queue 无论 skipped、失败或 timeout 都只算已尝试，不重发；ack 后、首个 queue 前崩溃时该
   tick 不发布，由 TTL 兜底。Direct `scheduler-tick` 与不认识版本化请求的旧 renderer 都
@@ -442,7 +443,7 @@ status 与 row formats 全部匹配时，session 才视为 settled。
 
 | Task | Interval | Execution budget | Lease |
 |---|---:|---:|---:|
-| metrics | 4 s | 8 s | 15 s |
+| metrics | 4 s | 8 s | —（不写 claim） |
 | heartbeat | 30 s | 10 s | 20 s |
 
 Driver 约每 4.1 s tick 一次（4 s delay 加启动开销）。Due 按整秒判断，metrics interval
@@ -468,18 +469,21 @@ HUP/INT 仍终止 renderer。
 ### 10.2 State transition
 
 ```text
-observed
-  -> exact-state claim + lease
-  -> task execution
-  -> guarded publish
-  -> completion with lease=0
+metrics:   observed -> guarded input read -> sampling -> guarded completion
+heartbeat: observed -> exact-state claim + lease -> render -> guarded completion
 ```
+
+Completion 写入 lease=0。Metrics 不写 claim：每次 option 写入都会让全部 attached client
+全量重绘，而 driver lock 已保证 single-flight；input read 不写任何 option，completion 是该
+tick 唯一的写入。
 
 必须保持：
 
-- claim 比较 active、generation 与 exact observed task state；
+- claim 与 completion 都比较 active、generation 与 exact task state（metrics completion
+  比较 observed state，heartbeat completion 比较 claimed state）；
 - timeout 后的 ambiguous mutation 不在进程内重试；
-- expired lease 由下一次 tick 恢复；
+- metrics 在 completion 前中断不改变任何状态，下一次 tick 直接重跑；heartbeat 的 expired
+  lease 由下一次 tick 恢复；
 - reload rotate generation 后，旧 worker 不得 publish；
 - ordinary application error 保留 scheduler active；
 - panic、watchdog、missing binary 或 signal 仅 fence observed generation。

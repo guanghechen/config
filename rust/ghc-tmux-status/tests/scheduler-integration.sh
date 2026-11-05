@@ -225,6 +225,28 @@ if [ -s "$tmux_call_log" ]; then
   exit 1
 fi
 
+# Every option write redraws all clients, so metrics write no claim: a due tick
+# reads its inputs without mutating anything, then commits observed -> completed
+# in its only write queue, which also carries the publication. Metrics sampling
+# exists only on macOS.
+if [ "$(uname -s)" = Darwin ]; then
+  metric_due="777:9:0:0"
+  tmux -L "$socket" set -s @GHC_SL_METRIC_SCHED "$metric_due" ';' \
+    set -s @GHC_SL_SESSION_STATES stale
+  run_owned_tick $'1\t777\t'"$metric_due"$'\t'"$heartbeat_not_due"
+  expect_publication "$publish_prefix" "due metrics tick"
+  if [ "$(rg -c '"set"|set-option' "$tmux_call_log" || echo 0)" != "1" ] \
+    || ! rg '^run-shell -bC -d 12 ' "$tmux_call_log" | rg -Fq '@GHC_SL_METRIC_LAST_COMPLETE'; then
+    echo "due metrics tick did not commit once with its publication" >&2
+    cat "$tmux_call_log" >&2
+    exit 1
+  fi
+  case "$(tmux -L "$socket" show -sqv @GHC_SL_METRIC_SCHED)" in
+    777:10:*:0) ;;
+    *) echo "due metrics tick did not complete without a lease" >&2; exit 1 ;;
+  esac
+fi
+
 # A due claim carries the publication ahead of its guard, in the same queue.
 heartbeat_due="777:11:0:0"
 tmux -L "$socket" set -s @GHC_SL_HEARTBEAT_SCHED "$heartbeat_due" ';' \

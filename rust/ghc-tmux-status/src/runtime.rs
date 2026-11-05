@@ -40,7 +40,7 @@ use crate::session::{
 use crate::status_length::{status_left_length, status_right_length};
 use crate::tmux::{
     CompareAndSetOutcome, GlobalOptionCas, GuardedMutationOutcome, SchedulerClaimMutation,
-    TmuxAdapter, TmuxOptionGuard, TmuxOptionScope,
+    SchedulerCompletionMutation, TmuxAdapter, TmuxOptionGuard, TmuxOptionScope,
 };
 use crate::util::format::format_percent_width_2;
 use crate::util::time::unix_timestamp_seconds;
@@ -57,7 +57,7 @@ pub struct StatusRuntime {
 const MAX_SESSION_SWAP_ATTEMPTS: usize = 3;
 const SESSION_SWAP_RENDER_TIMEOUT: Duration = Duration::from_secs(10);
 
-const METRIC_CLAIM_OPTIONS: &[(TmuxOptionScope, &str)] = &[
+const METRIC_INPUT_OPTIONS: &[(TmuxOptionScope, &str)] = &[
     (TmuxOptionScope::GlobalSession, CPU_SAMPLE_STATE_OPTION),
     (TmuxOptionScope::GlobalSession, MEMORY_SAMPLE_STATE_OPTION),
     (TmuxOptionScope::GlobalSession, NETWORK_SAMPLE_STATE_OPTION),
@@ -391,36 +391,70 @@ impl StatusRuntime {
         let Some(claim) = plan_claim(task, generation, observed_state, now_seconds) else {
             return Ok(());
         };
+        match task {
+            SchedulerTask::Metrics => self.run_scheduled_metrics(&claim, publish),
+            SchedulerTask::Heartbeat => self.run_scheduled_heartbeat(&claim, publish),
+        }
+    }
+
+    /**
+     * Metrics never write a claim. Every tmux option write redraws all attached
+     * clients and the driver lock already serializes ticks, so the task reads its
+     * inputs, samples, then commits `observed -> completed` in one guarded queue.
+     * The exact observed-state guard still rejects a concurrent or stale commit,
+     * and a tick that stops before committing leaves the task due for the next one.
+     */
+    fn run_scheduled_metrics(
+        &self,
+        claim: &ClaimPlan,
+        publish: &mut Option<SessionStatesPublish>,
+    ) -> AppResult<()> {
+        let deadline = claim.deadline();
+        let generation = claim.generation.to_string();
+        let guards = scheduler_guards(claim, &generation, &claim.observed_state);
+        let inputs = match self
+            .tmux
+            .read_guarded_options(&guards, METRIC_INPUT_OPTIONS)
+        {
+            Ok(Some(inputs)) => inputs,
+            Ok(None) => return Ok(()),
+            Err(error) => {
+                self.record_scheduler_failure(claim, &claim.observed_state, "read", &error);
+                return Err(error);
+            }
+        };
+        let result = self.execute_scheduled_metrics(claim, &inputs, &deadline, publish);
+        if let Err(error) = &result {
+            self.record_scheduler_failure(claim, &claim.observed_state, "execute", error);
+        }
+        result
+    }
+
+    fn run_scheduled_heartbeat(
+        &self,
+        claim: &ClaimPlan,
+        publish: &mut Option<SessionStatesPublish>,
+    ) -> AppResult<()> {
         /*
          * Taken before the queue runs: a skipped, failed, or timed-out queue has
          * still attempted the publication, which is never repeated.
          */
         let publish = publish.take();
-        let generation_text = generation.to_string();
-        let guards = scheduler_guards(&claim, &generation_text, &claim.observed_state);
-        let metric_deadline = (task == SchedulerTask::Metrics).then(|| claim.deadline());
+        let generation = claim.generation.to_string();
+        let guards = scheduler_guards(claim, &generation, &claim.observed_state);
         let mutation = SchedulerClaimMutation {
-            state_option: task.state_option(),
+            state_option: claim.task.state_option(),
             claimed_state: &claim.claimed_state,
-            last_attempt_option: task.last_attempt_option(),
+            last_attempt_option: claim.task.last_attempt_option(),
             now_seconds: claim.started_at_seconds,
         };
-        let claim_result = match task {
-            SchedulerTask::Metrics => self.tmux.claim_scheduler_task_with_options(
-                &guards,
-                &mutation,
-                METRIC_CLAIM_OPTIONS,
-                publish.as_ref(),
-            ),
-            SchedulerTask::Heartbeat => self
-                .tmux
-                .claim_scheduler_task(&guards, &mutation, publish.as_ref())
-                .map(|outcome| (outcome, Vec::new())),
-        };
-        let (outcome, claimed_options) = match claim_result {
-            Ok(result) => result,
+        let outcome = match self
+            .tmux
+            .claim_scheduler_task(&guards, &mutation, publish.as_ref())
+        {
+            Ok(outcome) => outcome,
             Err(error) => {
-                self.record_scheduler_failure(&claim, "claim", &error);
+                self.record_scheduler_failure(claim, &claim.claimed_state, "claim", &error);
                 return Err(error);
             }
         };
@@ -428,19 +462,9 @@ impl StatusRuntime {
             return Ok(());
         }
 
-        let result = match task {
-            SchedulerTask::Metrics => metric_deadline.as_ref().map_or_else(
-                || {
-                    Err(AppError::Render(
-                        "metrics task is missing its execution deadline".to_string(),
-                    ))
-                },
-                |deadline| self.execute_scheduled_metrics(&claim, &claimed_options, deadline),
-            ),
-            SchedulerTask::Heartbeat => self.execute_scheduled_heartbeat(&claim),
-        };
+        let result = self.execute_scheduled_heartbeat(claim);
         if let Err(error) = &result {
-            self.record_scheduler_failure(&claim, "execute", error);
+            self.record_scheduler_failure(claim, &claim.claimed_state, "execute", error);
         }
         result
     }
@@ -450,6 +474,7 @@ impl StatusRuntime {
         claim: &ClaimPlan,
         values: &[String],
         deadline: &OperationDeadline,
+        publish: &mut Option<SessionStatesPublish>,
     ) -> AppResult<()> {
         let [
             cpu_state,
@@ -460,8 +485,8 @@ impl StatusRuntime {
         ] = values
         else {
             return Err(AppError::TmuxParse(format!(
-                "expected {} claimed metric options, got {}",
-                METRIC_CLAIM_OPTIONS.len(),
+                "expected {} metric input options, got {}",
+                METRIC_INPUT_OPTIONS.len(),
                 values.len()
             )));
         };
@@ -475,7 +500,7 @@ impl StatusRuntime {
         );
         deadline.check("publish-metrics")?;
         let generation = claim.generation.to_string();
-        let guards = scheduler_guards(claim, &generation, &claim.claimed_state);
+        let guards = scheduler_guards(claim, &generation, &claim.observed_state);
         let completed_at = unix_timestamp_seconds();
         let completion_outcome = scheduler_outcome_value(
             completed_at,
@@ -485,15 +510,17 @@ impl StatusRuntime {
             "known",
             "ok",
         );
+        let started_at = claim.started_at_seconds.to_string();
         let mut sets = sample.set_refs();
+        sets.push((claim.task.last_attempt_option(), &started_at));
         sets.push((claim.task.last_outcome_option(), &completion_outcome));
+        // The commit is the tick's first mutation queue, so it carries the publication.
+        let publish = publish.take();
         let outcome = self.tmux.finish_scheduler_task(
             &guards,
             &sets,
-            claim.task.state_option(),
-            &claim.completed_state,
-            claim.task.last_complete_option(),
-            completed_at,
+            &scheduler_completion(claim, completed_at),
+            publish.as_ref(),
         )?;
         self.trace_apply(|| {
             format!(
@@ -538,10 +565,8 @@ impl StatusRuntime {
         let outcome = self.tmux.finish_scheduler_task(
             &guards,
             &[(claim.task.last_outcome_option(), &completion_outcome)],
-            claim.task.state_option(),
-            &claim.completed_state,
-            claim.task.last_complete_option(),
-            completed_at,
+            &scheduler_completion(claim, completed_at),
+            None,
         )?;
         self.trace_apply(|| {
             format!(
@@ -556,9 +581,16 @@ impl StatusRuntime {
         Ok(())
     }
 
-    fn record_scheduler_failure(&self, claim: &ClaimPlan, phase: &str, error: &AppError) {
+    /// Records a failure only while the task still holds `expected_state`.
+    fn record_scheduler_failure(
+        &self,
+        claim: &ClaimPlan,
+        expected_state: &str,
+        phase: &str,
+        error: &AppError,
+    ) {
         let generation = claim.generation.to_string();
-        let guards = scheduler_guards(claim, &generation, &claim.claimed_state);
+        let guards = scheduler_guards(claim, &generation, expected_state);
         let outcome = scheduler_outcome_value(
             unix_timestamp_seconds(),
             claim.generation,
@@ -897,6 +929,15 @@ fn scheduler_guards<'a>(
             expected: expected_state,
         },
     ]
+}
+
+fn scheduler_completion(claim: &ClaimPlan, completed_at: u64) -> SchedulerCompletionMutation<'_> {
+    SchedulerCompletionMutation {
+        state_option: claim.task.state_option(),
+        completed_state: &claim.completed_state,
+        last_complete_option: claim.task.last_complete_option(),
+        now_seconds: completed_at,
+    }
 }
 
 /**

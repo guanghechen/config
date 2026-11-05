@@ -72,6 +72,10 @@ impl SchedulerTask {
         }
     }
 
+    /*
+     * Metrics never write their claim (see the runtime), so their lease only
+     * bounds clock-skew repair and honours claims left by older renderers.
+     */
     pub fn lease_seconds(self) -> u64 {
         match self {
             Self::Metrics => METRIC_EXECUTION_LEASE_SECONDS,
