@@ -337,4 +337,64 @@ t:test("commit pane directories toggle independently and copy their displayed pa
   t.assert_eq("cursor", copy_opts.relative, "copy picker anchor")
 end)
 
+t:test("restore writes back the bytes of the commit, CRLF and binary content included", function()
+  local root = diffview.committed(t, { ["seed.txt"] = { "seed" } })
+  local files = { ["crlf.txt"] = "a\r\nb\r\nlast", ["blob.bin"] = "\0\1\r\n\n\255end" } ---@type table<string, string>
+  ---@param path                        string
+  ---@param bytes                       string
+  local function write(path, bytes)
+    local file = assert(io.open(root .. "/" .. path, "wb"))
+    file:write(bytes)
+    file:close()
+  end
+  for path, bytes in pairs(files) do
+    write(path, bytes)
+  end
+  git.run(root, { "add", "." })
+  git.run(root, { "commit", "-q", "-m", "bytes" })
+  for path in pairs(files) do
+    write(path, "changed\n")
+  end
+  t:patch_table(vim.ui, "select", function(_, _, on_choice)
+    on_choice("Yes")
+  end)
+
+  local session = diffview.open_log(t, { layout = 4 })
+  local head = vim.trim(git.run(root, { "rev-parse", "HEAD" }))
+  local commit = nil ---@type era.m.diffview.ICommit|nil
+  for _, candidate in ipairs(session.state:get_commits()) do
+    if candidate.hash == head then
+      commit = candidate
+    end
+  end
+  local lyt = session.layout
+  stl.async.run(function()
+    action.__expand_commit__(session, assert(commit))
+  end)
+  for path, bytes in pairs(files) do
+    local row = nil ---@type integer|nil
+    t.wait_until(function()
+      for lnum = 1, vim.api.nvim_buf_line_count(lyt.commits_bufnr) do
+        local item = pane_commits.get_item_at_line(lyt.commits_bufnr, lnum)
+        if item and item.entry and item.entry.filepath == path then
+          row = lnum
+          return true
+        end
+      end
+      return false
+    end, 10000, "the row of " .. path)
+    vim.api.nvim_set_current_win(lyt.commits_winnr)
+    vim.api.nvim_win_set_cursor(lyt.commits_winnr, { assert(row), 0 })
+
+    action.restore_file(session)
+    t.wait_until(function()
+      local file = assert(io.open(root .. "/" .. path, "rb"))
+      local content = file:read("*a")
+      file:close()
+      return content == bytes
+    end, 10000, path .. " restored byte for byte")
+  end
+  t.assert_eq("", git.run(root, { "status", "--porcelain" }), "worktree and index match the commit")
+end)
+
 t:run()

@@ -655,7 +655,6 @@ function M.restore_file(ctx)
   end
 
   local filepath = entry.filepath
-  local full_path = dot.path.join(dot.path.workspace(), filepath)
 
   -- Confirmation dialog
   vim.ui.select({ "Yes", "No" }, {
@@ -665,40 +664,29 @@ function M.restore_file(ctx)
       return
     end
 
-    -- Restore file using git show
+    -- Git's own checkout writes the file, so line endings, binary content and filters come out as committed.
     stl.git.exec.exec_async(
-      { "show", commit.hash .. ":" .. filepath },
+      { "--literal-pathspecs", "restore", "--source=" .. commit.hash, "--worktree", "--", filepath },
       { cwd = dot.path.workspace() },
-      function(lines, code)
+      function(_, code, stderr)
         if code ~= 0 then
           stl.reporter.warn({
             from = __module_name__,
             subject = "restore_file",
-            message = "Failed to get file content from commit",
+            message = "Failed to restore file from commit",
+            details = { filepath = filepath, stderr = stderr },
           })
           return
         end
 
-        -- Write to file
-        vim.schedule(function()
-          local ok, err = pcall(vim.fn.writefile, lines, full_path)
-          if ok then
-            stl.reporter.info({
-              from = __module_name__,
-              subject = "restore_file",
-              message = string.format("Restored %s to commit %s", filepath, commit.abbrev_hash),
-            })
-            -- Refresh to show changes
-            stl.async.run(function()
-              M.refresh(ctx)
-            end)
-          else
-            stl.reporter.error({
-              from = __module_name__,
-              subject = "restore_file",
-              message = "Failed to write file: " .. tostring(err),
-            })
-          end
+        stl.reporter.info({
+          from = __module_name__,
+          subject = "restore_file",
+          message = string.format("Restored %s to commit %s", filepath, commit.abbrev_hash),
+        })
+        -- Refresh to show changes
+        stl.async.run(function()
+          M.refresh(ctx)
         end)
       end
     )
