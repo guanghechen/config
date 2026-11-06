@@ -405,4 +405,51 @@ t:test("multiple TabClosed events coalesce into one refresh", function()
   t.assert_false(third_valid, "third tab buffer validity")
 end)
 
+---A tab with a panel, then a left and a right source window.
+---@return integer, integer, integer, integer
+local function source_layout()
+  vim.cmd.tabnew()
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local left = vim.api.nvim_get_current_win() ---@type integer
+  vim.api.nvim_win_set_buf(left, vim.api.nvim_create_buf(true, false))
+  local right = vim.api.nvim_open_win(vim.api.nvim_create_buf(true, false), false, { split = "right", win = left })
+  local panel = vim.api.nvim_open_win(vim.api.nvim_create_buf(false, true), false, { split = "left", win = left })
+  vim.w[left].sourcefile, vim.w[right].sourcefile = true, true
+  t:defer(function()
+    if vim.api.nvim_tabpage_is_valid(tabnr) then
+      vim.cmd.tabclose(vim.api.nvim_tabpage_get_number(tabnr))
+    end
+  end)
+  return tabnr, left, right, panel
+end
+
+t:test("a rebuild keeps the source window the tab remembers while a panel is current", function()
+  local Tab = setup()
+  t:patch_table(dot.win, "is_sourcefile", function(winnr)
+    return vim.w[winnr].sourcefile == true
+  end)
+  local tabnr, _, right, panel = source_layout()
+  assert(Tab.resolve(tabnr, true)).winnr_sourcefile:next(right)
+  vim.api.nvim_set_current_win(panel)
+
+  Tab.refresh()
+
+  t.assert_eq(right, Tab.retrieve_winnr_sourcefile(tabnr), "the remembered source window")
+end)
+
+t:test("a rebuild drops a remembered source window that closed", function()
+  local Tab = setup()
+  t:patch_table(dot.win, "is_sourcefile", function(winnr)
+    return vim.w[winnr].sourcefile == true
+  end)
+  local tabnr, left, right, panel = source_layout()
+  assert(Tab.resolve(tabnr, true)).winnr_sourcefile:next(right)
+  vim.api.nvim_set_current_win(panel)
+  vim.api.nvim_win_close(right, true)
+
+  Tab.refresh()
+
+  t.assert_eq(left, Tab.retrieve_winnr_sourcefile(tabnr), "a source window still open")
+end)
+
 t:run()

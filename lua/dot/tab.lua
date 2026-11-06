@@ -294,6 +294,24 @@ function M.refresh_bufs(bufs)
   end
 end
 
+-- A rebuild keeps a window the tab remembers while it still serves, as the current window may be a panel such as
+-- the Explorer, whose files open in the remembered source window.
+---@param tabnr                         integer
+---@param winnr                         integer The tab's current window
+---@param previous                      stl.c.Observable|nil
+---@param test                          fun(winnr: integer): boolean
+---@return integer
+local function remembered_winnr(tabnr, winnr, previous, test)
+  if test(winnr) then
+    return winnr
+  end
+  local kept = previous ~= nil and previous:snapshot() or 0 ---@type integer
+  if kept > 0 and vim.api.nvim_win_is_valid(kept) and vim.api.nvim_win_get_tabpage(kept) == tabnr and test(kept) then
+    return kept
+  end
+  return 0
+end
+
 ---@param tabnr                         ?integer
 ---@param force                         boolean
 ---@return dot.tab.IMeta|nil
@@ -337,9 +355,15 @@ function M.resolve(tabnr, force)
   local tabtype = vim.t[tabnr].tabtype or stl.e.TabTypeEnum.NORMAL ---@type stl.e.TabTypeEnum
 
   local winnr = vim.api.nvim_tabpage_get_win(tabnr) ---@type integer
-  local winnr_fixed = stl.c.Observable.from_value(stl.nvim.win.is_fixed(winnr) and winnr or 0) ---@type stl.c.Observable
-  local winnr_float = stl.c.Observable.from_value(stl.nvim.win.is_float(winnr) and winnr or 0) ---@type stl.c.Observable
-  local winnr_sourcefile = stl.c.Observable.from_value(dot.win.is_sourcefile(winnr) and winnr or 0) ---@type stl.c.Observable
+  ---@type stl.c.Observable
+  local winnr_fixed =
+    stl.c.Observable.from_value(remembered_winnr(tabnr, winnr, meta and meta.winnr_fixed, stl.nvim.win.is_fixed))
+  ---@type stl.c.Observable
+  local winnr_float =
+    stl.c.Observable.from_value(remembered_winnr(tabnr, winnr, meta and meta.winnr_float, stl.nvim.win.is_float))
+  ---@type stl.c.Observable
+  local winnr_sourcefile =
+    stl.c.Observable.from_value(remembered_winnr(tabnr, winnr, meta and meta.winnr_sourcefile, dot.win.is_sourcefile))
 
   ---@type dot.tab.IMeta
   meta = {
