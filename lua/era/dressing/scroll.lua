@@ -375,6 +375,8 @@ local function enable()
   -- finish on their targets first. A click acts on the screen as drawn, so they stop where they are and
   -- no later frame moves the cursor it placed. Keys of the frames are not typed and a moving mouse does
   -- not act. Mapped wheels reach here as the keys of their mappings, so the typed key identifies them.
+  -- A click off the text, such as on a winbar button, acts on no text either: the release of a breadcrumb
+  -- click would otherwise stop the jump it started halfway.
   on_key_ns = vim.on_key(function(key, typed)
     local name = typed ~= "" and vim.fn.keytrans(typed) or "" ---@type string
     if key == MOUSE_SCROLL_DOWN or key == MOUSE_SCROLL_UP or name:find("ScrollWheel") then
@@ -385,6 +387,9 @@ local function enable()
       return
     end
     local click = name:find("Mouse>$") or name:find("Drag>$") or name:find("Release>$")
+    if click and vim.fn.getmousepos().line == 0 then
+      return
+    end
     for _, state in pairs(states) do
       if state.timer and click then
         stop_animation(state)

@@ -3,21 +3,18 @@ local __module_name__ = "era.m.nvimbar.component.lsp" ---@type string
 
 local btn = stl.nvim.fn.btn
 local txt = stl.nvim.fn.txt
-local decode_btn_args = stl.nvim.fn.decode_btn_args
 
 ---@type string
-local fn_goto_lsp_pos = dot.G.register_anonymous_fn(function(num)
-  local args = decode_btn_args(tostring(num)) ---@type integer[]
-  if #args == 3 then
-    local winnr = args[1] ---@type integer|nil
-    local row = args[2] ---@type integer|nil
-    local col = args[3] ---@type integer|nil
-
-    if type(winnr) == "number" and type(row) == "number" and type(col) == "number" then
-      if vim.api.nvim_win_is_valid(winnr) then
-        vim.api.nvim_win_set_cursor(winnr, { row, col })
-      end
-    end
+local fn_goto_lsp_pos = dot.G.register_anonymous_fn(function(index)
+  -- The click carries only the symbol's index: %N@ reads N as a C int, which the window, row and column together
+  -- overflowed past the first few hundred lines.
+  local winnr = vim.fn.getmousepos().winid ---@type integer
+  local meta = winnr ~= 0 and dot.win.resolve(winnr, false) or nil ---@type dot.win.IMeta|nil
+  local symbols = meta ~= nil and meta.winline ~= nil and meta.winline.lsp_symbols or {} ---@type dot.t.ILspSymbol[]
+  local symbol = symbols[index] ---@type dot.t.ILspSymbol|nil
+  if symbol ~= nil and vim.api.nvim_win_is_valid(winnr) then
+    -- Symbol columns are 1-based.
+    vim.api.nvim_win_set_cursor(winnr, { symbol.row, symbol.col - 1 })
   end
 end) or ""
 
@@ -236,7 +233,7 @@ function M.symbols(position)
       local meta = dot.win.resolve(context.winnr, false)
       local winline = meta and meta.winline
       local pieces = {}
-      for _, symbol in ipairs(winline and winline.lsp_symbols or {}) do
+      for index, symbol in ipairs(winline and winline.lsp_symbols or {}) do
         local title = symbol.name or ""
         local icon = (stl.icon.kind[symbol.kind] or "") .. " "
         local hln_icon = symbol.kind and hln_lsp_icon .. "_" .. symbol.kind or hln_lsp_icon
@@ -244,7 +241,7 @@ function M.symbols(position)
         local hltext = txt(sep, hln_lsp_sep) .. txt(icon, hln_icon) .. txt(title, hln_lsp_text)
         pieces[#pieces + 1] = {
           text = text,
-          hltext = btn(hltext, fn_goto_lsp_pos, { context.winnr, symbol.row, symbol.col }),
+          hltext = btn(hltext, fn_goto_lsp_pos, index),
           width = vim.api.nvim_strwidth(text),
         }
       end

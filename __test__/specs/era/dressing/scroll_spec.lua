@@ -584,6 +584,9 @@ end)
 t:test("a click stops animations on the view drawn under it", function()
   for _, key in ipairs({ "<LeftMouse>", "<2-LeftMouse>", "<RightMouse>", "<LeftDrag>", "<LeftRelease>" }) do
     local runtime = setup()
+    t:patch_table(vim.fn, "getmousepos", function()
+      return { winid = 1, line = 45, column = 1 }
+    end)
     runtime.view.lnum = 100
     runtime.view.topline = 100
     runtime.check_scroll(1)
@@ -597,6 +600,23 @@ t:test("a click stops animations on the view drawn under it", function()
     t.assert_eq(40, runtime.states[1].current.topline, key .. " keeps the drawn view")
     t.assert_eq(40, runtime.view.topline, key .. " does not restore the target view")
     t.assert_eq(4, runtime.options.scrolloff, key .. " restores scrolloff")
+  end
+end)
+
+t:test("a click off the text, such as the release of a winbar button, leaves animations running", function()
+  for _, key in ipairs({ "<LeftMouse>", "<LeftRelease>" }) do
+    local runtime = setup()
+    t:patch_table(vim.fn, "getmousepos", function()
+      return { winid = 1, line = 0, column = 0 }
+    end)
+    runtime.view.lnum = 100
+    runtime.view.topline = 100
+    runtime.check_scroll(1)
+    local timer = runtime.timers[1]
+    assert(runtime.on_key)(vim.keycode(key), vim.keycode(key))
+
+    t.assert_false(timer.cleared, key .. " clears the timer")
+    t.assert_true(runtime.states[1].timer == timer, key .. " ends the animation")
   end
 end)
 
