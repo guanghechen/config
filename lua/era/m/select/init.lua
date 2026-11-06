@@ -152,6 +152,8 @@ function M.select(items, opts, on_choice)
 
   ---@type era.m.picker.ListComposer|nil
   local picker = nil
+  -- Every way of closing the picker ends in on_disposed; one that chose nothing answers nil, as vim.ui.select requires.
+  local answered = false ---@type boolean
 
   ---@return nil
   local function do_toggle()
@@ -198,6 +200,7 @@ function M.select(items, opts, on_choice)
     end,
 
     on_confirm = function(composer, item)
+      answered = true
       local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
       if composer:isfocused() and vim.api.nvim_win_is_valid(winnr) then
         vim.api.nvim_tabpage_set_win(tabnr, winnr)
@@ -219,6 +222,13 @@ function M.select(items, opts, on_choice)
         flag_fuzzy:dispose()
         flag_regex:dispose()
         flag_case_sensitive:dispose()
+      end
+      if not answered then
+        answered = true
+        -- After the window is gone, so a caller may open another picker at once.
+        vim.schedule(function()
+          on_choice(nil, nil)
+        end)
       end
     end,
   })

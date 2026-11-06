@@ -117,4 +117,37 @@ t:test("vim.ui.select restores its origin while the picker still owns focus", fu
   t.assert_eq(1, picker_closed, "picker close count")
 end)
 
+t:test("vim.ui.select answers nil once when the picker closes without a choice", function()
+  local calls = {} ---@type { item: any, idx: any }[]
+  open_select(function(item, idx)
+    calls[#calls + 1] = { item = item, idx = idx }
+  end)
+
+  ---@diagnostic disable-next-line: need-check-nil
+  picker_props.on_disposed()
+  vim.wait(100, function()
+    return #calls > 0
+  end, 5)
+  t.assert_eq(1, #calls, "on_choice calls")
+  t.assert_nil(calls[1].item, "item")
+  t.assert_nil(calls[1].idx, "idx")
+end)
+
+t:test("vim.ui.select answers once when a choice closes the picker", function()
+  local calls = 0 ---@type integer
+  open_select(function()
+    calls = calls + 1
+  end)
+
+  picker_focused = false
+  ---@diagnostic disable-next-line: need-check-nil
+  picker_props.on_confirm(picker, { uuid = "1", data = { original_item = "one" } })
+  ---@diagnostic disable-next-line: need-check-nil
+  picker_props.on_disposed()
+  vim.wait(100, function()
+    return false
+  end, 5)
+  t.assert_eq(1, calls, "on_choice calls")
+end)
+
 t:run()
