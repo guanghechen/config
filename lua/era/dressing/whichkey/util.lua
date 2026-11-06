@@ -95,19 +95,19 @@ function M.get_mapmode(mode)
   return mode:sub(1, 1):match("[ncitsxo]") or "n"
 end
 
----Normalize lhs (convert actual leader key to <leader>)
----@param lhs                            string
+---Normalize the raw lhs of a mapping to the notation of typed keys, with the leader key as <leader>
+---@param lhsraw                         string The `lhsraw` of a mapping; its `lhs` is already in <> notation.
 ---@return string
-function M.normalize_lhs(lhs)
+function M.normalize_lhs(lhsraw)
   local leader = vim.g.mapleader
   if leader == nil or leader == " " then
     leader = " "
   end
   -- Replace actual leader with <leader> at the beginning
-  if lhs:sub(1, #leader) == leader then
-    return "<leader>" .. lhs:sub(#leader + 1)
+  if lhsraw:sub(1, #leader) == leader then
+    return "<leader>" .. vim.fn.keytrans(lhsraw:sub(#leader + 1))
   end
-  return vim.fn.keytrans(lhs)
+  return vim.fn.keytrans(lhsraw)
 end
 
 return M

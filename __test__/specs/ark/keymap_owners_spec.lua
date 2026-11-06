@@ -52,10 +52,7 @@ local PREFIXES = {
 
 -- Select-mode maps that start with a printable key, with their source. Typing over a selection, such as a snippet
 -- placeholder, replaces it with the typed text, so each of these takes its key from the text instead.
-local TYPED = {
-  -- Which-key turns `<` of the maps it reads into a group and puts its trigger there, Select mode included.
-  ["s <lt>"] = "era/dressing/whichkey/input.lua",
-} ---@type table<string, string>
+local TYPED = {} ---@type table<string, string>
 
 ---@class __test__.specs.ark.keymap_owners.IReport
 ---@field public overrides              ?table<string, string>

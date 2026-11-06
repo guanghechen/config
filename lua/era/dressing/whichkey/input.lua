@@ -185,6 +185,10 @@ function M.__bind__(bufnr, mode, trigger_key, tree_key, mapped)
   if (mode == "n" or mode == "o") and not is_safe_single_key(tree_key, mode) then
     return
   end
+  -- Alone, a key such as <C-A> or <C-W> runs its own command once 'timeoutlen' passes; a trigger would wait instead.
+  if tree_key ~= "<leader>" and tree_key:match("^<.+>$") then
+    return
+  end
 
   mapped = mapped or {}
   mapped.keys = mapped.keys or mapped_keys(bufnr, mode)
@@ -265,7 +269,11 @@ function M.__feed_with_context__(keys, mode)
     keystr = vim.v.count .. keystr
   end
 
-  local default_reg = vim.fn.has("clipboard") == 1 and "+" or '"'
+  -- v:register starts as "+ or "* only when 'clipboard' names it; a clipboard provider alone leaves it at "".
+  local clipboard = vim.o.clipboard ---@type string
+  local default_reg = clipboard:find("unnamedplus", 1, true) and "+"
+    or clipboard:find("unnamed", 1, true) and "*"
+    or '"'
   if vim.v.register ~= default_reg and mode ~= "i" and mode ~= "c" then
     keystr = '"' .. vim.v.register .. keystr
   end

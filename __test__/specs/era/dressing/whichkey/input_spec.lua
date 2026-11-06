@@ -284,4 +284,48 @@ t:test("a declared action without nowait waits for the next key when longer keys
   t.assert_true(result.stopped, "input stops after the child read fails")
 end)
 
+t:test("a mapping with special keys stays under its own keys, and triggers stay on typed prefixes", function()
+  local bufnr = new_buffer()
+  for _, lhs in ipairs({ "<C-w>X1", "<C-a>X1" }) do
+    vim.keymap.set("n", lhs, function() end, { desc = "special prefix" })
+    t:defer(function()
+      pcall(vim.keymap.del, "n", lhs)
+    end)
+  end
+  State.enable()
+
+  local tree = assert(State.buf_trees[bufnr].n)
+  t.assert_nil(Tree.find(tree, "<lt>"), "no group for a literal <")
+  t.assert_true(Tree.find(tree, "<C-W>X1") ~= nil, "the mapping under <C-W>")
+  local bound = {} ---@type table<string, true>
+  for _, trigger in pairs(Input.triggers) do
+    if trigger.bufnr == bufnr then
+      bound[trigger.mode .. " " .. trigger.trigger_key] = true
+    end
+  end
+  t.assert_true(bound["n g"] ~= nil, "a typed prefix keeps its trigger")
+  for key in pairs(bound) do
+    t.assert_true(key:match("^[nx] ") ~= nil, "a trigger outside Normal and Visual mode: " .. key)
+  end
+  for _, key in ipairs({ "n <lt>", "n <", "n <C-W>", "n <C-A>" }) do
+    -- <C-W> and <C-A> run their own commands once 'timeoutlen' passes; a trigger would wait instead.
+    t.assert_nil(bound[key], key)
+  end
+end)
+
+t:test("passed-through keys get no register prefix that 'clipboard' does not name", function()
+  local has = vim.fn.has
+  t:patch_table(vim.fn, "has", function(feature)
+    return feature == "clipboard" and 1 or has(feature)
+  end)
+  t:patch_table(vim.o, "clipboard", "")
+  local fed = {} ---@type string[]
+  t:patch_table(vim.api, "nvim_feedkeys", function(keys)
+    fed[#fed + 1] = keys
+  end)
+
+  Input.__feed_with_context__("<lt>x", "s")
+  t.assert_same({ "<x" }, fed, "keys typed over a selection")
+end)
+
 t:run()

@@ -11,7 +11,9 @@ local S = era.dressing.whichkey
 local DEFAULT_OPTS = {
   preset = "classic",
   delay = 200,
-  triggers = { { "<auto>", mode = "nxso" } },
+  -- Not in Operator-pending mode, where a trigger map ends the operator before the keys are fed back, nor in Select
+  -- mode, where a typed character replaces the selection.
+  triggers = { { "<auto>", mode = "nx" } },
   disable = {
     ft = { stl.filetype.TERM, stl.filetype.WINSEP },
   },
@@ -419,7 +421,7 @@ function M.__get_keymap__(bufnr, mode, lhs)
   ---@return table|nil
   local function find(keymaps)
     for _, keymap in ipairs(keymaps) do
-      if S.util.normalize_lhs(keymap.lhs) == lhs then
+      if S.util.normalize_lhs(keymap.lhsraw) == lhs then
         return keymap
       end
     end
@@ -453,7 +455,7 @@ function M.__load_keymaps__(bufnr, mode)
         -- For Neovim keymaps, don't save callback/rhs - we'll use feedkeys for execution
         -- Only save description for display purposes
         S.tree.add(tree_tbl, {
-          S.util.normalize_lhs(km.lhs),
+          S.util.normalize_lhs(km.lhsraw),
           nil, -- no rhs/action - will use feedkeys
           desc = km.desc or (type(km.rhs) == "string" and km.rhs) or km.lhs,
           nowait = km.nowait == 1,
