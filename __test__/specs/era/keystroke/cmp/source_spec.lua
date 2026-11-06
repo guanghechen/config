@@ -75,6 +75,37 @@ t:test("path parsing distinguishes workspace references and file-relative paths"
   end
 end)
 
+-- Base64 has long runs of letters and digits; the image line of a Markdown file ends such a run with a parenthesis.
+---@param size                          integer
+---@return string
+local function base64(size)
+  local alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+  local chars, seed = {}, 7 ---@type string[], integer
+  for index = 1, size do
+    seed = (seed * 1103515245 + 12345) % 2147483648
+    local pick = seed % 64 + 1 ---@type integer
+    chars[index] = alphabet:sub(pick, pick)
+  end
+  return table.concat(chars)
+end
+
+t:test("path parsing after a long token stays fast", function()
+  local token = base64(16 * 1024)
+  local start = vim.uv.hrtime()
+  t.assert_nil(Path.target(runtime.context("![img](data:image/png;base64," .. token .. ") w")), "no path")
+  local target = assert(Path.target(runtime.context(token .. ") ./lua/era/cm")))
+  t.assert_eq(#token + #") ./lua/era/", target.start_col, "start of the basename")
+  t.assert_true((vim.uv.hrtime() - start) / 1e6 < 50, "milliseconds for both")
+end)
+
+t:test("the word before the cursor on a long line is found fast and right", function()
+  local line = "![img](data:image/png;base64," .. base64(100 * 1024) .. ") word"
+  local start = vim.uv.hrtime()
+  t.assert_eq(#line - 4, Context.start_col(line, #line), "start of the word")
+  t.assert_true((vim.uv.hrtime() - start) / 1e6 < 50, "milliseconds")
+  t.assert_eq(4, Context.start_col("x = abc", 7), "a short line afterwards")
+end)
+
 t:test("path targets reject invalid UTF-8 origins without invoking native path conversion", function()
   local bufnr = buffer_fixture({ "" })
   t.assert_eq(nil, Path.target(runtime.context('"/tmp/\255/a')), "typed directory")

@@ -4,6 +4,8 @@ local __module_name__ = "era.keystroke.cmp.source.path" ---@type string
 local Context = require("era.keystroke.cmp.context")
 local Item = require("era.keystroke.cmp.item")
 local M = {}
+-- Bytes before the cursor that can hold the path being typed, so a key on a long line costs the same as anywhere.
+local PATH_WINDOW = 4096
 
 ---@class era.keystroke.cmp.source.path.ITarget
 ---@field public dirname                string
@@ -13,14 +15,15 @@ local M = {}
 ---@param context                       era.keystroke.cmp.IContext
 ---@return era.keystroke.cmp.source.path.ITarget|nil
 function M.target(context)
-  local before = context.line:sub(1, context.col)
+  local from = math.max(context.col - PATH_WINDOW, 0)
+  local before = context.line:sub(from + 1, context.col)
   local quoted_start, token = before:match("()[\"'`]([^\"'`]*)$")
   local start = quoted_start and quoted_start + 1 or nil
   if start == nil then
-    start, token = before:match("()([^%s\"'`<>=,;|%(%)[%]{}]*)$")
-  end
-  if start == nil or token == nil then
-    return nil
+    -- After the last delimiter, found in one pass; `()([^...]*)$` retried from every byte of a long token, such as
+    -- the base64 of an image, taking seconds a key.
+    start = before:match(".*[%s\"'`<>=,;|%(%)[%]{}]()") or 1
+    token = before:sub(start)
   end
   local at_path = token:sub(1, 1) == "@"
   if not at_path and not token:find("[/\\]") then
@@ -60,7 +63,7 @@ function M.target(context)
   end
   return {
     dirname = dot.path.resolve(root, dirname),
-    start_col = start - 1 + #prefix,
+    start_col = from + start - 1 + #prefix,
     source = at_path and "path_at" or "path",
   }
 end

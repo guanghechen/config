@@ -4,6 +4,9 @@ local __module_name__ = "era.keystroke.cmp.context" ---@type string
 local M = {}
 local keyword = vim.regex([[\k\%(\k\|-\)*$]])
 local keyword_suffix = vim.regex([[^\%(\k\|-\)*]])
+-- Bytes around the cursor that can hold the word being typed. Over a whole long line, such as a base64 image, the
+-- regex took 30 s a key and left its engine failing with E363 on later lines of the session.
+local WORD_WINDOW = 256
 local versions = {} ---@type table<integer, integer>
 -- A detached buffer can be loaded again; forgotten versions must never be reused.
 local version = 0
@@ -25,9 +28,9 @@ end
 ---@param col                           integer
 ---@return integer
 function M.start_col(line, col)
-  local before = line:sub(1, col)
-  local start_col = keyword:match_str(before)
-  return start_col or col
+  local from = math.max(col - WORD_WINDOW, 0)
+  local start_col = keyword:match_str(line:sub(from + 1, col))
+  return start_col and from + start_col or col
 end
 
 ---@param before                        era.keystroke.cmp.IContext
@@ -38,7 +41,7 @@ function M.within_query(before, after, include_start)
   if before.bufnr ~= after.bufnr or before.winnr ~= after.winnr or before.row ~= after.row then
     return false
   end
-  local _, length = keyword_suffix:match_str(before.line:sub(before.col + 1))
+  local _, length = keyword_suffix:match_str(before.line:sub(before.col + 1, before.col + WORD_WINDOW))
   return after.col >= before.start_col + (include_start and 0 or 1) and after.col <= before.col + (length or 0)
 end
 
