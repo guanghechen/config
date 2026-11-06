@@ -29,6 +29,8 @@ function M.new(char)
   self.bufnr_hint = nil
   self.winnr_hint = nil
   self.winnr_target = nil
+  -- Each pick shows a renderer per window; a cached one reuses its hidden hint buffer instead of leaving another.
+  M.renderers[char] = self
   return self
 end
 
@@ -45,10 +47,9 @@ function M:__create_buf_as_needed__()
     vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr_hint })
     vim.api.nvim_set_option_value("filetype", stl.filetype.WINPICKER_MASK, { buf = bufnr_hint })
     vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr_hint })
+    vim.api.nvim_buf_set_lines(bufnr_hint, 0, -1, true, self.hint)
     self.bufnr_hint = bufnr_hint
   end
-
-  vim.api.nvim_buf_set_lines(bufnr_hint, 0, 0, true, self.hint)
   return bufnr_hint
 end
 
