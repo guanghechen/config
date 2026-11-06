@@ -7,6 +7,7 @@ Status: Design。入口代码位于 `lua/era/m/git_files/`，树视图为 `era.v
 
 ## 布局
 
+- 浮窗铺满编辑区：从左上角起覆盖 tabline，占满全宽，向下止于全局 statusline 之上，statusline 与命令行保持可见。
 - Widget 复用 Result / Preview surface 与 `era.view.GitFiles`，不依赖 Picker composer。左栏从上到下为单行 inputbox、
   Staged、Unstaged；右栏为跨越整个左栏高度的单个 diff preview，不按左栏分段。
 - 输入框高度固定为一行，两棵树分配剩余高度，各自拥有 native Data/State/View，独立保存展开、选择、

@@ -547,9 +547,10 @@ end
 ---@return nil
 function M:_layout()
   local preview = self._preview_enabled and vim.o.columns >= 88
-  local width = math.max(8, math.min(preview and 182 or 122, vim.o.columns - 4))
-  local height = math.max(9, math.floor((vim.o.lines - 2) * 0.9))
-  local row, col = math.max(0, math.floor((vim.o.lines - height - 2) / 2)), math.floor((vim.o.columns - width) / 2)
+  -- Full screen over the tabline, with the status line and the command line left in sight.
+  local width = math.max(8, vim.o.columns)
+  local height = math.max(9, vim.o.lines - vim.o.cmdheight - (vim.o.laststatus > 0 and 1 or 0))
+  local row, col = 0, 0
   local left = preview and math.floor(width * 0.48) or width
   local top = math.floor((height - 5) / 2)
   -- Lower panes own horizontal separators; left panes own the divider beside preview.

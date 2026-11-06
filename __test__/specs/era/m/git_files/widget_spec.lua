@@ -19,6 +19,20 @@ local function fixture()
   return state
 end
 
+t:test("the widget fills the editor over the tabline and leaves the status line in sight", function()
+  local state = fixture()
+  local widget = state.widget
+  local input = vim.api.nvim_win_get_config(widget.input:get_winnr())
+  local unstaged = vim.api.nvim_win_get_config(widget.panes.unstaged.result:get_winnr())
+
+  t.assert_eq(0, input.row, "top row, over the tabline")
+  t.assert_eq(0, input.col, "left column")
+  -- Borders flank the input on both sides and the lowest pane above and below.
+  t.assert_eq(vim.o.columns, input.col + input.width + 2, "full width")
+  t.assert_eq(vim.o.lines - vim.o.cmdheight - 1, unstaged.row + unstaged.height + 2, "status line row stays free")
+  t.assert_eq(0, #state.warnings, vim.inspect(state.warnings))
+end)
+
 t:test("both trees have independent floating windows and retain roots and folds on reopening", function()
   local state = fixture()
   local widget = state.widget
