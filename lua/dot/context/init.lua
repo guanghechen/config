@@ -332,7 +332,8 @@ function M.watch_changes()
       filepath = M._storage.editor,
       ---@diagnostic disable-next-line: unused-local
       on_event = function(p, event)
-        if type(event) == "table" and event.change == true then
+        -- Writes replace the file, which reports `rename`.
+        if type(event) == "table" and (event.change == true or event.rename == true) then
           vim.schedule(function()
             M.load({ editor = M._storage.editor })
           end)

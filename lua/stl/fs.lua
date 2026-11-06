@@ -301,12 +301,16 @@ end
 ---@field public on_event               fun(filepath:string, events: any, unwatch:fun():nil):nil
 ---@field public on_error               ?fun(filepath:string, err: any, unwatch:fun():nil):nil
 
+---Watches the directory of the file, since a watch on the file itself stays on the old file once a writer renames
+---another over it, as `write_file` does. Such a replacement reports `rename` rather than `change`.
 ---@param opts                          stl.t.IWatchFileOptions
 ---@return fun():nil
 function M.watch_file(opts)
   local filepath = opts.filepath
   local on_event = opts.on_event
   local on_error = opts.on_error or default_watch_on_error
+  local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
+  local basename = yoz.path.basename(os_filepath) ---@type string
 
   local handle = vim.uv.new_fs_event()
   local flags = {
@@ -325,56 +329,91 @@ function M.watch_file(opts)
     end
   end
 
-  ---@diagnostic disable-next-line: unused-local
   local callback = function(err, filename, events)
     if err then
       on_error(filepath, err, unwatch)
-    else
+    elseif filename == nil or filename == basename then
       on_event(filepath, events, unwatch)
     end
   end
 
   ---attacher handler
   if handle ~= nil then
-    vim.uv.fs_event_start(handle, filepath, flags, callback)
+    vim.uv.fs_event_start(handle, yoz.path.dirname(os_filepath, false, stl.env.PATH_SEP), flags, callback)
   end
   return unwatch
 end
 
+local tmp_seq = 0 ---@type integer
+
+---Writes to a sibling temporary file renamed over the target, so a failed write keeps the previous content and
+---no reader sees a partial file. A symlink keeps pointing at the file it links to.
 ---@param filepath                      string
 ---@param content                       string
----@return nil
+---@return boolean                      Whether the content was written
+---@return string|nil                   Why it was not
 function M.write_file(filepath, content)
-  stl.env.mkdirs(filepath, false)
+  -- A missing directory fails the open below, which reports it.
+  pcall(stl.env.mkdirs, filepath, false)
 
-  local file, err_open = io.open(filepath, "wb")
-  if not file then
+  local os_filepath = yoz.canonical_path.to_os_path(filepath) ---@type string
+  -- Renaming over a symlink would replace the link.
+  local target = vim.uv.fs_realpath(os_filepath) or os_filepath ---@type string
+  local stat = vim.uv.fs_stat(target)
+  tmp_seq = tmp_seq + 1
+  local tmppath = string.format("%s.%d-%d.tmp", target, vim.uv.os_getpid(), tmp_seq) ---@type string
+
+  local err = nil ---@type string|nil
+  -- A rename ignores the permissions of the file it replaces.
+  if stat ~= nil and not vim.uv.fs_access(target, "W") then
+    err = "EACCES: permission denied: " .. target
+  else
+    local fd, err_open = vim.uv.fs_open(tmppath, "wx", stat ~= nil and stat.mode % 512 or 438)
+    if fd == nil then
+      err = err_open
+    else
+      local offset = 0 ---@type integer
+      while err == nil and offset < #content do
+        local written, err_write = vim.uv.fs_write(fd, offset == 0 and content or content:sub(offset + 1), offset)
+        if written == nil then
+          err = err_write
+        else
+          offset = offset + written
+        end
+      end
+      if err == nil then
+        local _, err_fsync = vim.uv.fs_fsync(fd)
+        err = err_fsync
+      end
+      local _, err_close = vim.uv.fs_close(fd)
+      err = err or err_close
+      if err == nil then
+        local _, err_rename = vim.uv.fs_rename(tmppath, target)
+        err = err_rename
+      end
+      if err ~= nil then
+        vim.uv.fs_unlink(tmppath)
+      end
+    end
+  end
+
+  if err ~= nil then
     stl.reporter.error({
       from = __module_name__,
       subject = "write_file",
-      message = "Failed to open filepath.",
-      details = { filepath = filepath, error = err_open },
+      message = "Failed to write file.",
+      details = { filepath = filepath, bytes = #content, error = err },
     })
-    return
+    return false, err
   end
-
-  local ok, err_write = pcall(file.write, file, content)
-  file:close()
-
-  if not ok then
-    stl.reporter.error({
-      from = __module_name__,
-      subject = "write_file",
-      message = "Failed to write content.",
-      details = { filepath = filepath, content = content, error = err_write },
-    })
-  end
+  return true, nil
 end
 
 ---@param filepath                      string
 ---@param data                          any
 ---@param prettier                      boolean
----@return nil
+---@return boolean                      Whether the data was written
+---@return string|nil                   Why it was not
 function M.write_json(filepath, data, prettier)
   local ok_to_encode_json, json_text = pcall(function()
     if prettier then
@@ -389,9 +428,9 @@ function M.write_json(filepath, data, prettier)
       message = "Failed to encode json data.",
       details = { filepath = filepath, data = data },
     })
-    return
+    return false, json_text
   end
-  M.write_file(filepath, json_text)
+  return M.write_file(filepath, json_text)
 end
 
 return M
