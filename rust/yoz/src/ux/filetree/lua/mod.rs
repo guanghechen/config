@@ -198,6 +198,7 @@ impl LuaUserData for LuaFiletree {
             }
             Ok(Some(value))
         });
+        methods.add_method("watch_activity", |_, this, ()| Ok(this.0.watch_activity()));
         methods.add_method("watch_visible", |_, this, values: LuaTable| {
             if values.raw_len() > 64 {
                 return Err(LuaError::external("too many watch viewports"));

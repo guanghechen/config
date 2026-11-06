@@ -15,6 +15,9 @@ local Data = {}
 ---@param previous                      ?string
 ---@return ux.filetree.IWatchStatus|nil
 function Data:watch_status(previous) end
+---Advances once per watch delivery that carries filesystem events, never for reads.
+---@return integer
+function Data:watch_activity() end
 ---@param hints                         {frame: yoz.ux.treeview.Frame, first: integer, last: integer}[]
 ---@return nil
 function Data:watch_visible(hints) end

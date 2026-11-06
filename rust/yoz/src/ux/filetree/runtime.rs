@@ -129,6 +129,13 @@ impl Filetree {
             .status
             .clone()
     }
+    /** Advances once per watch delivery that carries filesystem events, never for reads. */
+    pub fn watch_activity(&self) -> u64 {
+        self.interest
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .activity
+    }
     /** Observe accepted browse/refresh work; frame publication and IO success are separate. */
     pub fn is_settled(&self) -> bool {
         let dirty = self.dirty.lock().unwrap_or_else(|error| error.into_inner());

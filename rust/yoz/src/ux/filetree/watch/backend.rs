@@ -279,4 +279,8 @@ pub(super) use platform::Backend;
 #[cfg(not(target_os = "macos"))]
 impl Backend {
     pub fn prioritize(&mut self, _: &[u64]) {}
+    /** Every polled id here comes from a filesystem event. */
+    pub fn activity(&self, polled: &HashSet<u64>) -> bool {
+        !polled.is_empty()
+    }
 }

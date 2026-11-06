@@ -302,6 +302,8 @@ Status: Design。本文定义当前 native Explorer 的输入、用途、窗口�
   Busy 保留 pending 输入并延迟重试，手动 refresh 也重新同步 diagnostics。
   Ignore cache 失效独立触发可见路径预加载，完成后再提交 annotation 输入；后台 pane 再显示时按失效版本重新查询，
   不依赖 source/layout/viewport 变化。预加载期间释放最后一个 owner 后，迟到结果不得再次提交输入。
+- Source 变化仅在 Filetree watch activity 前进时刷新 Git status；展开与浏览只读取目录，不重查 Git。
+  Explorer 文件任务完成后自行刷新，手动 refresh 无条件刷新。
 - Diagnostics/error/warning 前后跳转只查可见文件，Git 也可跳聚合目录，首尾循环。Find Files、Search Files、Find Explorer、
   Copy Path、Quickfix、File Info、System Open、Add to AI 调用现有能力；AI 动作只添加位置，不发送消息。
   Find Files/Find Explorer 使用光标目录或文件的父目录，Search Files 使用光标文件/目录，空树使用 display root。

@@ -272,6 +272,9 @@ Treeview owner 分配 NodeId。一个物理资源经 hardlink/symlink 出现在�
   `covered` 是这些兴趣关联的逻辑 occurrence NodeId 集合。仅用于订阅的根不计入 `directories`。
   Linux 仅匹配入口名称的父目录辅助监听也不计入 `directories`，仍计入实际 `roots`。
   macOS 的 `limited` 反映实际根预算，不因普通展开目录超过 50 而置位。
+- `watch_activity()` 计数携带 filesystem 事件的 dirty 交付批次；目录读取、注册与重试引起的重读，
+  以及 macOS 新覆盖目录的补读都不推进它。事件标记与对应 id 在同一临界区取出，交付间隙到达的事件计入下一批。
+  消费者据此区分磁盘变化与浏览读取引起的 source 变化。
 - 目录收起或失去 view 需求时撤销刷新兴趣；再次加入兴趣时强制重读，关闭读取与注册监听之间的竞态窗口。
   无剩余兴趣时释放 OS 订阅，保留的 source 不能被视为持续更新的缓存。
   任务不依赖 pane 存活，最后一个 data/state/task/frame 引用消失后回收对应资源。

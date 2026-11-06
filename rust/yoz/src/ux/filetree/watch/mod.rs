@@ -90,6 +90,8 @@ pub(crate) struct Interest {
     pub anchor: Option<NodeId>,
     pub viewports: Vec<Viewport>,
     pub status: Status,
+    /** Deliveries carrying filesystem events; reads, registrations and retries leave it. */
+    pub activity: u64,
 }
 
 struct Shared {
@@ -384,6 +386,7 @@ fn run(shared: &Arc<Shared>, dirty: Dirty, data: &WeakDataHandle) -> Result<()> 
     let mut delivery_error = None;
     let mut limited = false;
     let mut report = None;
+    let mut eventful = false;
     while !shared.stopped.load(Ordering::Acquire) {
         let desired = {
             let mut inbox = shared
@@ -467,10 +470,12 @@ fn run(shared: &Arc<Shared>, dirty: Dirty, data: &WeakDataHandle) -> Result<()> 
             report = Some(last_error);
         }
         let events = backend.poll()?;
+        let observed = backend.activity(&events);
         if !events.is_empty() {
             for id in events {
                 if let Some(nodes) = routes.get(&id) {
                     changed.extend(nodes.iter().copied());
+                    eventful |= observed;
                 }
             }
             let now = Instant::now();
@@ -515,6 +520,13 @@ fn run(shared: &Arc<Shared>, dirty: Dirty, data: &WeakDataHandle) -> Result<()> 
                 /* Registration and retry re-reads are not filesystem activity. */
                 if merging.is_some() {
                     merged = Some(Instant::now());
+                }
+                if std::mem::take(&mut eventful) {
+                    let mut interest = shared
+                        .interest
+                        .lock()
+                        .unwrap_or_else(|error| error.into_inner());
+                    interest.activity = interest.activity.wrapping_add(1);
                 }
                 pending = Some((
                     data.submit(Action::Native(Box::new(Dirtied {

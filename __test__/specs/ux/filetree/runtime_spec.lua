@@ -424,4 +424,40 @@ t:test("native watch updates the actual buffer without manual refresh", function
   t.assert_eq(id, view:frame():node_at(1))
 end)
 
+t:test("watch activity moves with files changing on disk, not with directories read or newly watched", function()
+  local path = t:tempdir()
+  for _, name in ipairs({ "a", "b", "c" }) do
+    assert(vim.uv.fs_mkdir(path .. "/" .. name, 448))
+    write(path .. "/" .. name .. "/file")
+  end
+  -- FSEvents journals events late; the fixture's own must land before the watch starts.
+  vim.wait(1000)
+  local data = await(filetree.open(path))
+  local state = await(data:create_state())
+  local view = filetree.attach(state, { keymaps = false })
+  t:defer(function()
+    view:detach()
+  end)
+  t.wait_until(function()
+    return data:watch_status().directories > 0 and data:native():is_settled()
+  end, 10000)
+  local before = data:watch_activity()
+
+  for _, name in ipairs({ "a", "b", "c" }) do
+    local directory = await(data:resolve(path .. "/" .. name))
+    await(state:set_expanded({ directory:node() }, true, false))
+  end
+  t.wait_until(function()
+    return data:watch_status().directories > 3 and data:native():is_settled()
+  end, 10000)
+  -- Registration re-reads land within a few milliseconds of the watch they follow.
+  vim.wait(300)
+  t.assert_eq(before, data:watch_activity(), "directories read and newly watched")
+
+  write(path .. "/b/created")
+  t.wait_until(function()
+    return data:watch_activity() > before
+  end, 10000, "a file created on disk")
+end)
+
 t:run()

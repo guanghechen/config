@@ -101,4 +101,45 @@ t:test("real Git queries and OS watch update staged, modified, untracked and ign
   t.assert_eq(0, #fixture.messages, vim.inspect(fixture.messages))
 end)
 
+t:test(
+  "expanding directories reads them without a Git refresh, while a file changed on disk still asks for one",
+  function()
+    local path = t:tempdir()
+    for _, name in ipairs({ "a", "b", "c" }) do
+      assert(vim.uv.fs_mkdir(path .. "/" .. name, 448))
+      fixture.write(path .. "/" .. name .. "/file.lua")
+    end
+    git.run(path, { "init", "-q" })
+    t:patch_table(dot.path, "is_git_repo", function()
+      return true
+    end)
+    local refreshes = 0 ---@type integer
+    t:patch_table(Git, "refresh", function()
+      refreshes = refreshes + 1
+      return stl.c.Future.resolve()
+    end)
+    local widget = fixture.widget(path, { o_flag_hidden = stl.c.Observable.from_value(false) })
+    local session = widget:context()
+    t.wait_until(function()
+      return session.data:watch_status().directories > 0 and session.data:native():is_settled()
+    end, 10000)
+    refreshes = 0
+
+    for _, name in ipairs({ "a", "b", "c" }) do
+      local directory = await(session.data:resolve(path .. "/" .. name))
+      await(session.state:set_expanded({ directory:node() }, true, false))
+    end
+    t.wait_until(function()
+      return session.data:watch_status().directories > 3 and session.data:native():is_settled()
+    end, 10000)
+    vim.wait(300)
+    t.assert_eq(0, refreshes, "Git refreshes from expanding three directories")
+
+    fixture.write(path .. "/a/created.lua")
+    t.wait_until(function()
+      return refreshes > 0
+    end, 10000, "a file created on disk")
+  end
+)
+
 t:run()

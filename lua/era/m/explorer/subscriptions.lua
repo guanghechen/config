@@ -21,6 +21,7 @@ local filepath = require("ux.filetree.path")
 ---@field _buffers                      table<integer, boolean>
 ---@field _namespaces                   table<integer, table<integer, boolean>>
 ---@field _git_revision                 integer
+---@field _activity                     integer
 ---@field _git                          boolean
 ---@field _running                      boolean
 ---@field _disposed                     boolean
@@ -43,6 +44,7 @@ function M.new(session)
     _buffers = {},
     _namespaces = namespaces_by_data[session.data] or {},
     _git_revision = 0,
+    _activity = session.data:watch_activity(),
     _git = true,
     _running = false,
     _disposed = false,
@@ -56,7 +58,12 @@ function M.new(session)
   controllers[session.data] = self
   self._subscriptions[#self._subscriptions + 1] = session.data:subscribe({
     on_source_changed = function()
-      Git.refresh()
+      -- Expanding a directory reads it and changes the source as well; only filesystem activity moves Git status.
+      local activity = self._data:watch_activity()
+      if activity ~= self._activity then
+        self._activity = activity
+        Git.refresh()
+      end
     end,
     on_effect = function(effect)
       if effect.kind == "WatchStatus" then

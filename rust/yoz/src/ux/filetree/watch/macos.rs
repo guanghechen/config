@@ -109,6 +109,8 @@ struct Events {
     routes: Routes,
     covered: HashSet<u64>,
     changed: HashSet<u64>,
+    /** Whether filesystem events marked any of `changed`, unlike the scans of newly covered directories. */
+    eventful: bool,
     since: u64,
     notify: Arc<dyn Fn() + Send + Sync>,
 }
@@ -173,6 +175,8 @@ pub struct Backend {
     registration_error: Option<Error>,
     reconfigure: bool,
     watched: HashMap<PathBuf, FileIdentity>,
+    /** `Events::eventful` of the last poll, taken with its ids so a later callback cannot be lost between them. */
+    eventful: bool,
     _memory: Charge,
     queue: Queue,
 }
@@ -209,9 +213,13 @@ unsafe extern "C" fn events(
         /* Dropped history, root moves, and volume changes invalidate all registered directories. */
         if flags & 0xee != 0 {
             let Events {
-                covered, changed, ..
+                covered,
+                changed,
+                eventful,
+                ..
             } = &mut *events;
             changed.extend(covered.iter().copied());
+            *eventful = true;
             break;
         }
         let path = unsafe { *paths.cast::<*const c_char>().add(at) };
@@ -225,6 +233,7 @@ unsafe extern "C" fn events(
             routes,
             covered,
             changed,
+            eventful,
             ..
         } = &mut *events;
         /* Directory replacement and coalesced subtrees also invalidate loaded descendants. */
@@ -232,12 +241,14 @@ unsafe extern "C" fn events(
             routes.descendants(path, |id| {
                 if covered.contains(&id) {
                     changed.insert(id);
+                    *eventful = true;
                 }
             });
         }
         for path in [Some(path), path.parent()].into_iter().flatten() {
             if let Some(id) = routes.get(path).filter(|id| covered.contains(id)) {
                 changed.insert(id);
+                *eventful = true;
             }
         }
         if events.changed.len() == events.covered.len() {
@@ -265,6 +276,7 @@ impl Backend {
                 routes: Routes::default(),
                 covered: HashSet::new(),
                 changed: HashSet::new(),
+                eventful: false,
                 since: unsafe { FSEventsGetCurrentEventId() },
                 ready: false,
                 notify,
@@ -275,6 +287,7 @@ impl Backend {
             registration_error: None,
             reconfigure: false,
             watched: HashMap::new(),
+            eventful: false,
             _memory: Charge::new(0),
         })
     }
@@ -502,7 +515,12 @@ impl Backend {
             .context
             .lock()
             .unwrap_or_else(|error| error.into_inner());
+        self.eventful = std::mem::take(&mut context.eventful);
         Ok(std::mem::take(&mut context.changed))
+    }
+    /** Whether filesystem events, rather than scans of newly covered directories, marked the polled ids. */
+    pub fn activity(&self, _: &HashSet<u64>) -> bool {
+        self.eventful
     }
 }
 impl Drop for Backend {
@@ -526,6 +544,7 @@ mod tests {
             routes,
             covered: HashSet::from([3]),
             changed: HashSet::new(),
+            eventful: false,
             since: 42,
             notify: Arc::new(move || {
                 observed.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
@@ -562,6 +581,7 @@ mod tests {
             routes,
             covered: HashSet::from([1, 2]),
             changed: HashSet::new(),
+            eventful: false,
             since: 42,
             notify: Arc::new(|| {}),
         });
@@ -598,6 +618,7 @@ mod tests {
                 routes,
                 covered: HashSet::from([1, 2, 3, 4]),
                 changed: HashSet::new(),
+                eventful: false,
                 since: 42,
                 notify: Arc::new(|| {}),
             });
@@ -711,5 +732,21 @@ mod tests {
             backend.roots.values().next().unwrap().path,
             std::fs::canonicalize(directory.path()).unwrap()
         );
+    }
+
+    #[test]
+    fn t_activity_belongs_to_the_polled_batch() {
+        let mut backend = Backend::new(Arc::new(|| {})).unwrap();
+        let polled = backend.poll().unwrap();
+        /* An FSEvents callback lands between taking a batch and asking for its activity. */
+        {
+            let mut context = backend.context.lock().unwrap();
+            context.changed.insert(1);
+            context.eventful = true;
+        }
+        assert!(!backend.activity(&polled));
+        let polled = backend.poll().unwrap();
+        assert_eq!(polled, HashSet::from([1]));
+        assert!(backend.activity(&polled));
     }
 }

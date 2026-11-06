@@ -301,6 +301,12 @@ function M:watch_status()
   return assert(self._native:watch_status())
 end
 
+---Advances once per watch delivery that carries filesystem events, never for reads.
+---@return integer
+function M:watch_activity()
+  return self._native:watch_activity()
+end
+
 ---@param plan                          ux.filetree.IOperationPlan
 ---@return yoz.ux.filetree.Job
 function M:start_operation(plan)
