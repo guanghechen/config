@@ -8,6 +8,7 @@ web_search = "live"
 model = "gpt-6-astra"
 model_provider = "copilot"
 model_reasoning_effort = "high"
+cli_auth_credentials_store = "ephemeral"
 
 [agents]
 enabled = true
@@ -31,6 +32,9 @@ websocket_connect_timeout_ms = 60000
 command = "/usr/bin/printenv"
 args = ["OPENAI_CODEX_AUTH_TOKEN"]
 
+[model_providers.copilot.http_headers]
+x-openai-actor-authorization = "kit-copilot-local"
+
 [analytics]
 enabled = false
 
@@ -47,7 +51,7 @@ log_user_prompt = false
 apps = false
 goals = true
 hooks = true
-image_generation = false
+image_generation = true
 memories = true
 multi_agent = true
 plugin_sharing = false

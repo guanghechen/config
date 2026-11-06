@@ -18,3 +18,6 @@ websocket_connect_timeout_ms = 60000
 [model_providers.copilot-dev.auth]
 command = "/usr/bin/printenv"
 args = ["OPENAI_CODEX_AUTH_TOKEN"]
+
+[model_providers.copilot-dev.http_headers]
+x-openai-actor-authorization = "kit-copilot-local"
