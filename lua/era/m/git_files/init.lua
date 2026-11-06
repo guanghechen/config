@@ -23,6 +23,7 @@ local scopes = { "staged", "unstaged" }
 ---@field root                          string
 ---@field token                         stl.c.CancellationToken
 ---@field focus                         boolean
+---@field leave                         ?era.view.git_files.Scope The pane a write emptied, left once shown empty
 ---@field future                        ?stl.c.Future
 
 ---@class era.m.git_files.Widget
@@ -418,9 +419,10 @@ function M:_current(request)
 end
 
 ---@param focus                         boolean
+---@param leave                         ?era.view.git_files.Scope The pane a write emptied, left once shown empty
 ---@return stl.c.Future|nil
-function M:refresh(focus)
-  local previous_focus = self._request and self._request.focus
+function M:refresh(focus, leave)
+  local previous = self._request ---@type era.m.git_files.IRequest|nil
   self:_cancel()
   if self._disposed then
     return
@@ -432,8 +434,14 @@ function M:refresh(focus)
     self:hide()
     return
   end
-  local request =
-    { root = dot.path.workspace(), token = stl.c.CancellationToken.new(), focus = focus or previous_focus or false }
+  -- A refresh that supersedes another, such as one a Git refresh event starts, does what that one would have.
+  ---@type era.m.git_files.IRequest
+  local request = {
+    root = dot.path.workspace(),
+    token = stl.c.CancellationToken.new(),
+    focus = focus or (previous ~= nil and previous.focus) or false,
+    leave = leave or (previous ~= nil and previous.leave or nil),
+  }
   self._request = request
   for _, scope in ipairs(scopes) do
     self:_header(self.panes[scope])
@@ -509,6 +517,12 @@ function M:refresh(focus)
       self:_set_active(self:target("staged"))
       self:_show()
       self:focus("input")
+    end
+    if request.leave ~= nil then
+      local pane = self.panes[request.leave]
+      if pane.result:isfocused() and pane.tree.totals.count == 0 then
+        self:focus(request.leave == "staged" and "unstaged" or "staged")
+      end
     end
     self:_update_preview(true)
   end)
@@ -809,14 +823,7 @@ function M:_transfer_entries(pane, keys, entries)
       end
     end
     if self:isvisible() and self._root == root and root == dot.path.workspace() then
-      local refreshing = self:refresh(false)
-      if refreshing then
-        refreshing:map(function()
-          if not self._disposed and pane.result:isfocused() and pane.tree.totals.count == 0 then
-            self:focus(scope == "staged" and "unstaged" or "staged")
-          end
-        end)
-      end
+      self:refresh(false, scope)
     end
     if ok and root == dot.path.workspace() then
       era.m.git.state.refresh_index():catch(function(error)

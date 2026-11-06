@@ -88,6 +88,25 @@ t:test("marked files transfer together and source exhaustion moves focus to the 
   t.assert_eq(0, #state.warnings, vim.inspect(state.warnings))
 end)
 
+t:test("source exhaustion moves focus even when a Git refresh event supersedes the write's refresh", function()
+  local state = fixture()
+  local widget, pane = state.widget, state.widget.panes.unstaged
+  -- The index refresh publishes a Git refresh event, whose refresh supersedes the one the write started.
+  t:patch_table(era.m.git.state, "refresh_index", function()
+    state.refreshed:next(state.refreshed:snapshot() + 1)
+    return stl.c.Future.resolve()
+  end)
+  for _, path in ipairs({ "dir/mixed.lua", "dir/second.lua" }) do
+    pane.tree:toggle_select(Paths.key(state.root .. "/" .. path), true)
+  end
+  t.await(pane.tree:ready())
+  widget:focus("unstaged")
+  t.await(assert(widget:transfer("unstaged")))
+  support.ready(widget)
+  t.assert_eq(0, pane.tree.totals.count, "the source pane is empty")
+  t.assert_true(widget.panes.staged.result:isfocused(), "focus moved to Staged")
+end)
+
 t:test("a Visual range stages all selected rows", function()
   local state = fixture()
   local widget = state.widget
