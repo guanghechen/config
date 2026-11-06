@@ -274,6 +274,9 @@ end
 -- split
 ----------------------------------------------------------------------------------------------------
 
+---@type table<'h'|'j'|'k'|'l', 'left'|'below'|'above'|'right'>
+local SPLIT_SIDES = { h = "left", j = "below", k = "above", l = "right" }
+
 ---@param direction                     'h'|'j'|'k'|'l'
 ---@return integer
 local function __split__(direction)
@@ -309,24 +312,16 @@ function M.split(direction)
     return
   end
 
-  local bufnr_original = vim.api.nvim_win_get_buf(winnr_original) ---@type integer
   local bufnr_scratch = vim.api.nvim_create_buf(false, true) ---@type integer
-  vim.api.nvim_set_option_value("buflisted", false, { buf = bufnr_scratch })
-  vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr_scratch })
+  vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr_scratch })
   vim.api.nvim_set_option_value("filetype", "text", { buf = bufnr_scratch })
-  vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr_scratch })
 
-  if vim.api.nvim_get_option_value("winfixbuf", { win = winnr_original }) then
-    vim.api.nvim_set_option_value("winfixbuf", false, { win = winnr_original, scope = "local" })
-    vim.api.nvim_win_set_buf(winnr_original, bufnr_scratch)
-    vim.api.nvim_set_option_value("winfixbuf", true, { win = winnr_original, scope = "local" })
-  else
-    vim.api.nvim_win_set_buf(winnr_original, bufnr_scratch)
-  end
-
-  local winnr_target = __split__(direction) ---@type integer
-  vim.api.nvim_win_set_buf(winnr_original, bufnr_original)
-  vim.api.nvim_win_set_buf(winnr_target, bufnr_scratch)
+  -- The panel, such as the Explorer or a terminal, keeps its buffer. A window opened on another buffer takes the
+  -- options a window has for a buffer it has not shown, not those the panel set for its own buffer.
+  local winnr_target = vim.api.nvim_open_win(bufnr_scratch, true, {
+    split = SPLIT_SIDES[direction],
+    win = winnr_original,
+  }) ---@type integer
 
   vim.api.nvim_set_option_value("cursorline", true, { win = winnr_target, scope = "local" })
   vim.api.nvim_set_option_value("number", true, { win = winnr_target, scope = "local" })
@@ -335,12 +330,6 @@ function M.split(direction)
   vim.api.nvim_set_option_value("spell", false, { win = winnr_target, scope = "local" })
   vim.api.nvim_set_option_value("winfixbuf", false, { win = winnr_target, scope = "local" })
   vim.api.nvim_set_option_value("wrap", false, { win = winnr_target, scope = "local" })
-
-  vim.schedule(function()
-    if vim.api.nvim_buf_is_valid(bufnr_scratch) then
-      vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr_scratch })
-    end
-  end)
 end
 
 ---@return nil
