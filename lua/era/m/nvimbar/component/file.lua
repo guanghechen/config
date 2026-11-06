@@ -222,8 +222,9 @@ function M.size(position)
   local component = {
     name = "file:size",
 
+    -- A refresh within one file comes only from a change: :write bumps the changedtick as it clears 'modified'.
     will_change = function(context, prev_context)
-      return context.filepath ~= prev_context.filepath
+      return context.changedtick ~= prev_context.changedtick
     end,
     refresh = function(context)
       if context.filepath == nil or context.filepath == "" then

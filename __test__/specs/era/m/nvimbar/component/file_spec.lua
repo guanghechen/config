@@ -34,4 +34,11 @@ t:test("clicking the file path offers the copy choices above the status line at 
   t.assert_eq(36, config.col, "at column 36")
 end)
 
+t:test("the file size refreshes when a write changes the buffer's changedtick", function()
+  local size = file.size("f_sl")
+  local shown = { filepath = "/project/main.lua", changedtick = 4 }
+  t.assert_false(size.will_change(shown, shown), "nothing happened")
+  t.assert_true(size.will_change({ filepath = "/project/main.lua", changedtick = 5 }, shown), "written")
+end)
+
 t:run()
