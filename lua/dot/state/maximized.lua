@@ -125,10 +125,10 @@ function M.compute_float_maximized_wincfg(wincfg)
   maximize_cfg.border = "rounded"
 
   local editor_width = vim.o.columns ---@type integer
-  local editor_height = vim.o.lines ---@type integer
-  local top_offset = stl.nvim.fn.is_tabline_visible() and 1 or 0 ---@type integer
+  local editor_height = vim.o.lines - vim.o.cmdheight ---@type integer
+  -- Full screen over the tabline, with the status line and the command line left in sight.
   local bottom_offset = stl.nvim.fn.is_statusline_visible() and 1 or 0 ---@type integer
-  local available_height = math.max(1, editor_height - top_offset - bottom_offset) ---@type integer
+  local available_height = math.max(1, editor_height - bottom_offset) ---@type integer
 
   ---@type integer, integer
   local fitted_width, fitted_height = stl.box.fit_editor(
@@ -138,7 +138,7 @@ function M.compute_float_maximized_wincfg(wincfg)
     { cols = editor_width, rows = available_height }
   )
 
-  maximize_cfg.row = top_offset
+  maximize_cfg.row = 0
   maximize_cfg.width = fitted_width
   maximize_cfg.height = fitted_height
 
@@ -154,10 +154,15 @@ function M.resolve_resize_config(winnr, desired_cfg, opts)
 
   local original = context.original_float ---@type dot.state.maximized.IOriginalFloatWindow|nil
   if original ~= nil and original.winnr == winnr then
-    original.wincfg = vim.deepcopy(desired_cfg)
+    -- Callers start from the config on screen, whose border and zindex are the maximized ones; kept, a restore would
+    -- bring the maximized frame back and every resize would lift the window one level more.
+    local restore_cfg = vim.deepcopy(desired_cfg) ---@type vim.api.keyset.win_config
+    restore_cfg.border = original.wincfg.border
+    restore_cfg.zindex = original.wincfg.zindex
+    original.wincfg = restore_cfg
     original.winblend = original.winblend or winblend
 
-    local maximize_cfg = M.compute_float_maximized_wincfg(desired_cfg) ---@type vim.api.keyset.win_config
+    local maximize_cfg = M.compute_float_maximized_wincfg(restore_cfg) ---@type vim.api.keyset.win_config
     return {
       cfg = maximize_cfg,
       winblend = 0,
@@ -170,6 +175,19 @@ function M.resolve_resize_config(winnr, desired_cfg, opts)
     winblend = winblend or 0,
     maximized = false,
   }
+end
+
+---Sets part of a float's config; while the float is maximized, only the config it restores to takes it.
+---@param winnr                         integer
+---@param cfg                           vim.api.keyset.win_config
+---@return nil
+function M.set_float_config(winnr, cfg)
+  local original = context.original_float ---@type dot.state.maximized.IOriginalFloatWindow|nil
+  if original ~= nil and original.winnr == winnr then
+    original.wincfg = vim.tbl_extend("force", original.wincfg, cfg)
+    return
+  end
+  vim.api.nvim_win_set_config(winnr, cfg)
 end
 
 return M

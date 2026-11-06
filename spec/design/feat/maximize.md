@@ -18,9 +18,13 @@ Neovim 无法锁定 tabpage；`:tabs` 仍可观察该 tab，原生命令/API 仍
 
 ## 浮动 window
 
-- 在原 window 上最大化，不创建 tab 或复制 widget buffer。
+- 在原 window 上最大化，不创建 tab 或复制 widget buffer。最大化后从第 0 行起覆盖 tabline、占满全宽，止于全局
+  statusline 之上，statusline 与命令行保持可见；外框统一为完整圆角，zindex 比原 window 高一级。
 - 保存原 window config、`winblend` 与 `winhighlight`，再次 toggle 时恢复。
-- Widget resize 通过 `dot.state.maximized.resolve_resize_config()` 更新原 config，同时维持最大化后的尺寸。
+- Widget resize 通过 `dot.state.maximized.resolve_resize_config()` 更新原 config，同时维持最大化后的尺寸。调用方以屏幕上的
+  config 为基础，其边框与 zindex 属于最大化，因此原 config 只接收其余字段，边框与 zindex 保持原值。
+- Widget 在最大化期间修改边框等呈现字段时经 `dot.state.maximized.set_float_config()` 写入原 config，恢复后生效，
+  不改动最大化外框。
 
 ## 状态归属
 

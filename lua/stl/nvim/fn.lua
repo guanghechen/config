@@ -129,19 +129,6 @@ function M.is_statusline_visible()
   return false
 end
 
----@return boolean
-function M.is_tabline_visible()
-  local showtabline = vim.o.showtabline ---@type integer
-  if showtabline == 2 then
-    return true
-  end
-  if showtabline == 1 then
-    local tab_count = vim.fn.tabpagenr("$") ---@type integer
-    return tab_count > 1
-  end
-  return false
-end
-
 ---@param hlname                        string
 ---@return string
 function M.make_bg_transparency(hlname)

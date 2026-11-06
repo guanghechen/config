@@ -575,7 +575,7 @@ function M:_layout()
       zindex = 50,
     }, dimension)
     pane.result:resize(dimension)
-    vim.api.nvim_win_set_config(winnr, { border = border })
+    dot.state.maximized.set_float_config(winnr, { border = border })
     self:_header(pane)
   end
   if preview then
@@ -587,7 +587,7 @@ function M:_layout()
       zindex = 50,
     }, dimension)
     self.preview.surface:resize(dimension)
-    vim.api.nvim_win_set_config(winnr, { border = border })
+    dot.state.maximized.set_float_config(winnr, { border = border })
     self:_update_preview()
   else
     self.preview:hide()

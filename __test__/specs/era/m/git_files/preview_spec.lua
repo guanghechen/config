@@ -146,4 +146,26 @@ t:test("late preview output cannot replace a newer target or write after closing
   t.assert_eq(2, killed)
 end)
 
+t:test("laying out while the preview is maximized keeps its frame and restores the joined border", function()
+  local state = fixture()
+  local widget = state.widget
+  widget._preview_enabled = true
+  widget:resize()
+  local winnr = assert(widget.preview.surface:get_winnr())
+  local joined = vim.api.nvim_win_get_config(winnr).border
+  local Maximize = require("era.m.maximize")
+  dot.state.status.winnr_command:next(winnr)
+  t:defer(function()
+    dot.state.maximized.clear_original_float()
+  end)
+
+  Maximize.toggle()
+  widget:resize()
+  local frame = vim.api.nvim_win_get_config(winnr).border
+  t.assert_eq("╭", frame[1], "top-left corner while maximized")
+  t.assert_eq("╰", frame[7], "bottom-left corner while maximized")
+  Maximize.toggle()
+  t.assert_same(joined, vim.api.nvim_win_get_config(winnr).border, "the border joined to the left panes")
+end)
+
 t:run()

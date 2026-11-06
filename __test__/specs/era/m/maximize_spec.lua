@@ -38,9 +38,6 @@ bootstrap.with_runtime(t, {
         is_statusline_visible = function()
           return false
         end,
-        is_tabline_visible = function()
-          return false
-        end,
       },
       win = {
         is_float = function(winnr)
@@ -281,6 +278,88 @@ t:test("float maximize reconfigures and restores the original window", function(
   t.assert_eq(original.relative, restored.relative, "restored relative")
   t.assert_eq(original.width, restored.width, "restored width")
   t.assert_eq(original.height, restored.height, "restored height")
+end)
+
+---@param border                        string
+---@return integer
+local function open_float(border)
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local source_winnr = vim.api.nvim_get_current_win() ---@type integer
+  local source_bufnr = vim.api.nvim_win_get_buf(source_winnr) ---@type integer
+  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local float_winnr = vim.api.nvim_open_win(bufnr, true, {
+    relative = "editor",
+    row = 2,
+    col = 3,
+    width = 20,
+    height = 5,
+    border = border,
+    zindex = 50,
+  })
+  register_cleanup(tabnr, source_winnr, source_bufnr, { bufnr })
+  ---@diagnostic disable-next-line: invisible
+  t:defer(function()
+    if vim.api.nvim_win_is_valid(float_winnr) then
+      vim.api.nvim_win_close(float_winnr, true)
+    end
+    maximized.clear_original_float()
+  end)
+  return float_winnr
+end
+
+t:test("a maximized float covers the tabline and leaves the status line and the command line in sight", function()
+  t:patch_table(stl.nvim.fn, "is_statusline_visible", function()
+    return true
+  end)
+  local cfg = maximized.compute_float_maximized_wincfg({
+    relative = "editor",
+    row = 2,
+    col = 3,
+    width = 20,
+    height = 5,
+    border = "single",
+    zindex = 50,
+  })
+
+  t.assert_eq(0, cfg.row, "top row, over the tabline")
+  -- The rounded frame takes a row above and below.
+  t.assert_eq(vim.o.lines - vim.o.cmdheight - 1, cfg.row + cfg.height + 2, "status line row stays free")
+  t.assert_eq(51, cfg.zindex, "above the float it maximizes")
+end)
+
+t:test("laying out a maximized float again keeps the border and zindex it restores to", function()
+  local float_winnr = open_float("single")
+  local single = vim.api.nvim_win_get_config(float_winnr).border
+  winnr_command = float_winnr
+  Maximize.toggle()
+
+  -- Widgets resize from the config on screen.
+  for _ = 1, 3 do
+    local wincfg = vim.api.nvim_win_get_config(float_winnr) ---@type vim.api.keyset.win_config
+    wincfg.row, wincfg.col, wincfg.width, wincfg.height = 4, 5, 30, 6
+    vim.api.nvim_win_set_config(float_winnr, maximized.resolve_resize_config(float_winnr, wincfg).cfg)
+  end
+  t.assert_eq(51, vim.api.nvim_win_get_config(float_winnr).zindex, "maximized zindex")
+
+  Maximize.toggle()
+  local restored = vim.api.nvim_win_get_config(float_winnr) ---@type vim.api.keyset.win_config
+  t.assert_same(single, restored.border, "restored border")
+  t.assert_eq(50, restored.zindex, "restored zindex")
+  t.assert_eq(30, restored.width, "the latest width")
+  t.assert_eq(6, restored.height, "the latest height")
+end)
+
+t:test("a border set while a float is maximized applies once it is restored", function()
+  local double = vim.api.nvim_win_get_config(open_float("double")).border
+  local float_winnr = open_float("single")
+  winnr_command = float_winnr
+  Maximize.toggle()
+  local frame = vim.api.nvim_win_get_config(float_winnr).border
+
+  maximized.set_float_config(float_winnr, { border = "double" })
+  t.assert_same(frame, vim.api.nvim_win_get_config(float_winnr).border, "the maximized frame stays")
+  Maximize.toggle()
+  t.assert_same(double, vim.api.nvim_win_get_config(float_winnr).border, "the border set while maximized")
 end)
 
 t:run()
