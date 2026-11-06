@@ -195,6 +195,14 @@ local function resolve_refreshed_entry(current, previous_entries, entries, is_vi
   end
 end
 
+---Whether Changes own the shared preview. Only a selection takes it over, so updates to Changes that select
+---nothing, such as refreshes, leave a History preview alone.
+---@param ctx                           era.m.diffview.view.workspace.IContext
+---@return boolean
+local function previews_changes(ctx)
+  return ctx.layout.preview_source ~= "history"
+end
+
 ---Navigate to an adjacent entry and keep state, panel cursor, and preview in sync.
 ---@param ctx                           era.m.diffview.view.workspace.IContext
 ---@param direction                     1|-1
@@ -1125,14 +1133,18 @@ function M.toggle_untracked(ctx)
   end
   ctx.state:set_current_entry(target)
   if target == nil then
-    workspace_view.clear_sbs(ctx)
+    if previews_changes(ctx) then
+      workspace_view.clear_sbs(ctx)
+    end
     return
   end
 
   M.__update_changes_cursor__(ctx, target)
-  stl.async.run(function()
-    workspace_view.open_entry(ctx, target)
-  end)
+  if previews_changes(ctx) then
+    stl.async.run(function()
+      workspace_view.open_entry(ctx, target)
+    end)
+  end
 end
 
 ---Toggle the persisted default diff fold policy and apply it to this view.
@@ -1181,7 +1193,7 @@ function M.apply_entries(ctx, entries, token)
     -- Panel metadata can stay unchanged while the selected Git blob changes.
     -- Keep the canonical panel snapshot, but refresh its preview content.
     workspace_view.sync_changes_heights(ctx.layout)
-    if current then
+    if current and previews_changes(ctx) then
       workspace_view.open_entry(ctx, current, token, { preserve_view = true })
     end
     return
@@ -1204,10 +1216,12 @@ function M.apply_entries(ctx, entries, token)
 
     if refreshed_entry then
       M.__update_changes_cursor__(ctx, refreshed_entry)
-      workspace_view.open_entry(ctx, refreshed_entry, token, {
-        preserve_view = get_entry_id(current) == get_entry_id(refreshed_entry),
-      })
-    else
+      if previews_changes(ctx) then
+        workspace_view.open_entry(ctx, refreshed_entry, token, {
+          preserve_view = get_entry_id(current) == get_entry_id(refreshed_entry),
+        })
+      end
+    elseif previews_changes(ctx) then
       workspace_view.clear_sbs(ctx)
     end
     ctx.state:set_current_entry(refreshed_entry)

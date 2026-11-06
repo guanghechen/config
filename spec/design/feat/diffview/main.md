@@ -19,6 +19,7 @@ File History 使用 `diffview_commits + path_filter`；tabline 显示过滤文�
 - workspace 左侧从上到下组合 Staged、Unstaged 与 History，右侧共享一组 SBS windows；默认 focus Changes。
 - History 复用 commits pane/state/action，但 working-tree state 与 commit-log state 继续独立持有。
 - workspace view 持有共享 SBS preview generation；最后一次 Changes 或 History selection 是唯一 preview writer。
+  刷新与 untracked 切换不是 selection：History 持有 preview 时，Changes 只更新 pane、光标与当前条目。
 - SBS buffer 可以跨 Diffview tab 复用；buffer-local keymap 在执行时按当前 tab 解析 view context，不持有安装时的 context。
 - `<leader>et` 将 Staged、Unstaged 与 History 视为一个 sidebar，统一隐藏或恢复。
 - `<leader>gf` 继续打开带 path_filter 的独立 `diffview_commits`，服务 File History。

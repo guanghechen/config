@@ -236,4 +236,23 @@ t:test("a cancelled refresh leaves the view alone", function()
   t.assert_eq(0, seen.sets, "snapshot unchanged")
 end)
 
+t:test("refreshes leave a History preview alone while the Changes selection follows them", function()
+  local session = open({ "a.lua", "b.lua" })
+  session.history:begin_preview()
+  local seen = observe(session)
+
+  t.assert_true(apply(session, { entry(session, "a.lua"), entry(session, "b.lua") }), "unchanged snapshot applied")
+  t.assert_true(
+    apply(session, { entry(session, "a.lua"), entry(session, "b.lua"), entry(session, "c.lua") }),
+    "changed snapshot applied"
+  )
+  t.assert_true(apply(session, { entry(session, "c.lua") }), "snapshot without the selection applied")
+  t.assert_eq("c.lua", session.state:get_current_entry().filepath, "selection moved to the next entry")
+  t.assert_true(apply(session, {}), "empty snapshot applied")
+  t.assert_nil(session.state:get_current_entry(), "selection emptied")
+  t.assert_eq(0, #seen.opened, "Changes previews opened")
+  t.assert_eq(0, seen.cleared, "previews cleared")
+  t.assert_eq("history", session.layout.preview_source)
+end)
+
 t:run()

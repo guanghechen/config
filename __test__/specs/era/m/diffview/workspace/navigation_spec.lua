@@ -112,6 +112,30 @@ t:test("hiding untracked files selects the first remaining rendered entry", func
   t.assert_eq(1, dirty, "tabline dirtied")
 end)
 
+t:test("hiding untracked files while History previews moves the Changes selection without the preview", function()
+  local flag_untracked = dot.context.diffview.flag_untracked
+  local initial = flag_untracked:snapshot() ---@type boolean
+  t:defer(function()
+    flag_untracked:next(initial)
+  end)
+  flag_untracked:next(true)
+  local session = open({ edited = { "tracked.lua" }, untracked = { "new.lua" } })
+  select(session, "new.lua", "unstaged")
+  session.history:begin_preview()
+  local opened = record_previews()
+  local cleared = 0
+  t:patch_table(workspace_view, "clear_sbs", function()
+    cleared = cleared + 1
+  end)
+
+  action.toggle_untracked(session)
+
+  t.assert_eq("unstaged:tracked.lua", current(session), "remaining selection")
+  t.assert_eq(0, #opened, "Changes previews opened")
+  t.assert_eq(0, cleared, "previews cleared")
+  t.assert_eq("history", session.layout.preview_source)
+end)
+
 t:test("cross-pane navigation follows visible changes order and wraps", function()
   local session = open({ edited = { "a.lua", "b.lua", "collapsed/hidden.lua" }, staged = { "a.lua" } })
   diffview.collapse(t, session, "unstaged", "collapsed", "collapsed/hidden.lua")
