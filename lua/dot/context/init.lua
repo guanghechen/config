@@ -310,6 +310,7 @@ function M.watch_changes()
           data.theme.theme ~= snapshot.theme.theme
           or data.theme.transparency ~= snapshot.theme.transparency
           or data.theme.username ~= snapshot.theme.username
+          or not vim.deep_equal(M.behavior.normalize(raw_data.behavior), M.behavior.dump())
         then
           M.save({ editor = M._storage.editor })
         end
