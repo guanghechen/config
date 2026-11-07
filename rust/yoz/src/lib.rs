@@ -48,7 +48,10 @@ where
 fn fn_module(lua: &Lua) -> LuaResult<LuaTable> {
     lua.create_table_from([
         ("uuid", f(lua, |_, ()| Ok(r#fn::uuid()))?),
-        ("md5", f(lua, |_, input: String| Ok(r#fn::md5(&input)))?),
+        (
+            "md5",
+            f(lua, |_, input: LuaString| Ok(r#fn::md5(&input.as_bytes())))?,
+        ),
     ])
 }
 
@@ -618,7 +621,39 @@ fn fs_module(lua: &Lua) -> LuaResult<LuaTable> {
                 }
             })?,
         ),
+        (
+            "lock",
+            f(
+                lua,
+                |lua, (path, timeout_ms): (String, u64)| -> LuaResult<LuaMultiValue> {
+                    match fs::FileLock::acquire(
+                        std::path::Path::new(&path),
+                        std::time::Duration::from_millis(timeout_ms),
+                    ) {
+                        Ok(lock) => Ok(LuaMultiValue::from_vec(vec![
+                            LuaValue::UserData(lua.create_userdata(LuaFileLock(lock))?),
+                            LuaValue::Nil,
+                        ])),
+                        Err(error) => Ok(LuaMultiValue::from_vec(vec![
+                            LuaValue::Nil,
+                            LuaValue::String(lua.create_string(error)?),
+                        ])),
+                    }
+                },
+            )?,
+        ),
     ])
+}
+
+struct LuaFileLock(fs::FileLock);
+
+impl LuaUserData for LuaFileLock {
+    fn add_methods<M: LuaUserDataMethods<Self>>(methods: &mut M) {
+        methods.add_method_mut("unlock", |_, this, ()| {
+            this.0.unlock();
+            Ok(())
+        });
+    }
 }
 
 fn replace_module(lua: &Lua) -> LuaResult<LuaTable> {

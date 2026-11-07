@@ -1,6 +1,10 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "dot.context" ---@type string
 
+local merge = require("dot.context.merge")
+
+local LOCK_TIMEOUT_MS = 2000 ---@type integer
+
 ---@class dot.context.__mods
 local __mods = {
   behavior = "dot.context.editor.behavior",
@@ -79,6 +83,7 @@ local __mods = {
 ---@field public search_file            dot.context.search_file
 ---@field public select                 dot.context.select
 ---@field protected _storage            dot.context.storage
+---@field protected _workspace_baseline ?dot.context.merge.Fingerprints What the workspace state was when loaded or saved
 local M = setmetatable({
   _storage = {},
 }, {
@@ -90,6 +95,74 @@ local M = setmetatable({
     return rawget(t, k)
   end,
 })
+
+---Workspace state modules, in the order they load and save.
+---@type string[]
+local WORKSPACE = {
+  "bookmark",
+  "colorpicker",
+  "diffview",
+  "explorer",
+  "flight",
+  "frecency",
+  "lsp",
+  "module",
+  "option",
+  "plugin",
+  "search_buffer",
+  "search_file",
+  "select",
+}
+
+---@return table<string, table<string, unknown>>
+local function dump_workspace()
+  local data = {} ---@type table<string, table<string, unknown>>
+  for _, name in ipairs(WORKSPACE) do
+    data[name] = M[name].dump()
+  end
+  return data
+end
+
+---Writes back the workspace fields this instance changed since it loaded them; every other field keeps its value in
+---the file, which instances that saved meanwhile may have changed. The lock makes instances quitting at once save one
+---after another. See spec/design/context.md.
+---@param filepath                      string
+---@return nil
+local function save_workspace(filepath)
+  local ours = dump_workspace()
+  local current = merge.fingerprints(ours)
+  local baseline = M._workspace_baseline
+  -- Without a baseline, nothing in memory is known to be this instance's own.
+  if baseline == nil or not merge.changed(baseline, current) then
+    return
+  end
+
+  local lock, err = yoz.fs.lock(filepath .. ".lock", LOCK_TIMEOUT_MS)
+  if lock == nil then
+    -- Saving unlocked beats losing what this instance changed.
+    stl.reporter.warn({
+      from = __module_name__,
+      subject = "save",
+      message = "Saving the workspace state without its lock",
+      details = { filepath = filepath, error = err },
+    })
+  end
+  local raw = stl.fs.read_json({ filepath = filepath, silent_on_bad_path = true, silent_on_bad_json = true })
+  local disk = nil ---@type table<string, table<string, unknown>>|nil
+  if type(raw) == "table" then
+    disk = {}
+    for _, name in ipairs(WORKSPACE) do
+      disk[name] = M[name].normalize(raw[name])
+    end
+  end
+  local saved = stl.fs.write_json(filepath, merge.merge(baseline, current, ours, disk), true)
+  if lock ~= nil then
+    lock:unlock()
+  end
+  if saved then
+    M._workspace_baseline = current
+  end
+end
 
 ---@return dot.context.data
 function M.dump()
@@ -134,19 +207,10 @@ function M.load(storage)
       and vim.fn.filereadable(storage.workspace) ~= 0
       and stl.fs.read_json({ filepath = storage.workspace, silent_on_bad_path = true })
     ) or {}
-    M.bookmark.load(data_workspace.bookmark)
-    M.colorpicker.load(data_workspace.colorpicker)
-    M.diffview.load(data_workspace.diffview)
-    M.explorer.load(data_workspace.explorer)
-    M.flight.load(data_workspace.flight)
-    M.frecency.load(data_workspace.frecency)
-    M.lsp.load(data_workspace.lsp)
-    M.module.load(data_workspace.module)
-    M.option.load(data_workspace.option)
-    M.plugin.load(data_workspace.plugin)
-    M.search_buffer.load(data_workspace.search_buffer)
-    M.search_file.load(data_workspace.search_file)
-    M.select.load(data_workspace.select)
+    for _, name in ipairs(WORKSPACE) do
+      M[name].load(data_workspace[name])
+    end
+    M._workspace_baseline = merge.fingerprints(dump_workspace())
   end
 end
 
@@ -162,22 +226,7 @@ function M.save(storage)
   end
 
   if storage.workspace then
-    local data = {
-      bookmark = M.bookmark.dump(),
-      colorpicker = M.colorpicker.dump(),
-      diffview = M.diffview.dump(),
-      explorer = M.explorer.dump(),
-      flight = M.flight.dump(),
-      frecency = M.frecency.dump(),
-      lsp = M.lsp.dump(),
-      module = M.module.dump(),
-      option = M.option.dump(),
-      plugin = M.plugin.dump(),
-      search_buffer = M.search_buffer.dump(),
-      search_file = M.search_file.dump(),
-      select = M.select.dump(),
-    }
-    stl.fs.write_json(storage.workspace, data, true)
+    save_workspace(storage.workspace)
   end
 end
 

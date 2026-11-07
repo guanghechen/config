@@ -20,6 +20,22 @@ function M.entry_path(path) end
 ---@return string|nil error
 function M.path_suffix(base, path) end
 
+---Takes an exclusive OS lock on `path`, created with its directory when missing, retrying every 10 ms for up to
+---`timeout_ms`.
+---`unlock()`, garbage collection or the end of the process releases it, so a crashed holder never keeps it.
+---@param path                          string
+---@param timeout_ms                    integer
+---@return yoz.fs.FileLock|nil
+---@return string|nil error
+function M.lock(path, timeout_ms) end
+
+---@class yoz.fs.FileLock
+local FileLock = {}
+
+---Releases the lock; later calls do nothing.
+---@return nil
+function FileLock:unlock() end
+
 ---@class yoz.fs.IFileItemWithStatus
 ---@field public type                   string
 ---@field public name                   string

@@ -10,6 +10,7 @@
 - [Tab 类型与 Tabline](tab.md)：命令适用范围、tab 类型与 tabline 注册。
 - [Nvimbar](nvimbar.md)：组件取数、状态提交、通知与布局。
 - [Signal Hub](signal-hub.md)：进程内消息、身份、路由与清理。
+- [Context](context.md)：editor 与 workspace 状态的持久化，以及多实例保存合并。
 - [stl.os](stl/os.md)：canonical filepath 与系统调用边界。
 - [Treeview](treeview/README.md)：native Data/State/Frame、标记算法、任务、投影、渲染、Visual 与 consumer 接入；
   接入步骤见 [Treeview 接入](treeview/integration.md)。
