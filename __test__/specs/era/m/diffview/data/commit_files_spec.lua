@@ -41,4 +41,25 @@ t:test("commit files: the root commit lists the files it creates, like any later
   t.assert_same({ "M a.txt +0 -1" }, summary(files(root, "HEAD")), "later commit")
 end)
 
+t:test("commit files: a renamed file is one entry with its previous path and its own counts", function()
+  local root = git.repo(t)
+  vim.fn.writefile({ "one", "two", "three", "four", "five" }, root .. "/a.txt")
+  vim.fn.writefile({ "bee" }, root .. "/b.txt")
+  git.run(root, { "add", "." })
+  git.run(root, { "commit", "-q", "-m", "first" })
+  git.run(root, { "mv", "a.txt", "c.txt" })
+  vim.fn.writefile({ "one", "TWO", "three", "four", "five" }, root .. "/c.txt")
+  vim.fn.writefile({ "BEE" }, root .. "/b.txt")
+  git.run(root, { "commit", "-q", "-am", "rename" })
+  t:patch_table(dot.path, "workspace", function()
+    return root
+  end)
+
+  local entries = files(root, "HEAD")
+  t.assert_same({ "M b.txt +1 -1", "R c.txt +1 -1" }, summary(entries))
+  for _, entry in ipairs(entries) do
+    t.assert_eq(entry.status == "R" and "a.txt" or nil, entry.prev_filepath, entry.filepath)
+  end
+end)
+
 t:run()

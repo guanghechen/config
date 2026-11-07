@@ -71,7 +71,6 @@ local __module_name__ = "era.m.diffview.types" ---@type string
 ---@field public files                  era.m.diffview.IFileEntry[]|nil changed files (lazy loaded)
 ---@field public file_status            string|nil                      file status for file history (A/M/D)
 ---@field public filepath               string|nil                      filepath for file history
----@field public parent_filepath        string|nil                      parent filepath for rename/copy
 ---@field public file_insertions        integer|nil                     insertions for file history
 ---@field public file_deletions         integer|nil                     deletions for file history
 ---@field public total_files_changed    integer|nil                     total files changed for commit

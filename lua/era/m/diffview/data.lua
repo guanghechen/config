@@ -523,7 +523,6 @@ function M.__fetch_log_page_with_path__(workspace, skip, per_page, path_filter, 
       if commit then
         commit.file_status = nil
         commit.filepath = nil
-        commit.parent_filepath = nil
         commit.file_insertions = nil
         commit.file_deletions = nil
 
@@ -535,11 +534,10 @@ function M.__fetch_log_page_with_path__(workspace, skip, per_page, path_filter, 
             i = i + 1
             break
           end
-          local status, path_current, path_prev = parse_name_status_line(status_line)
+          local status, path_current = parse_name_status_line(status_line)
           if status and path_current then
             commit.file_status = status
             commit.filepath = path_current
-            commit.parent_filepath = path_prev
           end
           i = i + 1
         end
@@ -578,14 +576,13 @@ function M.__fetch_log_page_with_path__(workspace, skip, per_page, path_filter, 
       elseif numstat_line:match("^%x+$") then
         current_hash = numstat_line
       elseif current_hash then
-        local ins, del, path_current, path_prev = parse_numstat_line(numstat_line)
+        local ins, del, path_current = parse_numstat_line(numstat_line)
         local commit = path_current and commits_map[current_hash] or nil
         if ins and del and commit then
           commit.file_insertions = ins
           commit.file_deletions = del
           if not commit.filepath then
             commit.filepath = path_current
-            commit.parent_filepath = path_prev
           end
         end
       end
@@ -804,6 +801,9 @@ function M.fetch_commit_files(hash, token)
     "--root",
     "--no-commit-id",
     "--name-status",
+    -- A renamed file is one entry with the path it had, as `git log --follow` reports it, not a deletion and an
+    -- addition.
+    "-M",
     "-r",
     hash,
   }
@@ -857,27 +857,19 @@ function M.__fetch_commit_numstat__(hash, files, token)
     "--root",
     "--no-commit-id",
     "--numstat",
+    -- Renames as `fetch_commit_files` lists them; -z keeps a renamed path apart from its source.
+    "-M",
+    "-z",
     "-r",
     hash,
   }
 
-  local result = stl.git.exec.exec(args, { cwd = workspace }, token):await()
+  local result = stl.git.exec.exec(args, { cwd = workspace, raw = true }, token):await()
 
   check_token(token)
 
   if result.code == 0 then
-    local stats = {} ---@type table<string, { insertions: integer, deletions: integer }>
-
-    for _, line in ipairs(result.lines) do
-      local ins, del, filepath = parse_numstat_line(line)
-      if ins and del and filepath then
-        stats[filepath] = {
-          insertions = ins,
-          deletions = del,
-        }
-      end
-    end
-
+    local stats = Numstat.parse(result.lines)
     for _, file in ipairs(files) do
       local stat = stats[file.filepath]
       if stat then

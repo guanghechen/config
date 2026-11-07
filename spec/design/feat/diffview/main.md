@@ -13,6 +13,11 @@
 
 File History 使用 `diffview_commits + path_filter`；tabline 显示过滤文件名，列表只包含涉及该路径的 commits。
 
+- 列表用 `git log --follow` 沿改名追溯；每个 commit 记下该文件在其中的路径（`ICommit.filepath`），打开时按这个
+  路径找文件，改名前的 commit 显示旧名。
+- commit 的变更文件开启改名检测（`diff-tree -M`）：改名是一个 `R` 条目，带旧路径 `prev_filepath`，与
+  `git log --follow` 一致；diff 左侧取每个条目自己的旧路径，不套用 File History 所跟踪文件的旧路径。
+
 ## 入口与 Workspace 组装
 
 - `<leader>gg` 是唯一 repository-level Git 入口，打开 `diffview_workspace`。
@@ -218,6 +223,7 @@ local winopts = {
 ---@field public stage_type     "staged"|"unstaged"|nil
 ---@field public insertions     integer|nil         -- 新增行数
 ---@field public deletions      integer|nil         -- 删除行数
+---@field public prev_filepath  string|nil          -- 改名/复制前的路径 (R/C)
 ```
 
 ### ICommit
@@ -234,7 +240,6 @@ local winopts = {
 ---@field public files          era.m.diffview.IFileEntry[]|nil  -- 变更文件列表 (懒加载)
 ---@field public file_status    string|nil          -- 文件状态 (path_filter 模式)
 ---@field public filepath       string|nil          -- 文件路径 (path_filter 模式)
----@field public parent_filepath string|nil         -- 父路径 (重命名/复制)
 ---@field public file_insertions integer|nil        -- 新增行数 (path_filter 模式)
 ---@field public file_deletions integer|nil         -- 删除行数 (path_filter 模式)
 ```

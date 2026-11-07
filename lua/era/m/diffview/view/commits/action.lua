@@ -1390,10 +1390,11 @@ function M.__open_target_file_diff__(ctx, commit, path_filter)
       commits_view.render_commits(ctx)
     end
 
-    -- Find target file entry
+    -- A commit before a rename has the file under its old name, which the log recorded while following it.
+    local filepath = actual_commit.filepath or path_filter ---@type string
     local target_entry = nil ---@type era.m.diffview.IFileEntry|nil
     for _, entry in ipairs(actual_commit.files or {}) do
-      if entry.filepath == path_filter then
+      if entry.filepath == filepath then
         target_entry = entry
         break
       end
@@ -1403,7 +1404,7 @@ function M.__open_target_file_diff__(ctx, commit, path_filter)
       stl.reporter.warn({
         from = __module_name__,
         subject = "__open_target_file_diff__",
-        message = string.format("File not found in commit: %s", path_filter),
+        message = string.format("File not found in commit: %s", filepath),
       })
       return
     end

@@ -584,7 +584,7 @@ function M.open_commit_entry(opts)
   }
 
   local filepath = entry.filepath
-  local parent_filepath = commit.parent_filepath or entry.prev_filepath or filepath
+  local parent_filepath = entry.prev_filepath or filepath
   local status = entry.status
   local hash = commit.hash
 
