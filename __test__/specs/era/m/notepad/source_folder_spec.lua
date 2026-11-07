@@ -160,4 +160,56 @@ t:test("quitting flushes every source even when one of them fails", function()
   t.assert_eq("kept\n", read(vim.fs.joinpath(dirpath, "Note.md")))
 end)
 
+---A folder source over a new directory whose notes are `contents`, by name, in order.
+---@param contents                      {[1]: string, [2]: string}[]
+---@return era.m.notepad.state.source.Folder
+---@return string dirpath
+local function source_with(contents)
+  local dirpath = t:tempdir()
+  local source = S.FolderSource.new(config(dirpath))
+  local first = source:load(false).active_uuid
+  for index, entry in ipairs(contents) do
+    local item = index == 1 and source:retrieve(first) or source:create(entry[1])
+    source:update(item.uuid, { name = entry[1], content = entry[2] })
+  end
+  t.assert_true(source:flush(), "flushed")
+  return source, dirpath
+end
+
+t:test("names that share a file reuse its note instead of emptying it", function()
+  local source, dirpath = source_with({ { "a/b", "x" }, { "Todo", "important" } })
+
+  t.assert_eq("a/b", source:create("a_b").name, "a sanitized name finds the note of its file")
+  -- Only a filesystem that ignores case stores `todo` in `Todo.md`.
+  local insensitive = vim.uv.fs_stat(vim.fs.joinpath(dirpath, "todo.md")) ~= nil
+  t.assert_eq(insensitive and "Todo" or "todo", source:create("todo").name)
+  t.assert_true(source:flush(), "flushed")
+
+  t.assert_eq("x\n", read(vim.fs.joinpath(dirpath, "a_b.md")))
+  t.assert_eq("important\n", read(vim.fs.joinpath(dirpath, "Todo.md")))
+end)
+
+t:test("renaming onto the file of another note is rejected, while changing only the case keeps the note", function()
+  t:patch_table(stl.reporter, "warn", function() end)
+  local source, dirpath = source_with({ { "a/b", "x" }, { "Other", "other" } })
+  local other = source:load(false).name_to_uuid["Other"]
+
+  t.assert_eq(false, source:rename(other, "a_b"), "a_b is the file of a/b")
+  t.assert_true(source:rename(other, "OTHER"), "the same note under another case")
+  t.assert_true(source:flush(), "flushed")
+
+  t.assert_eq("a/b=x OTHER=other", notes(S.FolderSource.new(config(dirpath))))
+end)
+
+t:test("a note file missing from the index is adopted with its text", function()
+  local source, dirpath = source_with({ { "Note", "first" } })
+  write(vim.fs.joinpath(dirpath, "Extra.md"), "kept\n")
+
+  source:create("Extra")
+  t.assert_true(source:flush(), "flushed")
+
+  t.assert_eq("kept\n", read(vim.fs.joinpath(dirpath, "Extra.md")))
+  t.assert_eq("Note=first Extra=kept", notes(S.FolderSource.new(config(dirpath))))
+end)
+
 t:run()

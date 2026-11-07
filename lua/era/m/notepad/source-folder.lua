@@ -321,8 +321,9 @@ function M:create(name, content)
   local state = self:load(false) ---@type era.m.notepad.state.source.FolderState
 
   local existing_uuid = state.name_to_uuid[normalized_name]
-  if existing_uuid ~= nil then
-    local existing_item = state.items[existing_uuid]
+  local exists, owner = self:__note_file_owner__(normalized_name)
+  local existing_item = existing_uuid ~= nil and state.items[existing_uuid] or owner
+  if existing_item ~= nil then
     self:__load_note_content__(existing_item)
     return existing_item
   end
@@ -335,12 +336,18 @@ function M:create(name, content)
     content = initial_content,
     original = initial_content,
   }
+  if exists then
+    -- A note file missing from the index keeps its text.
+    item.content, item.original = nil, nil
+  end
 
   state.items[uuid] = item
   state.name_to_uuid[normalized_name] = uuid
   state.orders[#state.orders + 1] = uuid
 
-  self:__save_note_content__(item)
+  if not exists then
+    self:__save_note_content__(item)
+  end
   self._dirty_orders = true
   self:__schedule_flush__()
 
@@ -367,6 +374,7 @@ function M:update(uuid, patch)
   local normalized_name = era.m.notepad.state.normalize_name(patch.name, self.default_item_name)
   if normalized_name ~= item.name then
     local has_conflict = S.state.check_name_conflict(state.name_to_uuid, normalized_name, uuid)
+      or self:__note_file_taken__(normalized_name, item)
     if has_conflict then
       stl.reporter.warn({
         from = __module_name__,
@@ -420,6 +428,7 @@ function M:rename(uuid, new_name)
   end
 
   local has_conflict = era.m.notepad.state.check_name_conflict(state.name_to_uuid, normalized_name, uuid)
+    or self:__note_file_taken__(normalized_name, item)
   if has_conflict then
     stl.reporter.warn({
       from = __module_name__,
@@ -738,6 +747,36 @@ end
 ---@return string
 function M:__get_note_path__(name)
   return dot.path.join(self._dirpath, name_to_filename(name))
+end
+
+---The file of note `name` and the indexed note stored in it. Different names share a file when sanitizing makes them
+---equal or the filesystem ignores case, as `todo` and `Todo` on macOS.
+---@protected
+---@param name                          string
+---@return boolean exists
+---@return era.m.notepad.state.INotepadItemState|nil owner
+function M:__note_file_owner__(name)
+  local stat = vim.uv.fs_stat(self:__get_note_path__(name))
+  if stat == nil then
+    return false, nil
+  end
+  for _, item in pairs(self:load(false).items) do
+    local own = vim.uv.fs_stat(self:__get_note_path__(item.name))
+    if own ~= nil and own.dev == stat.dev and own.ino == stat.ino then
+      return true, item
+    end
+  end
+  return true, nil
+end
+
+---Whether renaming `item` to `name` would write over a file that is not its own.
+---@protected
+---@param name                          string
+---@param item                          era.m.notepad.state.INotepadItemState
+---@return boolean
+function M:__note_file_taken__(name, item)
+  local exists, owner = self:__note_file_owner__(name)
+  return exists and owner ~= item
 end
 
 ---@protected
