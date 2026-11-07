@@ -192,6 +192,35 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
+--- Keep [[ and ]] the global reference jumps. Neovim's filetype plugins map them to section motions in python, rust,
+--- go, markdown, help and more; in Normal and Visual mode, where the global maps are, a buffer-local copy of the global
+--- map takes their place, which an ftplugin that undoes with `unmap <buffer> [[` (gdscript, abaqus) still finds.
+--- Operator-pending maps shadow nothing, and without a global map the ftplugin's own map stays.
+local runtime = vim.uv.fs_realpath(vim.env.VIMRUNTIME) or vim.env.VIMRUNTIME ---@type string
+
+vim.api.nvim_create_autocmd("FileType", {
+  group = augroup("keep_reference_jumps"),
+  callback = function()
+    -- Filetype plugins map in the current buffer, which `nvim_exec_autocmds()` may leave apart from the event's one.
+    local bufnr = vim.api.nvim_get_current_buf()
+    for _, mode in ipairs({ "n", "x" }) do
+      for _, keymap in ipairs(vim.api.nvim_buf_get_keymap(bufnr, mode)) do
+        -- A map an ftplugin sets, in Vim script or in Lua, carries the script ID of that ftplugin.
+        local script = (keymap.lhs == "[[" or keymap.lhs == "]]")
+          and keymap.sid > 0
+          and vim.fn.getscriptinfo({ sid = keymap.sid })[1]
+        if script and vim.startswith(vim.uv.fs_realpath(script.name) or script.name, runtime) then
+          local own = vim.fn.maparg(keymap.lhs, mode, false, true) --[[@as table<string, any>]]
+          vim.api.nvim_buf_del_keymap(bufnr, mode, keymap.lhs)
+          local global = vim.fn.maparg(keymap.lhs, mode, false, true) --[[@as table<string, any>]]
+          global.buffer = 1
+          vim.fn.mapset(mode, false, global.lhs and global or own)
+        end
+      end
+    end
+  end,
+})
+
 --- Highlight on yank.
 vim.api.nvim_create_autocmd("TextYankPost", {
   group = augroup("highlight_on_yank"),

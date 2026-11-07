@@ -197,21 +197,25 @@ for _, host in ipairs({ "neovim", "neovide", "vscode", "yozvim", "yuivim" }) do
   end)
 end
 
----@return nil
-local function load_filetypes()
+---Loads lua/ark/autocmd.lua without registering its autocmds, and returns them by group.
+---@return table<string, table>
+local function load_autocmds()
+  local autocmds = {} ---@type table<string, table>
   t:patch_table(vim.api, "nvim_create_augroup", function(name)
     return name
   end)
-  t:patch_table(vim.api, "nvim_create_autocmd", function()
+  t:patch_table(vim.api, "nvim_create_autocmd", function(_, opts)
+    autocmds[opts.group] = opts
     return 1
   end)
   assert(loadfile("lua/ark/autocmd.lua"))()
+  return autocmds
 end
 
 -- Patterns of equal priority are tried in an order that changes from one process to the next, so each overlap below
 -- passed or failed by chance before the configuration stopped competing with Neovim's own patterns.
 t:test("filetype patterns match the intended files and leave Neovim's own rules in place", function()
-  load_filetypes()
+  load_autocmds()
 
   for filepath, expected in pairs({
     ["/home/user/.config/fzf/fzf.fzfrc"] = "bash",
@@ -233,7 +237,7 @@ t:test("filetype patterns match the intended files and leave Neovim's own rules 
 end)
 
 t:test("a file over the size limit is a bigfile even where Neovim has a pattern for its path", function()
-  load_filetypes()
+  load_autocmds()
   t:patch_table(vim.g, "bigfile_size", 8)
   local dir = t:tempdir()
 
@@ -247,6 +251,109 @@ t:test("a file over the size limit is a bigfile even where Neovim has a pattern 
     end)
     t.assert_eq("bigfile", (vim.filetype.match({ filename = filepath, buf = bufnr })), name)
   end
+end)
+
+-- The cases below turn on Neovim's filetype plugins for the rest of the process, so they run last.
+
+---Registers the handler that keeps [[ and ]] after Neovim's filetype plugins, as the configuration's own handlers are,
+---and returns a function that gives buffer `bufnr`, a new one by default, a filetype.
+---@return fun(filetype: string, bufnr: integer|nil): integer
+local function keep_reference_jumps()
+  local create_augroup, create_autocmd = vim.api.nvim_create_augroup, vim.api.nvim_create_autocmd
+  local handler = assert(load_autocmds().ark_keep_reference_jumps, "the handler")
+  vim.cmd("filetype plugin on")
+  local group = create_augroup("keep_reference_jumps_spec", { clear = true })
+  t:defer(function()
+    vim.api.nvim_del_augroup_by_id(group)
+  end)
+  create_autocmd("FileType", { group = group, callback = handler.callback })
+  return function(filetype, bufnr)
+    bufnr = bufnr or vim.api.nvim_create_buf(true, false)
+    vim.api.nvim_set_option_value("filetype", filetype, { buf = bufnr })
+    return bufnr
+  end
+end
+
+---Global [[ and ]] in Normal and Visual mode, as the configuration maps them: with a Lua callback.
+---@return nil
+local function map_reference_jumps()
+  for _, lhs in ipairs({ "[[", "]]" }) do
+    vim.keymap.set({ "n", "x" }, lhs, function() end, { desc = "reference" })
+    t:defer(function()
+      vim.keymap.del({ "n", "x" }, lhs)
+    end)
+  end
+end
+
+---Who maps `lhs` in `mode` in buffer `bufnr` itself: the description of the map, "runtime" for a map of Neovim's
+---filetype plugins without one, or nil.
+---@param bufnr                         integer
+---@param mode                          string
+---@param lhs                           string
+---@return string|nil
+local function owner(bufnr, mode, lhs)
+  for _, keymap in ipairs(vim.api.nvim_buf_get_keymap(bufnr, mode)) do
+    if keymap.lhs == lhs then
+      return keymap.desc or (keymap.sid > 0 and "runtime" or "?")
+    end
+  end
+end
+
+t:test("Neovim's filetype plugins give [[ and ]] to the global maps in Normal and Visual mode", function()
+  map_reference_jumps()
+  local filetype = keep_reference_jumps()
+
+  local python = filetype("python")
+  t.assert_eq("reference", owner(python, "n", "[["), "python, Normal")
+  t.assert_eq("reference", owner(python, "x", "]]"), "python, Visual")
+  t.assert_eq("runtime", owner(python, "o", "]]"), "python, Operator-pending")
+  -- One :noremap covers Normal, Visual and Operator-pending mode.
+  local go = filetype("go")
+  t.assert_eq("reference", owner(go, "n", "]]"), "go, Normal")
+  t.assert_eq("reference", owner(go, "x", "[["), "go, Visual")
+  t.assert_eq("runtime", owner(go, "o", "[["), "go, Operator-pending")
+  t.assert_eq("reference", owner(filetype("markdown"), "n", "]]"), "markdown, mapped from Lua")
+
+  local panel = vim.api.nvim_create_buf(false, true)
+  vim.keymap.set("n", "[[", function() end, { buf = panel, desc = "page" })
+  t.assert_eq("page", owner(filetype("diffview-commits", panel), "n", "[["), "a map of the configuration's own")
+end)
+
+t:test("a filetype plugin still undoes [[ and ]] after they give way to the global maps", function()
+  map_reference_jumps()
+  local filetype = keep_reference_jumps()
+
+  -- Their undo unmaps [[ without `silent!`, which fails on a map that is gone.
+  for _, name in ipairs({ "gdscript", "abaqus" }) do
+    local bufnr = filetype(name)
+    t.assert_eq("reference", owner(bufnr, "n", "[["), name)
+    filetype("text", bufnr)
+    t.assert_nil(owner(bufnr, "n", "[["), name .. " undone")
+  end
+end)
+
+t:test("without global [[ and ]], filetype plugins keep their own", function()
+  local filetype = keep_reference_jumps()
+
+  local python = filetype("python")
+  t.assert_eq("runtime", owner(python, "n", "[["))
+  local rhs = vim.api.nvim_buf_call(python, function()
+    return vim.fn.maparg("[[", "n")
+  end)
+  t.assert_true(rhs:find("Python_jump", 1, true) ~= nil, "the map as the ftplugin set it: " .. rhs)
+end)
+
+-- This case leaves the filetype plugin's settings in the current buffer, so it runs last.
+t:test("FileType for a buffer other than the current one gives way where the filetype plugin maps", function()
+  map_reference_jumps()
+  local filetype = keep_reference_jumps()
+  local other = filetype("python")
+  local current = vim.api.nvim_get_current_buf()
+
+  -- Neovim's filetype plugins then map in the current buffer, as for notepad's call.
+  vim.api.nvim_exec_autocmds("FileType", { buf = other })
+  t.assert_eq("reference", owner(current, "n", "[["), "the current buffer")
+  t.assert_eq("reference", owner(other, "n", "[["), "the event's buffer")
 end)
 
 t:run()
