@@ -30,6 +30,21 @@ t:test("saving keeps the fields that an instance saving since changed", function
   t.assert_eq(expandtab, saved.option.expandtab, "this instance's option")
 end)
 
+t:test("instances that change different settings of one picker keep both", function()
+  local filepath = storage()
+  dot.context.load({ workspace = filepath })
+  local gitignore = not dot.context.select.find_file.flag_gitignore:snapshot()
+  dot.context.select.find_file.flag_gitignore:next(gitignore)
+  stl.fs.write_json(filepath, { select = { find_file = { search_pattern = "other" } } }, true)
+
+  dot.context.save({ workspace = filepath })
+
+  local saved = assert(stl.fs.read_json({ filepath = filepath }))
+  t.assert_eq("other", saved.select.find_file.search_pattern, "the other instance's search")
+  t.assert_eq(gitignore, saved.select.find_file.flag_gitignore, "this instance's filter")
+  t.assert_eq(nil, saved["select.find_file"], "the picker is written back in place")
+end)
+
 t:test("an instance that changed nothing leaves the file alone", function()
   local filepath = storage()
   stl.fs.write_json(filepath, { bookmark = { pinned = { "/kept.md" } } }, true)

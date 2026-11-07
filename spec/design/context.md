@@ -14,8 +14,9 @@
 
 ### 合并单位
 
-- 字段：`workspace.json` 中的 `<模块>.<字段>`，如 `bookmark.pinned`、`frecency.files`、`option.expandtab`、
-  `select.find_file`，共七十余个，可选字段未设置时不计。
+- 字段：`workspace.json` 中的 `<模块>.<字段>`，如 `bookmark.pinned`、`frecency.files`、`option.expandtab`。
+  `select` 中各 picker 的过滤规则、开关与搜索历史彼此独立，每项设置单独作为字段，如
+  `select.find_file.flag_gitignore`、`select.find_file.search_pattern_history`。共约 230 个，可选字段未设置时不计。
 - 一个字段要么整体取本实例的值，要么整体保留文件中的值，不做部分合并。
 
 ### 规则
@@ -53,8 +54,8 @@
 
 实测于本仓库所在机器，`workspace.json` 现有 126 份，中位数 11.6 KB，最大 50.6 KB：
 
-- 启动：为全部字段计算指纹，16 KB 时 0.13 ms，66 KB 时 0.45 ms。
+- 启动：为全部字段计算指纹，中位数文件 0.10 ms，最大文件 0.24 ms（p50；p95 为 0.28、0.47 ms）。
 - 退出：
   - 没有改动时零 I/O。
-  - 有改动时额外读盘、解码 0.1–0.2 ms，计算指纹 0.1–0.5 ms；写入约 4 ms，主要是 `fsync`。
+  - 有改动时额外读盘、解码 0.1–0.2 ms，计算指纹与合并 0.11–0.25 ms；写入约 4 ms，主要是 `fsync`。
   - 两个实例同时退出时，后取锁者约等待 10 ms。

@@ -123,13 +123,36 @@ local function dump_workspace()
   return data
 end
 
+---Moves each picker of `select` to `select.<picker>`, beside the modules, so that its settings merge one at a time:
+---filters, flags and search history change independently.
+---@param data                          table<string, table<string, unknown>>
+---@return table<string, table<string, unknown>>
+local function split_pickers(data)
+  for _, picker in ipairs(M.select.keys) do
+    data["select." .. picker] = data.select[picker]
+    data.select[picker] = nil
+  end
+  return data
+end
+
+---Undoes `split_pickers`.
+---@param data                          table<string, table<string, unknown>>
+---@return table<string, table<string, unknown>>
+local function join_pickers(data)
+  for _, picker in ipairs(M.select.keys) do
+    data.select[picker] = data["select." .. picker]
+    data["select." .. picker] = nil
+  end
+  return data
+end
+
 ---Writes back the workspace fields this instance changed since it loaded them; every other field keeps its value in
 ---the file, which instances that saved meanwhile may have changed. The lock makes instances quitting at once save one
 ---after another. See spec/design/context.md.
 ---@param filepath                      string
 ---@return nil
 local function save_workspace(filepath)
-  local ours = dump_workspace()
+  local ours = split_pickers(dump_workspace())
   local current = merge.fingerprints(ours)
   local baseline = M._workspace_baseline
   -- Without a baseline, nothing in memory is known to be this instance's own.
@@ -154,8 +177,10 @@ local function save_workspace(filepath)
     for _, name in ipairs(WORKSPACE) do
       disk[name] = M[name].normalize(raw[name])
     end
+    split_pickers(disk)
   end
-  local saved = stl.fs.write_json(filepath, merge.merge(baseline, current, ours, disk), true)
+  local merged = join_pickers(merge.merge(baseline, current, ours, disk))
+  local saved = stl.fs.write_json(filepath, merged, true)
   if lock ~= nil then
     lock:unlock()
   end
@@ -210,7 +235,7 @@ function M.load(storage)
     for _, name in ipairs(WORKSPACE) do
       M[name].load(data_workspace[name])
     end
-    M._workspace_baseline = merge.fingerprints(dump_workspace())
+    M._workspace_baseline = merge.fingerprints(split_pickers(dump_workspace()))
   end
 end
 
