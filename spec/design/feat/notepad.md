@@ -46,7 +46,9 @@ Source 身份由容器持有，不要求每个 item 增加 `source` 字段。
 
 - `folder`：便签写为 `.md`，名称先转换为 filesystem-safe filename；`.__notepad__` 保存 metadata。
 - `json`：在一个文件中保存 `items`、`orders` 与 `activated_item_uuid`。
-- 两个 engine 均使用 3000 ms debounce；`source:flush()` 强制落盘。
+- 两个 engine 均使用 3000 ms debounce；`source:flush()` 强制落盘，退出 Neovim 时 flush 所有已加载的 source。
+  `folder` 的编辑只改内存，flush 原子写入未保存的便签和有变化的 metadata，没有改动时不写盘；
+  metadata 缺失或损坏时从目录中的 `.md` 重建索引，不覆盖已有便签。
 - Engine 切换通过 `dump_to_json()` / `load_from_json()` 传递统一数据，由 state 更新配置和 source cache。
 
 View 切换 source 前同步当前 buffer 内容并 flush。Action 将保存、创建、重命名、删除与 source 选择

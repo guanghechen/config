@@ -51,6 +51,24 @@ end
 ---@type table<string, era.m.notepad.state.INotepadSource>
 local _source_cache = {}
 
+vim.api.nvim_create_autocmd("VimLeavePre", {
+  group = stl.nvim.fn.augroup("notepad_flush_on_VimLeavePre"),
+  callback = function()
+    -- Edits wait for a debounced flush, which quitting would drop; one failing source must not cost the others.
+    for name, source in pairs(_source_cache) do
+      local ok, err = pcall(source.flush, source)
+      if not ok then
+        stl.reporter.error({
+          from = __module_name__,
+          subject = "VimLeavePre",
+          message = "Failed to flush notes",
+          details = { source = name, error = tostring(err) },
+        })
+      end
+    end
+  end,
+})
+
 ---Observable for the currently activated note UUID
 ---@type stl.c.Observable
 local o_activated_uuid = stl.c.Observable.from_value("")

@@ -13,6 +13,7 @@ local __module_name__ = "era.m.notepad.source-folder" ---@type string
 ---@field protected _state              era.m.notepad.state.source.FolderState|nil Internal state cache
 ---@field protected _dirty_orders       boolean Track if orders changed
 ---@field protected _dirty_active       boolean Track if active_uuid changed
+---@field protected _dirty_names        boolean Track if a note was renamed
 ---@field protected _dirpath            string Directory path for notes
 ---@field protected _metadata_path      string Path to .__notepad__ metadata file
 local M = {}
@@ -49,6 +50,7 @@ function M.new(config)
   self._state = nil
   self._dirty_orders = false
   self._dirty_active = false
+  self._dirty_names = false
 
   self._flush_debounced = stl.timer.debounce(function()
     self:flush()
@@ -141,6 +143,40 @@ function M:load(force)
     })
   end
 
+  local rebuilt = #orders == 0
+  if rebuilt then
+    -- Without readable metadata the notes on disk are the index; the default note must not write over one.
+    local stems = {} ---@type string[]
+    for filename, kind in vim.fs.dir(self._dirpath) do
+      if kind == "file" and filename:sub(-3) == ".md" then
+        stems[#stems + 1] = filename:sub(1, -4)
+      end
+    end
+    table.sort(stems)
+    local listed = {} ---@type table<string, boolean>
+    for _, stem in ipairs(stems) do
+      local name = S.state.normalize_name(stem, self.default_item_name)
+      local uuid = name_to_uuid[name]
+      if uuid == nil then
+        uuid = yoz.fn.uuid()
+        items_map[uuid] = { uuid = uuid, name = name, content = nil, original = nil }
+        name_to_uuid[name] = uuid
+      end
+      if not listed[uuid] then
+        listed[uuid] = true
+        orders[#orders + 1] = uuid
+      end
+    end
+    if #orders > 0 then
+      stl.reporter.warn({
+        from = __module_name__,
+        subject = "Index Rebuilt",
+        message = string.format("Rebuilt the notes index from %d note files", #orders),
+        details = { filepath = self._metadata_path },
+      })
+    end
+  end
+
   if #orders == 0 then
     local uuid = yoz.fn.uuid()
     local name = S.state.normalize_name(nil, self.default_item_name)
@@ -172,6 +208,12 @@ function M:load(force)
 
   self._dirty_orders = false
   self._dirty_active = false
+  self._dirty_names = false
+
+  if rebuilt then
+    self._dirty_orders = true
+    self:__schedule_flush__()
+  end
 
   return self._state
 end
@@ -346,12 +388,12 @@ function M:update(uuid, patch)
   end
 
   if modified then
-    self:__save_note_content__(item)
-
     if name_changed then
+      self._dirty_names = true
       self:__rename_note_file__(old_name, item.name)
     end
 
+    -- The debounced flush writes the content, as a quit does.
     self:__schedule_flush__()
   end
 
@@ -392,6 +434,7 @@ function M:rename(uuid, new_name)
   item.name = normalized_name
 
   self:__rename_note_file__(old_name, item.name)
+  self._dirty_names = true
   self:__schedule_flush__()
 
   return true
@@ -427,7 +470,6 @@ function M:append_content(uuid, text)
   end
 
   item.content = new_content
-  self:__save_note_content__(item)
   self:__schedule_flush__()
 
   return true
@@ -542,43 +584,53 @@ function M:flush()
     self._flush_debounced:cancel()
   end
 
-  stl.env.mkdirs(self._dirpath, true)
-
-  local items = {}
-  for _, uuid in ipairs(self._state.orders) do
-    local item = self._state.items[uuid]
-    if item ~= nil then
-      items[#items + 1] = {
-        uuid = item.uuid,
-        name = item.name,
-      }
+  local unsaved = {} ---@type era.m.notepad.state.INotepadItemState[]
+  for _, item in pairs(self._state.items) do
+    if item.content ~= nil and item.content ~= item.original then
+      unsaved[#unsaved + 1] = item
     end
   end
-
-  local save_data = {
-    items = items,
-    orders = self._state.orders,
-    activated_item_uuid = self._state.active_uuid or vim.NIL,
-  }
-
-  local ok, err = pcall(function()
-    stl.fs.write_json(self._metadata_path, save_data, true)
-  end)
-
-  if not ok then
-    stl.reporter.error({
-      from = __module_name__,
-      subject = "Flush Failed",
-      message = "Failed to write notes metadata",
-      details = { filepath = self._metadata_path, error = err },
-    })
-    return false
+  local metadata_changed = self._dirty_orders or self._dirty_active or self._dirty_names
+  -- Every flush on exit lands here; a notepad only read must not touch the disk.
+  if #unsaved == 0 and not metadata_changed then
+    return true
   end
 
-  self._dirty_orders = false
-  self._dirty_active = false
+  stl.env.mkdirs(self._dirpath, true)
 
-  return true
+  local saved = true
+  for _, item in ipairs(unsaved) do
+    saved = self:__save_note_content__(item) and saved
+  end
+
+  if metadata_changed then
+    local items = {}
+    for _, uuid in ipairs(self._state.orders) do
+      local item = self._state.items[uuid]
+      if item ~= nil then
+        items[#items + 1] = {
+          uuid = item.uuid,
+          name = item.name,
+        }
+      end
+    end
+
+    local save_data = {
+      items = items,
+      orders = self._state.orders,
+      activated_item_uuid = self._state.active_uuid or vim.NIL,
+    }
+
+    if not stl.fs.write_json(self._metadata_path, save_data, true) then
+      return false
+    end
+
+    self._dirty_orders = false
+    self._dirty_active = false
+    self._dirty_names = false
+  end
+
+  return saved
 end
 
 ---Export to standard JSON format
@@ -663,6 +715,7 @@ function M:load_from_json(json_data)
     self:__save_note_content__(item)
   end
 
+  self._dirty_orders = true
   self:flush()
   return true
 end
@@ -741,19 +794,8 @@ function M:__save_note_content__(item)
     return true
   end
 
-  local filepath = self:__get_note_path__(item.name)
-  local ok, err = pcall(function()
-    local lines = vim.split(item.content, "\n", { plain = true })
-    vim.fn.writefile(lines, filepath)
-  end)
-
-  if not ok then
-    stl.reporter.error({
-      from = __module_name__,
-      subject = "Save Failed",
-      message = "Failed to save note content",
-      details = { filepath = filepath, error = err },
-    })
+  -- Atomic, so a failed write keeps the previous note; every line ends with "\n" as `writefile()` writes it.
+  if not stl.fs.write_file(self:__get_note_path__(item.name), item.content .. "\n") then
     return false
   end
 
