@@ -26,38 +26,30 @@ pub fn replace_file_by_matches_advance(
     let mut offset_delta: i64 = 0;
     let mut next_offsets: Vec<usize> = vec![];
     let regex = matcher(search_pattern, flag_regex, flag_case_sensitive)?;
-    let next_text: String = regex
-        .replace_all(&text, |caps: &Captures| {
-            let m = caps.get(0).unwrap();
-            let offset: usize = m.start();
-            let should_replace: bool = match_offsets.contains(&offset);
-            if should_replace {
-                let mut replacement: String = replace_pattern.to_string();
-                for i in 1..caps.len() {
-                    if let Some(cap) = caps.get(i) {
-                        let placeholder = format!("${}", i);
-                        replacement = replacement.replace(&placeholder, cap.as_str());
-                    }
+    let next_text: String = super::replace_all(&regex, &text, |caps: &Captures| {
+        let m = caps.get(0).unwrap();
+        let offset: usize = m.start();
+        let should_replace: bool = match_offsets.contains(&offset);
+        if should_replace {
+            let replacement: String = super::expand(caps, replace_pattern);
+
+            let mut i = next_offsets.len();
+            while i < remain_offsets.len() {
+                let remain_offset: usize = remain_offsets[i];
+                if remain_offset > offset {
+                    break;
                 }
 
-                let mut i = next_offsets.len();
-                while i < remain_offsets.len() {
-                    let remain_offset: usize = remain_offsets[i];
-                    if remain_offset > offset {
-                        break;
-                    }
-
-                    next_offsets.push((remain_offset as i64 + offset_delta) as usize);
-                    i += 1;
-                }
-                offset_delta += (replacement.len() as i64) - (m.end() as i64 - m.start() as i64);
-
-                replacement
-            } else {
-                m.as_str().to_string()
+                next_offsets.push((remain_offset as i64 + offset_delta) as usize);
+                i += 1;
             }
-        })
-        .to_string();
+            offset_delta += (replacement.len() as i64) - (m.end() as i64 - m.start() as i64);
+
+            replacement
+        } else {
+            m.as_str().to_string()
+        }
+    });
 
     let mut i: usize = next_offsets.len();
     while i < remain_offsets.len() {

@@ -13,29 +13,21 @@ pub fn replace_text_preview_by_matches(
 ) -> Result<String, String> {
     let match_offsets: HashSet<usize> = match_offsets.iter().cloned().collect();
     let regex = matcher(search_pattern, flag_regex, flag_case_sensitive)?;
-    let next_text: String = regex
-        .replace_all(text, |caps: &Captures| {
-            let mut replacement = replace_pattern.to_string();
-            for i in 1..caps.len() {
-                if let Some(cap) = caps.get(i) {
-                    let placeholder = format!("${}", i);
-                    replacement = replacement.replace(&placeholder, cap.as_str());
-                }
-            }
+    let next_text: String = super::replace_all(&regex, text, |caps: &Captures| {
+        let replacement = super::expand(caps, replace_pattern);
 
-            let m = caps.get(0).unwrap();
-            let should_replace: bool = match_offsets.contains(&m.start());
-            if should_replace {
-                if keep_search_pieces {
-                    format!("{}{}", m.as_str(), replacement)
-                } else {
-                    replacement
-                }
+        let m = caps.get(0).unwrap();
+        let should_replace: bool = match_offsets.contains(&m.start());
+        if should_replace {
+            if keep_search_pieces {
+                format!("{}{}", m.as_str(), replacement)
             } else {
-                m.as_str().to_string()
+                replacement
             }
-        })
-        .to_string();
+        } else {
+            m.as_str().to_string()
+        }
+    });
     Ok(next_text)
 }
 

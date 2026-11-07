@@ -383,6 +383,8 @@ fn build_matcher(options: &ISearchInFilesOptions) -> Result<RegexMatcher, String
     let mut builder = RegexMatcherBuilder::new();
     builder.case_insensitive(!options.flag_case_sensitive);
     builder.multi_line(true);
+    /* `$` matches before `\r\n` as the replace matcher does; without a line terminator, patterns may span lines. */
+    builder.crlf(true).line_terminator(None);
     builder.unicode(true);
     builder.dot_matches_new_line(true);
 
@@ -913,6 +915,39 @@ mod tests {
             "a.txt should not be present when searching with \\r\\n"
         );
         assert!(filenames.contains("b.txt"), "b.txt should be present");
+    }
+
+    #[test]
+    fn t_search_in_files_end_anchor_matches_lf_and_crlf_lines() {
+        let options = ISearchInFilesOptions {
+            cwd: Some(fixtures_dir()),
+            flag_case_sensitive: true,
+            flag_gitignore: true,
+            flag_regex: true,
+            max_filesize: Some("1M".to_string()),
+            max_matches: Some(300),
+            search_pattern: r#"Hello, (world|世界)!$"#.to_string(),
+            search_paths: ".".to_string(),
+            include_patterns: "*.txt".to_string(),
+            exclude_patterns: "c.txt".to_string(),
+            specified_filepath: None,
+        };
+
+        let filenames: HashSet<_> = search_in_files(&options)
+            .expect("expected successful search")
+            .items
+            .iter()
+            .map(|file| {
+                std::path::Path::new(&file.p)
+                    .file_name()
+                    .unwrap()
+                    .to_string_lossy()
+                    .to_string()
+            })
+            .collect();
+
+        assert!(filenames.contains("a.txt"), "LF lines end at `$`");
+        assert!(filenames.contains("b.txt"), "CRLF lines end at `$`");
     }
 
     #[test]

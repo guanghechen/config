@@ -46,6 +46,8 @@ fn compile(pattern: &str, flag_regex: bool, flag_case_sensitive: bool) -> Result
     };
     RegexBuilder::new(&pattern)
         .case_insensitive(!flag_case_sensitive)
+        .multi_line(true)
+        .crlf(true)
         .dot_matches_new_line(true)
         .build()
         .map_err(|error| format!("Invalid regex pattern: {error}"))
@@ -85,5 +87,17 @@ mod tests {
         assert_eq!(find("foo", true, false, "Foo foo"), [(0, 3), (4, 7)]);
         assert_eq!(find("foo", true, true, "Foo foo"), [(4, 7)]);
         assert_eq!(find("a.b", true, true, "a\nb"), [(0, 3)]);
+    }
+
+    #[test]
+    fn t_matcher_anchors_match_at_every_line_ending() {
+        assert_eq!(
+            find("a$", true, true, "a\na\r\na"),
+            [(0, 1), (2, 3), (5, 6)]
+        );
+        assert_eq!(
+            find("^a", true, true, "a\na\r\na"),
+            [(0, 1), (2, 3), (5, 6)]
+        );
     }
 }

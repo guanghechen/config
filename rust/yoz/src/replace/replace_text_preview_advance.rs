@@ -16,46 +16,38 @@ pub fn replace_text_preview_advance(
     let mut total_search_len: usize = 0;
     let mut total_replace_len: usize = 0;
 
-    let next_text: String = regex
-        .replace_all(text, |caps: &Captures| {
-            let mut replacement = replace_pattern.to_string();
-            for i in 1..caps.len() {
-                if let Some(cap) = caps.get(i) {
-                    let placeholder = format!("${}", i);
-                    replacement = replacement.replace(&placeholder, cap.as_str());
-                }
-            }
+    let next_text: String = super::replace_all(&regex, text, |caps: &Captures| {
+        let replacement = super::expand(caps, replace_pattern);
 
-            let m = caps.get(0).unwrap();
-            if keep_search_pieces {
-                let search_start: usize = m.start() + total_replace_len;
-                let search_end: usize = search_start + m.len();
-                let replace_start: usize = search_end;
-                let replace_end: usize = replace_start + replacement.len();
-                total_search_len += m.len();
-                total_replace_len += replacement.len();
-                matches.push(ISearchInLinesMatchPoint {
-                    start: search_start,
-                    end: search_end,
-                });
-                matches.push(ISearchInLinesMatchPoint {
-                    start: replace_start,
-                    end: replace_end,
-                });
-                format!("{}{}", m.as_str(), replacement)
-            } else {
-                let replace_start: usize = m.start() + total_replace_len - total_search_len;
-                let replace_end: usize = replace_start + replacement.len();
-                total_search_len += m.len();
-                total_replace_len += replacement.len();
-                matches.push(ISearchInLinesMatchPoint {
-                    start: replace_start,
-                    end: replace_end,
-                });
-                replacement
-            }
-        })
-        .to_string();
+        let m = caps.get(0).unwrap();
+        if keep_search_pieces {
+            let search_start: usize = m.start() + total_replace_len;
+            let search_end: usize = search_start + m.len();
+            let replace_start: usize = search_end;
+            let replace_end: usize = replace_start + replacement.len();
+            total_search_len += m.len();
+            total_replace_len += replacement.len();
+            matches.push(ISearchInLinesMatchPoint {
+                start: search_start,
+                end: search_end,
+            });
+            matches.push(ISearchInLinesMatchPoint {
+                start: replace_start,
+                end: replace_end,
+            });
+            format!("{}{}", m.as_str(), replacement)
+        } else {
+            let replace_start: usize = m.start() + total_replace_len - total_search_len;
+            let replace_end: usize = replace_start + replacement.len();
+            total_search_len += m.len();
+            total_replace_len += replacement.len();
+            matches.push(ISearchInLinesMatchPoint {
+                start: replace_start,
+                end: replace_end,
+            });
+            replacement
+        }
+    });
     Ok(IReplacePreviewResult {
         text: next_text,
         matches,
