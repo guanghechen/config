@@ -13,6 +13,7 @@ local data = require("era.m.diffview.data")
 local pane_changes = require("era.m.diffview.pane.changes")
 local pane_commits = require("era.m.diffview.pane.commits")
 local sbs_keymap = require("era.m.diffview.view.sbs_keymap")
+local util = require("era.m.diffview.util")
 local workspace_action = require("era.m.diffview.view.workspace.action")
 local workspace_keymap = require("era.m.diffview.view.workspace.keymap")
 local workspace_tabline = require("era.m.diffview.view.workspace.tabline")
@@ -48,6 +49,47 @@ end
 local function resolve_sbs(mode, key)
   local session = M.current()
   return session and find_keymap(session:sbs_keymaps(), mode, key)
+end
+
+---The SBS mappings a working-tree buffer borrows while the cursor is on it in a preview window.
+---@type era.m.diffview.view.sbs_keymap.IBinding|nil
+local lent = nil
+
+---Lends the SBS mappings to the working-tree buffer the cursor is on in a preview window of the current tab, and takes
+---them back from a buffer the cursor or the preview left. Buffer-local mappings reach every window of a buffer, and a
+---working-tree buffer is also the user's: its windows outside the preview keep the user's own mappings.
+---@return nil
+local function sync_lent()
+  local winnr = vim.api.nvim_get_current_win()
+  local bufnr = vim.api.nvim_win_get_buf(winnr)
+  local session = M.current()
+  if
+    session
+    and (winnr == session.layout.sbs_left_winnr or winnr == session.layout.sbs_right_winnr)
+    and util.is_worktree_buffer(bufnr)
+  then
+    if lent and lent.bufnr == bufnr then
+      return
+    end
+    if lent then
+      sbs_keymap.detach(lent)
+    end
+    lent = sbs_keymap.attach(session:sbs_keymaps(), bufnr, resolve_sbs)
+  elseif lent then
+    sbs_keymap.detach(lent)
+    lent = nil
+  end
+end
+
+---Installs the SBS mappings on a preview buffer Diffview owns; a working-tree buffer only borrows them.
+---@param session                       era.m.diffview.Session
+---@param bufnr                         integer
+---@return nil
+local function setup_sbs(session, bufnr)
+  if not util.is_worktree_buffer(bufnr) then
+    sbs_keymap.setup(session:sbs_keymaps(), bufnr, resolve_sbs)
+  end
+  sync_lent()
 end
 
 ---@param layout                        { sbs_left_winnr: integer|nil, sbs_right_winnr: integer|nil }
@@ -96,6 +138,12 @@ local function watch_tabs()
     return
   end
   group = vim.api.nvim_create_augroup(__module_name__, { clear = true })
+  vim.api.nvim_create_autocmd("WinEnter", {
+    group = group,
+    callback = function()
+      sync_lent()
+    end,
+  })
   vim.api.nvim_create_autocmd("TabClosed", {
     group = group,
     callback = function()
@@ -115,6 +163,7 @@ end
 ---@class era.m.diffview.Session
 ---@field public kind                   "workspace"|"commits"
 ---@field public tabnr                  integer
+---@field public layout                 { sbs_left_winnr: integer|nil, sbs_right_winnr: integer|nil }
 ---@field public close                  fun(self: era.m.diffview.Session): nil
 ---@field public navigate_window        fun(self: era.m.diffview.Session, direction: "h"|"j"|"k"|"l"): boolean
 ---@field public refresh                fun(self: era.m.diffview.Session): nil
@@ -150,6 +199,7 @@ function Session:__release__()
     cleanup()
   end
   self._cleanups = {}
+  sync_lent()
   return true
 end
 
@@ -247,7 +297,7 @@ end
 ---@param bufnr                         integer
 ---@return nil
 function WorkspaceSession:setup_sbs(bufnr)
-  sbs_keymap.setup(self:sbs_keymaps(), bufnr, resolve_sbs)
+  setup_sbs(self, bufnr)
 end
 
 ---@return nil
@@ -438,7 +488,7 @@ end
 ---@param bufnr                         integer
 ---@return nil
 function CommitsSession:setup_sbs(bufnr)
-  sbs_keymap.setup(self:sbs_keymaps(), bufnr, resolve_sbs)
+  setup_sbs(self, bufnr)
 end
 
 ---@return nil

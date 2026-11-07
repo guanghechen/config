@@ -146,68 +146,59 @@ end
 -- Window options management
 ----------------------------------------------------------------------------------------------------
 
----@type table<integer, table<string, any>>
-local winopts_store = {}
+---Working-tree buffers that side-by-side windows show, by window, with the window options each brought in.
+---@type table<integer, { bufnr: integer, winopts: table<string, any> }>
+local borrowed = {}
 
----Save window options for later restoration
----@param bufnr                         integer
----@param winnr                         integer
-function M.save_winopts(bufnr, winnr)
-  if winopts_store[bufnr] then
+---@type integer|nil
+local group = nil
+
+---Gives a working-tree buffer its own window options back when its side-by-side window closes, even with its tab:
+---the closing window still records the options its buffer leaves with. Neovim would skip the options of a diff
+---window, but 'diffopt' "closeoff" turns 'diff' off in the side that closes last.
+local function watch_closing()
+  if group then
     return
   end
-
-  if not vim.api.nvim_win_is_valid(winnr) then
-    return
-  end
-
-  winopts_store[bufnr] = {}
-  for _, opt in ipairs(TRACKED_WINOPTS) do
-    winopts_store[bufnr][opt] = vim.api.nvim_get_option_value(opt, { win = winnr, scope = "local" })
-  end
-
-  -- Clean up store entry when buffer is wiped out to prevent memory leak
-  vim.api.nvim_create_autocmd("BufWipeout", {
-    buf = bufnr,
-    once = true,
-    callback = function()
-      winopts_store[bufnr] = nil
+  group = vim.api.nvim_create_augroup(__module_name__, { clear = true })
+  vim.api.nvim_create_autocmd("WinClosed", {
+    group = group,
+    callback = function(args)
+      local winnr = tonumber(args.match) ---@type integer|nil
+      if winnr and borrowed[winnr] then
+        M.restore_winopts(winnr)
+      end
     end,
   })
 end
 
----Restore saved window options
+---Remembers the window options a working-tree buffer brought into side-by-side window `winnr`, before the window
+---turns it into a diff side.
+---@param winnr                         integer
 ---@param bufnr                         integer
-function M.restore_winopts(bufnr)
-  local saved = winopts_store[bufnr]
-  if not saved then
+local function borrow(winnr, bufnr)
+  if not util.is_worktree_buffer(bufnr) then
     return
   end
-
-  if not vim.api.nvim_buf_is_valid(bufnr) then
-    winopts_store[bufnr] = nil
-    return
+  local winopts = {} ---@type table<string, any>
+  for _, opt in ipairs(TRACKED_WINOPTS) do
+    winopts[opt] = vim.api.nvim_get_option_value(opt, { win = winnr, scope = "local" })
   end
-
-  -- Find a window displaying this buffer
-  local wins = vim.fn.win_findbuf(bufnr)
-  local winnr = wins[1]
-
-  if winnr then
-    for opt, val in pairs(saved) do
-      pcall(function()
-        vim.api.nvim_set_option_value(opt, val, { win = winnr, scope = "local" })
-      end)
-    end
-  end
-
-  winopts_store[bufnr] = nil
+  borrowed[winnr] = { bufnr = bufnr, winopts = winopts }
+  watch_closing()
 end
 
----Clear saved window options for a buffer
----@param bufnr                         integer
-function M.clear_winopts(bufnr)
-  winopts_store[bufnr] = nil
+---Gives the working-tree buffer in side-by-side window `winnr` its own window options back. Call it before the
+---buffer leaves the window: Neovim hands the options a buffer leaves a window with to the next window that shows it.
+---@param winnr                         integer
+function M.restore_winopts(winnr)
+  local entry = borrowed[winnr]
+  borrowed[winnr] = nil
+  if entry and vim.api.nvim_win_is_valid(winnr) and vim.api.nvim_win_get_buf(winnr) == entry.bufnr then
+    for opt, value in pairs(entry.winopts) do
+      vim.api.nvim_set_option_value(opt, value, { win = winnr, scope = "local" })
+    end
+  end
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -441,9 +432,6 @@ function M.open_diff_entry(opts)
     local absolute_path = util.workspace_path(filepath)
     if vim.fn.filereadable(absolute_path) == 1 then
       right_bufnr = M.find_or_create_local_buffer(absolute_path)
-      if vim.api.nvim_win_is_valid(right_winnr) then
-        M.save_winopts(right_bufnr, right_winnr)
-      end
     else
       right_bufnr = M.get_null_buffer()
     end
@@ -493,11 +481,6 @@ function M.open_diff_entry(opts)
       local absolute_path = util.workspace_path(filepath)
       right_bufnr = M.find_or_create_local_buffer(absolute_path)
 
-      -- Save window options for local buffer
-      if vim.api.nvim_win_is_valid(right_winnr) then
-        M.save_winopts(right_bufnr, right_winnr)
-      end
-
       apply_buffers(left_bufnr, right_bufnr)
     end
   elseif status == "R" or status == "C" then
@@ -522,9 +505,6 @@ function M.open_diff_entry(opts)
       end
     else
       right_bufnr = M.find_or_create_local_buffer(util.workspace_path(filepath))
-      if vim.api.nvim_win_is_valid(right_winnr) then
-        M.save_winopts(right_bufnr, right_winnr)
-      end
       if not load_content(util.staged_object(previous), left_bufnr, entry.old_object_name) then
         return
       end
@@ -560,11 +540,6 @@ function M.open_diff_entry(opts)
 
       local absolute_path = util.workspace_path(filepath)
       right_bufnr = M.find_or_create_local_buffer(absolute_path)
-
-      -- Save window options for local buffer
-      if vim.api.nvim_win_is_valid(right_winnr) then
-        M.save_winopts(right_bufnr, right_winnr)
-      end
 
       if not load_content(util.staged_object(filepath), left_bufnr, entry.old_object_name) then
         return
@@ -716,11 +691,15 @@ function M.__apply_buffers__(left_winnr, right_winnr, left_bufnr, right_bufnr, o
     end
 
     if vim.api.nvim_win_is_valid(left_winnr) then
+      M.restore_winopts(left_winnr)
       vim.api.nvim_win_set_buf(left_winnr, left_bufnr)
+      borrow(left_winnr, left_bufnr)
       M.apply_sbs_winopts(left_winnr, "sbs_left")
     end
     if vim.api.nvim_win_is_valid(right_winnr) then
+      M.restore_winopts(right_winnr)
       vim.api.nvim_win_set_buf(right_winnr, right_bufnr)
+      borrow(right_winnr, right_bufnr)
       M.apply_sbs_winopts(right_winnr, "sbs_right")
     end
   end

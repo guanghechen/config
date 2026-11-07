@@ -68,46 +68,101 @@ end
 ---@param keymaps                        stl.t.IKeymap[]
 ---@param bufnr                          integer
 ---@param resolve                        era.m.diffview.view.sbs_keymap.IResolve
+---@param skip                           ?fun(mode: string, lhs: string): boolean Keys to leave alone.
+---@return { mode: string, lhs: string }[] installed
+local function install(keymaps, bufnr, resolve, skip)
+  local installed = {} ---@type { mode: string, lhs: string }[]
+  for _, keymap in ipairs(keymaps) do
+    -- Generated callbacks close over their view context; mappings retain only scalar metadata.
+    local canonical_key = keymap.key
+    local description = DESCRIPTIONS[canonical_key] or keymap.desc
+    for _, mode in ipairs(keymap.modes) do
+      local plug = plug_name(mode, canonical_key) ---@type string
+      local bound = false
+      for _, key in ipairs(vim.list_extend({ canonical_key }, keymap.aliases or {})) do
+        if not (skip and skip(mode, key)) then
+          vim.keymap.set(mode, key, function()
+            if resolve(mode, canonical_key) then
+              return plug
+            end
+            return key
+          end, {
+            buf = bufnr,
+            desc = description,
+            expr = true,
+            nowait = true,
+            replace_keycodes = true,
+            silent = true,
+          })
+          installed[#installed + 1] = { mode = mode, lhs = key }
+          bound = true
+        end
+      end
+      if bound then
+        vim.keymap.set(mode, plug, function()
+          M.dispatch(resolve, mode, canonical_key)
+        end, {
+          buf = bufnr,
+          silent = true,
+        })
+        installed[#installed + 1] = { mode = mode, lhs = plug }
+      end
+    end
+  end
+  return installed
+end
+
+---Install the SBS mappings on a preview buffer that Diffview owns.
+---@param keymaps                        stl.t.IKeymap[]
+---@param bufnr                          integer
+---@param resolve                        era.m.diffview.view.sbs_keymap.IResolve
 ---@return nil
 function M.setup(keymaps, bufnr, resolve)
   if not vim.api.nvim_buf_is_valid(bufnr) then
     return
   end
+  install(keymaps, bufnr, resolve)
+end
 
-  for _, keymap in ipairs(keymaps) do
-    -- Generated callbacks close over their view context; mappings retain only scalar metadata.
-    local canonical_key = keymap.key
-    local description = DESCRIPTIONS[canonical_key] or keymap.desc
-    local aliases = keymap.aliases or {}
-    for _, mode in ipairs(keymap.modes) do
-      local plug = plug_name(mode, canonical_key) ---@type string
-      vim.keymap.set(mode, plug, function()
-        M.dispatch(resolve, mode, canonical_key)
-      end, {
-        buf = bufnr,
-        silent = true,
-      })
+---The SBS mappings lent to a working-tree buffer, which `detach` takes back.
+---@class era.m.diffview.view.sbs_keymap.IBinding
+---@field public bufnr                  integer
+---@field public installed              { mode: string, lhs: string }[]
 
-      local function bind(key)
-        vim.keymap.set(mode, key, function()
-          if resolve(mode, canonical_key) then
-            return plug
-          end
-          return key
-        end, {
-          buf = bufnr,
-          desc = description,
-          expr = true,
-          nowait = true,
-          replace_keycodes = true,
-          silent = true,
-        })
-      end
-      bind(canonical_key)
-      for _, alias in ipairs(aliases) do
-        bind(alias)
+---Lend the SBS mappings to a working-tree buffer, which is also the user's. A key it maps itself keeps that mapping,
+---so that `detach` removes nothing but what this installed.
+---@param keymaps                        stl.t.IKeymap[]
+---@param bufnr                          integer
+---@param resolve                        era.m.diffview.view.sbs_keymap.IResolve
+---@return era.m.diffview.view.sbs_keymap.IBinding
+function M.attach(keymaps, bufnr, resolve)
+  local own = {} ---@type table<string, table<string, true>>
+  local function mapped(mode, lhs)
+    if own[mode] == nil then
+      own[mode] = {}
+      -- `vim.keycode` gives the simplified form of a key such as <C-j>, which `lhsrawalt` holds.
+      for _, keymap in ipairs(vim.api.nvim_buf_get_keymap(bufnr, mode)) do
+        own[mode][keymap.lhsraw] = true
+        if keymap.lhsrawalt then
+          own[mode][keymap.lhsrawalt] = true
+        end
       end
     end
+    return own[mode][vim.keycode(lhs)] == true
+  end
+  return { bufnr = bufnr, installed = install(keymaps, bufnr, resolve, mapped) }
+end
+
+---Take back the SBS mappings `attach` lent.
+---@param binding                        era.m.diffview.view.sbs_keymap.IBinding
+---@return nil
+function M.detach(binding)
+  if not vim.api.nvim_buf_is_valid(binding.bufnr) then
+    return
+  end
+  for _, map in ipairs(binding.installed) do
+    -- The user may have cleared a mapping meanwhile, as `:mapclear <buffer>` does.
+    pcall(vim.api.nvim_buf_del_keymap, binding.bufnr, map.mode, map.lhs)
   end
 end
 

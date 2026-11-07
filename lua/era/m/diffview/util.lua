@@ -93,6 +93,14 @@ function M.unmark_diffview_tab(tabnr)
   vim.t[tabnr].tabtype = nil
 end
 
+---Whether `bufnr` edits a file, as the working-tree side of a preview does: a buffer of the user's that previews only
+---borrow, unlike the buffers Diffview owns.
+---@param bufnr                        integer
+---@return boolean
+function M.is_worktree_buffer(bufnr)
+  return vim.api.nvim_get_option_value("buftype", { buf = bufnr }) == ""
+end
+
 ----------------------------------------------------------------------------------------------------
 -- Git object utilities
 ----------------------------------------------------------------------------------------------------

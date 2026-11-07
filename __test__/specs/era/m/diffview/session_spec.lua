@@ -31,6 +31,58 @@ local function type_into(bufnr, keys)
   vim.api.nvim_win_close(winnr, true)
 end
 
+---Previews `path` from Changes and waits until the preview shows it.
+---@param session                       era.m.diffview.WorkspaceSession
+---@param path                          string
+---@param stage_type                    "staged"|"unstaged"
+---@return nil
+local function preview(session, path, stage_type)
+  local entry = assert(session.state:find_entry(path, stage_type))
+  local done = false
+  stl.async.run(function()
+    workspace_view.open_entry(session, entry)
+    done = true
+  end)
+  t.wait_until(function()
+    return done
+  end, 5000, "preview of " .. path)
+end
+
+---The Normal-mode mapping `bufnr` itself has for `lhs`.
+---@param bufnr                         integer
+---@param lhs                           string
+---@return table|nil
+local function mapping(bufnr, lhs)
+  local raw = vim.keycode(lhs)
+  for _, keymap in ipairs(vim.api.nvim_buf_get_keymap(bufnr, "n")) do
+    if keymap.lhsraw == raw or keymap.lhsrawalt == raw then
+      return keymap
+    end
+  end
+end
+
+---The window options a side-by-side window sets, as window `winnr` has them.
+---@param winnr                         integer
+---@return table<string, any>
+local function winopts(winnr)
+  local result = {} ---@type table<string, any>
+  for _, name in ipairs({ "cursorbind", "diff", "foldcolumn", "foldenable", "foldmethod", "scrollbind", "winhighlight" }) do
+    result[name] = vim.api.nvim_get_option_value(name, { win = winnr, scope = "local" })
+  end
+  return result
+end
+
+---The window options `bufnr` gets in a window of a new tab, as when the user opens it again.
+---@param bufnr                         integer
+---@return table<string, any>
+local function winopts_reopened(bufnr)
+  vim.cmd("tabnew")
+  vim.api.nvim_win_set_buf(0, bufnr)
+  local result = winopts(vim.api.nvim_get_current_win())
+  vim.cmd("tabclose")
+  return result
+end
+
 t:test("opening selects the first file in panel order and seeds both states with the default folds", function()
   diffview.repository(t)
   local session = diffview.open_workspace(t)
@@ -310,6 +362,72 @@ t:test("resizing Changes renders them again and remembers the width until the se
   session:close()
   vim.api.nvim_exec_autocmds("WinResized", {})
   t.assert_eq(1, renders, "a closed session no longer watches")
+end)
+
+t:test("a working-tree file has the side-by-side mappings only while the cursor is on it in the preview", function()
+  local root = diffview.repository(t)
+  vim.cmd.edit(vim.fn.fnameescape(root .. "/a.txt"))
+  local home, bufnr = vim.api.nvim_get_current_win(), vim.api.nvim_get_current_buf()
+  local session = diffview.open_workspace(t)
+  local right = assert(session.layout.sbs_right_winnr)
+
+  preview(session, "a.txt", "unstaged")
+  t.assert_eq(bufnr, vim.api.nvim_win_get_buf(right), "the preview shows the user's a.txt")
+  t.assert_nil(mapping(bufnr, "<C-j>"), "the cursor is in Changes")
+  vim.api.nvim_set_current_win(right)
+  t.assert_true(mapping(bufnr, "<C-j>") ~= nil, "the cursor is on a.txt in the preview")
+  vim.api.nvim_set_current_win(home)
+  t.assert_nil(mapping(bufnr, "<C-j>"), "the user's own window on a.txt")
+
+  vim.api.nvim_set_current_win(right)
+  preview(session, "c.txt", "staged")
+  t.assert_nil(mapping(bufnr, "<C-j>"), "the preview moved on under the cursor")
+  preview(session, "a.txt", "unstaged")
+  t.assert_true(mapping(bufnr, "<C-j>") ~= nil, "the preview came back under the cursor")
+  session:close()
+  t.assert_nil(mapping(bufnr, "<C-j>"), "the session closed")
+end)
+
+t:test("a working-tree file keeps its own mappings through the preview", function()
+  local root = diffview.repository(t)
+  vim.cmd.edit(vim.fn.fnameescape(root .. "/a.txt"))
+  local bufnr = vim.api.nvim_get_current_buf()
+  vim.keymap.set("n", "<C-j>", "<Nop>", { buf = bufnr, desc = "mine" })
+  local session = diffview.open_workspace(t)
+
+  preview(session, "a.txt", "unstaged")
+  vim.api.nvim_set_current_win(assert(session.layout.sbs_right_winnr))
+  t.assert_eq("mine", assert(mapping(bufnr, "<C-j>")).desc, "while lent the other keys")
+  t.assert_true(mapping(bufnr, "gs") ~= nil, "the other keys are lent")
+  session:close()
+  t.assert_eq("mine", assert(mapping(bufnr, "<C-j>")).desc, "after taking them back")
+  t.assert_nil(mapping(bufnr, "gs"), "taken back")
+end)
+
+t:test("a working-tree file leaves the preview with its own window options", function()
+  local root = diffview.repository(t)
+  vim.cmd.edit(vim.fn.fnameescape(root .. "/a.txt"))
+  local bufnr = vim.api.nvim_get_current_buf()
+  local own = winopts(vim.api.nvim_get_current_win())
+  local session = diffview.open_workspace(t)
+
+  preview(session, "a.txt", "unstaged")
+  flush()
+  t.assert_true(winopts(assert(session.layout.sbs_right_winnr)).scrollbind, "a diff side while previewed")
+  preview(session, "c.txt", "staged")
+  t.assert_same(own, winopts_reopened(bufnr), "after the preview moved on")
+
+  preview(session, "a.txt", "unstaged")
+  flush()
+  session:close()
+  t.assert_same(own, winopts_reopened(bufnr), "after the session closed")
+
+  local again = diffview.open_workspace(t)
+  preview(again, "a.txt", "unstaged")
+  flush()
+  vim.api.nvim_set_current_tabpage(again.tabnr)
+  vim.cmd("tabclose")
+  t.assert_same(own, winopts_reopened(bufnr), "after its tab closed")
 end)
 
 -- Closing the only tab leaves the tab open, so this case runs last.

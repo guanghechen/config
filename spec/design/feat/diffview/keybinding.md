@@ -118,3 +118,7 @@ SBS buffer 可以跨 Diffview tabs 复用，因此不能持有安装时的 view 
 3. 当前 context 支持该 key 时返回 `<Plug>`，由普通 mapping 在 `textlock` 外执行 action；workspace action 再按
    active preview owner 选择 Changes 或 History。
 4. 当前 context 不支持该 key 时直接返回原 lhs，保留 Neovim 原生 count/register 语义；不得静默 no-op。
+5. 工作区文件（unstaged preview 右侧）是用户自己的 buffer，不是 Diffview 的 SBS buffer。Buffer-local mapping 对该
+   buffer 的所有窗口生效，因此它只在光标位于显示它的 SBS window 时借用上述 mappings：光标离开、preview 换走它或
+   session 关闭时收回。该 buffer 自有的同名 buffer-local mapping 保持不变，收回只删除借出的部分。Diffview 之外显示
+   同一文件的窗口始终保留用户的 mapping，例如全局 `<C-a>r`、`<C-j>`、`<C-k>`。

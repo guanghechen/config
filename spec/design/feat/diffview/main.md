@@ -111,7 +111,8 @@ fn / tabline ──> session ───────────────> sbs_
   History 使用的 commits action。Session 传入真实模块，路由测试传入记录调用的替身。
 - Session 拥有 Git 订阅、Changes 尺寸监听、预览代次与 untracked discard 队列；`close()` 统一回收。一个模块级
   `TabClosed` autocmd 关闭失去 tab 的 session；漏掉 `TabClosed` 的 session 在下一次查找时关闭。
-- `sbs_keymap` 只安装 buffer-local mappings；按键时由当前 tab 的 session 解析对应 keymap。
+- `sbs_keymap` 只安装 buffer-local mappings；按键时由当前 tab 的 session 解析对应 keymap。工作区文件只在光标位于
+  显示它的 SBS window 时借用这些 mappings，见[共享 SBS buffer 契约](keybinding.md#共享-sbs-buffer-契约)。
 
 ### 四种 Pane
 
@@ -368,7 +369,11 @@ fetch_log_page(page, 100)
 
 ### 窗口选项保存与恢复
 
-对于工作区文件，需要保存原始窗口选项，关闭 diffview 时恢复。
+Buffer 离开窗口时，Neovim 记下它在该窗口的窗口选项，交给下一个显示它的窗口。工作区文件进入 SBS window 时，
+先记下它带来的窗口选项（`config.TRACKED_WINOPTS`），再设为 diff side；preview 换走它之前、session 关闭时、SBS
+window 关闭时（`WinClosed`，包括整个 tab 被关闭），恢复这些选项，以免 `scrollbind`、`cursorbind`、
+`foldmethod=diff` 与 Diffview 的 `winhighlight` 被带到普通窗口。不能指望 Neovim 跳过 diff 窗口的选项：'diffopt'
+的 `closeoff` 会在 tab 关闭时关掉最后一个 diff side 的 `diff`。
 
 ## 快捷键
 

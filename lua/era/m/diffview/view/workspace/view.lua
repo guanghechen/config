@@ -723,10 +723,12 @@ end
 function M.destroy(lyt)
   next_preview_generation(lyt)
 
-  -- Restore window options for local buffers in sbs
-  if lyt.sbs_right_winnr and vim.api.nvim_win_is_valid(lyt.sbs_right_winnr) then
-    local bufnr = vim.api.nvim_win_get_buf(lyt.sbs_right_winnr)
-    pane_sbs.restore_winopts(bufnr)
+  -- Give a previewed working-tree buffer its own window options back.
+  if lyt.sbs_left_winnr then
+    pane_sbs.restore_winopts(lyt.sbs_left_winnr)
+  end
+  if lyt.sbs_right_winnr then
+    pane_sbs.restore_winopts(lyt.sbs_right_winnr)
   end
 
   -- Clean up Changes buffers.
