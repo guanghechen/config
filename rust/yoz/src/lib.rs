@@ -680,6 +680,39 @@ fn replace_module(lua: &Lua) -> LuaResult<LuaTable> {
             })?,
         ),
         (
+            "expand_lines_by_matches",
+            f(lua, |lua, params: LuaValue| -> LuaResult<LuaMultiValue> {
+                let params =
+                    crate::types::replace::IExpandLinesByMatchesParams::from_lua(params, lua)?;
+                match crate::replace::expand_lines_by_matches(
+                    &params.lines,
+                    &params.search_pattern,
+                    &params.replace_pattern,
+                    params.flag_regex,
+                    params.flag_case_sensitive,
+                    &params.match_offsets,
+                ) {
+                    Ok(expanded) => {
+                        let table = lua.create_table_with_capacity(expanded.len(), 0)?;
+                        for (index, text) in expanded.into_iter().enumerate() {
+                            match text {
+                                Some(text) => table.raw_set(index + 1, lua.create_string(text)?)?,
+                                None => table.raw_set(index + 1, false)?,
+                            }
+                        }
+                        Ok(LuaMultiValue::from_vec(vec![
+                            LuaValue::Table(table),
+                            LuaValue::Nil,
+                        ]))
+                    }
+                    Err(error) => Ok(LuaMultiValue::from_vec(vec![
+                        LuaValue::Nil,
+                        LuaValue::String(lua.create_string(error)?),
+                    ])),
+                }
+            })?,
+        ),
+        (
             "replace_file",
             f(lua, |lua, params: LuaValue| -> LuaResult<LuaMultiValue> {
                 let params = crate::types::replace::IReplaceFileParams::from_lua(params, lua)?;

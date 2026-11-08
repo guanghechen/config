@@ -34,6 +34,30 @@ impl FromLua for IReplaceCheckPatternParams {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct IExpandLinesByMatchesParams {
+    pub lines: Vec<String>,
+    pub search_pattern: String,
+    pub replace_pattern: String,
+    pub flag_regex: bool,
+    pub flag_case_sensitive: bool,
+    pub match_offsets: Vec<usize>,
+}
+
+impl FromLua for IExpandLinesByMatchesParams {
+    fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
+        let table = expect_table(value, "yoz.replace.IExpandLinesByMatchesParams")?;
+        Ok(Self {
+            lines: table.get("lines")?,
+            search_pattern: table.get("search_pattern")?,
+            replace_pattern: table.get("replace_pattern")?,
+            flag_regex: table.get("flag_regex")?,
+            flag_case_sensitive: table.get("flag_case_sensitive")?,
+            match_offsets: table.get("match_offsets")?,
+        })
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct IReplaceFileParams {
     pub filepath: String,
     pub search_pattern: String,

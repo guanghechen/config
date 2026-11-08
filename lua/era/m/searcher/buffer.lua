@@ -137,12 +137,35 @@ local function highlight_text_match(bufnr, namespace, hlgroup, match)
   highlight_range(end_row, 0, math.min((match.cy or 0) + 1, line_length(end_row)))
 end
 
----@param bufnr                         integer
----@return string[]
----@return string
-local function collect_buffer_content(bufnr)
-  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
-  return lines, table.concat(lines, "\n")
+-- Search offsets index the lines joined with "\n"; edits and marks take rows and columns of the lines themselves.
+---@param lines                         string[]
+---@return integer[]
+local function line_starts(lines)
+  local starts = {} ---@type integer[]
+  local offset = 0 ---@type integer
+  for i, line in ipairs(lines) do
+    starts[i] = offset
+    offset = offset + #line + 1
+  end
+  return starts
+end
+
+---The 0-based row and column of an offset in the joined lines; a line break sits at the end of its line.
+---@param starts                        integer[]
+---@param offset                        integer
+---@return integer
+---@return integer
+local function locate(starts, offset)
+  local lo, hi = 1, #starts ---@type integer, integer
+  while lo < hi do
+    local mid = math.floor((lo + hi + 1) / 2) ---@type integer
+    if starts[mid] <= offset then
+      lo = mid
+    else
+      hi = mid - 1
+    end
+  end
+  return lo - 1, offset - starts[lo]
 end
 
 ---@class era.m.searcher.buffer.ISearcherProps
@@ -174,6 +197,7 @@ end
 ---@field protected _winnr_source       integer|nil
 ---@field protected _bufnr_source       integer|nil
 ---@field protected _matches            yoz.search.ITextMatch[]|nil
+---@field protected _changedtick        integer|nil Change tick of the source buffer the matches were found in.
 ---@field protected _scheduler_search   stl.c.Scheduler
 ---@field protected _nvimbar            era.m.nvimbar.Nvimbar
 ---@field protected _finder_keymaps     stl.t.IKeymap[]
@@ -252,6 +276,7 @@ function M.new(props)
   self._winnr_source = nil
   self._bufnr_source = nil
   self._matches = nil
+  self._changedtick = nil
   self._nvimbar = nvimbar
   self._scheduler_search = scheduler_search
   self._finder_keymaps = finder_keymaps
@@ -547,7 +572,6 @@ function M:replace_current_match()
   end
 
   local search_pattern = self.o_search_pattern:snapshot() ---@type string
-  local replace_pattern = self.o_replace_pattern:snapshot() ---@type string
   if search_pattern == "" then
     stl.reporter.error({
       from = __module_name__,
@@ -567,7 +591,6 @@ function M:replace_current_match()
     return
   end
 
-  local _, text = collect_buffer_content(bufnr_source) ---@type string[], string
   local current_match = matches[current_match_index] ---@type yoz.search.ITextMatch
   if current_match == nil then
     stl.reporter.error({
@@ -578,19 +601,13 @@ function M:replace_current_match()
     return
   end
 
-  local match_offset = current_match.ox ---@type integer
+  if not self:__require_fresh_matches__("Replace Current Match") then
+    return
+  end
 
-  local replaced_text, replace_err = yoz.replace.replace_text_preview_by_matches({
-    text = text,
-    search_pattern = search_pattern,
-    replace_pattern = replace_pattern,
-    keep_search_pieces = false,
-    flag_regex = self.o_flag_regex:snapshot(),
-    flag_case_sensitive = self.o_flag_case_sensitive:snapshot(),
-    match_offsets = { match_offset },
-  })
-
-  if replaced_text == nil then
+  local lines = vim.api.nvim_buf_get_lines(bufnr_source, 0, -1, true) ---@type string[]
+  local replacements, replace_err = self:__expand__(lines, { current_match })
+  if replacements == nil then
     stl.reporter.error({
       from = __module_name__,
       subject = "Replace Current Match",
@@ -599,8 +616,21 @@ function M:replace_current_match()
     return
   end
 
-  local new_lines = vim.split(replaced_text, "\n", { plain = true }) ---@type string[]
-  local ok, set_err = pcall(vim.api.nvim_buf_set_lines, bufnr_source, 0, -1, false, new_lines)
+  local replacement = replacements[1] ---@type string|false
+  if replacement == false then
+    stl.reporter.warn({
+      from = __module_name__,
+      subject = "Replace Current Match",
+      message = "The current match is a fuzzy piece, not a match of the pattern",
+    })
+    return
+  end
+
+  local starts = line_starts(lines) ---@type integer[]
+  local sr, sc = locate(starts, current_match.ox)
+  local er, ec = locate(starts, current_match.oy + 1)
+  local new_text = vim.split(replacement, "\n", { plain = true }) ---@type string[]
+  local ok, set_err = pcall(vim.api.nvim_buf_set_text, bufnr_source, sr, sc, er, ec, new_text)
   if ok then
     -- Store the desired match index to preserve after search refresh
     local next_index = current_match_index
@@ -610,11 +640,9 @@ function M:replace_current_match()
       next_index = math.max(1, current_match_index - 1)
     end
 
-    -- Set the preserve index before scheduling search
+    -- Search at once, so the next replacement finds the matches fresh.
     self._preserve_match_index = next_index
-
-    -- Schedule search to refresh matches
-    self._scheduler_search:schedule()
+    self:__search__()
 
     stl.reporter.info({
       from = __module_name__,
@@ -663,7 +691,6 @@ function M:replace_all_matches()
   end
 
   local search_pattern = self.o_search_pattern:snapshot() ---@type string
-  local replace_pattern = self.o_replace_pattern:snapshot() ---@type string
   if search_pattern == "" then
     stl.reporter.error({
       from = __module_name__,
@@ -673,17 +700,13 @@ function M:replace_all_matches()
     return
   end
 
-  local _, text = collect_buffer_content(bufnr_source) ---@type string[], string
-  local replaced_text, replace_err = yoz.replace.replace_text_preview({
-    text = text,
-    search_pattern = search_pattern,
-    replace_pattern = replace_pattern,
-    keep_search_pieces = false,
-    flag_regex = self.o_flag_regex:snapshot(),
-    flag_case_sensitive = self.o_flag_case_sensitive:snapshot(),
-  })
+  if not self:__require_fresh_matches__("Replace All Matches") then
+    return
+  end
 
-  if replaced_text == nil then
+  local lines = vim.api.nvim_buf_get_lines(bufnr_source, 0, -1, true) ---@type string[]
+  local replacements, replace_err = self:__expand__(lines, matches)
+  if replacements == nil then
     stl.reporter.error({
       from = __module_name__,
       subject = "Replace All Matches",
@@ -692,8 +715,20 @@ function M:replace_all_matches()
     return
   end
 
-  local new_lines = vim.split(replaced_text, "\n", { plain = true }) ---@type string[]
-  local ok, set_err = pcall(vim.api.nvim_buf_set_lines, bufnr_source, 0, -1, false, new_lines)
+  -- From the last match back, so an edit leaves the positions of the matches before it as they are.
+  local starts = line_starts(lines) ---@type integer[]
+  local replaced = 0 ---@type integer
+  local ok, set_err = pcall(function()
+    for i = #matches, 1, -1 do
+      local replacement = replacements[i] ---@type string|false
+      if replacement ~= false then
+        local sr, sc = locate(starts, matches[i].ox)
+        local er, ec = locate(starts, matches[i].oy + 1)
+        vim.api.nvim_buf_set_text(bufnr_source, sr, sc, er, ec, vim.split(replacement, "\n", { plain = true }))
+        replaced = replaced + 1
+      end
+    end
+  end)
 
   if ok then
     -- Clear all highlights since all matches are replaced
@@ -709,7 +744,7 @@ function M:replace_all_matches()
     stl.reporter.info({
       from = __module_name__,
       subject = "Replace All Matches",
-      message = string.format("Replaced %d matches successfully", #matches),
+      message = string.format("Replaced %d matches successfully", replaced),
     })
   else
     stl.reporter.error({
@@ -1275,6 +1310,7 @@ function M:__search__()
     return
   end
 
+  self._changedtick = vim.api.nvim_buf_get_changedtick(bufnr_source)
   local pattern = self.o_search_pattern:snapshot() ---@type string
   if pattern == "" then
     self._matches = {}
@@ -1397,6 +1433,46 @@ function M:__search__()
   self:__update_replace_preview__()
 end
 
+---The replacement of each match, as replacing it would write it, or false for a fuzzy piece.
+---@protected
+---@param lines                         string[]
+---@param matches                       yoz.search.ITextMatch[]
+---@return (string|false)[]|nil
+---@return string|nil
+function M:__expand__(lines, matches)
+  local match_offsets = {} ---@type integer[]
+  for i, match in ipairs(matches) do
+    match_offsets[i] = match.ox
+  end
+  return yoz.replace.expand_lines_by_matches({
+    lines = lines,
+    search_pattern = self.o_search_pattern:snapshot(),
+    replace_pattern = self.o_replace_pattern:snapshot(),
+    flag_regex = self.o_flag_regex:snapshot(),
+    flag_case_sensitive = self.o_flag_case_sensitive:snapshot(),
+    match_offsets = match_offsets,
+  })
+end
+
+---Replacing writes at the positions of the matches, which an edit since the search may have moved: the search runs
+---again, and the replacement waits for the user to see what it changes now.
+---@protected
+---@param subject                       string
+---@return boolean
+function M:__require_fresh_matches__(subject)
+  if vim.api.nvim_buf_get_changedtick(self._bufnr_source) == self._changedtick then
+    return true
+  end
+
+  self:__search__()
+  stl.reporter.warn({
+    from = __module_name__,
+    subject = subject,
+    message = "The buffer changed after the search; the matches are found again, so replace again.",
+  })
+  return false
+end
+
 ---@protected
 ---@return nil
 function M:__update_replace_preview__()
@@ -1432,7 +1508,6 @@ function M:__update_replace_preview__()
   end
 
   local search_pattern = self.o_search_pattern:snapshot() ---@type string
-  local replace_pattern = self.o_replace_pattern:snapshot() ---@type string
 
   -- Don't show preview if search pattern is empty
   if search_pattern == "" then
@@ -1444,40 +1519,24 @@ function M:__update_replace_preview__()
     return
   end
 
-  local _, text = collect_buffer_content(bufnr_source) ---@type string[], string
-  local flag_regex = self.o_flag_regex:snapshot() ---@type boolean
-  local flag_case_sensitive = self.o_flag_case_sensitive:snapshot() ---@type boolean
+  local lines = vim.api.nvim_buf_get_lines(bufnr_source, 0, -1, false) ---@type string[]
+  local replacements, preview_err = self:__expand__(lines, matches)
+  if replacements == nil then
+    stl.reporter.error({
+      from = __module_name__,
+      subject = "Replace Preview",
+      message = preview_err or "Failed to compute replacement preview",
+    })
+    return
+  end
+
   local replacement_matches = {} ---@type era.m.searcher.buffer.IReplacementMatch[]
-
-  local text_len = #text ---@type integer
-
-  for _, text_match in ipairs(matches) do
-    local start_offset = text_match.ox ---@type integer
-    local end_offset = math.min((text_match.oy or text_match.ox) + 1, text_len) ---@type integer
-
-    if end_offset > start_offset then
-      local matched_text = string.sub(text, start_offset + 1, end_offset) ---@type string
-      local replacement_text, preview_err = yoz.replace.replace_text_preview({
-        text = matched_text,
-        search_pattern = search_pattern,
-        replace_pattern = replace_pattern,
-        keep_search_pieces = false,
-        flag_regex = flag_regex,
-        flag_case_sensitive = flag_case_sensitive,
-      })
-
-      if replacement_text == nil then
-        stl.reporter.error({
-          from = __module_name__,
-          subject = "Replace Preview",
-          message = preview_err or "Failed to compute replacement preview",
-        })
-        return
-      end
-
+  for i, text_match in ipairs(matches) do
+    local replacement_text = replacements[i] ---@type string|false
+    if replacement_text ~= false then
       replacement_matches[#replacement_matches + 1] = {
-        l = start_offset,
-        r = end_offset,
+        l = text_match.ox,
+        r = text_match.oy + 1,
         text = replacement_text,
       }
     end

@@ -9,6 +9,14 @@ local M = {}
 ---@field public flag_regex             boolean
 ---@field public flag_case_sensitive    boolean
 
+---@class yoz.replace.IExpandLinesByMatchesParams
+---@field public lines                  string[]
+---@field public search_pattern         string
+---@field public replace_pattern        string
+---@field public flag_regex             boolean
+---@field public flag_case_sensitive    boolean
+---@field public match_offsets          integer[]
+
 ---@class yoz.replace.IReplaceFileParams
 ---@field public filepath               string
 ---@field public search_pattern         string
@@ -56,6 +64,13 @@ local M = {}
 ---@return true|nil
 ---@return string|nil
 function M.check_pattern(params) end
+
+---The replacement of each match buffer search lists at `match_offsets`, matched as buffer search matches, or false
+---where no match of the pattern starts, as at a fuzzy piece.
+---@param params                        yoz.replace.IExpandLinesByMatchesParams
+---@return (string|false)[]|nil
+---@return string|nil
+function M.expand_lines_by_matches(params) end
 
 ---@param params                        yoz.replace.IReplaceFileParams
 ---@return boolean|nil

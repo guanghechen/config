@@ -16,6 +16,8 @@ composer -> Lua file-search controller -> Rust job -> controller -> composer
 - 文件搜索与替换在整段文本上匹配：`.` 匹配换行；正则模式按行解析 `^`/`$`，`\r\n` 算一个行尾，
   `$` 在 `\r` 之前匹配，`^` 也在单独的 `\r` 之后匹配；跨行模式可以写 `\n` 或 `\r\n`。
 - buffer 搜索按行匹配，`.` 与 `\s` 不跨行；模式文本含有真实换行字符时，才在以 `\n` 连接的整段 buffer 上匹配。
+  buffer 替换按同样的规则展开列出的每个 match，捕获组取自 match 在原行中的那次匹配；只改写 match 所在的范围，
+  其他位置的 mark 与 extmark 不动。搜索后 buffer 有过改动时，替换先重新搜索并提示，不按旧位置写入。
 - 文件开头的 UTF-8 BOM 不属于正文：文件搜索的行列与 offset 从 BOM 之后算起，与 Neovim 读入后的 buffer 一致；
   替换与替换预览按同样的正文匹配，写回时保留 BOM。
 - 搜索不列出空匹配，替换也不改动空匹配。
