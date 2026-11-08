@@ -1035,6 +1035,32 @@ t:test("Tab toggles the selection from the finder while a filter is being typed"
   end)
 end)
 
+t:test("confirming the selected files in a picker that closes for good reports them", function()
+  with_composer("confirm-closes", function(composer)
+    local Paths = require("era.view.result_paths")
+    local root = "/workspace/confirm-closes"
+    t:patch_table(composer._scheduler_match, "schedule", function() end)
+    composer:reset_filepaths(root, { "a.lua", "b.lua" }, false)
+    composer.result:create_win({ border = "none", number = false, winhighlight = "" }, {
+      row = 0,
+      col = 0,
+      width = 60,
+      height = 8,
+    })
+    local tree = composer._treeview
+    treeview.await(tree:ready())
+    tree:set_selected(Paths.key(root .. "/a.lua"), true)
+    treeview.await(tree:ready())
+    local confirmed = nil ---@type string[]|nil
+    t:patch_table(composer, "_on_confirm", function(_, paths)
+      confirmed = paths
+    end)
+
+    composer:__resolve_confirmation__(Paths.key(root))
+    t.assert_same({ root .. "/a.lua" }, confirmed)
+  end)
+end)
+
 ---Open a permanent picker over alpha.txt, beta.txt and gamma.txt in a child UI, showing all three rows matched.
 ---@return __test__.support.UI ui
 ---@return string root

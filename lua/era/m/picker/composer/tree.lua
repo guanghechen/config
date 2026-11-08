@@ -1024,15 +1024,15 @@ function M:__resolve_confirmation__(nodeuuid)
     end
 
     if #uuids > 0 then
-      composer:close()
       composer:mark_result_dirty()
+      composer:close()
       self._on_confirm(self, uuids)
       return
     end
   end
 
-  composer:close()
   composer:mark_result_dirty()
+  composer:close()
   self._on_confirm(self, { nodeuuid })
 end
 

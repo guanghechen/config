@@ -317,6 +317,21 @@ t:test("Tab toggles the selection from the finder while a filter is being typed"
   t.assert_true(vim.list_contains(tab and tab.modes or {}, "i"), "Insert mode, like Normal mode and the result pane")
 end)
 
+t:test("confirming in a picker that closes for good reports the node", function()
+  local composer = action_fixture("confirm-closes")
+  composer:insert(composer._tree.root, "one", { name = "one" })
+  composer._treeview:insert("one", { nodetype = "leaf" })
+  mount(composer)
+  local confirmed = nil ---@type string[]|nil
+  t:patch_table(composer, "_on_confirm", function(_, uuids)
+    confirmed = uuids
+  end)
+
+  composer:__resolve_confirmation__("one")
+  t.assert_same({ "one" }, confirmed)
+  t.assert_true(composer._composer:isdisposed(), "a picker that is not permanent closes for good")
+end)
+
 ---Open a permanent picker over the given nodes in a child UI, showing all three rows matched.
 ---@param viewtype                      string
 ---@param nodes                         string[][] Key, parent key ("" for the root) and nodetype of each node.

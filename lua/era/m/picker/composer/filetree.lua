@@ -1535,8 +1535,8 @@ function M:__open_node__(nodeuuid)
         vim.api.nvim_set_current_win(winnr_sourcefile)
       end
 
-      composer:close()
       composer:mark_result_dirty()
+      composer:close()
       dot.win.open_filepaths(winnr_sourcefile, filepaths, lnum, col)
       return
     end
@@ -1598,8 +1598,8 @@ function M:__resolve_confirmation__(nodeuuid)
     end
 
     if #filepaths > 0 then
-      composer:close()
       composer:mark_result_dirty()
+      composer:close()
       self._on_confirm(self, filepaths)
       return
     end
