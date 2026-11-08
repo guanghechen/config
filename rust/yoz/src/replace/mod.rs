@@ -1,3 +1,4 @@
+mod check_pattern;
 mod replace_file;
 mod replace_file_by_matches;
 mod replace_file_by_matches_advance;
@@ -8,6 +9,7 @@ mod replace_text_preview;
 mod replace_text_preview_advance;
 mod replace_text_preview_by_matches;
 mod replace_text_preview_by_matches_advance;
+pub use check_pattern::*;
 pub use replace_file::*;
 pub use replace_file_by_matches::*;
 pub use replace_file_by_matches_advance::*;
@@ -23,6 +25,7 @@ use regex::Captures;
 use regex::Regex;
 use std::fs;
 use std::fs::File;
+use std::io;
 use std::io::Write;
 
 /** A UTF-8 byte order mark. */
@@ -31,7 +34,11 @@ const BOM: &str = "\u{feff}";
 /** Reads a file's text as file search does: a leading UTF-8 byte order mark is left out, so the match offsets of a
 search index the text, as Neovim's buffer lines do. Also returns whether the file starts with one. */
 fn read_text(filepath: &str) -> Result<(bool, String), String> {
-    let mut text = fs::read_to_string(filepath).map_err(|e| e.to_string())?;
+    let mut text = fs::read_to_string(filepath).map_err(|e| match e.kind() {
+        /* File search reads bytes, so it lists the file all the same. */
+        io::ErrorKind::InvalidData => "not UTF-8 text".to_string(),
+        _ => e.to_string(),
+    })?;
     let bom = text.starts_with(BOM);
     if bom {
         text.drain(..BOM.len());
@@ -209,6 +216,31 @@ mod tests {
         fs::write(&path, "\u{feff}").unwrap();
         replace_file(file, "^", "X", true, true).unwrap();
         assert_eq!(fs::read_to_string(&path).unwrap(), "\u{feff}");
+    }
+
+    #[test]
+    fn t_a_file_that_is_not_utf8_text_is_searched_but_not_replaced() {
+        let dir = TempDir::new();
+        let path = dir.path().join("latin1");
+        let bytes = b"caf\xe9 abc\n";
+        fs::write(&path, bytes).unwrap();
+        let file = path.to_str().unwrap();
+
+        assert_eq!(search_offsets(&dir, "abc", false), vec![5]);
+        let not_text = "not UTF-8 text".to_string();
+        assert_eq!(
+            replace_file(file, "abc", "X", false, true),
+            Err(not_text.clone())
+        );
+        assert_eq!(
+            replace_file_by_matches(file, "abc", "X", false, true, &[5]),
+            Err(not_text.clone())
+        );
+        assert_eq!(
+            replace_file_preview(file, "abc", "X", false, false, true),
+            Err(not_text)
+        );
+        assert_eq!(fs::read(&path).unwrap(), bytes);
     }
 
     /** A linear congruential generator, so the cases are the same on every run. */

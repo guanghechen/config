@@ -146,6 +146,7 @@ local SEARCH_INDICATOR_DELAY_NS = 120 * 1e6 ---@type integer
 ---@field protected _file_search        era.m.searcher.FileSearch|nil
 ---@field protected _published_search_inputs era.m.searcher.composer.filetree.ISearchInputs|nil
 ---@field protected _published_search_limit_reached boolean
+---@field protected _published_replace_error string|nil Why replacing cannot use the published search pattern.
 ---@field protected _search_indicator_hl_index integer|nil
 ---@field protected _search_indicator_started_at integer|nil
 ---@field protected _search_indicator_frame string|nil
@@ -640,6 +641,9 @@ function M.new(props)
         if not self:__require_exhaustive_search_projection__("replace_all") then
           return
         end
+        if not self:__require_replaceable_pattern__("replace_all") then
+          return
+        end
 
         local dirtied = false
         for _, key, data, entry in treeview:iter_rows(frame) do
@@ -657,6 +661,9 @@ function M.new(props)
     replace_in_node = function()
       treeview:range_action(function(frame, first, last)
         if not self:__require_current_search_projection__("replace_in_node") then
+          return
+        end
+        if not self:__require_replaceable_pattern__("replace_in_node") then
           return
         end
 
@@ -1520,6 +1527,7 @@ function M.new(props)
   self._file_search = file_search
   self._published_search_inputs = nil
   self._published_search_limit_reached = false
+  self._published_replace_error = nil
   self._search_indicator_hl_index = nil
   self._search_indicator_started_at = nil
   self._search_indicator_frame = nil
@@ -1687,6 +1695,7 @@ function M:dispose()
   self._file_search = nil
   self._published_search_inputs = nil
   self._published_search_limit_reached = nil
+  self._published_replace_error = nil
   self._search_indicator_hl_index = nil
   self._search_indicator_started_at = nil
   self._search_indicator_frame = nil
@@ -1799,6 +1808,7 @@ function M:reset_filepaths(rootpath, cwd, filepaths)
 
   self._published_search_inputs = nil
   self._published_search_limit_reached = false
+  self._published_replace_error = nil
   self:mark_result_flags_dirty()
 
   local frecency = self._frecency ---@type stl.c.Frecency|nil
@@ -2052,6 +2062,23 @@ function M:__require_exhaustive_search_projection__(subject)
 end
 
 ---@protected
+---@param subject                       string
+---@return boolean
+function M:__require_replaceable_pattern__(subject)
+  local replace_error = self._published_replace_error ---@type string|nil
+  if replace_error == nil then
+    return true
+  end
+
+  stl.reporter.warn({
+    from = self.fullname,
+    subject = subject,
+    message = "Replacing cannot use this pattern:\n" .. replace_error,
+  })
+  return false
+end
+
+---@protected
 ---@return era.m.searcher.file_search.IRequest|nil
 ---@return string|nil
 function M:__snapshot_search_request__()
@@ -2070,6 +2097,12 @@ function M:__snapshot_search_request__()
     specified_filepath = rootpath ---@type string
   end
 
+  local _, replace_error = yoz.replace.check_pattern({
+    search_pattern = inputs.search_pattern,
+    flag_regex = inputs.flag_regex,
+    flag_case_sensitive = inputs.flag_case_sensitive,
+  })
+
   ---@type era.m.searcher.view.filetree.ISearchParams
   local params = {
     cwd = cwd,
@@ -2087,6 +2120,7 @@ function M:__snapshot_search_request__()
 
     search_pattern = inputs.search_pattern,
     replace_pattern = inputs.replace_pattern,
+    replace_error = replace_error,
   }
 
   ---@type era.m.searcher.composer.filetree.ISearchRequestContext
@@ -2128,6 +2162,7 @@ function M:__clear_search_projection__()
   local treeview = self._treeview ---@type era.m.searcher.FiletreeView
   self._published_search_inputs = nil
   self._published_search_limit_reached = false
+  self._published_replace_error = nil
   treeview:reset_filepaths(rootpath, {})
 
   self._last_preview_filepath = nil
@@ -2185,6 +2220,10 @@ function M:__apply_search_result__(context, result)
     end
   end
 
+  -- Replace mode tells why a pattern has no replacements once, not again for each edit of the replacement.
+  local published = self._published_search_inputs ---@type era.m.searcher.composer.filetree.ISearchInputs|nil
+  local told = published ~= nil and published.flag_replace and self._published_replace_error ~= nil ---@type boolean
+
   self:reset_filepaths(rootpath, cwd, filepaths)
   treeview:publish_search_result(result, uuids)
 
@@ -2197,9 +2236,18 @@ function M:__apply_search_result__(context, result)
 
   self._published_search_inputs = context.inputs
   self._published_search_limit_reached = result.limit_reached
+  self._published_replace_error = params.replace_error
   self._uuids_order = uuids
   self:mark_result_flags_dirty()
   self:mark_result_dirty()
+
+  if params.flag_replace and params.replace_error ~= nil and not told then
+    stl.reporter.warn({
+      from = self.fullname,
+      subject = "replace",
+      message = "Replacing cannot use this pattern, so the results show no replacements:\n" .. params.replace_error,
+    })
+  end
 end
 
 ---@param nodeuuid                      string

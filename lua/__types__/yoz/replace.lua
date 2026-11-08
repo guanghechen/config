@@ -4,6 +4,11 @@
 ---@class yoz.replace
 local M = {}
 
+---@class yoz.replace.IReplaceCheckPatternParams
+---@field public search_pattern         string
+---@field public flag_regex             boolean
+---@field public flag_case_sensitive    boolean
+
 ---@class yoz.replace.IReplaceFileParams
 ---@field public filepath               string
 ---@field public search_pattern         string
@@ -45,6 +50,12 @@ local M = {}
 ---@class yoz.replace.IReplacePreviewResult
 ---@field public text                   string
 ---@field public matches                dot.t.IMatchPoint[]
+
+---Fails with the reason when replacing cannot use a search pattern, as for one that matches bytes outside UTF-8.
+---@param params                        yoz.replace.IReplaceCheckPatternParams
+---@return true|nil
+---@return string|nil
+function M.check_pattern(params) end
 
 ---@param params                        yoz.replace.IReplaceFileParams
 ---@return boolean|nil

@@ -25,6 +25,7 @@ local Paths = require("era.view.result_paths")
 ---@field public specified_filepath     string|nil
 ---@field public search_pattern         string
 ---@field public replace_pattern        string|nil
+---@field public replace_error          string|nil Why replacing cannot use the search pattern; nil when it can.
 
 ---@class era.m.searcher.view.filetree.ISearchResult
 ---@field public items                  era.m.searcher.view.filetree.ISearchedItem[]
@@ -160,7 +161,10 @@ function M:normalize_search_result(params, results)
   local search_pattern = params.search_pattern ---@type string
   local replace_pattern = params.replace_pattern ---@type string|nil
 
-  local has_replace_preview = flag_replace and replace_pattern ~= nil and replace_pattern ~= ""
+  local has_replace_preview = flag_replace
+    and params.replace_error == nil
+    and replace_pattern ~= nil
+    and replace_pattern ~= ""
   local search_highlight = has_replace_preview and "m_ss_search" or "m_ss_matches"
 
   ---@param relpath                     string

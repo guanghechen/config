@@ -128,8 +128,11 @@ function M:calc_preview_data(context)
   local lines = {} ---@type string[]
   local highlights = {} ---@type era.m.searcher.IPlainfileViewHighlight[]
 
+  local preview_result = nil ---@type yoz.replace.IReplacePreviewResult|nil
   if flag_replace then
-    local preview_result, preview_error = yoz.replace.replace_file_preview_by_matches_advance({
+    -- Nil when replacing cannot use the pattern, which the composer tells once, or the file is not UTF-8 text, which
+    -- replacing it tells: the matches then show as search shows them.
+    preview_result = yoz.replace.replace_file_preview_by_matches_advance({
       filepath = os_filepath,
       search_pattern = search_pattern,
       replace_pattern = replace_pattern,
@@ -138,19 +141,9 @@ function M:calc_preview_data(context)
       flag_case_sensitive = flag_case_sensitive,
       match_offsets = match_offsets,
     })
+  end
 
-    if preview_result == nil then
-      if preview_error ~= nil then
-        stl.reporter.error({
-          from = __module_name__,
-          subject = "replace_file_preview_by_matches_advance",
-          message = preview_error,
-        })
-      end
-      local fallback_lines = stl.fs.read_file_as_lines({ filepath = os_filepath, silent = true }) or {} ---@type string[]
-      preview_result = { text = table.concat(fallback_lines, "\n"), matches = {} }
-    end
-
+  if preview_result ~= nil then
     local preview_text = preview_result.text ---@type string
     local lwidths = yoz.string.calc_linewidths(preview_text) ---@type integer[]
     lines = yoz.string.parse_lines(preview_text, lwidths) ---@type string[]
@@ -250,38 +243,32 @@ function M:mark_dirty()
   return self
 end
 
+-- The highlight of the current match for each highlight of a match. A replace preview that cannot be made shows the
+-- matches as search does, so these follow the preview rather than replace mode.
+local CURRENT_HLNAMES = {
+  m_sr_match = "m_sr_match_cur",
+  m_sr_replace = "m_sr_replace_cur",
+  m_sr_search = "m_sr_search_cur",
+} ---@type table<string, string>
+
 ---@param context                       era.m.searcher.IPlainfileViewContext
 ---@param data                          era.m.searcher.IPlainfileViewData
 ---@return stl.t.IHighlight[]
 function M:patch_preview_data(context, data)
   local highlights = {} ---@type stl.t.IHighlight[]
-  local flag_replace = context.flag_replace:snapshot() ---@type boolean
   local offset_current = context.offset_current ---@type integer
 
-  if flag_replace then
-    local resolved = false ---@type boolean
-    for _, hl in ipairs(data.highlights) do
-      if offset_current == hl.offset then
-        resolved = true
-        local is_search_match = hl.hlname == "m_sr_search" ---@type boolean
-        local hlname = is_search_match and "m_sr_search_cur" or "m_sr_replace_cur" ---@type string
+  local resolved = false ---@type boolean
+  for _, hl in ipairs(data.highlights) do
+    if offset_current == hl.offset then
+      resolved = true
+      local hlname = CURRENT_HLNAMES[hl.hlname] ---@type string|nil
+      if hlname ~= nil then
         local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type stl.t.IHighlight
         highlights[#highlights + 1] = highlight
-      elseif resolved then
-        break
       end
-    end
-  else
-    local resolved = false ---@type boolean
-    for _, hl in ipairs(data.highlights) do
-      if offset_current == hl.offset then
-        resolved = true
-        local hlname = "m_sr_match_cur" ---@type string
-        local highlight = { lnum = hl.lnum, coll = hl.coll, colr = hl.colr, hlname = hlname } ---@type stl.t.IHighlight
-        highlights[#highlights + 1] = highlight
-      elseif resolved then
-        break
-      end
+    elseif resolved then
+      break
     end
   end
 

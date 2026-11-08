@@ -96,6 +96,42 @@ t:test("search preview drops the carriage return of CRLF line breaks", function(
   t.assert_same({ "m_sr_match 2:2-5" }, marks(data), "highlight of the match")
 end)
 
+t:test("a replace preview that cannot be made shows the matches as search does", function()
+  local errors = 0 ---@type integer
+  t:patch_table(stl.reporter, "error", function()
+    errors = errors + 1
+  end)
+
+  -- A file that is not UTF-8 text: "foo" starts at column 7 of the second line, after the byte 0xE9.
+  local latin1 = fixture("latin1.txt", "a foo\r\nb caf\233 foo\r\n")
+  ---@type era.m.searcher.view.filetree.IResolvedFileMatch
+  local filematch = {
+    filepath = latin1,
+    relative = "latin1.txt",
+    matches = { { lx = 2, ly = 2, cx = 7, cy = 9, ox = 14, oy = 16, s = "b caf\u{FFFD} foo", sx = 9, sy = 11 } },
+  }
+  local current = context(latin1, "foo", { 14 }, true, filematch)
+  current.offset_current = 14
+  local data = view:calc_preview_data(current)
+  t.assert_same({ "a foo", "b caf\233 foo" }, data.lines, "the lines of the file")
+  t.assert_same({ "m_sr_match 2:7-10" }, marks(data), "the match as search marks it")
+  t.assert_same({ "m_sr_match_cur 2:7-10" }, marks({ highlights = view:patch_preview_data(current, data) }), "current")
+
+  -- A pattern that matches bytes outside UTF-8: the two bytes of "é".
+  local accent = fixture("accent.txt", "café foo\n")
+  filematch = {
+    filepath = accent,
+    relative = "accent.txt",
+    matches = { { lx = 1, ly = 1, cx = 3, cy = 4, ox = 3, oy = 4, s = "café foo", sx = 3, sy = 3 } },
+  }
+  current = context(accent, [[(?-u:\xC3\xA9)]], { 3 }, true, filematch)
+  current.flag_regex = stl.c.Observable.from_value(true)
+  data = view:calc_preview_data(current)
+  t.assert_same({ "café foo" }, data.lines, "the lines of the file")
+  t.assert_same({ "m_sr_match 1:3-5" }, marks(data), "the bytes as search marks them")
+  t.assert_eq(0, errors, "nothing to report while drawing")
+end)
+
 t:test("rendering a CRLF replace preview writes clean lines and marks each row of the match", function()
   local bufnr = vim.api.nvim_create_buf(false, true)
   t:defer(function()

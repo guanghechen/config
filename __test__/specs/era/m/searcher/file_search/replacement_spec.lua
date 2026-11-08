@@ -34,6 +34,7 @@ end
 ---@class __test__.specs.era.m.searcher.file_search.replacement.IControls
 ---@field public search_pattern         stl.c.Observable
 ---@field public replace_pattern        stl.c.Observable
+---@field public flag_regex             stl.c.Observable
 ---@field public flag_replace           stl.c.Observable
 
 ---@class __test__.specs.era.m.searcher.file_search.replacement.ISeen
@@ -47,6 +48,7 @@ local function new_composer(dir)
   local controls = {
     search_pattern = observable(""),
     replace_pattern = observable(""),
+    flag_regex = observable(false),
     flag_replace = observable(true),
   } ---@type __test__.specs.era.m.searcher.file_search.replacement.IControls
   local composer = era.m.searcher.FiletreeComposer.new({
@@ -60,7 +62,7 @@ local function new_composer(dir)
     flag_foldempty = observable(false),
     flag_gitignore = observable(false),
     flag_limit_matches = observable(true),
-    flag_regex = observable(false),
+    flag_regex = controls.flag_regex,
     flag_replace = controls.flag_replace,
     flag_case_sensitive = observable(false),
     flag_selected = observable(false),
@@ -145,6 +147,31 @@ local function count_texts(composer, needle)
     end
   end
   return count
+end
+
+---@param composer                      era.m.searcher.FiletreeComposer
+---@return string[]
+local function texts(composer)
+  local result = {} ---@type string[]
+  for _, fileuuid in ipairs(composer._uuids_order) do
+    local entry = composer._treeview:retrieve(fileuuid) ---@type era.m.searcher.view.filetree.IEntry|nil
+    for _, location in ipairs(entry and entry.locations or {}) do
+      result[#result + 1] = location.text
+    end
+  end
+  return result
+end
+
+---@param composer                      era.m.searcher.FiletreeComposer
+---@param desc                          string
+---@return fun(): nil
+local function action(composer, desc)
+  for _, keymap in ipairs(composer.finder.keymaps) do
+    if keymap.desc == desc then
+      return keymap.callback --[[@as fun(): nil]]
+    end
+  end
+  error("no action: " .. desc)
 end
 
 ---@param composer                      era.m.searcher.FiletreeComposer
@@ -268,6 +295,63 @@ t:test("a replacement edit shows the files as they are on disk", function()
     return seen.searches == 2
   end)
   t.assert_eq(6, count_texts(composer, "thread"), "previews of the changed file")
+end)
+
+t:test("a pattern that matches bytes outside UTF-8 is searched but tells once that it is not replaced", function()
+  local dir = fixture()
+  vim.fn.writefile({ "café needle" }, dir .. "/accent.txt")
+  local composer, controls = new_composer(dir)
+  local warnings = {} ---@type string[]
+  t:patch_table(stl.reporter, "warn", function(value)
+    warnings[#warnings + 1] = value.message
+  end)
+
+  -- The two bytes of "é".
+  controls.flag_regex:next(true)
+  controls.replace_pattern:next("pin")
+  controls.search_pattern:next([[(?-u:\xC3\xA9)]])
+  settle(composer, "the search did not publish")
+  t.assert_same({ "café needle" }, texts(composer), "the match without a replacement")
+  t.assert_eq(1, #warnings, "replace mode tells why")
+  t.assert_true(warnings[1]:find("invalid UTF-8", 1, true) ~= nil, "the reason: " .. warnings[1])
+
+  controls.replace_pattern:next("thread")
+  settle(composer, "the replacement edit did not publish", function()
+    return composer._published_search_inputs.replace_pattern == "thread"
+  end)
+  t.assert_eq(1, #warnings, "an edit of the replacement does not tell again")
+
+  action(composer, "searcher: replace all files")()
+  t.assert_eq(2, #warnings, "replacing all says why it does not")
+  t.assert_same({ "café needle" }, vim.fn.readfile(dir .. "/accent.txt"), "the file as it was")
+
+  controls.flag_replace:next(false)
+  settle(composer, "leaving replace mode did not publish", function()
+    return not composer._published_search_inputs.flag_replace
+  end)
+  controls.flag_replace:next(true)
+  settle(composer, "entering replace mode did not publish", function()
+    return composer._published_search_inputs.flag_replace
+  end)
+  t.assert_eq(3, #warnings, "entering replace mode again tells it again")
+end)
+
+t:test("replacing all leaves a file that is not UTF-8 text as it is and says so", function()
+  local dir = fixture()
+  local latin1 = dir .. "/latin1.txt"
+  vim.fn.writefile({ "caf\233 needle" }, latin1)
+  local composer, controls = new_composer(dir)
+  local errors = {} ---@type table[]
+  t:patch_table(stl.reporter, "error", function(value)
+    errors[#errors + 1] = value
+  end)
+
+  search(composer, controls, "pin")
+  action(composer, "searcher: replace all files")()
+  t.assert_same({ "pin one", "a pin and a pin", "nothing here" }, vim.fn.readfile(dir .. "/alpha.txt"), "alpha")
+  t.assert_same({ "caf\233 needle" }, vim.fn.readfile(latin1), "the file that is not UTF-8 text")
+  t.assert_eq(1, #errors, "one report")
+  t.assert_eq("not UTF-8 text", errors[1].message, "the reason")
 end)
 
 local test_result = t:run({ exit = false })

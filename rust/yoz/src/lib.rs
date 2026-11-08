@@ -659,6 +659,27 @@ impl LuaUserData for LuaFileLock {
 fn replace_module(lua: &Lua) -> LuaResult<LuaTable> {
     lua.create_table_from([
         (
+            "check_pattern",
+            f(lua, |lua, params: LuaValue| -> LuaResult<LuaMultiValue> {
+                let params =
+                    crate::types::replace::IReplaceCheckPatternParams::from_lua(params, lua)?;
+                match crate::replace::check_pattern(
+                    &params.search_pattern,
+                    params.flag_regex,
+                    params.flag_case_sensitive,
+                ) {
+                    Ok(()) => Ok(LuaMultiValue::from_vec(vec![
+                        LuaValue::Boolean(true),
+                        LuaValue::Nil,
+                    ])),
+                    Err(error) => Ok(LuaMultiValue::from_vec(vec![
+                        LuaValue::Nil,
+                        LuaValue::String(lua.create_string(error)?),
+                    ])),
+                }
+            })?,
+        ),
+        (
             "replace_file",
             f(lua, |lua, params: LuaValue| -> LuaResult<LuaMultiValue> {
                 let params = crate::types::replace::IReplaceFileParams::from_lua(params, lua)?;

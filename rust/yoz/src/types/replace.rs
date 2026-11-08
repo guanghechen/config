@@ -16,6 +16,24 @@ fn expect_table(value: LuaValue, to: &'static str) -> LuaResult<LuaTable> {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct IReplaceCheckPatternParams {
+    pub search_pattern: String,
+    pub flag_regex: bool,
+    pub flag_case_sensitive: bool,
+}
+
+impl FromLua for IReplaceCheckPatternParams {
+    fn from_lua(value: LuaValue, _lua: &Lua) -> LuaResult<Self> {
+        let table = expect_table(value, "yoz.replace.IReplaceCheckPatternParams")?;
+        Ok(Self {
+            search_pattern: table.get("search_pattern")?,
+            flag_regex: table.get("flag_regex")?,
+            flag_case_sensitive: table.get("flag_case_sensitive")?,
+        })
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct IReplaceFileParams {
     pub filepath: String,
     pub search_pattern: String,
