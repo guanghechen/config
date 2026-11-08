@@ -53,4 +53,57 @@ t:test("clearing a dense file keeps only its excluded match", function()
   t.assert_eq("match:10000", tree.entries[key].locations[1].locationuuid)
 end)
 
+t:test("result rows take whole last characters and keep the CRLF breaks a match spans", function()
+  local root = t:tempdir()
+  for name, text in pairs({ ["zh.txt"] = "这是中文文本\n", ["crlf.txt"] = "ab\r\ncd\r\n" }) do
+    local file = assert(io.open(vim.fs.joinpath(root, name), "wb"))
+    file:write(text)
+    file:close()
+  end
+  local tree = Files.new({ name = "search rows", tree = Paths.new() })
+  t:defer(function()
+    tree:dispose()
+  end)
+  ---@return table[]
+  local function rows(name, pattern, regex, replacement)
+    local result = assert(tree:search({
+      cwd = root,
+      specified_filepath = vim.fs.joinpath(root, name),
+      excludes = {},
+      includes = {},
+      flag_case_sensitive = true,
+      flag_exclude = false,
+      flag_gitignore = false,
+      flag_regex = regex,
+      flag_replace = replacement ~= nil,
+      max_filesize = "1M",
+      search_pattern = pattern,
+      replace_pattern = replacement,
+    }))
+    return vim.tbl_map(function(item)
+      return { item.text, item.highlights }
+    end, result.items)
+  end
+
+  t.assert_same({
+    {
+      "这是中文X文本",
+      { { coll = 6, colr = 12, hlname = "m_ss_search" }, { coll = 12, colr = 13, hlname = "m_ss_replace" } },
+    },
+  }, rows("zh.txt", "中文", false, "X"))
+  t.assert_same(
+    { { "这是中文文本", { { coll = 6, colr = 12, hlname = "m_ss_matches" } } } },
+    rows("zh.txt", "中文", false)
+  )
+  local mark = stl.icon.listchars.eol ---@type string
+  local highlights = {
+    { coll = 2, colr = 2 + #mark, hlname = "m_ss_search" },
+    { coll = 2 + #mark, colr = 3 + #mark, hlname = "m_ss_replace" },
+  }
+  t.assert_same({
+    { "ab" .. mark .. "X", highlights },
+    { "cd" .. mark .. "X", highlights },
+  }, rows("crlf.txt", [[\r\n]], true, "X"))
+end)
+
 t:run()

@@ -63,9 +63,15 @@ local Paths = require("era.view.result_paths")
 ---@field public match                  era.m.searcher.view.filetree.ISearchedItem
 
 ---@param text                          string
+---@param size                          integer Bytes the text stands for in the file.
 ---@return string
-local function decode_preview_text(text)
-  return (text:gsub(stl.icon.listchars.eol, "\n"))
+local function decode_preview_text(text, size)
+  local lf = text:gsub(stl.icon.listchars.eol, "\n") ---@type string
+  if #lf == size then
+    return lf
+  end
+  -- A line break mark stands for "\r\n" too; a match through CRLF line breaks spans both bytes of each.
+  return (text:gsub(stl.icon.listchars.eol, "\r\n"))
 end
 
 ---@param text                          string
@@ -190,15 +196,18 @@ function M:normalize_search_result(params, results)
       local preview_text = match.s or "" ---@type string
       local sx = match.sx or 0 ---@type integer
       local sy = match.sy or sx ---@type integer
+      -- `sy` starts the last matched character, which may take more than a byte, as the 3-byte mark of a line break
+      -- does; the match ends at that character's last byte.
+      local stop = sy + 1 + vim.str_utf_end(preview_text, sy + 1) ---@type integer
 
       local text ---@type string
       local highlights ---@type stl.t.IHighlightInline[]
 
       if has_replace_preview then
-        local prefix = preview_text:sub(1, sy + 1) ---@type string
-        local suffix = preview_text:sub(sy + 2) ---@type string
-        local match_chunk = preview_text:sub(sx + 1, sy + 1) ---@type string
-        local match_real = decode_preview_text(match_chunk) ---@type string
+        local prefix = preview_text:sub(1, stop) ---@type string
+        local suffix = preview_text:sub(stop + 1) ---@type string
+        local match_chunk = preview_text:sub(sx + 1, stop) ---@type string
+        local match_real = decode_preview_text(match_chunk, match.oy - match.ox + 1) ---@type string
         local replace_pattern_text = replace_pattern or "" ---@type string
 
         local replacement_real, preview_err = yoz.replace.replace_text_preview({
@@ -232,7 +241,7 @@ function M:normalize_search_result(params, results)
         local replacement_len = #replacement_display ---@type integer
 
         highlights = {
-          { coll = sx, colr = sy + 1, hlname = search_highlight },
+          { coll = sx, colr = stop, hlname = search_highlight },
         }
 
         if replacement_len > 0 then
@@ -245,7 +254,7 @@ function M:normalize_search_result(params, results)
       else
         text = preview_text
         highlights = {
-          { coll = sx, colr = sy + 1, hlname = search_highlight },
+          { coll = sx, colr = stop, hlname = search_highlight },
         }
       end
 
