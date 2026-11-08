@@ -422,28 +422,37 @@ impl<'matcher, 'count, 'cancel> Sink for FileMatchSink<'matcher, 'count, 'cancel
         let bytes = mat.bytes();
         let line_number = mat.line_number().unwrap_or(0);
         let absolute_offset = mat.absolute_byte_offset() as usize;
+        let block = mat.bytes_range_in_buffer();
 
         let mut match_ranges: Vec<MatchRange> = Vec::new();
         let mut continue_search = true;
 
-        let result = self.matcher.find_iter(bytes, |range| {
-            if is_cancelled(self.cancelled) {
-                continue_search = false;
-                return false;
-            }
+        /* The block holds the lines of its matches, which start and end in it. Matching the block alone would take its
+         * end for the end of the text, where `$` holds and `\s*$` takes the line break; the buffer around it gives each
+         * match the text after it, as replacement sees it. */
+        let result = self
+            .matcher
+            .find_iter_at(mat.buffer(), block.start, |range| {
+                if range.start() >= block.end {
+                    return false;
+                }
+                if is_cancelled(self.cancelled) {
+                    continue_search = false;
+                    return false;
+                }
 
-            if reached_match_limit(*self.matches_count, self.max_matches) {
-                continue_search = false;
-                return false;
-            }
+                if reached_match_limit(*self.matches_count, self.max_matches) {
+                    continue_search = false;
+                    return false;
+                }
 
-            match_ranges.push(MatchRange {
-                start: range.start(),
-                end: range.end(),
+                match_ranges.push(MatchRange {
+                    start: range.start() - block.start,
+                    end: range.end() - block.start,
+                });
+                *self.matches_count = self.matches_count.saturating_add(1);
+                true
             });
-            *self.matches_count = self.matches_count.saturating_add(1);
-            true
-        });
 
         if let Err(error) = result {
             return Err(io::Error::other(error));
@@ -948,6 +957,44 @@ mod tests {
 
         assert!(filenames.contains("a.txt"), "LF lines end at `$`");
         assert!(filenames.contains("b.txt"), "CRLF lines end at `$`");
+    }
+
+    #[test]
+    fn t_search_in_files_matches_with_the_text_after_the_lines_of_a_match() {
+        let dir = TempDir::new();
+        fs::write(dir.path().join("a.txt"), "foo  \nbar\nfoo \n\nbaz\n").unwrap();
+        let options = ISearchInFilesOptions {
+            cwd: Some(dir.path().to_string_lossy().to_string()),
+            flag_case_sensitive: true,
+            flag_gitignore: false,
+            flag_regex: true,
+            max_filesize: Some("1M".to_string()),
+            max_matches: None,
+            search_pattern: r"foo\s*$".to_string(),
+            search_paths: ".".to_string(),
+            include_patterns: String::new(),
+            exclude_patterns: String::new(),
+            specified_filepath: None,
+        };
+
+        let result = search_in_files(&options).expect("expected successful search");
+        let ranges: Vec<_> = result.items[0]
+            .matches
+            .iter()
+            .map(|m| (m.ox, m.oy))
+            .collect();
+        /* As replacement matches: the spaces alone, then the spaces and the break before the empty line. */
+        assert_eq!(ranges, [(0, 4), (10, 14)]);
+        let expected = crate::replace::replace_text_preview(
+            "foo  \nbar\nfoo \n\nbaz\n",
+            r"foo\s*$",
+            "#",
+            false,
+            true,
+            true,
+        )
+        .unwrap();
+        assert_eq!(expected, "#\nbar\n#\nbaz\n");
     }
 
     #[test]
