@@ -100,6 +100,22 @@ t:test("structural end operators include function, parameter, and class targets"
   t.assert_eq("; after()", vim.api.nvim_get_current_line())
 end)
 
+t:test("structural start operators stop before the target, as exclusive motions do", function()
+  Runtime.buffer(t, { "local function a()", "  return 1", "end", "", "local function b()", "  return 2", "end" })
+  Runtime.feed("d]f")
+  t.assert_same({ "local function b()", "  return 2", "end" }, vim.api.nvim_buf_get_lines(0, 0, -1, true))
+
+  Runtime.buffer(t, { "f(first, second)" })
+  vim.api.nvim_win_set_cursor(0, { 1, 2 })
+  Runtime.feed("d]a")
+  t.assert_eq("f(second)", vim.api.nvim_get_current_line())
+
+  Runtime.buffer(t, { "function a() end", "x()" })
+  vim.api.nvim_win_set_cursor(0, { 2, 0 })
+  Runtime.feed("d[f")
+  t.assert_same({ "x()" }, vim.api.nvim_buf_get_lines(0, 0, -1, true))
+end)
+
 t:test("structural operators preserve explicitly forced selection modes", function()
   local line = "before(); function f() end; after()"
   Runtime.buffer(t, { line, "keep()" })

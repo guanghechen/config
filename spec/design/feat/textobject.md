@@ -85,6 +85,8 @@ Git hunk 边界的连续跳转纳入回归验证，见文末验证范围。
 | `z` | `[z` / `]z`         | 无                  | 折叠范围：`@fold`          | `folds`       |
 
 这些跳转支持 Normal、Visual 和 operator-pending 模式，接受 count，打开 fold 并更新 jumplist。
+未强制模式的 operator 中，到起点的跳转是 exclusive：`d]f` 删到下一个函数之前，符合 exclusive 规则时按行；
+到终点的跳转包含终点字符，`d]F` 删到函数末尾。
 class 跳转在 diff 模式保留原生 fallback。本地不提供 `iz/az` 对象。
 
 `[s/]s` 跳转语法作用域，`is/as` 选择分隔线区域；`[b/]b` 跳转语法 block，
