@@ -124,4 +124,38 @@ t:test("wiping an unlisted buffer releases its keymap tree and triggers", functi
   end
 end)
 
+t:test("keys a server maps on attach show once its LspAttach handlers have run", function()
+  local state = new_state()
+  state.setup()
+  state.enable()
+  local bufnr = new_buffer()
+  vim.keymap.set("n", "gq1", function() end, { buffer = bufnr, desc = "server key" })
+  t.assert_nil(Whichkey.tree.find(state.buf_trees[bufnr].n, "gq1"), "keys are read when the buffer is entered")
+
+  vim.api.nvim_exec_autocmds("LspAttach", { group = "WhichKey", buffer = bufnr, modeline = false })
+  t.wait_until(function()
+    return Whichkey.tree.find(state.buf_trees[bufnr].n, "gq1") ~= nil
+  end, 2000, "server key")
+end)
+
+t:test("global keys a plugin maps when it loads show in the buffers already entered", function()
+  local state = new_state()
+  state.setup()
+  state.enable()
+  local other = new_buffer()
+  local bufnr = new_buffer()
+  vim.keymap.set("n", "gq2", function() end, { desc = "plugin key" })
+  t:defer(function()
+    pcall(vim.keymap.del, "n", "gq2")
+  end)
+
+  vim.api.nvim_exec_autocmds("User", { group = "WhichKey", pattern = "PluginLoad", modeline = false })
+  t.wait_until(function()
+    return state.buf_trees[bufnr] ~= nil and Whichkey.tree.find(state.buf_trees[bufnr].n, "gq2") ~= nil
+  end, 2000, "plugin key in the current buffer")
+  t.assert_nil(state.buf_trees[other], "another buffer reads its keys when entered")
+  vim.api.nvim_set_current_buf(other)
+  t.assert_true(Whichkey.tree.find(state.buf_trees[other].n, "gq2") ~= nil, "plugin key in another buffer")
+end)
+
 t:run()

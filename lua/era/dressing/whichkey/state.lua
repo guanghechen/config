@@ -395,6 +395,16 @@ function M.__attach__(bufnr)
   S.input.attach(bufnr)
 end
 
+---Read a buffer's keymaps again: at once for the current buffer, and on its next BufEnter for another.
+---@param bufnr                          integer
+---@return nil
+function M.__refresh__(bufnr)
+  M.buf_trees[bufnr] = nil
+  if bufnr == vim.api.nvim_get_current_buf() then
+    M.__attach__(bufnr)
+  end
+end
+
 ---Check if keymap is valid for which-key
 ---@param km                             table
 ---@return boolean
@@ -499,6 +509,36 @@ function M.__setup_autocmds__()
     group = group,
     callback = function(ev)
       M.__attach__(ev.buf)
+    end,
+  })
+
+  -- A buffer's keymaps are read when it is entered; a server that attaches later maps keys of its own once every
+  -- LspAttach handler has run, and a plugin that loads later maps global keys.
+  vim.api.nvim_create_autocmd("LspAttach", {
+    group = group,
+    callback = function(ev)
+      vim.schedule(function()
+        if vim.api.nvim_buf_is_valid(ev.buf) then
+          M.__refresh__(ev.buf)
+        end
+      end)
+    end,
+  })
+  local plugins_loaded = false ---@type boolean
+  vim.api.nvim_create_autocmd("User", {
+    group = group,
+    pattern = "PluginLoad",
+    callback = function()
+      if plugins_loaded then
+        return
+      end
+      plugins_loaded = true
+      vim.schedule(function()
+        plugins_loaded = false
+        for _, bufnr in ipairs(vim.tbl_keys(M.buf_trees)) do
+          M.__refresh__(bufnr)
+        end
+      end)
     end,
   })
 
