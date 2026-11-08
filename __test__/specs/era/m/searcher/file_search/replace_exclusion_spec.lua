@@ -157,4 +157,32 @@ t:test("replacing single matches one after another keeps the later ones in place
   t.assert_eq("y = 11\nx = 2;\ny = 33\n", read(root, "a.txt"))
 end)
 
+---The rows of the matches of `name`, as `lnum:col text`.
+---@param composer                      era.m.searcher.FiletreeComposer
+---@param name                          string
+---@return string[]
+local function rows(composer, name)
+  local result = {} ---@type string[]
+  for _, uuid in ipairs(composer._uuids_order) do
+    ---@diagnostic disable-next-line: assign-type-mismatch
+    local data = composer._filetree:get(uuid) ---@type era.view.result_paths.IFile|nil
+    if data ~= nil and vim.fs.basename(data.filepath) == name then
+      for _, location in ipairs(composer._treeview:retrieve(uuid).locations or {}) do
+        result[#result + 1] = string.format("%d:%d %s", location.lnum, location.col, location.text)
+      end
+    end
+  end
+  return result
+end
+
+t:test("replacing a match shows the other matches of its file as a new search would", function()
+  local root = workspace({ ["a.txt"] = "abcabcabc\nabc\n" })
+  local composer = search(root, "abc", "X", false)
+
+  run_on_match(composer, "a.txt", 2, "search: replace file")
+  t.assert_eq("abcXabc\nabc\n", read(root, "a.txt"))
+  t.assert_same(rows(search(root, "abc", "X", false), "a.txt"), rows(composer, "a.txt"))
+  t.assert_same({ "1:0 abcXXabc", "1:4 abcXabcX", "2:0 abcX" }, rows(composer, "a.txt"))
+end)
+
 t:run()

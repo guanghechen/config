@@ -783,18 +783,43 @@ function M.new(props)
 
           local preview_locations = advance_result.locations ---@type dot.t.IMatchLocation[]
 
+          -- The other matches may share its line or follow it; searching the file again shows them as a new search
+          -- would.
+          local searched = {} ---@type table<integer, era.m.searcher.view.filetree.ISearchedItem>
+          local request = self:__snapshot_search_request__() ---@type era.m.searcher.file_search.IRequest|nil
+          if request ~= nil then
+            ---@type era.m.searcher.composer.filetree.ISearchRequestContext
+            local context = request.context
+            local params = vim.deepcopy(context.params) ---@type era.m.searcher.view.filetree.ISearchParams
+            params.specified_filepath = leafdata.filepath
+            local result = treeview:search(params) ---@type era.m.searcher.view.filetree.ISearchResult|nil
+            for _, item in ipairs(result and result.items or {}) do
+              searched[item.preview.offset] = item
+            end
+          end
+
           local nt = 0 ---@type integer
-          for i = st + 1, L, 1 do
+          for i = 1, L, 1 do
             local location = locations[i] ---@type era.m.searcher.view.filetree.ILocationEntry
-            if treeview:isvisible(location.locationuuid) then
-              nt = nt + 1 ---@type integer
-              local pl = preview_locations[nt] ---@type dot.t.IMatchLocation
+            if i ~= st and treeview:isvisible(location.locationuuid) then
               -- Published metadata stays immutable; the next import reads the producer.
               local producer = treeview.entries[location.locationuuid] --[[@as era.m.searcher.view.filetree.ILocationEntry]]
-              local preview = producer.match.preview
-              preview.offset = pl.offset
-              preview.lnum = pl.lnum
-              preview.col = pl.col
+              local pl = nil ---@type dot.t.IMatchLocation|nil
+              if i > st then
+                nt = nt + 1 ---@type integer
+                pl = preview_locations[nt]
+              end
+              local offset = pl and pl.offset or producer.match.preview.offset ---@type integer
+              local item = searched[offset] ---@type era.m.searcher.view.filetree.ISearchedItem|nil
+              if item ~= nil then
+                producer.lnum, producer.col, producer.text = item.lnum, item.col, item.text
+                producer.highlights, producer.match = item.highlights, item
+              elseif pl ~= nil then
+                local preview = producer.match.preview
+                preview.offset = pl.offset
+                preview.lnum = pl.lnum
+                preview.col = pl.col
+              end
             end
           end
 

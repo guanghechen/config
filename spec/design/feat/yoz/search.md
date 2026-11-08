@@ -234,6 +234,10 @@ Node-scoped 与单项替换只处理可见 matches，不受此限制，但仍须
 受限 projection 的 node-scoped replacement 必须使用显式 match offsets，不能走 whole-file fast path，
 因为截止文件可能还有未发现的匹配。
 
+单项替换后，同文件其余可见 matches 的行号、列与预览文本按同一请求只搜该文件的结果刷新，与新搜索一致；
+这次搜索沿用 `max_matches`，开销受 limit 约束。替换引入的新匹配不加入结果，未在刷新结果中找到的 match
+只更新 offset。
+
 ## 发布与性能边界
 
 每次搜索发布一个最终结果，保留确定性排序。Lua FileSearch 校验 generation 后，ResultFiles 准备文件与 locations，
