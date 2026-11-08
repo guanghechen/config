@@ -238,6 +238,6 @@ stl.fn.observe({ dot.context.flight.dressing_illuminate }, function()
       M.undressing(bufnr)
     end
   end
-end, false)
+end, true)
 
 return M
