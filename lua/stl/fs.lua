@@ -230,6 +230,11 @@ function M.read_file_as_lines(params)
     if line:byte(-1) == 13 then
       line = line:sub(1, -2)
     end
+    -- As in a buffer Neovim loads, and in the text file search matches, the text starts after a leading UTF-8 byte
+    -- order mark; a mark further on is text.
+    if #lines == 0 and line:sub(1, 3) == "\239\187\191" then
+      line = line:sub(4)
+    end
     table.insert(lines, line)
   end
 

@@ -57,6 +57,11 @@ t:test("read_file_as_lines: stops at max_lines", function()
   t.assert_same({ "a", "b" }, Fs.read_file_as_lines({ filepath = filepath, max_lines = 2 }), "lines")
 end)
 
+t:test("read_file_as_lines: drops the byte order mark that starts the file, not one further on", function()
+  local filepath = fixture("\239\187\191a\r\n\239\187\191b\nc\239\187\191d\n")
+  t.assert_same({ "a", "\239\187\191b", "c\239\187\191d" }, Fs.read_file_as_lines({ filepath = filepath }), "lines")
+end)
+
 t:test("write_file: replaces the content and leaves no temporary file", function()
   local dirpath = t:tempdir()
   local filepath = vim.fs.joinpath(dirpath, "state.json")
