@@ -168,6 +168,59 @@ local function locate(starts, offset)
   return lo - 1, offset - starts[lo]
 end
 
+---Marks the replacement preview of a match: the matched text struck through, then the replacement inline after it.
+---Extmarks rather than `vim.hl.range`, which returns no mark to restyle and takes about 20 µs a call.
+---@param bufnr                         integer
+---@param current                       boolean
+---@param sr                            integer
+---@param sc                            integer
+---@param er                            integer
+---@param ec                            integer
+---@param replacement                   string
+---@param marks                         ?integer[] Marks to change in place.
+---@return integer[]
+local function set_preview(bufnr, current, sr, sc, er, ec, replacement, marks)
+  local struck = vim.api.nvim_buf_set_extmark(bufnr, NSNR_REPLACE_PREVIEW, sr, sc, {
+    id = marks and marks[1],
+    end_row = er,
+    end_col = ec,
+    hl_group = current and "m_sr_search_cur" or "m_sr_search",
+    priority = vim.hl.priorities.user,
+  })
+  if replacement == "" then
+    return { struck }
+  end
+  local inline = vim.api.nvim_buf_set_extmark(bufnr, NSNR_REPLACE_PREVIEW, er, ec, {
+    id = marks and marks[2],
+    virt_text = { { replacement, current and "m_sr_replace_cur" or "m_sr_replace" } },
+    virt_text_pos = "inline",
+    priority = vim.hl.priorities.user + 1,
+  })
+  return { struck, inline }
+end
+
+---Restyles the preview marks of a match where edits since have moved them.
+---@param bufnr                         integer
+---@param marks                         integer[]|nil
+---@param current                       boolean
+---@return nil
+local function restyle_preview(bufnr, marks, current)
+  if marks == nil then
+    return
+  end
+  local struck = vim.api.nvim_buf_get_extmark_by_id(bufnr, NSNR_REPLACE_PREVIEW, marks[1], { details = true })
+  local details = struck[3] ---@type vim.api.keyset.extmark_details|nil
+  if details == nil then
+    return
+  end
+  local replacement = "" ---@type string
+  if marks[2] ~= nil then
+    local inline = vim.api.nvim_buf_get_extmark_by_id(bufnr, NSNR_REPLACE_PREVIEW, marks[2], { details = true })
+    replacement = inline[3] and inline[3].virt_text[1][1] or ""
+  end
+  set_preview(bufnr, current, struck[1], struck[2], details.end_row, details.end_col, replacement, marks)
+end
+
 ---@class era.m.searcher.buffer.ISearcherProps
 ---@field public o_flag_fuzzy?          stl.c.Observable
 ---@field public o_flag_regex?          stl.c.Observable
@@ -198,6 +251,8 @@ end
 ---@field protected _bufnr_source       integer|nil
 ---@field protected _matches            yoz.search.ITextMatch[]|nil
 ---@field protected _changedtick        integer|nil Change tick of the source buffer the matches were found in.
+---@field protected _preview_marks      table<integer, integer[]>|nil Marks of the replacement preview of each match.
+---@field protected _preview_current    integer Match whose preview stands out as the current one.
 ---@field protected _scheduler_search   stl.c.Scheduler
 ---@field protected _nvimbar            era.m.nvimbar.Nvimbar
 ---@field protected _finder_keymaps     stl.t.IKeymap[]
@@ -277,6 +332,8 @@ function M.new(props)
   self._bufnr_source = nil
   self._matches = nil
   self._changedtick = nil
+  self._preview_marks = nil
+  self._preview_current = 0
   self._nvimbar = nvimbar
   self._scheduler_search = scheduler_search
   self._finder_keymaps = finder_keymaps
@@ -370,7 +427,7 @@ function M:close()
   if bufnr_source ~= nil and vim.api.nvim_buf_is_valid(bufnr_source) then
     vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH, 0, -1)
     vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH_CURRENT, 0, -1)
-    vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_REPLACE_PREVIEW, 0, -1)
+    self:__clear_replace_preview__(bufnr_source)
     -- Clean up source buffer keymaps
     self:__cleanup_source_keymaps__(bufnr_source)
   end
@@ -482,8 +539,7 @@ function M:goto_prev_match()
     vim.api.nvim_buf_clear_namespace(bufnr, NSNR_SEARCH_CURRENT, 0, -1)
     highlight_text_match(bufnr, NSNR_SEARCH_CURRENT, "IncSearch", match_prev)
 
-    -- Update replace preview for the new current match
-    self:__update_replace_preview__()
+    self:__restyle_current_preview__()
   end
 end
 
@@ -520,7 +576,7 @@ function M:goto_next_match()
     vim.api.nvim_buf_clear_namespace(bufnr, NSNR_SEARCH_CURRENT, 0, -1)
     highlight_text_match(bufnr, NSNR_SEARCH_CURRENT, "IncSearch", match_next)
 
-    self:__update_replace_preview__()
+    self:__restyle_current_preview__()
   end
 end
 
@@ -734,7 +790,7 @@ function M:replace_all_matches()
     -- Clear all highlights since all matches are replaced
     vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH, 0, -1)
     vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH_CURRENT, 0, -1)
-    vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_REPLACE_PREVIEW, 0, -1)
+    self:__clear_replace_preview__(bufnr_source)
 
     -- Clear matches and update counters
     self._matches = {}
@@ -1222,11 +1278,8 @@ function M:__setup_observers__(
   stl.fn.observe({
     o_flag_fuzzy,
     o_flag_regex,
-    o_flag_case_sensitive,
     o_flag_replace,
-    o_search_pattern,
     o_replace_pattern,
-    o_match_index,
   }, function()
     self:__update_replace_preview__()
   end, true)
@@ -1269,7 +1322,7 @@ function M:__clear__()
   if bufnr ~= nil and vim.api.nvim_buf_is_valid(bufnr) then
     vim.api.nvim_buf_clear_namespace(bufnr, NSNR_SEARCH, 0, -1)
     vim.api.nvim_buf_clear_namespace(bufnr, NSNR_SEARCH_CURRENT, 0, -1)
-    vim.api.nvim_buf_clear_namespace(bufnr, NSNR_REPLACE_PREVIEW, 0, -1)
+    self:__clear_replace_preview__(bufnr)
   end
   self._preserve_match_index = nil
 end
@@ -1320,6 +1373,7 @@ function M:__search__()
     self.o_match_total:next(0)
     vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH, 0, -1)
     vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH_CURRENT, 0, -1)
+    self:__clear_replace_preview__(bufnr_source)
     return
   end
 
@@ -1384,6 +1438,7 @@ function M:__search__()
     self.o_match_total:next(0)
     vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH, 0, -1)
     vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_SEARCH_CURRENT, 0, -1)
+    self:__clear_replace_preview__(bufnr_source)
     return
   end
 
@@ -1481,8 +1536,7 @@ function M:__update_replace_preview__()
     return
   end
 
-  -- Clear existing replace preview highlights
-  vim.api.nvim_buf_clear_namespace(bufnr_source, NSNR_REPLACE_PREVIEW, 0, -1)
+  self:__clear_replace_preview__(bufnr_source)
 
   local flag_replace = self.o_flag_replace:snapshot() ---@type boolean
 
@@ -1519,6 +1573,12 @@ function M:__update_replace_preview__()
     return
   end
 
+  -- The matches are positions in the text the search saw; after an edit the search runs again and renders the preview.
+  if vim.api.nvim_buf_get_changedtick(bufnr_source) ~= self._changedtick then
+    self:__search__()
+    return
+  end
+
   local lines = vim.api.nvim_buf_get_lines(bufnr_source, 0, -1, false) ---@type string[]
   local replacements, preview_err = self:__expand__(lines, matches)
   if replacements == nil then
@@ -1530,108 +1590,44 @@ function M:__update_replace_preview__()
     return
   end
 
-  local replacement_matches = {} ---@type era.m.searcher.buffer.IReplacementMatch[]
-  for i, text_match in ipairs(matches) do
-    local replacement_text = replacements[i] ---@type string|false
-    if replacement_text ~= false then
-      replacement_matches[#replacement_matches + 1] = {
-        l = text_match.ox,
-        r = text_match.oy + 1,
-        text = replacement_text,
-      }
+  local starts = line_starts(lines) ---@type integer[]
+  local current = self.o_match_index:snapshot() ---@type integer
+  local marks = {} ---@type table<integer, integer[]>
+  for i, match in ipairs(matches) do
+    local replacement = replacements[i] ---@type string|false
+    if replacement ~= false then
+      local sr, sc = locate(starts, match.ox)
+      local er, ec = locate(starts, match.oy + 1)
+      marks[i] = set_preview(bufnr_source, i == current, sr, sc, er, ec, replacement)
     end
   end
-
-  if #replacement_matches > 0 then
-    self:__render_replacement_matches__(bufnr_source, replacement_matches)
-  end
+  self._preview_marks = marks
+  self._preview_current = current
 end
-
----@class era.m.searcher.buffer.IReplacementMatch
----@field public l                      integer
----@field public r                      integer
----@field public text                   string
 
 ---@protected
 ---@param bufnr                         integer
----@param replacement_matches           era.m.searcher.buffer.IReplacementMatch[]
 ---@return nil
-function M:__render_replacement_matches__(bufnr, replacement_matches)
-  local text = table.concat(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false), "\n")
-  local lines = vim.split(text, "\n", { plain = true })
-  local current_match_offset = self:__get_current_match_offset__(lines)
-
-  for _, replacement_match in ipairs(replacement_matches) do
-    local lnum = self:__calculate_line_number__(lines, replacement_match.l)
-    local line_start_pos = self:__calculate_line_start_pos__(lines, lnum)
-    local col_start = replacement_match.l - line_start_pos
-    local col_end = replacement_match.r - line_start_pos
-
-    local is_current_match = current_match_offset and replacement_match.l == current_match_offset
-    local search_hlgroup = is_current_match and "m_sr_search_cur" or "m_sr_search"
-    local replace_hlgroup = is_current_match and "m_sr_replace_cur" or "m_sr_replace"
-
-    if col_start >= 0 and col_end > col_start then
-      pcall(vim.hl.range, bufnr, NSNR_REPLACE_PREVIEW, search_hlgroup, { lnum - 1, col_start }, { lnum - 1, col_end })
-
-      local replacement_text = replacement_match.text or ""
-      if replacement_text ~= "" then
-        pcall(vim.api.nvim_buf_set_extmark, bufnr, NSNR_REPLACE_PREVIEW, lnum - 1, col_end, {
-          virt_text = { { replacement_text, replace_hlgroup } },
-          virt_text_pos = "inline",
-          priority = vim.hl.priorities.user + 1,
-        })
-      end
-    end
-  end
+function M:__clear_replace_preview__(bufnr)
+  vim.api.nvim_buf_clear_namespace(bufnr, NSNR_REPLACE_PREVIEW, 0, -1)
+  self._preview_marks = nil
+  self._preview_current = 0
 end
 
+---Moving to another match changes only which preview stands out, so the marks of the two matches change in place.
 ---@protected
----@param lines                         string[]
----@return integer|nil
----@diagnostic disable-next-line: unused-local
-function M:__get_current_match_offset__(lines)
-  local current_match_index = self.o_match_index:snapshot() ---@type integer
-  local matches = self._matches ---@type yoz.search.ITextMatch[]|nil
-
-  if not matches or current_match_index <= 0 or current_match_index > #matches then
-    return nil
+---@return nil
+function M:__restyle_current_preview__()
+  local bufnr = self._bufnr_source ---@type integer|nil
+  local marks = self._preview_marks ---@type table<integer, integer[]>|nil
+  local current = self.o_match_index:snapshot() ---@type integer
+  if bufnr == nil or marks == nil or current == self._preview_current then
+    return
   end
 
-  local current_match = matches[current_match_index]
-  if not current_match then
-    return nil
-  end
-
-  return current_match.ox
-end
-
----@protected
----@param lines                         string[]
----@param char_offset                   integer
----@return integer
-function M:__calculate_line_number__(lines, char_offset)
-  local char_pos = 0
-  for i, line in ipairs(lines) do
-    local line_end = char_pos + #line
-    if char_offset >= char_pos and char_offset < line_end + 1 then
-      return i
-    end
-    char_pos = line_end + 1
-  end
-  return 1
-end
-
----@protected
----@param lines                         string[]
----@param lnum                          integer
----@return integer
-function M:__calculate_line_start_pos__(lines, lnum)
-  local line_start_pos = 0
-  for i = 1, lnum - 1 do
-    line_start_pos = line_start_pos + #lines[i] + 1
-  end
-  return line_start_pos
+  restyle_preview(bufnr, marks[self._preview_current], false)
+  restyle_preview(bufnr, marks[current], true)
+  self._preview_current = current
 end
 
 ---@protected
