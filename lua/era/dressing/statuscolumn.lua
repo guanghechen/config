@@ -195,6 +195,23 @@ local function collect_signs(bufnr, top_row, bot_row)
   return signs_by_lnum
 end
 
+---The fold sign of a line: a closed fold's, or an open fold's on the line it starts at.
+---@param winnr                         integer
+---@param lnum                          integer
+---@return era.dressing.statuscolumn.ISign|nil
+local function fold_sign(winnr, lnum)
+  local info = fold_info(winnr, lnum)
+  if not info or info.level <= 0 then
+    return nil
+  end
+  if info.lines > 0 then
+    return { type = "fold", text = stl.icon.fillchars.foldclose, texthl = "Folded" }
+  end
+  if config.folds.open and info.start == lnum then
+    return { type = "fold", text = stl.icon.fillchars.foldopen }
+  end
+end
+
 -- Returns wanted signs for a line sorted by priority (high to low)
 ---@param winnr                         integer
 ---@param bufnr                         integer
@@ -224,18 +241,7 @@ local function line_signs(winnr, bufnr, lnum, wanted)
 
   -- Get fold signs
   if wanted.fold then
-    local info = fold_info(winnr, lnum)
-    if info and info.level > 0 then
-      if info.lines > 0 then
-        ---@type era.dressing.statuscolumn.ISign
-        local sign = { type = "fold", text = stl.icon.fillchars.foldclose, texthl = "Folded" }
-        signs[#signs + 1] = sign
-      elseif config.folds.open and info.start == lnum then
-        ---@type era.dressing.statuscolumn.ISign
-        local sign = { type = "fold", text = stl.icon.fillchars.foldopen }
-        signs[#signs + 1] = sign
-      end
-    end
+    signs[#signs + 1] = fold_sign(winnr, lnum)
   end
 
   -- Sort by priority (high to low)
@@ -345,15 +351,35 @@ end
 ---@class era.dressing.statuscolumn
 local M = {}
 
+---A left click moves the cursor to the clicked line; a single plain one on the line's fold sign toggles the fold.
+---@param _                             integer
+---@param clicks                        integer
+---@param button                        string
+---@param mods                          string
 ---@return nil
-function M.click_fold()
+function M.click_fold(_, clicks, button, mods)
+  if button ~= "l" then
+    return
+  end
   local pos = vim.fn.getmousepos()
-  vim.api.nvim_win_set_cursor(pos.winid, { pos.line, 1 })
-  vim.api.nvim_win_call(pos.winid, function()
-    if vim.fn.foldlevel(pos.line) > 0 then
+  local winnr, lnum = pos.winid, pos.line ---@type integer, integer
+  vim.api.nvim_win_set_cursor(winnr, { lnum, 0 })
+  if clicks ~= 1 or vim.trim(mods) ~= "" then
+    return
+  end
+  -- The whole column takes clicks; a fold sign, ahead of a Git one, fills its last two cells when they show.
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  local textoff = vim.fn.getwininfo(winnr)[1].textoff ---@type integer
+  local shown = vim.b[bufnr].era_statuscolumn_right ~= false
+    and (
+      vim.api.nvim_get_option_value("signcolumn", { win = winnr }) ~= "no"
+      or vim.api.nvim_get_option_value("foldcolumn", { win = winnr }) ~= "0"
+    )
+  if shown and pos.wincol > textoff - 2 and fold_sign(winnr, lnum) then
+    vim.api.nvim_win_call(winnr, function()
       vim.cmd("normal! za")
-    end
-  end)
+    end)
+  end
 end
 
 ---@return string

@@ -227,8 +227,9 @@ t:test("does not append fold signs to cached sign arrays", function()
   end)
 
   local line_signs = load_line_signs()
-  local _, fold_info_index = get_upvalue(line_signs, "fold_info")
-  debug.setupvalue(line_signs, fold_info_index, function()
+  local fold_sign = get_upvalue(line_signs, "fold_sign") ---@type function
+  local _, fold_info_index = get_upvalue(fold_sign, "fold_info")
+  debug.setupvalue(fold_sign, fold_info_index, function()
     return { start = 1, level = 1, llevel = 1, lines = 0 }
   end)
 
@@ -239,6 +240,41 @@ t:test("does not append fold signs to cached sign arrays", function()
   t.assert_eq(2, #first_signs, "first render sign count")
   t.assert_eq(2, #second_signs, "second render sign count")
   t.assert_false(first_signs == second_signs, "render-local sign arrays")
+end)
+
+t:test("a single left click on a fold sign toggles the fold, and other clicks only move the cursor", function()
+  t:patch_global("era", require("era"))
+  t:patch_global("stl", { icon = { fillchars = { foldclose = ">", foldopen = "v" } } })
+  local winnr, bufnr = setup_window()
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "one", "  two", "  three", "four", "five" })
+  vim.api.nvim_set_option_value("number", true, { win = winnr })
+  vim.api.nvim_set_option_value("foldcolumn", "1", { win = winnr })
+  vim.api.nvim_set_option_value("foldmethod", "manual", { win = winnr })
+  vim.cmd("2,3fold")
+  vim.cmd("normal! zR")
+  local textoff = vim.fn.getwininfo(winnr)[1].textoff ---@type integer
+  ---@param line                        integer
+  ---@param wincol                      integer
+  ---@param clicks                      integer
+  ---@param button                      string
+  ---@param mods                        string
+  ---@return integer, integer
+  local function click(line, wincol, clicks, button, mods)
+    vim.api.nvim_win_set_cursor(winnr, { 5, 0 })
+    vim.cmd("normal! zR")
+    t:patch_table(vim.fn, "getmousepos", function()
+      return { winid = winnr, line = line, wincol = wincol }
+    end)
+    era.dressing.statuscolumn.click_fold(0, clicks, button, mods)
+    return vim.api.nvim_win_get_cursor(winnr)[1], vim.fn.foldclosed(2)
+  end
+
+  t.assert_same({ 2, 2 }, { click(2, textoff, 1, "l", "    ") }, "the sign of the fold's first line")
+  t.assert_same({ 2, -1 }, { click(2, 1, 1, "l", "    ") }, "the number")
+  t.assert_same({ 3, -1 }, { click(3, textoff, 1, "l", "    ") }, "a line inside the fold, which shows no sign")
+  t.assert_same({ 2, -1 }, { click(2, textoff, 2, "l", "    ") }, "a double click")
+  t.assert_same({ 2, -1 }, { click(2, textoff, 1, "l", "c   ") }, "a click with a modifier")
+  t.assert_same({ 5, -1 }, { click(2, textoff, 1, "r", "    ") }, "a right click")
 end)
 
 t:run()
