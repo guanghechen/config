@@ -158,4 +158,24 @@ t:test("global keys a plugin maps when it loads show in the buffers already ente
   t.assert_true(Whichkey.tree.find(state.buf_trees[other].n, "gq2") ~= nil, "plugin key in another buffer")
 end)
 
+t:test(
+  "disabling after a plugin loads leaves no triggers in the buffers it refreshed while they were not current",
+  function()
+    local state = new_state()
+    state.setup()
+    state.enable()
+    local other = new_buffer()
+    t.assert_true(trigger_count(other) > 0, "triggers once entered")
+    local bufnr = new_buffer()
+
+    vim.api.nvim_exec_autocmds("User", { group = "WhichKey", pattern = "PluginLoad", modeline = false })
+    t.wait_until(function()
+      return state.buf_trees[bufnr] ~= nil and state.buf_trees[other] == nil
+    end, 2000, "refreshed")
+    state.disable()
+    t.assert_eq(0, trigger_count(bufnr), "the current buffer")
+    t.assert_eq(0, trigger_count(other), "a buffer refreshed while not current")
+  end
+)
+
 t:run()

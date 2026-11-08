@@ -399,6 +399,10 @@ end
 ---@param bufnr                          integer
 ---@return nil
 function M.__refresh__(bufnr)
+  -- Its triggers go with its tree, so that disabling still reaches every buffer that has some.
+  for mode in pairs(M.get_trigger_modes()) do
+    S.input.detach(bufnr, mode)
+  end
   M.buf_trees[bufnr] = nil
   if bufnr == vim.api.nvim_get_current_buf() then
     M.__attach__(bufnr)
