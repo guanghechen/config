@@ -19,9 +19,10 @@ end
 ---@param get_file_info (fun(bufnr: integer): stl.c.Future|nil)|nil
 ---@param get_buf_name (fun(bufnr: integer): string)|nil
 ---@param create_repo (fun(repo: table): stl.c.Future)|nil
----@return era.m.git.buffer, table<string, fun(event: { buf: integer })>, fun(): nil, fun(bufnr: integer, visible: boolean), fun(bufnr: integer, valid: boolean), table<integer, integer>, { count: integer, opts: vim.api.keyset.buf_attach|nil }
+---@return era.m.git.buffer, table<string, fun(event: { buf: integer })>, fun(): nil, fun(bufnr: integer, visible: boolean), fun(bufnr: integer, valid: boolean), table<integer, integer>, { count: integer, opts: vim.api.keyset.buf_attach|nil }, table<string, string|string[]|nil>
 local function setup(initial_visible, get_file_info, get_buf_name, create_repo)
   local callbacks = {} ---@type table<string, fun(event: { buf: integer })>
+  local patterns = {} ---@type table<string, string|string[]|nil>
   local file_info_calls = {} ---@type table<integer, integer>
   local pending_debounce = nil ---@type fun()|nil
   local valid = {} ---@type table<integer, boolean>
@@ -145,7 +146,7 @@ local function setup(initial_visible, get_file_info, get_buf_name, create_repo)
   t:patch_table(vim.api, "nvim_create_autocmd", function(events, opts)
     events = type(events) == "table" and events or { events }
     for _, event in ipairs(events) do
-      callbacks[event] = opts.callback
+      callbacks[event], patterns[event] = opts.callback, opts.pattern
     end
     return 1
   end)
@@ -188,7 +189,8 @@ local function setup(initial_visible, get_file_info, get_buf_name, create_repo)
     end,
     ---@diagnostic disable-next-line: redundant-return-value
     file_info_calls,
-    listener_calls
+    listener_calls,
+    patterns
 end
 
 t:test("setup initializes visible buffers immediately", function()
@@ -255,6 +257,24 @@ t:test("BufFilePost rebinds Git state without duplicating the buffer listener", 
   t.assert_eq("/repo/new.lua", current.file, "current filepath")
   t.assert_eq("new.lua", current.relpath, "current Git path")
   t.assert_eq(1, listener_calls.count, "one low-level listener")
+end)
+
+t:test("a line ending option change refreshes the buffer it changed in", function()
+  local Buffer, callbacks, _, _, _, _, _, patterns = setup({ [11] = true })
+  t.assert_same({ "fileformat", "bomb", "endofline" }, patterns.OptionSet, "full option names")
+  local current = assert(Buffer.get_cache(11))
+  local updates = 0 ---@type integer
+  current.force_next_update = false
+  current.update_throttled = function()
+    updates = updates + 1
+  end
+  t:patch_table(vim.api, "nvim_get_current_buf", function()
+    return 11
+  end)
+
+  callbacks.OptionSet({ buf = 0 })
+  t.assert_true(current.force_next_update, "the next update recomputes")
+  t.assert_eq(1, updates, "updates")
 end)
 
 t:test("only edits that move sign marks force a sign repair", function()
