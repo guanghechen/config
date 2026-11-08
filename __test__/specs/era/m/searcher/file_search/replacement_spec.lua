@@ -73,6 +73,10 @@ local function new_composer(dir)
     replace_pattern = controls.replace_pattern,
     rootpath = observable(dir),
     search_pattern = controls.search_pattern,
+    -- As Search Files does.
+    on_refresh = function(composer)
+      composer:schedule_search()
+    end,
   })
   t:defer(function()
     composer:dispose()
@@ -295,6 +299,45 @@ t:test("a replacement edit shows the files as they are on disk", function()
     return seen.searches == 2
   end)
   t.assert_eq(6, count_texts(composer, "thread"), "previews of the changed file")
+end)
+
+t:test("a refresh brings hidden matches back with the offsets its search finds", function()
+  local dir = fixture()
+  vim.fn.writefile({ "foo foo foo foo" }, dir .. "/four.txt")
+  local composer, controls = new_composer(dir)
+  local tree = composer._treeview
+  controls.replace_pattern:next("foo foo")
+  controls.search_pattern:next("foo")
+  settle(composer, "the search did not publish")
+  local key = composer._uuids_order[1] ---@type string
+
+  ---@return string[]
+  local function offsets()
+    local result = {} ---@type string[]
+    for _, location in ipairs(tree:retrieve(key).locations) do
+      local hidden = tree:isvisible(location.locationuuid) and "" or " hidden"
+      result[#result + 1] = location.match.preview.offset .. hidden
+    end
+    return result
+  end
+
+  -- Hide the third match, then replace the first: the text after it moves 4 bytes on.
+  local hidden = tree:retrieve(key).locations[3].locationuuid ---@type string
+  tree:mark_node_invisible(hidden)
+  treeview.await(composer.result.draw())
+  composer.result:set_lnum_current(assert(tree:retrieve_lnum(tree:retrieve(key).locations[1].locationuuid)))
+  treeview.await(tree:ready())
+  action(composer, "search: replace file")()
+  treeview.await(composer.result.draw())
+  t.assert_same({ "foo foo foo foo foo" }, vim.fn.readfile(dir .. "/four.txt"), "the first match replaced")
+
+  action(composer, "searcher: refresh")()
+  treeview.await(composer.result.draw())
+  t.assert_false(tree:isvisible(hidden), "the hidden match waits for the search, its offset not moved")
+  settle(composer, "the refresh did not publish", function()
+    return #tree:retrieve(key).locations == 5
+  end)
+  t.assert_same({ "0", "4", "8", "12", "16" }, offsets(), "every match back where the search found it")
 end)
 
 t:test("a pattern that matches bytes outside UTF-8 is searched but tells once that it is not replaced", function()

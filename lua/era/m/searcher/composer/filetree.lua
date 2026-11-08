@@ -147,6 +147,7 @@ local SEARCH_INDICATOR_DELAY_NS = 120 * 1e6 ---@type integer
 ---@field protected _published_search_inputs era.m.searcher.composer.filetree.ISearchInputs|nil
 ---@field protected _published_search_limit_reached boolean
 ---@field protected _published_replace_error string|nil Why replacing cannot use the published search pattern.
+---@field protected _unhide_on_publish boolean Whether the next published results bring back the rows hidden before.
 ---@field protected _search_indicator_hl_index integer|nil
 ---@field protected _search_indicator_started_at integer|nil
 ---@field protected _search_indicator_frame string|nil
@@ -252,9 +253,11 @@ function M.new(props)
 
   local retriever = treeview
 
+  -- A hidden row keeps the offset it had when hidden, which a replacement since may have moved: the rows come back
+  -- with the results of the search the refresh runs.
   ---@type era.m.searcher.composer.filetree.IOnRefresh
   local function on_refresh(_, force)
-    treeview:reset_hidden()
+    self._unhide_on_publish = true
     _on_refresh(self, force)
   end
 
@@ -1528,6 +1531,7 @@ function M.new(props)
   self._published_search_inputs = nil
   self._published_search_limit_reached = false
   self._published_replace_error = nil
+  self._unhide_on_publish = false
   self._search_indicator_hl_index = nil
   self._search_indicator_started_at = nil
   self._search_indicator_frame = nil
@@ -1696,6 +1700,7 @@ function M:dispose()
   self._published_search_inputs = nil
   self._published_search_limit_reached = nil
   self._published_replace_error = nil
+  self._unhide_on_publish = false
   self._search_indicator_hl_index = nil
   self._search_indicator_started_at = nil
   self._search_indicator_frame = nil
@@ -2225,6 +2230,10 @@ function M:__apply_search_result__(context, result)
   local told = published ~= nil and published.flag_replace and self._published_replace_error ~= nil ---@type boolean
 
   self:reset_filepaths(rootpath, cwd, filepaths)
+  if self._unhide_on_publish then
+    self._unhide_on_publish = false
+    treeview:reset_hidden()
+  end
   treeview:publish_search_result(result, uuids)
 
   if frecency ~= nil then
