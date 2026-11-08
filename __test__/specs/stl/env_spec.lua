@@ -1,0 +1,36 @@
+local bootstrap = require("__test__.support.bootstrap")
+local harness = require("__test__.support.harness")
+
+local t = harness.new()
+bootstrap.with_native(t)
+
+local Env = require("stl.env")
+
+t:test("mkdirs makes a directory, or the one a file goes in, and takes an existing one as made", function()
+  local root = t:tempdir()
+  Env.mkdirs(vim.fs.joinpath(root, "a", "b"), true)
+  t.assert_eq(1, vim.fn.isdirectory(vim.fs.joinpath(root, "a", "b")), "directory")
+  Env.mkdirs(vim.fs.joinpath(root, "c", "d", "file.txt"), false)
+  t.assert_eq(1, vim.fn.isdirectory(vim.fs.joinpath(root, "c", "d")), "directory of a file")
+  t.assert_eq(0, vim.fn.filereadable(vim.fs.joinpath(root, "c", "d", "file.txt")), "no file")
+  Env.mkdirs(vim.fs.joinpath(root, "a"), true)
+end)
+
+t:test("mkdirs takes a relative path from Neovim's directory", function()
+  local root = t:tempdir()
+  local cwd = vim.uv.cwd()
+  vim.cmd.cd(root)
+  t:defer(function()
+    vim.cmd.cd(cwd)
+  end)
+  Env.mkdirs("relative/path", true)
+  t.assert_eq(1, vim.fn.isdirectory(vim.fs.joinpath(root, "relative", "path")))
+end)
+
+t:test("mkdirs fails where a file stands in the way", function()
+  local root = t:tempdir()
+  vim.fn.writefile({ "x" }, vim.fs.joinpath(root, "file"))
+  t.assert_false(pcall(Env.mkdirs, vim.fs.joinpath(root, "file", "sub"), true))
+end)
+
+t:run()

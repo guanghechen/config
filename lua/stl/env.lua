@@ -90,11 +90,10 @@ end
 ---@param is_dir                        boolean
 ---@return nil
 function M.mkdirs(filepath, is_dir)
-  if is_dir then
-    vim.fn.mkdir(filepath, "p")
-  else
-    vim.fn.mkdir(yoz.path.dirname(filepath, false, PATH_SEP), "p")
-  end
+  local dirpath = is_dir and filepath or yoz.path.dirname(filepath, false, PATH_SEP) ---@type string
+  -- Unlike `mkdir -p`, which gives up on a directory another process creates meanwhile, this takes it as made. A
+  -- relative path starts from Neovim's directory, as for `mkdir()`.
+  yoz.path.mkdirs(vim.fs.abspath(dirpath))
 end
 
 return M
