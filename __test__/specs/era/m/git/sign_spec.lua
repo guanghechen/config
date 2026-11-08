@@ -13,8 +13,11 @@ bootstrap.with_runtime(t, {
           end,
         },
         hunk = {
-          calc_signs_all = function(signs)
-            return signs
+          -- The tests pass the signs themselves for hunks; as hunks do, they give the signs of the lines asked for.
+          calc_signs_all = function(signs, top, bot)
+            return vim.tbl_filter(function(value)
+              return value.lnum >= top and value.lnum <= bot
+            end, signs)
           end,
         },
       },
@@ -24,16 +27,23 @@ bootstrap.with_runtime(t, {
 
 local sign = require("era.m.git.sign")
 
+-- A buffer a window shows, as signs go only on the lines windows show.
+---@param lines                         ?string[]
 ---@return integer
-local function create_buffer()
+---@return integer
+local function create_buffer(lines)
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "one", "two", "three" })
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines or { "one", "two", "three" })
+  local winnr = vim.api.nvim_open_win(bufnr, false, { relative = "editor", row = 0, col = 0, width = 40, height = 10 })
   t:defer(function()
+    if vim.api.nvim_win_is_valid(winnr) then
+      vim.api.nvim_win_close(winnr, true)
+    end
     if vim.api.nvim_buf_is_valid(bufnr) then
       vim.api.nvim_buf_delete(bufnr, { force = true })
     end
   end)
-  return bufnr
+  return bufnr, winnr
 end
 
 ---@param bufnr                      integer
@@ -98,6 +108,34 @@ t:test("an unchanged update writes nothing and unknown marks are dropped", funct
   writes = 0
   sign.update(bufnr, signs, nil)
   t.assert_eq(0, writes, "nothing to write")
+end)
+
+t:test("an update marks the lines windows show and drops the marks of the others", function()
+  local lines = {} ---@type string[]
+  for i = 1, 100 do
+    lines[i] = "line " .. i
+  end
+  local bufnr, winnr = create_buffer(lines)
+  local signs = { { lnum = 1, type = "add" }, { lnum = 50, type = "add" } } ---@type era.m.git.Sign[]
+  ---@return integer[]
+  local function rows()
+    return vim.tbl_map(function(mark)
+      return mark[2] + 1
+    end, marks(bufnr))
+  end
+
+  sign.update(bufnr, signs, nil)
+  t.assert_same({ 1 }, rows(), "the first lines are shown")
+
+  vim.api.nvim_win_call(winnr, function()
+    vim.cmd("normal! 45zt")
+  end)
+  sign.update(bufnr, signs, nil)
+  t.assert_same({ 50 }, rows(), "lines 45 on are shown")
+
+  vim.api.nvim_win_close(winnr, true)
+  sign.update(bufnr, signs, nil)
+  t.assert_same({}, rows(), "no window shows the buffer")
 end)
 
 t:run()

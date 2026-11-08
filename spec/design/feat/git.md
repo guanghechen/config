@@ -482,5 +482,6 @@ git.open_in_browser({ what = "commit" })  -- 打开当前行的 commit
 - 按单仓库维护状态，不聚合多个仓库或嵌套仓库的状态。
 - 配置使用模块常量。
 - Staged 与 unstaged hunks 分别计算和缓存，具体操作范围见上文。
-- 行级 diff 使用 Neovim 内置 histogram；sign 通过 decoration provider 只渲染可见区域。
+- 行级 diff 使用 Neovim 内置 histogram；sign 只渲染可见区域：hunk 更新只协调各窗口显示的行，其余行的 sign 删除，
+  窗口显示到新的行时由 decoration provider 补上，更新的开销与显示的行数相关，与改动的行数无关。
 - Diffview 的布局与交互见 [Diffview](diffview/main.md)，原生搜索反馈见 [Winline 搜索](ux/search.md)。

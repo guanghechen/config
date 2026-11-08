@@ -134,19 +134,33 @@ end
 ---@field public id                     integer
 ---@field public type                   era.m.git.SignType
 
+---@param bufnr                         integer
+---@param first                         integer First row, 0-based.
+---@param last                          integer Row past the last, 0-based, or -1 for the end of the buffer.
+function Signs:clear_rows(bufnr, first, last)
+  if last < 0 then
+    last = vim.api.nvim_buf_line_count(bufnr)
+  end
+  if first < last then
+    vim.api.nvim_buf_clear_namespace(bufnr, self._ns, first, last)
+  end
+end
+
 -- One mark per line; edits that join or delete lines can move a second mark onto a line, and those
 -- extras, like marks of no known sign, are returned for removal.
 ---@param bufnr                         integer
+---@param top                           integer
+---@param bot                           integer
 ---@return table<integer, era.m.git.sign.IExtmark> marks
 ---@return integer[] extras
-function Signs:__get_extmarks__(bufnr)
+function Signs:__get_extmarks__(bufnr, top, bot)
   local result = {} ---@type table<integer, era.m.git.sign.IExtmark>
   local extras = {} ---@type integer[]
   if not vim.api.nvim_buf_is_valid(bufnr) then
     return result, extras
   end
 
-  local marks = vim.api.nvim_buf_get_extmarks(bufnr, self._ns, 0, -1, { details = true })
+  local marks = vim.api.nvim_buf_get_extmarks(bufnr, self._ns, { top - 1, 0 }, { bot - 1, 0 }, { details = true })
   for _, mark in ipairs(marks) do
     local id = mark[1] ---@type integer
     local lnum = mark[2] + 1 ---@type integer
@@ -164,17 +178,19 @@ function Signs:__get_extmarks__(bufnr)
   return result, extras
 end
 
--- Writes only the lines whose sign differs, which leaves the namespace exactly as clearing it and
--- adding every sign again would.
+-- Writes only the lines of top..bot whose sign differs, which leaves those lines exactly as clearing them
+-- and adding their signs again would.
 ---@param bufnr                         integer
----@param new_signs                     era.m.git.Sign[]
+---@param new_signs                     era.m.git.Sign[] Signs of the lines top..bot.
 ---@param filter                        (fun(lnum: integer): boolean)|nil
-function Signs:__update_incremental__(bufnr, new_signs, filter)
+---@param top                           integer
+---@param bot                           integer
+function Signs:__update_incremental__(bufnr, new_signs, filter, top, bot)
   if not vim.api.nvim_buf_is_valid(bufnr) then
     return
   end
 
-  local old_signs, extras = self:__get_extmarks__(bufnr)
+  local old_signs, extras = self:__get_extmarks__(bufnr, top, bot)
   local new_signs_map = {} ---@type table<integer, era.m.git.SignType>
 
   for _, sign in ipairs(new_signs) do
@@ -324,44 +340,76 @@ function M.on_lines(bufnr, last_orig, last_new)
   signs_staged:on_lines(bufnr, last_orig, last_new)
 end
 
+-- The lines the windows of a buffer show, merged and in order.
+---@param bufnr                         integer
+---@return { [1]: integer, [2]: integer }[]
+local function shown_ranges(bufnr)
+  local ranges = {} ---@type { [1]: integer, [2]: integer }[]
+  for _, winnr in ipairs(vim.fn.win_findbuf(bufnr)) do
+    ranges[#ranges + 1] = { vim.fn.line("w0", winnr), vim.fn.line("w$", winnr) }
+  end
+  table.sort(ranges, function(a, b)
+    return a[1] < b[1]
+  end)
+  local merged = {} ---@type { [1]: integer, [2]: integer }[]
+  for _, range in ipairs(ranges) do
+    local last = merged[#merged]
+    if last ~= nil and range[1] <= last[2] + 1 then
+      last[2] = math.max(last[2], range[2])
+    else
+      merged[#merged + 1] = { range[1], range[2] }
+    end
+  end
+  return merged
+end
+
+-- Signs go on the lines windows show, as the decoration provider adds them for the lines a window comes to show;
+-- the marks elsewhere are dropped rather than kept current, so an update costs the lines shown, not the lines
+-- changed.
 ---@param bufnr                         integer
 ---@param hunks                         era.m.git.Hunk[]|nil
 ---@param hunks_staged                  era.m.git.Hunk[]|nil
 ---@param opts                          { untracked: boolean|nil }|nil
 function M.update(bufnr, hunks, hunks_staged, opts)
   setup_decoration_provider()
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
 
-  local line_count = vim.api.nvim_buf_line_count(bufnr) ---@type integer
+  local row = 0 ---@type integer
+  for _, range in ipairs(shown_ranges(bufnr)) do
+    local top, bot = range[1], range[2]
+    signs_normal:clear_rows(bufnr, row, top - 1)
+    signs_staged:clear_rows(bufnr, row, top - 1)
+    row = bot
 
-  local new_signs = {} ---@type era.m.git.Sign[]
-  if hunks and #hunks > 0 then
-    new_signs = era.m.git.hunk.calc_signs_all(hunks, 1, line_count)
-    if opts and opts.untracked then
-      for _, sign in ipairs(new_signs) do
-        if sign.type == "add" then
-          sign.type = "untracked"
+    local new_signs = {} ---@type era.m.git.Sign[]
+    if hunks and #hunks > 0 then
+      new_signs = era.m.git.hunk.calc_signs_all(hunks, top, bot)
+      if opts and opts.untracked then
+        for _, sign in ipairs(new_signs) do
+          if sign.type == "add" then
+            sign.type = "untracked"
+          end
         end
       end
     end
+    signs_normal:__update_incremental__(bufnr, new_signs, nil, top, bot)
+
+    local new_signs_staged = {} ---@type era.m.git.Sign[]
+    if hunks_staged and #hunks_staged > 0 then
+      new_signs_staged = era.m.git.hunk.calc_signs_all(hunks_staged, top, bot)
+    end
+    local new_signs_lnum_set = {} ---@type table<integer, boolean>
+    for _, sign in ipairs(new_signs) do
+      new_signs_lnum_set[sign.lnum] = true
+    end
+    signs_staged:__update_incremental__(bufnr, new_signs_staged, function(lnum)
+      return not new_signs_lnum_set[lnum]
+    end, top, bot)
   end
-
-  signs_normal:__update_incremental__(bufnr, new_signs)
-
-  local new_signs_staged = {} ---@type era.m.git.Sign[]
-  if hunks_staged and #hunks_staged > 0 then
-    new_signs_staged = era.m.git.hunk.calc_signs_all(hunks_staged, 1, line_count)
-  end
-
-  local new_signs_lnum_set = {} ---@type table<integer, boolean>
-  for _, sign in ipairs(new_signs) do
-    new_signs_lnum_set[sign.lnum] = true
-  end
-
-  local filter = function(lnum)
-    return not new_signs_lnum_set[lnum]
-  end
-
-  signs_staged:__update_incremental__(bufnr, new_signs_staged, filter)
+  signs_normal:clear_rows(bufnr, row, -1)
+  signs_staged:clear_rows(bufnr, row, -1)
 end
 
 function M.reset()
