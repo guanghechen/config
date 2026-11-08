@@ -1035,4 +1035,158 @@ t:test("Tab toggles the selection from the finder while a filter is being typed"
   end)
 end)
 
+---Open a permanent picker over alpha.txt, beta.txt and gamma.txt in a child UI, showing all three rows matched.
+---@return __test__.support.UI ui
+---@return string root
+local function open_typed_ahead()
+  local root = assert(vim.uv.fs_realpath(t:tempdir()))
+  for _, name in ipairs({ "alpha.txt", "beta.txt", "gamma.txt" }) do
+    vim.fn.writefile({ name }, root .. "/" .. name)
+  end
+  local ui = require("__test__.support.ui").new({ cwd = root })
+  t:defer(function()
+    ui:close()
+  end)
+  ui:start({ width = 100, height = 32, runtime = "ark" })
+  ui:lua(
+    [[
+    local root = ...
+    confirmed, loading, current = nil, nil, nil
+    picker = era.m.picker.FiletreeComposer.new({
+      name = "typed ahead", title = "typed ahead", permanent = true, preview = false,
+      search_pattern = stl.c.Observable.from_value(""),
+      flag_foldempty = stl.c.Observable.from_value(false),
+      flag_fuzzy = stl.c.Observable.from_value(true),
+      flag_regex = stl.c.Observable.from_value(false),
+      flag_case_sensitive = stl.c.Observable.from_value(false),
+      flag_selected = stl.c.Observable.from_value(false),
+      flag_viewtype = stl.c.Observable.from_value("list"),
+      on_confirm = function(composer, filepaths)
+        confirmed = filepaths and filepaths[1] or false
+        loading, current = composer._path_request ~= nil, composer._treeview:is_current()
+        composer:close()
+      end,
+    })
+    picker:reset_filepaths(root, { root .. "/alpha.txt", root .. "/beta.txt", root .. "/gamma.txt" }, false)
+    picker:focus()
+  ]],
+    root
+  )
+  ui:wait_until(function()
+    return ui:lua("return picker._treeview:linecount() == 3 and not picker._scheduler_match:pending()")
+  end, 5000, "three rows")
+  return ui, root
+end
+
+---Paths beside the three files, enough that preparing and showing them span many ticks.
+local WIDE_PATHS = [[
+  local paths = { "alpha.txt", "beta.txt", "gamma.txt" }
+  for index = 1, 10000 do
+    paths[#paths + 1] = string.format("file%05d.lua", index)
+  end
+]]
+
+t:test("a query typed ahead of <CR> confirms from its own results", function()
+  local ui = open_typed_ahead()
+  -- One burst, as keys typed faster than the match debounce arrive: <CR> runs before the query is matched.
+  ui:rpc("nvim_input", "igamma<CR>")
+  ui:wait_until(function()
+    return ui:lua("return confirmed ~= nil")
+  end, 5000, "confirmed")
+  t.assert_eq("gamma.txt", ui:lua("return confirmed"))
+end)
+
+t:test("a query typed ahead of <CR> right after reset_filepaths confirms from its own results", function()
+  local ui, root = open_typed_ahead()
+  ui:lua(
+    [[
+    local root = ...
+    prepared = picker:prepare_filepaths(root, { "alpha.txt", "beta.txt", "gamma.txt" })
+  ]],
+    root
+  )
+  ui:wait_until(function()
+    return ui:lua(
+      "return prepared:is_done() and picker._treeview:is_current() and not picker._scheduler_match:pending()"
+    )
+  end, 5000, "prepared paths shown")
+  -- Pickers that reset their paths on open, such as Find Diagnostics, show them while the keys run.
+  ui:lua(
+    [[
+    local root = ...
+    picker:reset_filepaths(root, { root .. "/alpha.txt", root .. "/beta.txt", root .. "/gamma.txt" }, false)
+    vim.api.nvim_input("igamma<CR>")
+  ]],
+    root
+  )
+  ui:wait_until(function()
+    return ui:lua("return confirmed ~= nil")
+  end, 5000, "confirmed")
+  t.assert_eq("gamma.txt", ui:lua("return confirmed"))
+end)
+
+t:test("keys typed after a deferred <CR> leave its query", function()
+  local ui, root = open_typed_ahead()
+  -- <CR> waits for the selection <Tab> submits; zz reaches the input before it runs.
+  ui:rpc("nvim_input", "i<Tab><CR>zz")
+  ui:wait_until(function()
+    return ui:lua("return confirmed ~= nil")
+  end, 5000, "confirmed")
+  t.assert_eq(root .. "/alpha.txt", ui:lua("return confirmed"), "the selection <Tab> made")
+end)
+
+t:test("<CR> while paths load acts at once on the rows shown", function()
+  local ui, root = open_typed_ahead()
+  -- Typeahead runs before the next slice of the preparation.
+  local preparing = ui:lua("local root = ... " .. WIDE_PATHS .. [[
+    picker:prepare_filepaths(root, paths)
+    vim.api.nvim_input("igamma<CR>")
+    return picker._path_request ~= nil
+  ]], root)
+  t.assert_true(preparing, "a wide path set loads across ticks")
+  ui:wait_until(function()
+    return ui:lua("return confirmed ~= nil")
+  end, 5000, "confirmed")
+  t.assert_true(ui:lua("return loading"), "confirmed before the paths loaded")
+end)
+
+t:test("<CR> while loaded paths publish acts at once on the rows shown", function()
+  local ui, root = open_typed_ahead()
+  ui:lua("local root = ... " .. WIDE_PATHS .. [[
+    picker:prepare_filepaths(root, paths):finally(function()
+      vim.api.nvim_input("igamma<CR>")
+    end)
+  ]], root)
+  ui:wait_until(function()
+    return ui:lua("return confirmed ~= nil")
+  end, 5000, "confirmed")
+  t.assert_false(ui:lua("return loading"), "confirmed after the paths loaded")
+  t.assert_false(ui:lua("return current"), "confirmed before the loaded paths showed")
+end)
+
+t:test("<CR> after a hide cancels matching the adopted paths acts at once on the rows shown", function()
+  local ui, root = open_typed_ahead()
+  ui:lua("local root = ... " .. WIDE_PATHS .. [[
+    local tree = picker._treeview
+    local adopt = tree.adopt_filepaths
+    tree.adopt_filepaths = function(...)
+      adopt(...)
+      tree.adopt_filepaths = nil
+      picker:hide()
+    end
+    prepared = picker:prepare_filepaths(root, paths)
+  ]], root)
+  ui:wait_until(function()
+    return ui:lua("return prepared:is_done()")
+  end, 5000, "preparation cancelled")
+  ui:lua([[
+    picker:focus()
+    vim.api.nvim_input("igamma<CR>")
+  ]])
+  ui:wait_until(function()
+    return ui:lua("return confirmed ~= nil")
+  end, 5000, "confirmed")
+  t.assert_false(ui:lua("return current"), "confirmed before the adopted paths showed")
+end)
+
 t:run()

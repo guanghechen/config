@@ -185,6 +185,16 @@ function M.new(props)
   })
   self._treeview = treeview
 
+  ---@return nil
+  local function match()
+    if self._preparing then
+      return
+    end
+    local input = search_pattern:snapshot() ---@type string
+    self:__match__(input)
+    self._composer:mark_result_dirty()
+  end
+
   local scheduler_match = stl.c.Scheduler.new({
     name = string.format("%s#match", fullname),
     mode = "debounce",
@@ -192,14 +202,7 @@ function M.new(props)
     timeout = 0,
     silent = stl.fn.falsy,
     value = stl.c.Observable.from_value(true),
-    task = function()
-      if self._preparing then
-        return
-      end
-      local input = search_pattern:snapshot() ---@type string
-      self:__match__(input)
-      self._composer:mark_result_dirty()
-    end,
+    task = match,
   })
 
   local actions = {
@@ -209,6 +212,31 @@ function M.new(props)
       end
     end,
   }
+
+  for key, action in pairs(actions) do
+    -- A query typed ahead of an action, faster than the match debounce, decides it: the input takes in the query, which
+    -- reaches the match scheduler only on a later tick, and a match for it runs at once. The action waits for the
+    -- result to show it in place rather than later, since it restores the mode it runs in.
+    actions[key] = function()
+      if self._disposed then
+        return
+      end
+      self._composer.finder:sync()
+      local matched = self._matched_input ---@type string|nil
+      if not self._preparing and (scheduler_match:pending() or matched and matched ~= search_pattern:snapshot()) then
+        scheduler_match:cancel()
+        match()
+        local drawn = self._composer.result:draw_now() ---@type stl.c.Future
+        vim.wait(1000, function()
+          return drawn:is_done()
+        end, 1)
+      end
+      -- The wait runs pending events, which may close the picker.
+      if not self._disposed then
+        action()
+      end
+    end
+  end
 
   local flags = {} ---@type era.m.picker.result.IFlagItemRaw[]
   do

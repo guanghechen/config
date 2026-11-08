@@ -294,4 +294,42 @@ t:test("a rejected flat reset leaves the published payloads and selection intact
   t.assert_true(ui:lua([[return picker:retrieve(1)==items[1] and picker._treeview:linecount()==3]]))
 end)
 
+t:test("a query typed ahead of <CR> confirms from its own results", function()
+  local ui = require("__test__.support.ui").new()
+  t:defer(function()
+    ui:close()
+  end)
+  ui:start({ width = 100, height = 32, runtime = "ark" })
+  ui:lua([[
+    confirmed = nil
+    picker = era.m.picker.ListComposer.new({
+      name = "typed ahead", title = "typed ahead", permanent = false,
+      search_pattern = stl.c.Observable.from_value(""),
+      flag_fuzzy = stl.c.Observable.from_value(true),
+      flag_regex = stl.c.Observable.from_value(false),
+      flag_case_sensitive = stl.c.Observable.from_value(false),
+      on_confirm = function(composer, item)
+        confirmed = item and item.uuid or false
+        composer:close()
+      end,
+    })
+    picker:reset_data({ items = {
+      { uuid = "alpha", text = "alpha", text_lower = "alpha", data = {} },
+      { uuid = "beta", text = "beta", text_lower = "beta", data = {} },
+      { uuid = "gamma", text = "gamma", text_lower = "gamma", data = {} },
+    } })
+    picker:focus()
+  ]])
+  ui:wait_until(function()
+    return ui:lua("return picker._treeview:linecount() == 3")
+  end, 5000, "three rows")
+
+  -- One burst, as keys typed faster than the match debounce arrive: <CR> runs before the query is matched.
+  ui:rpc("nvim_input", "igam<CR>")
+  ui:wait_until(function()
+    return ui:lua("return confirmed ~= nil")
+  end, 5000, "confirmed")
+  t.assert_eq("gamma", ui:lua("return confirmed"))
+end)
+
 t:run()

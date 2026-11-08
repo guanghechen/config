@@ -149,18 +149,7 @@ function M:create_buf()
   vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
     buf = bufnr,
     callback = function()
-      local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
-
-      if #lines > 1 then
-        local content = table.concat(lines, " ") ---@type string
-        self:set_content(content)
-        return
-      end
-
-      local content = lines[1] or "" ---@type string
-      self.input:next(content)
-      self.linecount:next(#lines)
-      self:__set_prompt__(bufnr)
+      self:sync()
     end,
   })
   return bufnr, true
@@ -266,6 +255,30 @@ function M:resize(dimension)
 end
 
 ----------------------------------------------------------------------------------------------------
+
+---Takes in what the input buffer holds. TextChangedI waits until no typed-ahead key is left, so a key typed right after
+---a query, such as <CR>, runs before the query reaches the input unless it syncs first.
+---@return nil
+function M:sync()
+  self:__health__()
+
+  local bufnr = self._bufnr ---@type integer|nil
+  if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
+    return
+  end
+
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
+  if #lines > 1 then
+    local content = table.concat(lines, " ") ---@type string
+    self:set_content(content)
+    return
+  end
+
+  local content = lines[1] or "" ---@type string
+  self.input:next(content)
+  self.linecount:next(#lines)
+  self:__set_prompt__(bufnr)
+end
 
 ---@param content                       string
 ---@return nil

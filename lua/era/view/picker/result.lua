@@ -54,7 +54,7 @@ local Nvimbar = nvimbar.Nvimbar
 ---@class era.view.PickerResult
 ---@field public uuid                   string
 ---@field public fullname               string
----@field public draw                   era.view.picker.result.IDraw
+---@field public draw                   fun(bufnr: integer): stl.c.Future
 ---@field public flags                  era.view.picker.result.IFlagItem[]
 ---@field public keymaps                stl.t.IKeymap[]
 ---@field public lnum_current           stl.c.Observable
@@ -609,6 +609,19 @@ function M:mark_content_dirty()
   self:__health__()
   self._scheduler_content:schedule()
   return self
+end
+
+---Draws the content now rather than when its schedule runs, for an action that reads it; resolves once the tree shows
+---it.
+---@return stl.c.Future
+function M:draw_now()
+  self:__health__()
+  local bufnr = self._bufnr ---@type integer|nil
+  if bufnr == nil or not vim.api.nvim_buf_is_valid(bufnr) then
+    return Future.resolve(nil)
+  end
+  self._scheduler_content:cancel()
+  return self.draw(bufnr)
 end
 
 ---@return era.view.PickerResult

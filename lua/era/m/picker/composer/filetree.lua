@@ -126,6 +126,8 @@ local FRECENCY_WEIGHT = 16 ---@type integer Match points for the most frecent fi
 ---@field protected _frecency           stl.c.Frecency|nil
 ---@field protected _composer           era.m.picker.BasicComposer
 ---@field protected _plainfile          era.view.Plainfile
+---@field protected _matched_input      string|nil
+---@field protected _path_adopted       integer|nil Treeview revision of the paths prepare_filepaths last adopted.
 ---@field protected _scheduler_match    stl.c.Scheduler
 ---@field protected _search_pattern     stl.c.Observable
 ---@field protected _treeview           era.m.picker.FiletreeView
@@ -211,6 +213,13 @@ function M.new(props)
     name = fullname,
   })
 
+  ---@return nil
+  local function match()
+    local input = o_search_pattern:snapshot() ---@type string
+    self:__match__(input)
+    self:mark_result_dirty()
+  end
+
   local scheduler_match = stl.c.Scheduler.new({
     name = string.format("%s#match", fullname),
     mode = "debounce",
@@ -218,11 +227,7 @@ function M.new(props)
     timeout = 0,
     silent = stl.fn.falsy,
     value = stl.c.Observable.from_value(true),
-    task = function()
-      local input = o_search_pattern:snapshot() ---@type string
-      self:__match__(input)
-      self:mark_result_dirty()
-    end,
+    task = match,
   })
 
   local flags = {} ---@type era.m.picker.result.IFlagItemRaw[]
@@ -589,7 +594,31 @@ function M.new(props)
         end
         action()
       end
-      actions[key] = gated
+      -- A query typed ahead of the key, faster than the match debounce, decides the action: the input takes in the
+      -- query, which reaches the match scheduler only on a later tick, and a match for it runs at once. The action
+      -- waits for the result to show it in place rather than later, since it restores the mode it runs in. Keys typed
+      -- after it do not change a deferred action. Until the paths prepare_filepaths loads show as a tree, it acts on
+      -- the rows shown: the wait would last the whole load and import.
+      actions[key] = function()
+        if self._disposed then
+          return
+        end
+        self._composer.finder:sync()
+        local matched = self._matched_input ---@type string|nil
+        if
+          not self._path_request
+          and (self._path_adopted ~= treeview._revision or treeview:is_current())
+          and (scheduler_match:pending() or matched and matched ~= o_search_pattern:snapshot())
+        then
+          scheduler_match:cancel()
+          match()
+          local drawn = self._composer.result:draw_now() ---@type stl.c.Future
+          vim.wait(1000, function()
+            return drawn:is_done()
+          end, 1)
+        end
+        gated()
+      end
     end
   end
 
@@ -1299,6 +1328,7 @@ function M:prepare_filepaths(cwd, filepaths, opts)
       self._last_preview_filepath, self._uuid_root = nil, root
       -- Build the match corpus cooperatively; a later change to the adopted tree cancels it.
       source_revision, revision = source.revision, treeview._revision
+      self._path_adopted = revision
       self:__match__(self._search_pattern:snapshot(), checkpoint)
       self._path_request = nil
       self:mark_result_dirty()
@@ -1469,6 +1499,7 @@ function M:__match__(input, checkpoint)
     weight = self._weigh and FRECENCY_WEIGHT or nil,
     weigh = self._weigh,
   }, checkpoint)
+  self._matched_input = input
 end
 
 ---@param nodeuuid                      string

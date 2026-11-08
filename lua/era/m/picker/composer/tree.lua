@@ -104,6 +104,7 @@ local __module_name__ = "era.m.picker.composer.tree" ---@type string
 ---@field protected _tree               era.view.ResultSource
 ---@field protected _composer           era.m.picker.BasicComposer
 ---@field protected _plainfile          era.view.Plainfile
+---@field protected _matched_input      string|nil
 ---@field protected _scheduler_match    stl.c.Scheduler|nil
 ---@field protected _treeview           era.view.ResultTree
 ---
@@ -179,6 +180,13 @@ function M.new(props)
 
   local retriever = treeview
 
+  ---@return nil
+  local function match()
+    local input = o_search_pattern:snapshot() ---@type string
+    self:__match__(input)
+    self:mark_result_dirty()
+  end
+
   local scheduler_match = stl.c.Scheduler.new({
     name = string.format("%s#match", fullname),
     mode = "debounce",
@@ -186,11 +194,7 @@ function M.new(props)
     timeout = 0,
     silent = stl.fn.falsy,
     value = stl.c.Observable.from_value(true),
-    task = function()
-      local input = o_search_pattern:snapshot() ---@type string
-      self:__match__(input)
-      self:mark_result_dirty()
-    end,
+    task = match,
   })
 
   local flags = {} ---@type era.m.picker.result.IFlagItemRaw[]
@@ -443,7 +447,26 @@ function M.new(props)
         end
         action()
       end
-      actions[key] = gated
+      -- A query typed ahead of the key, faster than the match debounce, decides the action: the input takes in the
+      -- query, which reaches the match scheduler only on a later tick, and a match for it runs at once. The action
+      -- waits for the result to show it in place rather than later, since it restores the mode it runs in. Keys typed
+      -- after it do not change a deferred action.
+      actions[key] = function()
+        if self._disposed then
+          return
+        end
+        self._composer.finder:sync()
+        local matched = self._matched_input ---@type string|nil
+        if scheduler_match:pending() or matched and matched ~= o_search_pattern:snapshot() then
+          scheduler_match:cancel()
+          match()
+          local drawn = self._composer.result:draw_now() ---@type stl.c.Future
+          vim.wait(1000, function()
+            return drawn:is_done()
+          end, 1)
+        end
+        gated()
+      end
     end
   end
 
@@ -985,6 +1008,7 @@ function M:__match__(input)
     fuzzy = self.flag_fuzzy:snapshot(),
     regex = self.flag_regex:snapshot(),
   })
+  self._matched_input = input
 end
 
 ---@param nodeuuid                      string

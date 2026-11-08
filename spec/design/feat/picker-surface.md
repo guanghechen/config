@@ -35,6 +35,7 @@ era.m.git_files ─┘
 - 派生的 `lnum_current`、`lnum_present`、`lnum_total`，不作为节点定位的权威数据；
 - current/present signs 与对应 scheduler；多项 selection 使用 viewport decoration；
 - Result 内容刷新调度；buffer 正文与 viewport decorations 由 native View 独占；
+- `draw_now()`：跳过调度立即绘制，返回发布完成后 resolve 的 Future，供需要读取最新结果的动作使用；
 - flags、position 与可选 status 的 winbar 渲染。
 
 Feature 通过 props 提供：

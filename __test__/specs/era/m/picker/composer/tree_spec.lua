@@ -317,5 +317,75 @@ t:test("Tab toggles the selection from the finder while a filter is being typed"
   t.assert_true(vim.list_contains(tab and tab.modes or {}, "i"), "Insert mode, like Normal mode and the result pane")
 end)
 
+---Open a permanent picker over the given nodes in a child UI, showing all three rows matched.
+---@param viewtype                      string
+---@param nodes                         string[][] Key, parent key ("" for the root) and nodetype of each node.
+---@return __test__.support.UI
+local function open_typed_ahead(viewtype, nodes)
+  local ui = require("__test__.support.ui").new()
+  t:defer(function()
+    ui:close()
+  end)
+  ui:start({ width = 100, height = 32, runtime = "ark" })
+  ui:lua(
+    [[
+    local viewtype, nodes = ...
+    confirmed = nil
+    picker = era.m.picker.TreeComposer.new({
+      name = "typed ahead", title = "typed ahead", permanent = true,
+      present = function(_, data) return { label = data and data.name or "" } end,
+      node_sorter = function(a, b) return a.name < b.name end,
+      search_pattern = stl.c.Observable.from_value(""),
+      flag_foldempty = stl.c.Observable.from_value(false),
+      flag_fuzzy = stl.c.Observable.from_value(true),
+      flag_regex = stl.c.Observable.from_value(false),
+      flag_case_sensitive = stl.c.Observable.from_value(false),
+      flag_selected = stl.c.Observable.from_value(false),
+      flag_viewtype = stl.c.Observable.from_value(viewtype),
+      on_confirm = function(composer, uuids)
+        confirmed = uuids and uuids[1] or false
+        composer:close()
+      end,
+    })
+    local root = picker._tree.root
+    for _, node in ipairs(nodes) do
+      local key, parent, nodetype = unpack(node)
+      picker:insert(parent == "" and root or parent, key, { name = key })
+      picker._treeview:insert(key, { nodetype = nodetype, text = key })
+    end
+    picker:attach(root)
+    picker._scheduler_match:schedule({ immediate = true })
+    picker:mark_result_dirty()
+    picker:focus()
+  ]],
+    viewtype,
+    nodes
+  )
+  ui:wait_until(function()
+    return ui:lua("return picker._treeview:linecount() == 3 and not picker._scheduler_match:pending()")
+  end, 5000, "three rows")
+  return ui
+end
+
+t:test("a query typed ahead of <CR> confirms from its own results", function()
+  local ui = open_typed_ahead("list", { { "alpha", "", "leaf" }, { "beta", "", "leaf" }, { "gamma", "", "leaf" } })
+  -- One burst, as keys typed faster than the match debounce arrive: <CR> runs before the query is matched.
+  ui:rpc("nvim_input", "igam<CR>")
+  ui:wait_until(function()
+    return ui:lua("return confirmed ~= nil")
+  end, 5000, "confirmed")
+  t.assert_eq("gamma", ui:lua("return confirmed"))
+end)
+
+t:test("keys typed after a deferred <CR> leave its query", function()
+  local ui =
+    open_typed_ahead("tree", { { "scope", "", "container" }, { "one", "scope", "leaf" }, { "two", "scope", "leaf" } })
+  -- <CR> waits for the collapse <C-h> submits, then opens scope again; zz reaches the input before it runs.
+  ui:rpc("nvim_input", "i<C-h><CR>zz")
+  ui:wait_until(function()
+    return ui:lua("return picker._matched_input == 'zz' and not picker._treeview:retrieve('scope').collapsed")
+  end, 5000, "scope opened again")
+end)
+
 t:run()
 t:run()

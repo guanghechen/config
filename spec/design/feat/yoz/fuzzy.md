@@ -118,6 +118,19 @@ local filter = result:ids(source)                                    -- yoz.ux.t
 
 ### Composer
 
+三个 composer 的查询都经 64 ms debounce 匹配。读取结果行的动作（确认、打开等）以按键时的查询为准，快于 debounce 的
+输入（如 Find Files 中输入文件名后立即回车、确认框中输入 `No` 后立即回车）不会作用于屏幕上的旧结果：
+
+1. 按键先把 Finder buffer 的内容同步到查询。typeahead 未处理完时 `TextChangedI` 不会触发，查询的通知也要到下一个
+   tick 才到达匹配调度。
+2. 匹配尚未覆盖当前查询时，取消 debounce 立即匹配，用 `Result:draw_now()` 发布，并在按键内原地等待发布完成（超时
+   1 s，在事件之间检查），再按光标行取结果。动作不推迟到之后执行，因为它会恢复 picker 打开前的模式。
+3. 动作因 selection 或折叠变更尚未生效而推迟时，之后只重新检查这些变更，不再同步查询；按键之后输入的字符只经正常的
+   debounce 匹配，不会提前用于这个动作。
+4. 数据仍在准备时不补做匹配，动作按当前显示的行执行：ListComposer 分批 `append` 期间，以及 FiletreeComposer 从
+   `prepare_filepaths` 开始到它接入的路径树发布之前。等待会持续到整个加载与导入结束，10 万路径时按键阻塞 1.4–1.7 s，
+   超时后仍按旧结果执行。`reset_filepaths` 等其他数据变更规模小，照常补做匹配并等待发布。
+
 - **ListComposer**：
   - 在 2 ms 一片的准备循环中分批 `append`，与 Source 同步替换；
   - `scheme` 默认 `default`，窗口历史等路径列表使用 `path`；

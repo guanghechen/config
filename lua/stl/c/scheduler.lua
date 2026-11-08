@@ -156,6 +156,12 @@ function M:isdisposed()
   return self._disposed
 end
 
+---Whether a scheduled run has yet to settle, waiting out its delay or running.
+---@return boolean
+function M:pending()
+  return self._tick_pending > self._tick_settled
+end
+
 ---@param opts                          ?stl.c.scheduler.IScheduleOpts
 ---@return stl.c.Scheduler
 function M:schedule(opts)
