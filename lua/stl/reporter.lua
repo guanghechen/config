@@ -38,8 +38,20 @@ function M.log(level, options)
   end
 
   if options.details ~= nil then
-    local details = vim.json.encode(options.details, { indent = "  ", sort_keys = false }) ---@type string
-    local content = "```json\n" .. details .. "\n```" ---@type string
+    local ok, details = pcall(vim.json.encode, options.details, { indent = "  ", sort_keys = false })
+    local content ---@type string
+    if ok then
+      content = "```json\n" .. details .. "\n```"
+    else
+      -- JSON holds no userdata or functions; an error a native call raised is userdata, and its text is what
+      -- the report is for.
+      local inspected = vim.inspect(options.details, {
+        process = function(item)
+          return type(item) == "userdata" and tostring(item) or item
+        end,
+      })
+      content = "```lua\n" .. inspected .. "\n```"
+    end
     if #text > 0 then
       text = text .. "\n\n" .. content
     else
