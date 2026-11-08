@@ -39,4 +39,18 @@ t:test("root remains root without a trailing separator", function()
   t.assert_eq("/", native.canonical_path.get_cwd_without_trailing(), "canonical root CWD without trailing separator")
 end)
 
+t:test("mkdirs takes a relative path from the process directory, not the CWD set before", function()
+  local root, stale = t:tempdir(), t:tempdir()
+  local cwd = vim.uv.cwd()
+  native.path.set_cwd(stale)
+  vim.cmd.cd(root)
+  t:defer(function()
+    vim.cmd.cd(cwd)
+  end)
+
+  native.path.mkdirs("relative/path")
+  t.assert_eq(1, vim.fn.isdirectory(vim.fs.joinpath(root, "relative", "path")), "from the process directory")
+  t.assert_eq(0, vim.fn.isdirectory(vim.fs.joinpath(stale, "relative")), "nothing from the CWD set before")
+end)
+
 t:run()
