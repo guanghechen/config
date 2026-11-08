@@ -144,6 +144,15 @@ end
 ---@param size                          integer
 ---@return nil
 function M:move(row, col, size)
+  -- A float stays in the tab it opened in, wherever its config places it, so another tab needs a float of its own.
+  -- Closing it wipes its buffer; the content below goes into a new one.
+  if
+    self._winnr ~= nil
+    and vim.api.nvim_win_is_valid(self._winnr)
+    and vim.api.nvim_win_get_tabpage(self._winnr) ~= vim.api.nvim_get_current_tabpage()
+  then
+    self:hide()
+  end
   local bufnr = self:create_buf_as_needed() ---@type integer
   local cfg = self._cfg ---@type vim.api.keyset.win_config
   local direction = self._direction ---@type era.dressing.winsep.line.Direction
