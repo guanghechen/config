@@ -151,4 +151,23 @@ for _, binding in ipairs({ 1, 2 }) do
   end)
 end
 
+t:test("closing the bound window detaches through what wraps detach", function()
+  local _, state = fixture()
+  local winnr = window()
+  local view = treeview.attach(state, { winnr = winnr, keymaps = false })
+  local calls = {} ---@type (boolean|nil)[]
+  local detach = view.detach
+  view.detach = function(current, closing)
+    calls[#calls + 1] = closing
+    detach(current, closing)
+  end
+  t.wait_until(function()
+    return view:frame() ~= nil
+  end, 5000)
+
+  vim.api.nvim_win_close(winnr, true)
+  t.assert_same({ true }, calls, "the wrapper sees the window closing")
+  t.assert_true(view:status().closed)
+end)
+
 t:run()

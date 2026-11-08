@@ -141,10 +141,10 @@ function M.attach(session, view)
     return chunks
   end
   local detach = view.detach
-  view.detach = function(current)
+  view.detach = function(current, closing)
     views[current.bufnr] = nil
     clear_cache(entry)
-    detach(current)
+    detach(current, closing)
   end
 end
 

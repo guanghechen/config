@@ -130,12 +130,13 @@ function M.attach(view)
   end
   local detach = view.detach
   ---@param self                        ux.filetree.View
+  ---@param closing                     ?boolean
   ---@return nil
-  view.detach = function(self)
+  view.detach = function(self, closing)
     views[self.bufnr] = nil
     self._filetree_annotations, self._filetree_pending = nil, nil
     self._filetree_annotation_source = nil
-    detach(self)
+    detach(self, closing)
   end
 end
 

@@ -426,7 +426,8 @@ function M:_bind_window(winnr)
     group = self._group,
     pattern = tostring(winnr),
     callback = function()
-      self:_detach(true)
+      -- Through `detach`, so that what wraps it releases its own state for a window closed by `:q` too.
+      self:detach(true)
     end,
   })
 end
@@ -499,9 +500,10 @@ function M:resume(winnr)
   self:_redraw()
 end
 
+---@param closing                       ?boolean The bound window is closing.
 ---@return nil
-function M:detach()
-  self:_detach(false)
+function M:detach(closing)
+  self:_detach(closing == true)
 end
 
 ---@param closing                       boolean The bound window is closing.

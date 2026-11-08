@@ -444,12 +444,12 @@ function M:_attach(tabnr, winnr)
         self:render_winbar()
       end
       local detach = view.detach
-      view.detach = function(current)
+      view.detach = function(current, closing)
         session.views[current] = nil
         if self._views[tabnr] == current then
           self:_forget_window(tabnr, winnr)
         end
-        detach(current)
+        detach(current, closing)
       end
       require("era.m.explorer.keymaps").bind(self, view)
       self._titles[winnr], self._focus_highlights[winnr] = nil, nil
