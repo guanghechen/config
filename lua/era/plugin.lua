@@ -21,13 +21,6 @@ local conds = {
   standalone = function()
     return not vim.g.vscode and not vim.g.yozvim and not vim.g.yuivim
   end,
-  ---@return boolean
-  treesitter_context = function()
-    return not vim.g.vscode
-      and not vim.g.yozvim
-      and not vim.g.yuivim
-      and dot.context.plugin.treesitter_context:snapshot()
-  end,
 }
 
 ---@type era.m.plugin.IRawSpec[]
@@ -40,7 +33,7 @@ local raw_specs = {
   { name = "mason.nvim",                  main = "mason",                         cond = conds.lsp                    },
   { name = "nvim-lint",                   main = "lint",                          cond = conds.lsp                    },
   { name = "nvim-treesitter",             main = "nvim-treesitter",               cond = conds.standalone             },
-  { name = "nvim-treesitter-context",     main = "treesitter-context",            cond = conds.treesitter_context     },
+  { name = "nvim-treesitter-context",     main = "treesitter-context",            cond = conds.standalone             },
   { name = "render-markdown.nvim",        main = "render-markdown",               cond = conds.standalone             },
   -- stylua: ignore end
 }

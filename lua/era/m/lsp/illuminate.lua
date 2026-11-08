@@ -217,11 +217,27 @@ end
 function M.undressing(bufnr)
   attached_buffers[bufnr] = nil
   timer:stop()
-  vim.lsp.buf.clear_references()
+  vim.lsp.util.buf_clear_references(bufnr)
   vim.api.nvim_clear_autocmds({
     group = augroup,
     buf = bufnr,
   })
 end
+
+-- Buffers attach as their servers do; the toggle also reaches the buffers attached before it changed.
+stl.fn.observe({ dot.context.flight.dressing_illuminate }, function()
+  if dot.context.flight.dressing_illuminate:snapshot() then
+    for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+      if vim.api.nvim_buf_is_loaded(bufnr) then
+        M.dressing(bufnr)
+      end
+    end
+    update_highlight()
+  else
+    for bufnr in pairs(attached_buffers) do
+      M.undressing(bufnr)
+    end
+  end
+end, false)
 
 return M

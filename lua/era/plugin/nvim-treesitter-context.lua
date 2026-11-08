@@ -17,6 +17,8 @@ return {
   },
   config = function(_, opts)
     local tsc = require("treesitter-context")
+    -- The plugin loads whatever the toggle says, so that turning it on later can show the context.
+    opts.enable = dot.context.plugin.treesitter_context:snapshot()
     tsc.setup(opts)
 
     stl.fn.observe({ dot.context.plugin.treesitter_context }, function()
