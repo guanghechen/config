@@ -531,7 +531,6 @@ M.definitions.notepad = {
   note_select = D.new("Fnotepadnoteselect", "notepad: select note"),
   source_prev = D.new("Fnotepadsourceprev", "notepad: previous source"),
   source_next = D.new("Fnotepadsourcenext", "notepad: next source"),
-  change_engine = D.new("Fnotepadchangeengine", "notepad: change storage engine"),
   go_backward = D.new("Fnotepadgobackward", "notepad: go backward in history"),
   go_forward = D.new("Fnotepadgoforward", "notepad: go forward in history"),
   split_h = D.new("Fnotepadsplith", "notepad: split left"),

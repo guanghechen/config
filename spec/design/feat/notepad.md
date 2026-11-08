@@ -36,7 +36,7 @@ Source 配置以 `name` 为唯一标识，包含 `title`、`engine`、`filepath`
 - `name_to_uuid`：名称索引。
 - `note_uuid_history` 与 `history_index`：source 内的导航历史。
 
-Source 提供 load/list/retrieve、create/update/rename/remove、activation、history、flush 与 JSON import/export。
+Source 提供 load/list/retrieve、create/update/rename/remove、activation、history 与 flush。
 创建同名便签返回已有项；rename 拒绝名称冲突；remove 拒绝删除最后一项。空白名称由 source 的默认名称规则处理。
 `folder` 按文件判断同名：名称经 filesystem-safe 转换后相同，或文件系统不区分大小写，指向同一文件即为同一便签；
 创建遇到索引外的同名文件时收编其内容，rename 拒绝写到其他便签或索引外的文件上。
@@ -51,7 +51,7 @@ Source 身份由容器持有，不要求每个 item 增加 `source` 字段。
 - 两个 engine 均使用 3000 ms debounce；`source:flush()` 强制落盘，退出 Neovim 时 flush 所有已加载的 source。
   `folder` 的编辑只改内存，flush 原子写入未保存的便签和有变化的 metadata，没有改动时不写盘；
   metadata 缺失或损坏时从目录中的 `.md` 重建索引，不覆盖已有便签。
-- Engine 切换通过 `dump_to_json()` / `load_from_json()` 传递统一数据，由 state 更新配置和 source cache。
+- Engine 由 source 配置决定，运行时不切换。
 
 View 切换 source 前同步当前 buffer 内容并 flush。Action 将保存、创建、重命名、删除与 source 选择
 分派到 view/source，输入与确认使用 UI prompt，结果由 `stl.reporter` 报告。
@@ -83,7 +83,7 @@ Nvimbar 使用 `dot.G` click callbacks；名称最多显示 12 个字符，附�
 | `<C-[>` / `<C-]>`、`<leader>[` / `<leader>]`         | 上一个 / 下一个便签                                             |
 | `<C-S-,>` / `<C-S-.>`；aliases `<C-S-[>` / `<C-S-]>` | 左右交换便签顺序                                                |
 | `<C-1>`…`<C-9>`                                      | 按 index 选择便签                                               |
-| `<leader>0` / `<leader>1` / `<leader>2`              | 切换 engine / 选择 source / 选择便签                            |
+| `<leader>1` / `<leader>2`                            | 选择 source / 选择便签                                          |
 | `<M-i>` / `<M-o>`                                    | 后退 / 前进                                                     |
 | `<leader><cr>`                                       | Normal 发送当前 split block，Visual 发送 selection，均提交给 AI |
 | `q`                                                  | Normal mode 关闭窗口                                            |

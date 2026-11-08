@@ -161,14 +161,6 @@ local NOTEPAD_KEYMAPS = {
   },
   {
     modes = { "n", "x" },
-    key = "<leader>0",
-    desc = K.notepad.change_engine.desc,
-    callback = function()
-      K.notepad.change_engine:execute()
-    end,
-  },
-  {
-    modes = { "n", "x" },
     key = "<leader>1",
     desc = K.notepad.source_select.desc,
     callback = function()

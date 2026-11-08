@@ -18,11 +18,6 @@
 ---@field public filepath               string Absolute path to storage file
 ---@field public default_item_name      fun(): string Default name generator for untitled items
 
----@class era.m.notepad.state.INotepadSourceData
----@field public items                  table[] Array of note items with {uuid, name, content}
----@field public orders                 string[] Ordered list of UUIDs
----@field public activated_item_uuid    string|nil Currently active note UUID
-
 ---@class era.m.notepad.state.INotepadSourceState
 ---@field public items                  table<string, era.m.notepad.state.INotepadItemState> Map of UUID to note items
 ---@field public orders                 string[] Ordered list of UUIDs
@@ -50,7 +45,5 @@
 ---@field public can_go_forward         fun(self: era.m.notepad.state.INotepadSource): boolean Check if can navigate forward in history
 ---@field public go_backward            fun(self: era.m.notepad.state.INotepadSource): string|nil Navigate backward in history, returns UUID
 ---@field public go_forward             fun(self: era.m.notepad.state.INotepadSource): string|nil Navigate forward in history, returns UUID
----@field public dump_to_json           fun(self: era.m.notepad.state.INotepadSource): era.m.notepad.state.INotepadSourceData Export to standard JSON format
----@field public load_from_json         fun(self: era.m.notepad.state.INotepadSource, json_data: era.m.notepad.state.INotepadSourceData): boolean Import from standard JSON format
 ---@field public mark_orders_dirty      fun(self: era.m.notepad.state.INotepadSource)|nil Mark orders as dirty for persistence
 ---@field public mark_active_dirty      fun(self: era.m.notepad.state.INotepadSource)|nil Mark active UUID as dirty for persistence

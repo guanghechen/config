@@ -1142,13 +1142,6 @@ command
     end,
   })
   .implement({
-    uuid = K.notepad.change_engine.uuid,
-    tabtypes = stl.e.TabTypeSet.ALL,
-    action = function()
-      era.m.notepad.action.change_engine()
-    end,
-  })
-  .implement({
     uuid = K.notepad.go_backward.uuid,
     tabtypes = stl.e.TabTypeSet.ALL,
     action = function()
