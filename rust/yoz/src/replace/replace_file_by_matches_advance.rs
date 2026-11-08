@@ -4,9 +4,6 @@ use crate::types::IMatchLocation;
 use crate::types::replace::IReplaceFileResult;
 use regex::Captures;
 use std::collections::HashSet;
-use std::fs::File;
-use std::io::Read;
-use std::io::Write;
 
 pub fn replace_file_by_matches_advance(
     filepath: &str,
@@ -17,9 +14,7 @@ pub fn replace_file_by_matches_advance(
     match_offsets: &[usize],
     remain_offsets: &[usize],
 ) -> Result<IReplaceFileResult, String> {
-    let mut file = File::open(filepath).map_err(|e| e.to_string())?;
-    let mut text = String::new();
-    file.read_to_string(&mut text).map_err(|e| e.to_string())?;
+    let (bom, text) = super::read_text(filepath)?;
 
     let match_offsets: HashSet<usize> = match_offsets.iter().cloned().collect();
 
@@ -59,10 +54,7 @@ pub fn replace_file_by_matches_advance(
     }
 
     if text != next_text {
-        let mut new_file = File::create(filepath).map_err(|e| e.to_string())?;
-        new_file
-            .write_all(next_text.as_bytes())
-            .map_err(|e| e.to_string())?;
+        super::write_text(filepath, bom, &next_text)?;
     }
 
     let locations: Vec<IMatchLocation> = get_locations(&next_text, &next_offsets);

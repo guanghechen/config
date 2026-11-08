@@ -21,6 +21,32 @@ pub use replace_text_preview_by_matches_advance::*;
 
 use regex::Captures;
 use regex::Regex;
+use std::fs;
+use std::fs::File;
+use std::io::Write;
+
+/** A UTF-8 byte order mark. */
+const BOM: &str = "\u{feff}";
+
+/** Reads a file's text as file search does: a leading UTF-8 byte order mark is left out, so the match offsets of a
+search index the text, as Neovim's buffer lines do. Also returns whether the file starts with one. */
+fn read_text(filepath: &str) -> Result<(bool, String), String> {
+    let mut text = fs::read_to_string(filepath).map_err(|e| e.to_string())?;
+    let bom = text.starts_with(BOM);
+    if bom {
+        text.drain(..BOM.len());
+    }
+    Ok((bom, text))
+}
+
+/** Writes `text` over a file, after the byte order mark `read_text` left out of it. */
+fn write_text(filepath: &str, bom: bool, text: &str) -> Result<(), String> {
+    let mut file = File::create(filepath).map_err(|e| e.to_string())?;
+    if bom {
+        file.write_all(BOM.as_bytes()).map_err(|e| e.to_string())?;
+    }
+    file.write_all(text.as_bytes()).map_err(|e| e.to_string())
+}
 
 /** Replaces the matches of `regex` in `text` with what `replace` returns for each. Search never lists an empty
 match, so every empty match stays as it is. */
@@ -82,6 +108,9 @@ fn expand(caps: &Captures, replacement: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::search::search_in_files;
+    use crate::test_support::TempDir;
+    use crate::types::ISearchInFilesOptions;
 
     #[test]
     fn t_replacements_leave_the_empty_matches_search_never_lists() {
@@ -115,5 +144,132 @@ mod tests {
                 vec![(1, 2), (2, 3), (7, 8), (8, 9)]
             )
         );
+    }
+
+    /** The match offsets file search reports for `pattern` in the only file under `dir`. */
+    fn search_offsets(dir: &TempDir, pattern: &str, regex: bool) -> Vec<usize> {
+        let options = ISearchInFilesOptions {
+            cwd: Some(dir.path().to_str().unwrap().to_string()),
+            flag_case_sensitive: true,
+            flag_gitignore: false,
+            flag_regex: regex,
+            max_filesize: None,
+            max_matches: None,
+            search_pattern: pattern.to_string(),
+            search_paths: ".".to_string(),
+            include_patterns: String::new(),
+            exclude_patterns: String::new(),
+            specified_filepath: None,
+        };
+        let result = search_in_files(&options).unwrap();
+        result
+            .items
+            .first()
+            .map_or_else(Vec::new, |item| item.matches.iter().map(|m| m.ox).collect())
+    }
+
+    #[test]
+    fn t_a_byte_order_mark_stays_out_of_the_text_search_offsets_index_and_in_the_file() {
+        let dir = TempDir::new();
+        let path = dir.path().join("text");
+        fs::write(&path, "\u{feff}abcabcabc\nabc\n").unwrap();
+        let file = path.to_str().unwrap();
+
+        /* The second match, not the first one three bytes after the mark. */
+        let offsets = search_offsets(&dir, "abc", false);
+        assert_eq!(offsets, vec![0, 3, 6, 10]);
+        let preview =
+            replace_file_preview_by_matches_advance(file, "abc", "X", false, false, true, &[3])
+                .unwrap();
+        assert_eq!(preview.text, "abcXabc\nabc\n");
+        let result =
+            replace_file_by_matches_advance(file, "abc", "X", false, true, &[3], &[6, 10]).unwrap();
+        assert_eq!(fs::read_to_string(&path).unwrap(), "\u{feff}abcXabc\nabc\n");
+        let remaining: Vec<usize> = result.locations.iter().map(|l| l.offset).collect();
+        assert_eq!(remaining, search_offsets(&dir, "abc", false)[1..]);
+
+        /* The first line starts after the mark, as in search. */
+        assert_eq!(search_offsets(&dir, "^abc", true), vec![0, 8]);
+        replace_file_by_matches(file, "^abc", "Y", true, true, &[0]).unwrap();
+        assert_eq!(fs::read_to_string(&path).unwrap(), "\u{feff}YXabc\nabc\n");
+        replace_file(file, "^abc", "Y", true, true).unwrap();
+        assert_eq!(fs::read_to_string(&path).unwrap(), "\u{feff}YXabc\nY\n");
+
+        /* Previews show the text search lists, without the mark. */
+        assert_eq!(
+            replace_file_preview(file, "X", "Z", false, false, true).unwrap(),
+            "YZabc\nY\n"
+        );
+        let preview = replace_file_preview_advance(file, "Y", "W", false, true, true).unwrap();
+        assert_eq!(preview.text, "WXabc\nW\n");
+        let ranges: Vec<_> = preview.matches.iter().map(|m| (m.start, m.end)).collect();
+        assert_eq!(ranges, vec![(0, 1), (6, 7)]);
+
+        /* A file that is only the mark has no text to change. */
+        fs::write(&path, "\u{feff}").unwrap();
+        replace_file(file, "^", "X", true, true).unwrap();
+        assert_eq!(fs::read_to_string(&path).unwrap(), "\u{feff}");
+    }
+
+    /** A linear congruential generator, so the cases are the same on every run. */
+    struct Cases(u64);
+
+    impl Cases {
+        fn below(&mut self, bound: usize) -> usize {
+            self.0 = self
+                .0
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
+            ((self.0 >> 33) as usize) % bound
+        }
+    }
+
+    #[test]
+    fn t_every_search_offset_names_the_match_its_replacement_changes() {
+        let dir = TempDir::new();
+        let path = dir.path().join("text");
+        let file = path.to_str().unwrap();
+        let pieces = ["ab", "a", "b", "\n", "\r\n", "\u{feff}", "é"];
+        let patterns = [
+            ("ab", false),
+            ("é", false),
+            ("b\\r?\\na", true),
+            ("^a", true),
+            ("b$", true),
+        ];
+        let mut cases = Cases(62);
+        let mut replaced = 0;
+        for case in 0..200 {
+            let mut content = String::from(if case % 2 == 0 { BOM } else { "" });
+            for _ in 0..=cases.below(12) {
+                content.push_str(pieces[cases.below(pieces.len())]);
+            }
+            let (pattern, regex) = patterns[cases.below(patterns.len())];
+            /* Search and replacement both leave out one leading mark, whichever piece put it there. */
+            let (mark, text) = match content.strip_prefix(BOM) {
+                Some(text) => (BOM, text),
+                None => ("", content.as_str()),
+            };
+            fs::write(&path, &content).unwrap();
+            for offset in search_offsets(&dir, pattern, regex) {
+                let found = crate::search::matcher(pattern, regex, true)
+                    .unwrap()
+                    .find_iter(text)
+                    .find(|m| m.start() == offset);
+                let Some(found) = found else {
+                    panic!("{content:?} /{pattern}/: no match at offset {offset}");
+                };
+                fs::write(&path, &content).unwrap();
+                replace_file_by_matches(file, pattern, "X", regex, true, &[offset]).unwrap();
+                let expected = format!("{mark}{}X{}", &text[..found.start()], &text[found.end()..]);
+                assert_eq!(
+                    fs::read_to_string(&path).unwrap(),
+                    expected,
+                    "{content:?} /{pattern}/ at {offset}"
+                );
+                replaced += 1;
+            }
+        }
+        assert!(replaced > 100, "only {replaced} replacements");
     }
 }

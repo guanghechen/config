@@ -1,8 +1,5 @@
 use crate::search::matcher;
 use regex::Captures;
-use std::fs::File;
-use std::io::Read;
-use std::io::Write;
 
 /// Perform replacement on the entire file.
 pub fn replace_file(
@@ -12,9 +9,7 @@ pub fn replace_file(
     flag_regex: bool,
     flag_case_sensitive: bool,
 ) -> Result<bool, String> {
-    let mut file = File::open(filepath).map_err(|e| e.to_string())?;
-    let mut text = String::new();
-    file.read_to_string(&mut text).map_err(|e| e.to_string())?;
+    let (bom, text) = super::read_text(filepath)?;
 
     let regex = matcher(search_pattern, flag_regex, flag_case_sensitive)?;
     let next_text: String = super::replace_all(&regex, &text, |caps: &Captures| {
@@ -22,10 +17,7 @@ pub fn replace_file(
     });
 
     if text != next_text {
-        let mut new_file = File::create(filepath).map_err(|e| e.to_string())?;
-        new_file
-            .write_all(next_text.as_bytes())
-            .map_err(|e| e.to_string())?;
+        super::write_text(filepath, bom, &next_text)?;
     }
 
     Ok(true)

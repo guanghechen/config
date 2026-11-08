@@ -1,6 +1,3 @@
-use std::fs::File;
-use std::io::Read;
-
 use super::replace_text_preview::replace_text_preview;
 
 pub fn replace_file_preview(
@@ -11,9 +8,7 @@ pub fn replace_file_preview(
     flag_regex: bool,
     flag_case_sensitive: bool,
 ) -> Result<String, String> {
-    let mut file = File::open(filepath).map_err(|e| e.to_string())?;
-    let mut text = String::new();
-    file.read_to_string(&mut text).map_err(|e| e.to_string())?;
+    let (_, text) = super::read_text(filepath)?;
     replace_text_preview(
         &text,
         search_pattern,

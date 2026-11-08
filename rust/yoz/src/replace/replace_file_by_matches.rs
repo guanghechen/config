@@ -1,9 +1,6 @@
 use crate::search::matcher;
 use regex::Captures;
 use std::collections::HashSet;
-use std::fs::File;
-use std::io::Read;
-use std::io::Write;
 
 pub fn replace_file_by_matches(
     filepath: &str,
@@ -13,9 +10,7 @@ pub fn replace_file_by_matches(
     flag_case_sensitive: bool,
     match_offsets: &[usize],
 ) -> Result<bool, String> {
-    let mut file = File::open(filepath).map_err(|e| e.to_string())?;
-    let mut text = String::new();
-    file.read_to_string(&mut text).map_err(|e| e.to_string())?;
+    let (bom, text) = super::read_text(filepath)?;
 
     let match_offsets: HashSet<usize> = match_offsets.iter().cloned().collect();
     let regex = matcher(search_pattern, flag_regex, flag_case_sensitive)?;
@@ -30,10 +25,7 @@ pub fn replace_file_by_matches(
     });
 
     if text != next_text {
-        let mut new_file = File::create(filepath).map_err(|e| e.to_string())?;
-        new_file
-            .write_all(next_text.as_bytes())
-            .map_err(|e| e.to_string())?;
+        super::write_text(filepath, bom, &next_text)?;
     }
 
     Ok(true)
