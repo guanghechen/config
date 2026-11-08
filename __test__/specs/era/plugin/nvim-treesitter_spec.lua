@@ -3,6 +3,14 @@ local harness = require("__test__.support.harness")
 
 local t = harness.new()
 
+-- The installed parsers' directory; its Lua injections, like nvim-treesitter's, inject luadoc.
+local install_dir = vim.fn.tempname() ---@type string
+vim.fn.mkdir(install_dir .. "/queries/lua", "p")
+vim.fn.writefile(
+  { '(comment content: (_) @injection.content (#set! injection.language "luadoc"))' },
+  install_dir .. "/queries/lua/injections.scm"
+)
+
 bootstrap.with_global(t, "stl", {
   filetype = {
     NOTEPAD = "notepad",
@@ -17,8 +25,11 @@ bootstrap.with_global(t, "stl", {
 })
 bootstrap.with_global(t, "dot", {
   path = {
+    locate_config_filepath = function(filename)
+      return filename
+    end,
     locate_data_filepath = function()
-      return "/tmp/treesitter"
+      return install_dir
     end,
   },
 })
@@ -27,6 +38,33 @@ local Treesitter = require("era.plugin.nvim-treesitter")
 
 t:test("treesitter does not eagerly own textobjects", function()
   t.assert_nil(Treesitter.spec.dependencies, "dependencies")
+end)
+
+---@param query                         vim.treesitter.Query
+---@return table<string, true>
+local function injected_languages(query)
+  local languages = {} ---@type table<string, true>
+  for _, pattern in pairs(query.info.patterns) do
+    for _, step in ipairs(pattern) do
+      if step[1] == "set!" and step[2] == "injection.language" then
+        languages[step[3]] = true
+      end
+    end
+  end
+  return languages
+end
+
+t:test("Lua injections leave doc comments to LuaLS and keep the other languages", function()
+  local languages = injected_languages(assert(vim.treesitter.query.get("lua", "injections")))
+  t.assert_nil(languages.luadoc, "luadoc")
+  t.assert_true(languages.vim and languages.c and languages.luap and true or false, "vim, c and luap")
+
+  -- The query is set explicitly, so a runtimepath change keeps it.
+  vim.opt.runtimepath:append(t:tempdir())
+  t.assert_nil(
+    injected_languages(assert(vim.treesitter.query.get("lua", "injections"))).luadoc,
+    "luadoc after a change"
+  )
 end)
 
 local loading = false ---@type boolean True while the plugin config runs.
@@ -168,7 +206,7 @@ t:test("the installed parsers are on the runtimepath once from startup on", func
   ---@return integer
   local function entries()
     return #vim.tbl_filter(function(path)
-      return path == "/tmp/treesitter"
+      return path == install_dir
     end, vim.opt.runtimepath:get())
   end
 

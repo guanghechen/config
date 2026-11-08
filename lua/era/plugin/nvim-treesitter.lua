@@ -79,7 +79,6 @@ local ensure_installed = {
   "json5",
   "latex",
   "lua",
-  "luadoc",
   "luap",
   "make",
   "markdown",
@@ -244,6 +243,12 @@ local install_dir = dot.path.locate_data_filepath("treesitter") ---@type string
 -- injection finds a parser (`has_parser` in vim/treesitter/languagetree.lua), so a miss lasts until a garbage
 -- collection happens to drop it.
 vim.opt.runtimepath:prepend(install_dir)
+-- Scrolling a Lua file with luadoc injections takes 7-10 ms at p95 against 3 without them, typing 9-10 against 6.
+vim.treesitter.query.set(
+  "lua",
+  "injections",
+  table.concat(vim.fn.readfile(dot.path.locate_config_filepath("queries/lua/injections.scm")), "\n")
+)
 
 ---@type era.m.plugin.IPluginSpec
 M.spec = {
