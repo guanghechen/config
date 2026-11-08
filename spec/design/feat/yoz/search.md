@@ -81,6 +81,8 @@ export interface ISearchTextResult {
 `ITextMatch` 的行号从 1 开始，列与 source offset 按 byte 从 0 开始；`cy/oy` 包含最后一个匹配 byte。
 `sx/sy` 指向预览中匹配首尾字符的起始 byte，不是 end-exclusive 范围。
 CR、LF、CRLF 在预览中显示为 `↲`，该字符占 3 个 UTF-8 bytes，因此预览坐标不能直接用于原文替换。
+替换模式的结果行把匹配片段里的 `↲` 按匹配的原始字节数还原为 LF 或 CRLF 再算替换；片段字节数等于原始字节数时
+不含换行，其中的 `↲` 是字符本身。跨行且含字面 `↲` 的匹配无法区分两者，结果行的替换预览可能不准，实际替换不受影响。
 
 File search 的预览在匹配前后最多各扩展 64 bytes，并限制在匹配首尾行内。
 单行匹配不包含行尾时不附加该行的换行；其他范围的 raw preview 可能保留尾部 `↲`。

@@ -67,6 +67,11 @@ local Paths = require("era.view.result_paths")
 ---@param size                          integer Bytes the text stands for in the file.
 ---@return string
 local function decode_preview_text(text, size)
+  -- A line break mark takes more bytes than the break it stands for, so text as long as the match stands for no break:
+  -- every mark in it is the character itself.
+  if #text == size then
+    return text
+  end
   local lf = text:gsub(stl.icon.listchars.eol, "\n") ---@type string
   if #lf == size then
     return lf

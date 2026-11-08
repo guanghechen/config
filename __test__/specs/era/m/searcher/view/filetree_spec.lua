@@ -55,7 +55,10 @@ end)
 
 t:test("result rows take whole last characters and keep the CRLF breaks a match spans", function()
   local root = t:tempdir()
-  for name, text in pairs({ ["zh.txt"] = "这是中文文本\n", ["crlf.txt"] = "ab\r\ncd\r\n" }) do
+  local mark = stl.icon.listchars.eol ---@type string
+  local files =
+    { ["zh.txt"] = "这是中文文本\n", ["crlf.txt"] = "ab\r\ncd\r\n", ["mark.txt"] = "a" .. mark .. "b\n" }
+  for name, text in pairs(files) do
     local file = assert(io.open(vim.fs.joinpath(root, name), "wb"))
     file:write(text)
     file:close()
@@ -95,7 +98,6 @@ t:test("result rows take whole last characters and keep the CRLF breaks a match 
     { { "这是中文文本", { { coll = 6, colr = 12, hlname = "m_ss_matches" } } } },
     rows("zh.txt", "中文", false)
   )
-  local mark = stl.icon.listchars.eol ---@type string
   local highlights = {
     { coll = 2, colr = 2 + #mark, hlname = "m_ss_search" },
     { coll = 2 + #mark, colr = 3 + #mark, hlname = "m_ss_replace" },
@@ -104,6 +106,17 @@ t:test("result rows take whole last characters and keep the CRLF breaks a match 
     { "ab" .. mark .. "X", highlights },
     { "cd" .. mark .. "X", highlights },
   }, rows("crlf.txt", [[\r\n]], true, "X"))
+
+  -- The text holds the line break mark itself: the match stands for no break.
+  t.assert_same({
+    {
+      "a" .. mark .. "bX",
+      {
+        { coll = 0, colr = 2 + #mark, hlname = "m_ss_search" },
+        { coll = 2 + #mark, colr = 3 + #mark, hlname = "m_ss_replace" },
+      },
+    },
+  }, rows("mark.txt", "a" .. mark .. "b", false, "X"))
 end)
 
 t:run()
