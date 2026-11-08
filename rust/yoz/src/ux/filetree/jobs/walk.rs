@@ -239,9 +239,25 @@ impl Item {
 
 struct Observed {
     path: PathBuf,
-    entry: Entry,
+    /** Why the member could not be read when it could not. */
+    entry: std::io::Result<Entry>,
     resource: Option<Resource>,
     position: Option<usize>,
+}
+
+/** A member whose entry could not be read: it fails alone, and its siblings go on. */
+pub(super) struct Unreadable {
+    pub id: ItemId,
+    pub node: Option<NodeId>,
+    pub path: PathBuf,
+    pub error: std::io::Error,
+    pub memory: Reservation,
+}
+
+/** The next member of a directory, in the order the directory lists them. */
+pub(super) enum Member {
+    Item(Item),
+    Unreadable(Unreadable),
 }
 
 /** Bounded filesystem enumeration; a small bitset verifies the originally loaded members. */
@@ -251,7 +267,7 @@ pub(super) struct Cursor {
     iterator: ReadDir,
     #[cfg(any(target_os = "macos", target_os = "linux"))]
     hidden: io::staging::Filter,
-    items: VecDeque<Item>,
+    members: VecDeque<Member>,
     carry: Option<Observed>,
     seen: Vec<u64>,
     remaining: usize,
@@ -303,7 +319,7 @@ impl Cursor {
             origin,
             source: item.resource.clone(),
             iterator,
-            items: VecDeque::with_capacity(LOOKAHEAD),
+            members: VecDeque::with_capacity(LOOKAHEAD),
             carry: None,
             seen: vec![0; known.div_ceil(64)],
             remaining: known,
@@ -345,29 +361,36 @@ impl Cursor {
             let entry = self.hidden.read(&path);
             #[cfg(not(any(target_os = "macos", target_os = "linux")))]
             let entry = Entry::read(&path).map(Some);
-            let Some(mut entry) = entry.map_err(|error| {
-                if error.kind() == std::io::ErrorKind::NotADirectory
-                    || resource.is_some() && error.kind() == std::io::ErrorKind::NotFound
-                {
-                    return Error::stale("captured operation member disappeared");
+            let entry = match entry {
+                Ok(Some(mut entry)) => {
+                    entry.cycle = self.origin.cycle(&entry);
+                    Ok(entry)
                 }
-                if error.kind() == std::io::ErrorKind::NotFound
-                    && let Err(parent) = self.origin.signature.verify(&self.origin.path, true)
+                Ok(None) => continue,
+                Err(error)
+                    if error.kind() == std::io::ErrorKind::NotADirectory
+                        || resource.is_some() && error.kind() == std::io::ErrorKind::NotFound =>
                 {
-                    return directory_error("verify operation parent", parent);
+                    return Err(Error::stale("captured operation member disappeared"));
                 }
-                resource::io_error("read operation entry", error)
-            })?
-            else {
-                continue;
+                Err(error) => {
+                    if error.kind() == std::io::ErrorKind::NotFound
+                        && let Err(parent) = self.origin.signature.verify(&self.origin.path, true)
+                    {
+                        return Err(directory_error("verify operation parent", parent));
+                    }
+                    /* As a member that cannot be copied or removed, it fails alone. */
+                    Err(error)
+                }
             };
-            entry.cycle = self.origin.cycle(&entry);
             let position = if let Some(resource) = &resource {
-                let before = resource.entry()?;
-                if before.name != entry.name
-                    || Signature::entry(&before, false) != Signature::entry(&entry, false)
-                {
-                    return Err(Error::stale("loaded operation occurrence changed"));
+                if let Ok(entry) = &entry {
+                    let before = resource.entry()?;
+                    if before.name != entry.name
+                        || Signature::entry(&before, false) != Signature::entry(entry, false)
+                    {
+                        return Err(Error::stale("loaded operation occurrence changed"));
+                    }
                 }
                 let parent = self.source.as_ref().expect("known parent");
                 let position = parent
@@ -403,7 +426,7 @@ impl Cursor {
         next: &mut u64,
         cancel: &AtomicBool,
     ) -> Result<()> {
-        while !self.exhausted && self.items.len() < LOOKAHEAD {
+        while !self.exhausted && self.members.len() < LOOKAHEAD {
             if cancel.load(Ordering::Acquire) {
                 return Err(Error::new(
                     ErrorCode::ProviderError,
@@ -419,36 +442,71 @@ impl Cursor {
             let id = next
                 .checked_add(1)
                 .ok_or_else(|| Error::limit("job item identity exhausted"))?;
-            let item = Item::new(
-                ItemId(id),
-                self.origin.root,
-                Some(self.origin.clone()),
-                observed.path.clone(),
-                observed.entry.clone(),
-                observed.resource.clone(),
-                memory,
-            );
-            let item = match item {
-                Ok(item) => item,
-                Err(error) => {
-                    self.carry = Some(observed);
-                    return Err(error);
+            let Observed {
+                path,
+                entry,
+                resource,
+                position,
+            } = observed;
+            match entry {
+                Ok(entry) => {
+                    let item = Item::new(
+                        ItemId(id),
+                        self.origin.root,
+                        Some(self.origin.clone()),
+                        path.clone(),
+                        entry.clone(),
+                        resource.clone(),
+                        memory,
+                    );
+                    match item {
+                        Ok(item) => self.members.push_back(Member::Item(item)),
+                        Err(error) => {
+                            self.carry = Some(Observed {
+                                path,
+                                entry: Ok(entry),
+                                resource,
+                                position,
+                            });
+                            return Err(error);
+                        }
+                    }
                 }
-            };
+                Err(error) => match memory.reserve(1024 + path.as_os_str().len() * 2) {
+                    Ok(reservation) => self.members.push_back(Member::Unreadable(Unreadable {
+                        id: ItemId(id),
+                        node: resource.map(|resource| resource.node),
+                        path,
+                        error,
+                        memory: reservation,
+                    })),
+                    Err(reserve) => {
+                        self.carry = Some(Observed {
+                            path,
+                            entry: Err(error),
+                            resource,
+                            position,
+                        });
+                        return Err(reserve);
+                    }
+                },
+            }
             *next = id;
-            if let Some(position) = observed.position {
+            if let Some(position) = position {
                 self.seen[position / 64] |= 1 << (position % 64);
                 self.remaining -= 1;
             }
-            self.items.push_back(item);
         }
         Ok(())
     }
-    pub fn pop(&mut self) -> Option<Item> {
-        self.items.pop_front()
+    pub fn pop(&mut self) -> Option<Member> {
+        self.members.pop_front()
     }
     pub fn items(&self) -> impl Iterator<Item = &Item> {
-        self.items.iter()
+        self.members.iter().filter_map(|member| match member {
+            Member::Item(item) => Some(item),
+            Member::Unreadable(_) => None,
+        })
     }
 }
 

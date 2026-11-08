@@ -104,6 +104,8 @@ Lua 逐项序列化时才临时组成完整路径，不在 native Job 中保存�
 ### 错误与编辑器交接
 
 IO error 保留操作、对应资源、平台错误类别与原始 error code；普通业务失败为完成值，不抛成丢失上下文的 Lua error。
+目录成员读不出元数据（如目录缺少搜索权限）时只记该成员失败，同目录的其他成员与批次中的其他源照常处理；
+该目录因此无法完成，delete 不删除它，copy/move 的目录结果为 failed。目录本身或已加载 occurrence 的变化仍按 Stale 中止。
 `std::io::ErrorKind::NotFound` 对应结构化 `error.code = "NotFound"`；其他 IO 失败仍为 `ProviderError`。
 调用方只根据 code 决定是否补建缺失父目录，不解析 message 中的诊断文字；`NotADirectory` 与权限失败不等价于缺失。
 

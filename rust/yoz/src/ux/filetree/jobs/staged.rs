@@ -129,7 +129,19 @@ impl Runner {
                 self.check()?;
                 let current = stack.last_mut().expect("directory copy frame");
                 self.fill_cursor(&mut current.children)?;
-                let child = current.children.pop();
+                let child = match current.children.pop() {
+                    Some(Member::Item(source)) => Some(source),
+                    /* A member that cannot be read fails alone; the copy of its directory is incomplete. */
+                    Some(Member::Unreadable(member)) => {
+                        current.success = false;
+                        let target = current
+                            .target
+                            .join(member.path.file_name().expect("directory member"));
+                        results.push(self.unreadable_result(member, Some(target)));
+                        continue;
+                    }
+                    None => None,
+                };
                 let Some(source) = child else {
                     let directory = stack.pop().expect("completed directory");
                     let success = directory.success;

@@ -18,7 +18,7 @@ mod staged;
 mod trash;
 mod walk;
 pub use create::CreatePlan;
-use walk::{Cursor, Item};
+use walk::{Cursor, Item, Member, Unreadable};
 
 const RESULT_LIMIT: usize = super::memory::LIMIT;
 const PROGRESS_INTERVAL: Duration = Duration::from_millis(40);
@@ -679,9 +679,23 @@ impl Runner {
                 };
                 self.check()?;
                 self.fill_cursor(&mut directory.children)?;
-                if let Some(source) = directory.children.pop() {
-                    pending = Some((source, directory.target.clone(), None));
-                    continue;
+                match directory.children.pop() {
+                    Some(Member::Item(source)) => {
+                        pending = Some((source, directory.target.clone(), None));
+                        continue;
+                    }
+                    /* A member that cannot be read fails alone; the directory, holding it still, cannot finish. */
+                    Some(Member::Unreadable(member)) => {
+                        directory.success = false;
+                        let target = directory.target_path.as_ref().map(|path| {
+                            path.join(member.path.file_name().expect("directory member"))
+                        });
+                        self.flush_copies();
+                        let result = self.unreadable_result(member, target);
+                        self.deliver(result);
+                        continue;
+                    }
+                    None => {}
                 }
                 let directory = stack.pop().expect("directory");
                 let success = self.end(directory)?;
@@ -1032,7 +1046,51 @@ impl Runner {
         self.deliver(result);
     }
 
+    fn unreadable_result(
+        &mut self,
+        member: Unreadable,
+        target: Option<PathBuf>,
+    ) -> Arc<ItemResult> {
+        let Unreadable {
+            id,
+            node,
+            path,
+            error,
+            memory,
+        } = member;
+        let outcome = ItemOutcome {
+            path,
+            target,
+            status: ItemStatus::Failed,
+            error: Some(error),
+            sync_error: None,
+            charge: memory,
+        };
+        self.item_result(id, node, None, outcome)
+    }
+
     fn result(&mut self, source: &Item, outcome: ItemOutcome) -> Arc<ItemResult> {
+        let witness = (outcome.status == ItemStatus::Success && self.plan.task.is_some())
+            .then(|| {
+                source.parent.as_ref().map(|parent| walk::Witness {
+                    parent: parent.clone(),
+                    signature: source
+                        .node()
+                        .is_none()
+                        .then(|| walk::CapturedSignature::new(&source.entry)),
+                })
+            })
+            .flatten();
+        self.item_result(source.id, source.node(), witness, outcome)
+    }
+
+    fn item_result(
+        &mut self,
+        id: ItemId,
+        node: Option<NodeId>,
+        witness: Option<walk::Witness>,
+        outcome: ItemOutcome,
+    ) -> Arc<ItemResult> {
         let ItemOutcome {
             path,
             target,
@@ -1043,13 +1101,13 @@ impl Runner {
         } = outcome;
         let (source_physical, target_physical, path_memory) = self
             .physical
-            .remove(&source.id)
+            .remove(&id)
             .map_or((None, None, None), |(source, target, charge, _)| {
                 (source, target, Some(charge))
             });
         let result = ItemResult::new(
-            source.id,
-            source.node(),
+            id,
+            node,
             status,
             results::Details {
                 source: path,
@@ -1074,17 +1132,7 @@ impl Runner {
             },
             charge,
             &mut self.result_parents,
-            (status == ItemStatus::Success && self.plan.task.is_some())
-                .then(|| {
-                    source.parent.as_ref().map(|parent| walk::Witness {
-                        parent: parent.clone(),
-                        signature: source
-                            .node()
-                            .is_none()
-                            .then(|| walk::CapturedSignature::new(&source.entry)),
-                    })
-                })
-                .flatten(),
+            witness,
         );
         self.job.processed();
         result

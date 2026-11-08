@@ -308,6 +308,35 @@ t:test("private descendants expose stable Job item IDs without requiring browse 
   end
 end)
 
+t:test("a member that cannot be read fails alone and the rest of the batch goes on", function()
+  local path = t:tempdir()
+  assert(vim.uv.fs_mkdir(path .. "/locked", 448))
+  write(path .. "/locked/member")
+  write(path .. "/free")
+  local data = await(filetree.open(path))
+  local locked = await(data:resolve(path .. "/locked"))
+  local free = await(data:resolve(path .. "/free"))
+  -- Without search permission the directory lists its names, but no member can be read.
+  assert(vim.uv.fs_chmod(path .. "/locked", 384))
+  t:defer(function()
+    vim.uv.fs_chmod(path .. "/locked", 448)
+  end)
+  local job = data:start_operation({ kind = "delete", source = free:source(), nodes = { locked:node(), free:node() } })
+  t.wait_until(function()
+    return job:status().terminal
+  end, 10000)
+  local status = job:status()
+  t.assert_eq(nil, status.error)
+  local outcomes = {} ---@type table<string, string>
+  for _, result in ipairs(job:results(1, status.results)) do
+    outcomes[result.source] = result.status
+  end
+  t.assert_eq("failed", outcomes[path .. "/locked/member"], "the member")
+  t.assert_eq("failed", outcomes[path .. "/locked"], "its directory")
+  t.assert_eq("success", outcomes[path .. "/free"], "the other source")
+  t.assert_eq(nil, vim.uv.fs_stat(path .. "/free"))
+end)
+
 t:test("terminal Job after the event drain still delivers the final RootUnavailable effect", function()
   local path = t:tempdir()
   assert(vim.uv.fs_mkdir(path .. "/branch", 448))
