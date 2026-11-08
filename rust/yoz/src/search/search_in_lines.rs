@@ -256,6 +256,25 @@ mod tests {
     }
 
     #[test]
+    fn t_a_carriage_return_inside_a_buffer_line_is_a_character() {
+        let lines = vec!["a\rb".to_string(), "c b".to_string()];
+        let result = search_in_lines("b", &lines, false, false, true).unwrap();
+        let found: Vec<_> = result.matches.iter().map(|m| (m.lx, m.cx, m.ox)).collect();
+        assert_eq!(found, [(1, 2, 2), (2, 2, 6)]);
+
+        /* A trailing one, as a file with CRLF line breaks read as unix leaves, stays out of the line's content. */
+        let lines = vec!["x foo\r".to_string(), "foo".to_string()];
+        let result = search_in_lines(r"o\r?$", &lines, false, true, true).unwrap();
+        let found: Vec<_> = result.matches.iter().map(|m| (m.lx, m.cx, m.cy)).collect();
+        assert_eq!(found, [(1, 4, 4), (2, 2, 2)]);
+        let result = search_in_lines("o\nfoo", &lines, false, true, true).unwrap();
+        assert!(
+            result.matches.is_empty(),
+            "the trailing carriage return still stands between them"
+        );
+    }
+
+    #[test]
     fn t_search_preview_single_line_trims_newlines() {
         let lines = vec!["alpha beta".to_string()];
         let result = search_in_lines("alpha", &lines, false, false, true).expect("search succeeds");

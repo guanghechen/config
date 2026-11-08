@@ -73,6 +73,8 @@ impl<'a> ISearchBuffer<'a> {
 }
 
 impl ISearchBuffer<'static> {
+    /** Joins buffer lines with "\n". A buffer line holds no line break, so a carriage return in one is a character,
+    though a trailing one, as a file with CRLF line breaks read as unix leaves, stays out of the line's content. */
     pub fn from_lines(lines: &[String]) -> Self {
         if lines.is_empty() {
             return ISearchBuffer::new(Cow::Owned(String::new()));
@@ -82,14 +84,24 @@ impl ISearchBuffer<'static> {
         capacity = capacity.saturating_add(lines.len().saturating_sub(1));
 
         let mut text = String::with_capacity(capacity);
+        let mut line_offsets = Vec::with_capacity(lines.len() + 1);
+        let mut line_ranges = Vec::with_capacity(lines.len());
         for (index, line) in lines.iter().enumerate() {
             if index > 0 {
                 text.push('\n');
             }
+            let start = text.len();
             text.push_str(line);
+            line_offsets.push(start);
+            line_ranges.push(start..start + line.strip_suffix('\r').unwrap_or(line).len());
         }
+        line_offsets.push(text.len());
 
-        ISearchBuffer::new(Cow::Owned(text))
+        Self {
+            text: Cow::Owned(text),
+            line_offsets,
+            line_ranges,
+        }
     }
 }
 
