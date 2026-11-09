@@ -160,6 +160,12 @@ t:test("watch_file: still reports changes after the file is replaced", function(
   })
   ---@diagnostic disable-next-line: invisible
   t:defer(unwatch)
+  -- FSEvents starts its stream on another thread, after the watch returns, and misses the changes before that: write
+  -- until the watch reports one.
+  t.wait_until(function()
+    put(filepath, "0")
+    return events > 0
+  end, 3000, "the watch reports changes")
 
   -- Replaced the way an atomic writer does it, a sibling file renamed over it, twice.
   for round = 1, 2 do
