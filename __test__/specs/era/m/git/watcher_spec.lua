@@ -55,6 +55,27 @@ bootstrap.with_runtime(t, {
 
 local watcher = require("era.m.git.watcher")
 
+-- FSEvents starts its stream on another thread after the watch is set up and misses the changes before that: write
+-- HEAD again, as it is, until the watch reports it. Each write waits out the refresh debounce, which a later event
+-- would restart.
+---@param repo                          string
+---@return nil
+local function await_watch(repo)
+  local head = repo .. "/.git/HEAD" ---@type string
+  local content = vim.fn.readfile(head, "b") ---@type string[]
+  head_refreshes = 0
+  for _ = 1, 6 do
+    vim.fn.writefile(content, head, "b")
+    if vim.wait(500, function()
+      return head_refreshes > 0
+    end, 10) then
+      head_refreshes = 0
+      return
+    end
+  end
+  error("the watch reports no change")
+end
+
 ---@param branch                        string|nil
 ---@param pack_refs                     boolean|nil
 ---@return nil
@@ -74,8 +95,8 @@ local function assert_commit_detected(branch, pack_refs)
     git.run(repo, { "pack-refs", "--all", "--prune" })
   end
 
-  head_refreshes = 0
   watcher.update(repo .. "/.git")
+  await_watch(repo)
   vim.fn.writefile({ "changed" }, repo .. "/f.txt")
   git.run(repo, { "add", "f.txt" })
   git.run(repo, { "commit", "-qm", "change" })
@@ -103,8 +124,8 @@ t:test("watcher follows HEAD when checkout changes the current ref", function()
   git.run(repo, { "add", "f.txt" })
   git.run(repo, { "commit", "-qm", "base" })
   watcher.update(repo .. "/.git")
+  await_watch(repo)
 
-  head_refreshes = 0
   git.run(repo, { "checkout", "-qb", "feature/switched" })
   t.wait_until(function()
     return head_refreshes > 0
