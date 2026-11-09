@@ -54,6 +54,17 @@ local function actions(ui)
   ]])
 end
 
+t:test("an action typed right after a query reads the rows of that query", function()
+  local ui, path = fixture.new(t)
+  -- One burst, as fast typing gives it: <CR> runs before the 64 ms filter debounce does.
+  ui:rpc("nvim_input", "itwo<CR>")
+  wait(ui, [[vim.api.nvim_buf_get_name(0):match("Alpha%-two%.txt$") ~= nil]])
+  t.assert_eq(
+    vim.uv.fs_realpath(path .. "/Alpha-two.txt"),
+    vim.uv.fs_realpath(ui:lua("return vim.api.nvim_buf_get_name(0)"))
+  )
+end)
+
 t:test("native create/copy/rename/delete update the current directory and editor buffers", function()
   local ui, path = fixture.new(t)
   actions(ui)

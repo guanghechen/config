@@ -22,6 +22,37 @@ local function report(message)
   stl.reporter.error({ from = __module_name__, message = tostring(message) })
 end
 
+---@return ux.treeview.IDisplay
+local function display()
+  return {
+    pattern = search_pattern:snapshot(),
+    fuzzy = flag_fuzzy:snapshot(),
+    regex = flag_regex:snapshot(),
+    case_sensitive = flag_case_sensitive:snapshot(),
+  }
+end
+
+-- A query typed ahead of an action decides it, as in the pickers: the input takes the query in, the filter for it
+-- runs at once, and the action waits in place for the rows to show it.
+---@param action                        fun(): nil
+---@return fun(): nil
+local function settled(action)
+  return function()
+    picker.finder:sync()
+    if scheduler:pending() or not surface:shows(display()) then
+      scheduler:cancel()
+      surface:filter(display())
+      vim.wait(1000, function()
+        return picker:isdisposed() or surface:shows(display())
+      end, 1)
+    end
+    -- The wait runs pending events, which may close the picker.
+    if not picker:isdisposed() then
+      action()
+    end
+  end
+end
+
 ---@return yoz.ux.filetree.Resource|nil
 ---@return boolean
 local function current()
@@ -290,6 +321,7 @@ for _, entry in ipairs({
   }
 end
 
+-- Every action reads the rows: the one under the cursor, or the directory they list.
 ---@type stl.t.IKeymap[]
 local actions = {
   { modes = { "n", "x" }, key = "oa", desc = "filetree: create", callback = create_entry },
@@ -324,6 +356,10 @@ local actions = {
   },
 }
 
+for _, keymap in ipairs(actions) do
+  keymap.callback = settled(keymap.callback --[[@as fun(): nil]])
+end
+
 picker = era.m.picker.BasicComposer.new({
   name = __module_name__,
   permanent = true,
@@ -335,7 +371,7 @@ picker = era.m.picker.BasicComposer.new({
   result_number = false,
   result_tree = surface,
   keymaps_common = {
-    { modes = { "i", "n", "x" }, key = "<Enter>", desc = "filetree: open", callback = confirm },
+    { modes = { "i", "n", "x" }, key = "<Enter>", desc = "filetree: open", callback = settled(confirm) },
     { modes = { "i", "n", "x" }, key = "<Tab>", desc = "filetree: noop", callback = stl.fn.noop },
     {
       modes = { "i", "n", "x" },
@@ -343,7 +379,7 @@ picker = era.m.picker.BasicComposer.new({
       desc = "filetree: open",
       callback = function()
         if vim.fn.getmousepos().winid == picker.result:get_winnr() then
-          confirm()
+          settled(confirm)()
         end
       end,
     },
@@ -351,12 +387,7 @@ picker = era.m.picker.BasicComposer.new({
   keymaps_finder = actions,
   keymaps_result = actions,
   render_result = function()
-    surface:filter({
-      pattern = search_pattern:snapshot(),
-      fuzzy = flag_fuzzy:snapshot(),
-      regex = flag_regex:snapshot(),
-      case_sensitive = flag_case_sensitive:snapshot(),
-    })
+    surface:filter(display())
   end,
   render_preview = preview_file,
   preview_tree = function()

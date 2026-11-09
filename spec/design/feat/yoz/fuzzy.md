@@ -130,6 +130,8 @@ local filter = result:ids(source)                                    -- yoz.ux.t
 4. 数据仍在准备时不补做匹配，动作按当前显示的行执行：ListComposer 分批 `append` 期间，以及 FiletreeComposer 从
    `prepare_filepaths` 开始到它接入的路径树发布之前。等待会持续到整个加载与导入结束，10 万路径时按键阻塞 1.4–1.7 s，
    超时后仍按旧结果执行。`reset_filepaths` 等其他数据变更规模小，照常补做匹配并等待发布。
+5. Find Explorer 不经这三个 composer，按同样的规则处理它的动作：同步查询后，过滤未覆盖当前查询或 debounce 未到时立即
+   过滤，并在按键内等到 Directory 视图画出这次过滤（`Directory:shows(display)`，超时 1 s）再取光标行。
 
 - **ListComposer**：
   - 在 2 ms 一片的准备循环中分批 `append`，与 Source 同步替换；

@@ -193,6 +193,22 @@ function M:_filter()
   end)
 end
 
+---Whether the rows show `display`: no filter is on its way, and the view has drawn the state since.
+---@param display                       ux.treeview.IDisplay
+---@return boolean
+function M:shows(display)
+  if self._filtering or not self.state then
+    return false
+  end
+  for key, value in pairs(display) do
+    if not vim.deep_equal(self._display[key], value) then
+      return false
+    end
+  end
+  local frame = self:frame()
+  return frame ~= nil and frame:header().state_revision == self.state:status().revisions.state
+end
+
 ---@return stl.c.Future
 function M:refresh()
   return self.state and self.data:refresh(self.state):map(checked) or Future.resolve(nil)
