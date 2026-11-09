@@ -123,8 +123,8 @@ entry 与隐藏集合覆盖。`fields` 中以下键由 ResultTree 的 viewport �
 ### Picker 与 Searcher
 
 - Picker 的 fuzzy/exact 匹配由 [Yoz Fuzzy](../feat/yoz/fuzzy.md) corpus 完成：`ResultTree:match` 返回结果句柄作为 `orders`，
-  `_display` 以 `orders:ids(source)` 生成 native filter，收窄由 corpus 的结果缓存负责；regex 仍用 `search_in_lines`，
-  `orders` 为去重后的 key 数组。
+  `_display` 以 `orders:ids(source)` 生成 native filter，收窄由 corpus 的结果缓存负责；regex 仍用 `yoz.search` 的行搜索
+  （`locate_in_lines`，只取匹配位置），`orders` 为去重后的 key 数组。
 - Searcher 的跨文件检索使用 `yoz.search` Job 与 Lua FileSearch generation，终态结果经 ResultFiles 准备后导入，
   遵循 [Yoz Search](../feat/yoz/search.md)；它不使用 Treeview 的 native Query session，两种查询入口的边界见 [query.md](query.md)。
 - 大批普通文件列表使用 `FiletreeComposer:prepare_filepaths`：复制输入数组，在独立 producer 中分片构建路径和 entries，

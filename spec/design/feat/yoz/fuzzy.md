@@ -15,7 +15,7 @@ Treeview DisplayOptions.pattern -> ux/treeview/matching.rs -> fuzzy::TextMatcher
 
 - `yoz.fuzzy` 负责：算法、语法解析、corpus、排序、收窄缓存、并行，以及结果到 Treeview NodeId 的解析。
 - 使用方负责：何时构建 corpus、匹配文本的选取（例如 root 相对路径）、权重来源（frecency）与发布节奏。
-- Regex 查询不经过 `yoz.fuzzy`：picker 继续使用 `yoz.search.search_in_lines` 的 regex 路径，Treeview 使用 `regex` crate。
+- Regex 查询不经过 `yoz.fuzzy`：picker 继续使用 `yoz.search` 行搜索的 regex 路径（`locate_in_lines`），Treeview 使用 `regex` crate。
 
 ## 匹配语义
 
@@ -106,7 +106,7 @@ local filter = result:ids(source)                                    -- yoz.ux.t
 ### ResultTree
 
 - `ResultTree:match(params, checkpoint)`：
-  - 非空的 regex 查询走 `search_in_lines`，返回 key 数组，同一条目只出现一次；
+  - 非空的 regex 查询走 `locate_in_lines`，返回 key 数组，同一条目只出现一次；
   - 其余查询走 corpus。corpus 在 Lua source revision、ResultTree revision、root、scheme 与 `weigh` 不变时复用，
     构建时逐项调用 `checkpoint`，可以让出或取消。
 - 匹配文本依次取 `data.filepath`、`entry.text`、`data.name`。root 下的文件路径匹配 root 相对路径，

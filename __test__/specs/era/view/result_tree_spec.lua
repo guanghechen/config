@@ -57,6 +57,17 @@ t:test("ordered List filtering retains Tree ancestors and native selection acros
   t.assert_same({}, reports.error)
 end)
 
+t:test("regex matching gives each key once, in line order, with the byte ranges of its matches", function()
+  local tree = fixture()
+  local matched = tree:match_lines({ "one", "two", "one" }, { "a1b22", "none", "é3" }, "[0-9]+", true)
+  t.assert_same({ "one" }, matched, "each key once")
+  t.assert_same(
+    { { l = 1, r = 2 }, { l = 3, r = 5 }, { l = 2, r = 3 } },
+    tree._matches.one.matches,
+    "the ranges of every line of the key, in bytes"
+  )
+end)
+
 t:test("ready waits for every collapse change that is still in flight", function()
   local tree = fixture()
   support.applied(tree:publish({ mode = "tree", rootuuid = "root" }))

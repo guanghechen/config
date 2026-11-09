@@ -945,7 +945,8 @@ end
 ---@param case_sensitive                boolean
 ---@return string[]
 function M:match_lines(keys, lines, pattern, case_sensitive)
-  local result, error = yoz.search.search_in_lines({
+  -- Where each match is is all the filter needs; previews of every match would take most of the call.
+  local result, error = yoz.search.locate_in_lines({
     pattern = pattern,
     lines = lines,
     flag_fuzzy = false,
@@ -956,15 +957,15 @@ function M:match_lines(keys, lines, pattern, case_sensitive)
     self:_error(error)
   end
   local matched, matches = {}, {}
-  for _, item in ipairs(result and result.lines or {}) do
-    local key = keys[item.lnum]
+  for _, range in ipairs(result and result.matches or {}) do
+    local key = keys[range.lx]
     local match = matches[key]
-    if match then
-      vim.list_extend(match.matches, item.matches)
-    else
+    if match == nil then
+      match = { matches = {} }
       matched[#matched + 1] = key
-      matches[key] = { matches = vim.list_slice(item.matches) }
+      matches[key] = match
     end
+    match.matches[#match.matches + 1] = { l = range.cx, r = range.cy + 1 }
   end
   self._matches, self._result, self._orders = matches, nil, nil
   return matched
