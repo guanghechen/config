@@ -1064,6 +1064,28 @@ fn search_module(lua: &Lua) -> LuaResult<LuaTable> {
             })?,
         ),
         (
+            "locate_in_lines",
+            f(lua, |lua, options: LuaValue| -> LuaResult<LuaMultiValue> {
+                let options = search::ISearchInLinesOptions::from_lua(options, lua)?;
+                match search::search_in_lines(
+                    &options.pattern,
+                    &options.lines,
+                    options.flag_fuzzy,
+                    options.flag_regex,
+                    options.flag_case_sensitive,
+                ) {
+                    Ok(result) => {
+                        let data = crate::types::text_ranges_into_lua(lua, &result)?;
+                        Ok(LuaMultiValue::from_vec(vec![data, LuaValue::Nil]))
+                    }
+                    Err(error) => {
+                        let err = error.into_lua(lua)?;
+                        Ok(LuaMultiValue::from_vec(vec![LuaValue::Nil, err]))
+                    }
+                }
+            })?,
+        ),
+        (
             "search_in_text",
             f(lua, |lua, options: LuaValue| -> LuaResult<LuaMultiValue> {
                 let options = search::ISearchInTextOptions::from_lua(options, lua)?;

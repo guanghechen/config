@@ -17,13 +17,15 @@ local M = {}
 ---@field public exclude_patterns       string
 ---@field public specified_filepath     string|nil
 
----@class yoz.search.ITextMatch
+---@class yoz.search.ITextRange
 ---@field public lx                     integer
 ---@field public ly                     integer
 ---@field public cx                     integer
 ---@field public cy                     integer
 ---@field public ox                     integer
 ---@field public oy                     integer
+
+---@class yoz.search.ITextMatch : yoz.search.ITextRange
 ---@field public s                      string
 ---@field public sx                     integer
 ---@field public sy                     integer
@@ -119,6 +121,16 @@ function M.search_in_lines_regex(options) end
 ---@return yoz.search.ISearchTextResult|nil
 ---@return string|nil
 function M.search_in_lines(options) end
+
+---@class yoz.search.ITextRangesResult
+---@field public elapsed_time           integer
+---@field public matches                yoz.search.ITextRange[]
+
+---Where the matches of `search_in_lines` are, without their previews or the matches of each line.
+---@param options                       yoz.search.ISearchInLinesOptions
+---@return yoz.search.ITextRangesResult|nil
+---@return string|nil
+function M.locate_in_lines(options) end
 
 ---@class yoz.search.ISearchInTextOptions
 ---@field public pattern                string

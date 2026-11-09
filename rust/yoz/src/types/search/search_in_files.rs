@@ -102,6 +102,30 @@ impl IntoLua for ISearchTextResult {
     }
 }
 
+/// Where each match of `result` is, as `locate_in_lines` hands it to Lua: a table per match with `lx`, `ly`, `cx`, `cy`,
+/// `ox` and `oy`, without the preview and the per-line matches, whose conversion takes most of a call with many matches.
+pub fn text_ranges_into_lua(lua: &Lua, result: &ISearchTextResult) -> LuaResult<LuaValue> {
+    let keys = ["lx", "ly", "cx", "cy", "ox", "oy"]
+        .iter()
+        .map(|key| lua.create_string(key))
+        .collect::<LuaResult<Vec<_>>>()?;
+    let matches = lua.create_table_with_capacity(result.matches.len(), 0)?;
+    for (index, found) in result.matches.iter().enumerate() {
+        let range = lua.create_table_with_capacity(0, keys.len())?;
+        range.raw_set(&keys[0], found.lx)?;
+        range.raw_set(&keys[1], found.ly)?;
+        range.raw_set(&keys[2], found.cx)?;
+        range.raw_set(&keys[3], found.cy)?;
+        range.raw_set(&keys[4], found.ox)?;
+        range.raw_set(&keys[5], found.oy)?;
+        matches.raw_set(index + 1, range)?;
+    }
+    let table = lua.create_table_with_capacity(0, 2)?;
+    table.raw_set("elapsed_time", result.elapsed_time)?;
+    table.raw_set("matches", matches)?;
+    Ok(LuaValue::Table(table))
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct ISearchFailedResult {
     pub elapsed_time: u64,

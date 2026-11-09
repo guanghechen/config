@@ -37,13 +37,16 @@ composer -> Lua file-search controller -> Rust job -> controller -> composer
 [search.lua](../../../../lua/__types__/yoz/search.lua)。
 
 ```typescript
-export interface ITextMatch {
+export interface ITextRange {
   readonly lx: number // 1-based start line
   readonly ly: number // 1-based end line
   readonly cx: number // 0-based start byte column
   readonly cy: number // 0-based inclusive end byte column
   readonly ox: number // 0-based start byte offset in source text
   readonly oy: number // 0-based inclusive end byte offset in source text
+}
+
+export interface ITextMatch extends ITextRange {
   readonly s: string // Preview text with line endings rendered as ↲
   readonly sx: number // Byte offset in s of the first matched character
   readonly sy: number // Byte offset in s of the last matched character
@@ -80,7 +83,17 @@ export interface ISearchTextResult {
   readonly lines: ISearchInLinesLineMatch[]
   readonly elapsed_time: number // milliseconds
 }
+
+// This result is for the locate_in_lines api.
+export interface ITextRangesResult {
+  readonly matches: ITextRange[]
+  readonly elapsed_time: number // milliseconds
+}
 ```
+
+`locate_in_lines` 与 `search_in_lines` 搜索相同，只返回每个 match 的位置，供 buffer 搜索使用。32k 个匹配时，
+`search_in_lines` 一次调用约 132 ms，原生搜索与行文本传入约 6 ms，其余是预览与逐行匹配转成 Lua table；
+只转换位置约 22 ms。
 
 `ITextMatch` 的行号从 1 开始，列与 source offset 按 byte 从 0 开始；`cy/oy` 包含最后一个匹配 byte。
 `sx/sy` 指向预览中匹配首尾字符的起始 byte，不是 end-exclusive 范围。

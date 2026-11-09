@@ -86,7 +86,7 @@ end
 ---@param bufnr                         integer
 ---@param namespace                     integer
 ---@param hlgroup                       string
----@param match                         yoz.search.ITextMatch
+---@param match                         yoz.search.ITextRange
 ---@return nil
 local function highlight_text_match(bufnr, namespace, hlgroup, match)
   if not vim.api.nvim_buf_is_valid(bufnr) then
@@ -256,7 +256,7 @@ end
 ---@field protected _bufnr_replacer     integer|nil
 ---@field protected _winnr_source       integer|nil
 ---@field protected _bufnr_source       integer|nil
----@field protected _matches            yoz.search.ITextMatch[]|nil
+---@field protected _matches            yoz.search.ITextRange[]|nil
 ---@field protected _changedtick        integer|nil Change tick of the source buffer the matches were found in.
 ---@field protected _preview_marks      table<integer, integer[]>|nil Marks of the replacement preview of each match.
 ---@field protected _preview_current    integer Match whose preview stands out as the current one.
@@ -515,7 +515,7 @@ end
 
 ---@return nil
 function M:goto_prev_match()
-  local matches = self._matches ---@type yoz.search.ITextMatch[]|nil
+  local matches = self._matches ---@type yoz.search.ITextRange[]|nil
   if matches == nil then
     return
   end
@@ -537,7 +537,7 @@ function M:goto_prev_match()
 
   local index_current = self.o_match_index:snapshot() ---@type integer
   local index = stl.fn.navigate_circular(index_current, -1, N) ---@type integer
-  local match_prev = matches[index] ---@type yoz.search.ITextMatch
+  local match_prev = matches[index] ---@type yoz.search.ITextRange
   if match_prev then
     self.o_match_index:next(index)
     pcall(vim.api.nvim_win_set_cursor, winnr, { match_prev.lx or 1, match_prev.cx or 0 })
@@ -552,7 +552,7 @@ end
 
 ---@return nil
 function M:goto_next_match()
-  local matches = self._matches ---@type yoz.search.ITextMatch[]|nil
+  local matches = self._matches ---@type yoz.search.ITextRange[]|nil
   if matches == nil then
     return
   end
@@ -574,7 +574,7 @@ function M:goto_next_match()
 
   local index_current = self.o_match_index:snapshot() ---@type integer
   local index = stl.fn.navigate_circular(index_current, 1, N) ---@type integer
-  local match_next = matches[index] ---@type yoz.search.ITextMatch
+  local match_next = matches[index] ---@type yoz.search.ITextRange
   if match_next then
     self.o_match_index:next(index)
     pcall(vim.api.nvim_win_set_cursor, winnr, { match_next.lx or 1, match_next.cx or 0 })
@@ -614,7 +614,7 @@ function M:replace_current_match()
     return
   end
 
-  local matches = self._matches ---@type yoz.search.ITextMatch[]|nil
+  local matches = self._matches ---@type yoz.search.ITextRange[]|nil
   if matches == nil or #matches == 0 then
     stl.reporter.error({
       from = __module_name__,
@@ -654,7 +654,7 @@ function M:replace_current_match()
     return
   end
 
-  local current_match = matches[current_match_index] ---@type yoz.search.ITextMatch
+  local current_match = matches[current_match_index] ---@type yoz.search.ITextRange
   if current_match == nil then
     stl.reporter.error({
       from = __module_name__,
@@ -733,7 +733,7 @@ function M:replace_all_matches()
     return
   end
 
-  local matches = self._matches ---@type yoz.search.ITextMatch[]|nil
+  local matches = self._matches ---@type yoz.search.ITextRange[]|nil
   if matches == nil or #matches == 0 then
     stl.reporter.error({
       from = __module_name__,
@@ -1393,7 +1393,7 @@ function M:__search__()
   local flag_regex = self.o_flag_regex:snapshot() ---@type boolean
   local flag_case_sensitive = self.o_flag_case_sensitive:snapshot() ---@type boolean
 
-  local matches ---@type yoz.search.ITextMatch[]|nil
+  local matches ---@type yoz.search.ITextRange[]|nil
   local ok_lines, lines = pcall(vim.api.nvim_buf_get_lines, bufnr_source, 0, -1, false)
 
   if not ok_lines then
@@ -1420,11 +1420,11 @@ function M:__search__()
       flag_regex = flag_regex,
       flag_case_sensitive = flag_case_sensitive,
     }
-    local search_result, search_err = yoz.search.search_in_lines(search_params) ---@type yoz.search.ISearchTextResult|nil, string|nil
+    local search_result, search_err = yoz.search.locate_in_lines(search_params) ---@type yoz.search.ITextRangesResult|nil, string|nil
     if search_err then
       stl.reporter.error({
         from = __module_name__,
-        subject = "search_in_lines failed",
+        subject = "locate_in_lines failed",
         details = {
           error = search_err,
           params = search_params,
@@ -1498,7 +1498,7 @@ end
 ---The replacement of each match, as replacing it would write it, or false for a fuzzy piece.
 ---@protected
 ---@param lines                         string[]
----@param matches                       yoz.search.ITextMatch[]
+---@param matches                       yoz.search.ITextRange[]
 ---@return (string|false)[]|nil
 ---@return string|nil
 function M:__expand__(lines, matches)
@@ -1575,7 +1575,7 @@ function M:__update_replace_preview__()
     return
   end
 
-  local matches = self._matches ---@type yoz.search.ITextMatch[]|nil
+  local matches = self._matches ---@type yoz.search.ITextRange[]|nil
   if not matches or #matches == 0 then
     return
   end
