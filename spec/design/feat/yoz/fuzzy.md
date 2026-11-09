@@ -118,8 +118,9 @@ local filter = result:ids(source)                                    -- yoz.ux.t
 
 ### Composer
 
-三个 composer 的查询都经 64 ms debounce 匹配。读取结果行的动作（确认、打开等）以按键时的查询为准，快于 debounce 的
-输入（如 Find Files 中输入文件名后立即回车、确认框中输入 `No` 后立即回车）不会作用于屏幕上的旧结果：
+三个 composer 的查询都经 64 ms debounce 匹配。读取或移动结果行的按键（确认、打开、Finder 中的导航键、selection 切换等）
+以按键时的查询为准，快于 debounce 的输入（如 Find Files 中输入文件名后立即回车、确认框中输入 `No` 后立即回车）
+不会作用于屏幕上的旧结果：
 
 1. 按键先把 Finder buffer 的内容同步到查询。typeahead 未处理完时 `TextChangedI` 不会触发，查询的通知也要到下一个
    tick 才到达匹配调度。

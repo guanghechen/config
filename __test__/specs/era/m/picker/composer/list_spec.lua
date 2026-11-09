@@ -294,6 +294,44 @@ t:test("a rejected flat reset leaves the published payloads and selection intact
   t.assert_true(ui:lua([[return picker:retrieve(1)==items[1] and picker._treeview:linecount()==3]]))
 end)
 
+t:test("a navigation key typed ahead with a query moves over the rows of that query", function()
+  local ui = require("__test__.support.ui").new()
+  t:defer(function()
+    ui:close()
+  end)
+  ui:start({ width = 100, height = 32, runtime = "ark" })
+  ui:lua([[
+    confirmed = nil
+    picker = era.m.picker.ListComposer.new({
+      name = "typed ahead", title = "typed ahead", permanent = false,
+      search_pattern = stl.c.Observable.from_value(""),
+      flag_fuzzy = stl.c.Observable.from_value(true),
+      flag_regex = stl.c.Observable.from_value(false),
+      flag_case_sensitive = stl.c.Observable.from_value(false),
+      on_confirm = function(composer, item)
+        confirmed = item and item.uuid or false
+        composer:close()
+      end,
+    })
+    local items = {}
+    for _, name in ipairs({ "alpha", "beta", "gamma", "delta", "theta" }) do
+      items[#items + 1] = { uuid = name, text = name, text_lower = name, data = {} }
+    end
+    picker:reset_data({ items = items })
+    picker:focus()
+  ]])
+  ui:wait_until(function()
+    return ui:lua("return picker._treeview:linecount() == 5")
+  end, 5000, "five rows")
+
+  -- "ta" leaves beta, delta and theta; the second of them is delta, where the second of all five rows is beta.
+  ui:rpc("nvim_input", "ita<C-j><CR>")
+  ui:wait_until(function()
+    return ui:lua("return confirmed ~= nil")
+  end, 5000, "confirmed")
+  t.assert_eq("delta", ui:lua("return confirmed"))
+end)
+
 t:test("a query typed ahead of <CR> confirms from its own results", function()
   local ui = require("__test__.support.ui").new()
   t:defer(function()

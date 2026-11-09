@@ -1062,11 +1062,13 @@ t:test("confirming the selected files in a picker that closes for good reports t
 end)
 
 ---Open a permanent picker over alpha.txt, beta.txt and gamma.txt in a child UI, showing all three rows matched.
+---@param names                         ?string[] Other files to list.
 ---@return __test__.support.UI ui
 ---@return string root
-local function open_typed_ahead()
+local function open_typed_ahead(names)
+  names = names or { "alpha.txt", "beta.txt", "gamma.txt" }
   local root = assert(vim.uv.fs_realpath(t:tempdir()))
-  for _, name in ipairs({ "alpha.txt", "beta.txt", "gamma.txt" }) do
+  for _, name in ipairs(names) do
     vim.fn.writefile({ name }, root .. "/" .. name)
   end
   local ui = require("__test__.support.ui").new({ cwd = root })
@@ -1093,14 +1095,16 @@ local function open_typed_ahead()
         composer:close()
       end,
     })
-    picker:reset_filepaths(root, { root .. "/alpha.txt", root .. "/beta.txt", root .. "/gamma.txt" }, false)
+    local root, names = ...
+    picker:reset_filepaths(root, vim.tbl_map(function(name) return root .. "/" .. name end, names), false)
     picker:focus()
   ]],
-    root
+    root,
+    names
   )
   ui:wait_until(function()
-    return ui:lua("return picker._treeview:linecount() == 3 and not picker._scheduler_match:pending()")
-  end, 5000, "three rows")
+    return ui:lua("return picker._treeview:linecount() == ... and not picker._scheduler_match:pending()", #names)
+  end, 5000, "every row")
   return ui, root
 end
 
@@ -1111,6 +1115,23 @@ local WIDE_PATHS = [[
     paths[#paths + 1] = string.format("file%05d.lua", index)
   end
 ]]
+
+t:test("Tab typed ahead with a query selects a row of that query", function()
+  local ui, root = open_typed_ahead({ "alpha.txt", "beta.txt", "gamma.txt", "delta.txt", "theta.txt" })
+  -- "del" leaves delta alone, where <C-j> over all five rows reaches beta.
+  ui:rpc("nvim_input", "idel<C-j><Tab>")
+  ui:wait_until(function()
+    return ui:lua("return not picker._treeview:selection_pending() and #picker._treeview:selected_keys(true) > 0")
+  end, 5000, "selected")
+  t.assert_same(
+    { root .. "/delta.txt" },
+    ui:lua([[
+      return vim.tbl_map(function(key)
+        return picker._treeview:data(key).filepath
+      end, picker._treeview:selected_keys(true))
+    ]])
+  )
+end)
 
 t:test("a query typed ahead of <CR> confirms from its own results", function()
   local ui = open_typed_ahead()

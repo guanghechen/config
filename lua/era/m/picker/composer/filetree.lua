@@ -582,8 +582,41 @@ function M.new(props)
     end,
   }
 
+  -- A query typed ahead of a key, faster than the match debounce, decides what the key does: the input takes in the
+  -- query, which reaches the match scheduler only on a later tick, and a match for it runs at once. The key waits for
+  -- the result to show it in place rather than later, since an action restores the mode it runs in. Keys typed after
+  -- it do not change a deferred action. Until the paths prepare_filepaths loads show as a tree, the key acts on the
+  -- rows shown: the wait would last the whole load and import.
+  ---@return nil
+  local function settle()
+    if self._disposed then
+      return
+    end
+    self._composer.finder:sync()
+    local matched = self._matched_input ---@type string|nil
+    if
+      not self._path_request
+      and (self._path_adopted ~= treeview._revision or treeview:is_current())
+      and (scheduler_match:pending() or matched and matched ~= o_search_pattern:snapshot())
+    then
+      scheduler_match:cancel()
+      match()
+      local drawn = self._composer.result:draw_now() ---@type stl.c.Future
+      vim.wait(1000, function()
+        return drawn:is_done()
+      end, 1)
+    end
+  end
+
   for key, action in pairs(actions) do
-    if key ~= "toggle_selection" then
+    if key == "toggle_selection" then
+      actions[key] = function()
+        settle()
+        if not self._disposed then
+          action()
+        end
+      end
+    else
       -- A deferred action checks again: an action deferred before it may have submitted a new change.
       local function gated()
         if self._disposed then
@@ -594,29 +627,8 @@ function M.new(props)
         end
         action()
       end
-      -- A query typed ahead of the key, faster than the match debounce, decides the action: the input takes in the
-      -- query, which reaches the match scheduler only on a later tick, and a match for it runs at once. The action
-      -- waits for the result to show it in place rather than later, since it restores the mode it runs in. Keys typed
-      -- after it do not change a deferred action. Until the paths prepare_filepaths loads show as a tree, it acts on
-      -- the rows shown: the wait would last the whole load and import.
       actions[key] = function()
-        if self._disposed then
-          return
-        end
-        self._composer.finder:sync()
-        local matched = self._matched_input ---@type string|nil
-        if
-          not self._path_request
-          and (self._path_adopted ~= treeview._revision or treeview:is_current())
-          and (scheduler_match:pending() or matched and matched ~= o_search_pattern:snapshot())
-        then
-          scheduler_match:cancel()
-          match()
-          local drawn = self._composer.result:draw_now() ---@type stl.c.Future
-          vim.wait(1000, function()
-            return drawn:is_done()
-          end, 1)
-        end
+        settle()
         gated()
       end
     end
@@ -954,6 +966,7 @@ function M.new(props)
 
     search_pattern = o_search_pattern,
     search_pattern_history = search_pattern_history,
+    settle = settle,
     finder_title = title,
 
     result_number = true,

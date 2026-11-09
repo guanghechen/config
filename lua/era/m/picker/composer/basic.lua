@@ -119,6 +119,7 @@ local __highlights__ = {
 ---@field public on_focused             ?era.m.picker.composer.basic.IOnFocused
 ---@field public on_hidden              ?era.m.picker.composer.basic.IOnHidden
 ---@field public on_refresh             ?era.m.picker.composer.basic.IOnRefresh
+---@field public settle                 ?fun(): nil Takes in a query typed ahead of a key and shows its results first.
 ---@field public on_preview_rendered    ?era.m.picker.composer.basic.IOnPreviewRendered
 ---@field public on_result_rendered     ?era.m.picker.composer.basic.IOnResultRendered
 
@@ -176,6 +177,7 @@ end
 ---@field protected _on_focused         era.m.picker.composer.basic.IOnFocused
 ---@field protected _on_hidden          era.m.picker.composer.basic.IOnHidden
 ---@field protected _on_refresh         era.m.picker.composer.basic.IOnRefresh
+---@field protected _settle             fun(): nil
 local M = {}
 M.__index = M
 
@@ -234,6 +236,7 @@ function M.new(props)
   self._on_focused = on_focused ---@type era.m.picker.composer.basic.IOnFocused
   self._on_hidden = on_hidden ---@type era.m.picker.composer.basic.IOnHidden
   self._on_refresh = on_refresh ---@type era.m.picker.composer.basic.IOnRefresh
+  self._settle = props.settle or stl.fn.noop ---@type fun(): nil
 
   ---@type era.m.picker.Finder
   local finder = era.m.picker.Finder.new({
@@ -390,6 +393,7 @@ function M:dispose()
   self._on_focused = nil
   self._on_hidden = nil
   self._on_refresh = nil
+  self._settle = stl.fn.noop
 end
 
 ---@return nil
@@ -957,6 +961,7 @@ function M:__resolve_builtin_keymaps_finder__()
       desc = "picker#finder: focus next item",
       callback = function()
         local step = vim.v.count1 or 1 ---@type integer
+        self._settle()
         self:__result_move_down__(step)
       end,
     },
@@ -966,6 +971,7 @@ function M:__resolve_builtin_keymaps_finder__()
       desc = "picker#finder: focus next item",
       callback = function()
         local step = vim.v.count1 or 1 ---@type integer
+        self._settle()
         self:__result_move_down__(step)
       end,
     },
@@ -975,6 +981,7 @@ function M:__resolve_builtin_keymaps_finder__()
       desc = "picker#finder: focus prev item",
       callback = function()
         local step = vim.v.count1 or 1 ---@type integer
+        self._settle()
         self:__result_move_down__(-step)
       end,
     },
@@ -984,6 +991,7 @@ function M:__resolve_builtin_keymaps_finder__()
       desc = "picker#finder: focus prev item",
       callback = function()
         local step = vim.v.count1 or 1 ---@type integer
+        self._settle()
         self:__result_move_down__(-step)
       end,
     },
@@ -992,6 +1000,7 @@ function M:__resolve_builtin_keymaps_finder__()
       key = "gg",
       desc = "picker#finder: focus first item",
       callback = function()
+        self._settle()
         self:__result_move_to__(1)
       end,
     },
@@ -1095,6 +1104,7 @@ function M:__resolve_builtin_keymaps_finder__()
       desc = "picker#finder: focus next item",
       callback = function()
         local step = vim.v.count1 or 1 ---@type integer
+        self._settle()
         self:__result_move_down__(step)
       end,
     },
@@ -1104,6 +1114,7 @@ function M:__resolve_builtin_keymaps_finder__()
       desc = "picker#finder: focus prev item",
       callback = function()
         local step = vim.v.count1 or 1 ---@type integer
+        self._settle()
         self:__result_move_down__(-step)
       end,
     },
