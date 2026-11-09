@@ -27,6 +27,8 @@ local __mods = {
 
   FiletreeView = "era.m.searcher.view.filetree",
   PlainfileView = "era.m.searcher.view.plainfile",
+
+  Unsaved = "era.m.searcher.unsaved",
 }
 
 ---@class era.m.searcher
@@ -44,6 +46,8 @@ local __mods = {
 ---
 ---@field public FiletreeView           era.m.searcher.FiletreeView
 ---@field public PlainfileView          era.m.searcher.PlainfileView
+---
+---@field public Unsaved                era.m.searcher.unsaved
 local M = setmetatable({
   __mods = __mods,
 }, {

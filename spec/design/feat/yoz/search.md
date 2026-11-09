@@ -184,6 +184,12 @@ active request，清空 search projection 与有序结果列表，保留 root co
 不同，就只能只读展示。所有 destructive replace 在 native file write 前都必须重新比较 snapshot。
 不匹配时 warning 并拒绝操作，不能用新 query、replacement、root 或 flags 解释旧 match locations。
 
+替换不覆盖 Neovim 中的未保存修改。文件已加载且 buffer 有未保存修改时，替换改在 buffer 中进行，不写盘，由用户保存；
+一次替换在每个 buffer 中是一个 undo 步骤，只改写 match 所在的范围。列出的 matches 来自磁盘内容，因此先按行比较磁盘与
+buffer 的文本：match 跨越的行都未改动，且 buffer 中对应位置以同样的范围匹配时才替换（`yoz.replace.expand_text_by_matches`
+按整段文本给出每个 match 的范围与替换串）；其余 matches 保留在结果中，并提示保留的数量。CRLF buffer 无法表示的位置
+（如只含行尾的 `\r`）同样保留。已加载且无修改的 buffer 写盘后立即 `checktime`，直接显示替换后的内容；未加载的文件照常写盘。
+
 ### Busy 状态与动画
 
 Composer 为最新 logical search 持有一个只影响展示的 busy interval：

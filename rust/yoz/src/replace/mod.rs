@@ -1,5 +1,6 @@
 mod check_pattern;
 mod expand_lines_by_matches;
+mod expand_text_by_matches;
 mod replace_file;
 mod replace_file_by_matches;
 mod replace_file_by_matches_advance;
@@ -12,6 +13,7 @@ mod replace_text_preview_by_matches;
 mod replace_text_preview_by_matches_advance;
 pub use check_pattern::*;
 pub use expand_lines_by_matches::*;
+pub use expand_text_by_matches::*;
 pub use replace_file::*;
 pub use replace_file_by_matches::*;
 pub use replace_file_by_matches_advance::*;

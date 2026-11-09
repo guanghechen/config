@@ -17,6 +17,18 @@ local M = {}
 ---@field public flag_case_sensitive    boolean
 ---@field public match_offsets          integer[]
 
+---@class yoz.replace.IExpandTextByMatchesParams
+---@field public text                   string
+---@field public search_pattern         string
+---@field public replace_pattern        string
+---@field public flag_regex             boolean
+---@field public flag_case_sensitive    boolean
+---@field public match_offsets          integer[]
+
+---@class yoz.replace.IExpandedMatch
+---@field public oy                     integer 0-based offset of the last byte of the match
+---@field public replacement            string
+
 ---@class yoz.replace.IReplaceFileParams
 ---@field public filepath               string
 ---@field public search_pattern         string
@@ -71,6 +83,13 @@ function M.check_pattern(params) end
 ---@return (string|false)[]|nil
 ---@return string|nil
 function M.expand_lines_by_matches(params) end
+
+---The extent and replacement of each match file search lists at `match_offsets` in `text`, matched on the whole text as
+---file search matches, or false where no match of the pattern starts.
+---@param params                        yoz.replace.IExpandTextByMatchesParams
+---@return (yoz.replace.IExpandedMatch|false)[]|nil
+---@return string|nil
+function M.expand_text_by_matches(params) end
 
 ---@param params                        yoz.replace.IReplaceFileParams
 ---@return boolean|nil

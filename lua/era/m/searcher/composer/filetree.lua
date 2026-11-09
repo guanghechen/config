@@ -188,6 +188,17 @@ local function frecency_scores(frecency, uuids)
   return scores
 end
 
+-- The buffer that holds the file, when it is loaded.
+---@param filepath                      string
+---@return integer|nil
+local function loaded_bufnr(filepath)
+  local bufnr = stl.nvim.buf.locate_bufnr(filepath) ---@type integer|nil
+  if bufnr ~= nil and vim.api.nvim_buf_is_loaded(bufnr) then
+    return bufnr
+  end
+  return nil
+end
+
 ---@param props                         era.m.searcher.IFiletreeComposerProps
 ---@return era.m.searcher.FiletreeComposer
 function M.new(props)
@@ -732,6 +743,16 @@ function M.new(props)
           end
           ---@cast leafnodestate          era.m.searcher.view.filetree.IEntry
 
+          local bufnr = loaded_bufnr(leafdata.filepath) ---@type integer|nil
+          if stl.nvim.buf.has_unsaved_changes(bufnr) then
+            ---@cast bufnr                integer
+            if self:__replace_unsaved__(bufnr, leafdata.filepath, leafnodestate, { nodestate }) then
+              plainfile:mark_dirty()
+              self:mark_result_dirty()
+            end
+            return
+          end
+
           local offset_current = nodestate.match.preview.offset ---@type integer
           local offsets_remain = {} ---@type integer[]
           local locations = leafnodestate.locations ---@type era.m.searcher.view.filetree.ILocationEntry[]|nil
@@ -835,6 +856,9 @@ function M.new(props)
 
           plainfile:mark_dirty()
           treeview:remove_location(leafnodestate, nodestate.locationuuid)
+          if bufnr ~= nil then
+            vim.cmd.checktime(bufnr)
+          end
           self:mark_result_dirty()
           return
         end
@@ -2344,16 +2368,24 @@ function M:__replace_file__(data, nodestate)
 
   -- Only the listed matches: the file may hold others, past a match limit or brought in by a single replacement.
   local treeview = self._treeview ---@type era.m.searcher.FiletreeView
+  local visible = {} ---@type era.m.searcher.view.filetree.ILocationEntry[]
   local match_offsets = {} ---@type integer[]
   for i = 1, #locations, 1 do
     local location = locations[i] ---@type era.m.searcher.view.filetree.ILocationEntry
     if treeview:isvisible(location.locationuuid) then
+      visible[#visible + 1] = location
       match_offsets[#match_offsets + 1] = location.match.preview.offset
     end
   end
 
   if #match_offsets == 0 then
     return false
+  end
+
+  local bufnr = loaded_bufnr(data.filepath) ---@type integer|nil
+  if stl.nvim.buf.has_unsaved_changes(bufnr) then
+    ---@cast bufnr                      integer
+    return self:__replace_unsaved__(bufnr, data.filepath, nodestate, visible)
   end
 
   local succeed, replace_error = yoz.replace.replace_file_by_matches({
@@ -2367,6 +2399,10 @@ function M:__replace_file__(data, nodestate)
 
   if succeed == true then
     treeview:remove_visible_locations(nodestate)
+    -- A buffer without changes shows the replaced file at once, not when the file is next checked.
+    if bufnr ~= nil then
+      vim.cmd.checktime(bufnr)
+    end
   elseif replace_error ~= nil then
     stl.reporter.error({
       from = self.fullname,
@@ -2376,6 +2412,62 @@ function M:__replace_file__(data, nodestate)
     })
   end
   return succeed == true
+end
+
+---Replaces listed matches of a file in its buffer with unsaved changes rather than in the file: writing the buffer
+---would undo a replacement on disk, and reloading it would drop the changes.
+---@protected
+---@param bufnr                         integer
+---@param filepath                      string
+---@param leaf                          era.m.searcher.view.filetree.IEntry
+---@param locations                     era.m.searcher.view.filetree.ILocationEntry[]
+---@return boolean                      Whether any was replaced
+function M:__replace_unsaved__(bufnr, filepath, leaf, locations)
+  local match_offsets = {} ---@type integer[]
+  for i, location in ipairs(locations) do
+    match_offsets[i] = location.match.preview.offset
+  end
+  local replaced, replace_error = era.m.searcher.Unsaved.replace({
+    bufnr = bufnr,
+    filepath = yoz.canonical_path.to_os_path(filepath),
+    match_offsets = match_offsets,
+    search_pattern = self.search_pattern:snapshot(),
+    replace_pattern = self.replace_pattern:snapshot(),
+    flag_regex = self.flag_regex:snapshot(),
+    flag_case_sensitive = self.flag_case_sensitive:snapshot(),
+  })
+  if replaced == nil then
+    stl.reporter.error({
+      from = self.fullname,
+      subject = "replace_unsaved",
+      message = replace_error,
+      details = { filepath = filepath },
+    })
+    return false
+  end
+
+  local treeview = self._treeview ---@type era.m.searcher.FiletreeView
+  local left = 0 ---@type integer
+  for i, location in ipairs(locations) do
+    if replaced[i] then
+      treeview:remove_location(leaf, location.locationuuid)
+    else
+      left = left + 1
+    end
+  end
+  if left > 0 then
+    stl.reporter.warn({
+      from = self.fullname,
+      subject = "replace_unsaved",
+      message = string.format(
+        "Left %d of %d matches in %s: the unsaved changes of its buffer changed or moved them",
+        left,
+        #locations,
+        yoz.canonical_path.relative(yoz.canonical_path.get_cwd(), filepath, false)
+      ),
+    })
+  end
+  return left < #locations
 end
 
 ---@param nodeuuid                      string
