@@ -58,10 +58,10 @@ local watcher = require("era.m.git.watcher")
 -- FSEvents starts its stream on another thread after the watch is set up and misses the changes before that: write
 -- HEAD again, as it is, until the watch reports it. Each write waits out the refresh debounce, which a later event
 -- would restart.
----@param repo                          string
+---@param gitdir                        string
 ---@return nil
-local function await_watch(repo)
-  local head = repo .. "/.git/HEAD" ---@type string
+local function await_watch(gitdir)
+  local head = gitdir .. "/HEAD" ---@type string
   local content = vim.fn.readfile(head, "b") ---@type string[]
   head_refreshes = 0
   for _ = 1, 6 do
@@ -96,7 +96,7 @@ local function assert_commit_detected(branch, pack_refs)
   end
 
   watcher.update(repo .. "/.git")
-  await_watch(repo)
+  await_watch(repo .. "/.git")
   vim.fn.writefile({ "changed" }, repo .. "/f.txt")
   git.run(repo, { "add", "f.txt" })
   git.run(repo, { "commit", "-qm", "change" })
@@ -124,7 +124,7 @@ t:test("watcher follows HEAD when checkout changes the current ref", function()
   git.run(repo, { "add", "f.txt" })
   git.run(repo, { "commit", "-qm", "base" })
   watcher.update(repo .. "/.git")
-  await_watch(repo)
+  await_watch(repo .. "/.git")
 
   git.run(repo, { "checkout", "-qb", "feature/switched" })
   t.wait_until(function()
@@ -156,8 +156,8 @@ t:test("watcher observes commits from a linked worktree", function()
   git.run(repo, { "worktree", "add", "-qb", "feature/worktree", worktree })
 
   local gitdir = vim.trim(git.run(worktree, { "rev-parse", "--absolute-git-dir" })) ---@type string
-  head_refreshes = 0
   watcher.update(gitdir, repo .. "/.git")
+  await_watch(gitdir)
   vim.fn.writefile({ "changed" }, worktree .. "/f.txt")
   git.run(worktree, { "add", "f.txt" })
   git.run(worktree, { "commit", "-qm", "change" })
@@ -182,8 +182,8 @@ t:test("commits on branches beside the current one leave the watcher quiet", fun
   git.run(repo, { "worktree", "add", "-qb", "user/sibling", root .. "/sibling" })
 
   local gitdir = vim.trim(git.run(root .. "/current", { "rev-parse", "--absolute-git-dir" })) ---@type string
-  head_refreshes = 0
   watcher.update(gitdir, repo .. "/.git")
+  await_watch(gitdir)
   git.run(root .. "/sibling", { "commit", "--allow-empty", "-qm", "sibling" })
   vim.wait(1000)
   t.assert_eq(0, head_refreshes, "refreshes after a commit on the sibling branch")
@@ -203,6 +203,7 @@ t:test("the watcher still follows the current ref after gc packs it and removes 
   git.run(repo, { "checkout", "-qb", "user/current" })
 
   watcher.update(repo .. "/.git")
+  await_watch(repo .. "/.git")
   git.run(repo, { "pack-refs", "--all", "--prune" })
   t.assert_eq(0, vim.fn.isdirectory(repo .. "/.git/refs/heads/user"), "the ref directory is gone")
   vim.wait(500)
@@ -225,8 +226,9 @@ t:test("a ref update clears ignore results once per refresh, not once per file e
     clears = clears + 1
   end)
 
-  head_refreshes = 0
   watcher.update(repo .. "/.git")
+  await_watch(repo .. "/.git")
+  clears = 0
   git.run(repo, { "commit", "--allow-empty", "-qm", "change" })
   t.wait_until(function()
     return head_refreshes > 0
