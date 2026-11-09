@@ -111,12 +111,15 @@ local function declared_timeout_ms(suite)
   return declared
 end
 
----The environment of suite processes: the runner's own, without tmux. Children inherit it, so a regression in code
----that drives tmux panes cannot reach the user's real session.
+---The environment of suite processes: the runner's own, without tmux and with a state directory of the run. Children
+---inherit it, so a regression in code that drives tmux panes cannot reach the user's real session, and the undo files,
+---logs and saved context the configuration writes stay out of the user's state.
+---@param state                         string
 ---@return table<string, string>
-local function suite_env()
+local function suite_env(state)
   local env = vim.fn.environ() ---@type table<string, string>
   env.TMUX, env.TMUX_PANE = nil, nil
+  env.XDG_STATE_HOME = state
   return env
 end
 
@@ -240,7 +243,9 @@ function M.run_all(opts)
   end)
 
   local results = {} ---@type table<integer, __test__.support.runner.IResult>
-  local env = suite_env() ---@type table<string, string>
+  local state = vim.fn.tempname() ---@type string
+  vim.fn.mkdir(state, "p")
+  local env = suite_env(state) ---@type table<string, string>
   local started, running, written = 0, 0, 0 ---@type integer, integer, integer
   local failed, skipped = 0, 0 ---@type integer, integer
   while written < #suites do
@@ -271,6 +276,7 @@ function M.run_all(opts)
       skipped = skipped + result.skipped
     end
   end
+  vim.fn.delete(state, "rf")
 
   if opts.durations_path then
     for index, suite in ipairs(suites) do

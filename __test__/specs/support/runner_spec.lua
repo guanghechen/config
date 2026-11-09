@@ -313,6 +313,21 @@ t:test("suite processes do not inherit tmux", function()
   end)
 end)
 
+t:test("suite processes keep their state in a directory of the run", function()
+  with_temp_root(function(dir)
+    local record = dir .. "/state.txt" ---@type string
+    write_spec(string.format("vim.fn.writefile({ vim.fn.stdpath('state') }, %q)", record), dir .. "/state_spec.lua")
+    local failed, output = run_suites({ root = dir })
+    t.assert_eq(0, failed, output)
+    local state = vim.fn.readfile(record)[1] ---@type string
+    t.assert_true(
+      vim.fs.relpath(vim.fn.stdpath("state") --[[@as string]], state) == nil,
+      "not the state of the user: " .. state
+    )
+    t.assert_eq(nil, vim.uv.fs_stat(state), "removed after the run")
+  end)
+end)
+
 t:test("an invalid job count fails before any suite starts", function()
   with_temp_root(function(dir)
     write_spec("", dir .. "/pass_spec.lua")
