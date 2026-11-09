@@ -82,6 +82,7 @@ local function create_flag_items(o_flag_fuzzy, o_flag_regex, o_flag_case_sensiti
   return flags, raw_flags
 end
 
+---Extmarks rather than `vim.hl.range`, which takes about 20 µs a call: a search marks every match it finds.
 ---@param bufnr                         integer
 ---@param namespace                     integer
 ---@param hlgroup                       string
@@ -120,7 +121,13 @@ local function highlight_text_match(bufnr, namespace, hlgroup, match)
     end
     col_start = math.max(0, col_start)
     col_end = math.max(col_start, col_end)
-    vim.hl.range(bufnr, namespace, hlgroup, { row, col_start }, { row, col_end })
+    vim.api.nvim_buf_set_extmark(bufnr, namespace, row, col_start, {
+      end_row = row,
+      end_col = col_end,
+      hl_group = hlgroup,
+      priority = vim.hl.priorities.user,
+      strict = false,
+    })
   end
 
   if start_row == end_row then
