@@ -340,6 +340,29 @@ t:test("a refresh brings hidden matches back with the offsets its search finds",
   t.assert_same({ "0", "4", "8", "12", "16" }, offsets(), "every match back where the search found it")
 end)
 
+t:test("replacing all after a single replacement changes only the matches the results list", function()
+  local dir = fixture()
+  vim.fn.writefile({ "foo foo foo foo" }, dir .. "/four.txt")
+  local composer, controls = new_composer(dir)
+  local tree = composer._treeview
+  controls.replace_pattern:next("foo foo")
+  controls.search_pattern:next("foo")
+  settle(composer, "the search did not publish")
+  local key = composer._uuids_order[1] ---@type string
+
+  -- The replacement of the first match brings in a match at offset 4 that the results do not list.
+  composer.result:set_lnum_current(assert(tree:retrieve_lnum(tree:retrieve(key).locations[1].locationuuid)))
+  treeview.await(tree:ready())
+  action(composer, "search: replace file")()
+  treeview.await(composer.result.draw())
+  t.assert_same({ "foo foo foo foo foo" }, vim.fn.readfile(dir .. "/four.txt"), "the first match replaced")
+  t.assert_eq(3, #tree:retrieve(key).locations, "the three other matches listed")
+
+  action(composer, "searcher: replace all files")()
+  -- Five foo kept and three doubled: the one at offset 4 stays as it is.
+  t.assert_same({ "foo foo foo foo foo foo foo foo" }, vim.fn.readfile(dir .. "/four.txt"), "the listed matches")
+end)
+
 t:test("a pattern that matches bytes outside UTF-8 is searched but tells once that it is not replaced", function()
   local dir = fixture()
   vim.fn.writefile({ "café needle" }, dir .. "/accent.txt")

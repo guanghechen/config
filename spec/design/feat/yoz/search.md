@@ -241,8 +241,8 @@ Result winline 分别展示：
 
 `limit_reached = true` 时拒绝 global `replace all` 并 warning；用户需关闭限制并取得完整结果后再执行。
 Node-scoped 与单项替换只处理可见 matches，不受此限制，但仍须通过 stale-projection 检查。
-受限 projection 的 node-scoped replacement 必须使用显式 match offsets，不能走 whole-file fast path，
-因为截止文件可能还有未发现的匹配。
+文件、目录与全部替换都按列出且可见的 match offsets 写入，不整文件替换：文件中可能还有结果没有列出的匹配，
+如截止文件中未发现的、单项替换引入的匹配。
 
 单项替换后，同文件其余可见 matches 的行号、列与预览文本按同一请求只搜该文件的结果刷新，与新搜索一致；
 这次搜索沿用 `max_matches`：limit 为默认的 500 时每次替换多约 4 ms，关闭 limit 时与该文件的匹配数成正比，

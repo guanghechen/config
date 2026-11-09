@@ -2342,64 +2342,26 @@ function M:__replace_file__(data, nodestate)
     return false
   end
 
+  -- Only the listed matches: the file may hold others, past a match limit or brought in by a single replacement.
   local treeview = self._treeview ---@type era.m.searcher.FiletreeView
-  local L = #locations ---@type integer
-  local count = 0 ---@type integer
-  for i = 1, L, 1 do
-    local location = locations[i] ---@type era.m.searcher.view.filetree.ILocationEntry
-    if treeview:isvisible(location.locationuuid) then
-      count = count + 1
-    end
-  end
-
-  if count == 0 then
-    return false
-  end
-
-  local flag_case_sensitive = self.flag_case_sensitive:snapshot() ---@type boolean
-  local flag_regex = self.flag_regex:snapshot() ---@type boolean
-  local search_pattern = self.search_pattern:snapshot() ---@type string
-  local replace_pattern = self.replace_pattern:snapshot() ---@type string
-  local filepath = yoz.canonical_path.to_os_path(data.filepath) ---@type string
-
-  if count == L and not self._published_search_limit_reached then
-    local succeed, replace_error = yoz.replace.replace_file({
-      filepath = filepath,
-      search_pattern = search_pattern,
-      replace_pattern = replace_pattern,
-      flag_regex = flag_regex,
-      flag_case_sensitive = flag_case_sensitive,
-    })
-
-    if succeed == true then
-      treeview:remove_all_locations(nodestate)
-    elseif replace_error ~= nil then
-      stl.reporter.error({
-        from = self.fullname,
-        subject = "replace_file",
-        message = replace_error,
-        details = {
-          filepath = data.filepath,
-        },
-      })
-    end
-    return succeed == true
-  end
-
   local match_offsets = {} ---@type integer[]
-  for i = 1, L, 1 do
+  for i = 1, #locations, 1 do
     local location = locations[i] ---@type era.m.searcher.view.filetree.ILocationEntry
     if treeview:isvisible(location.locationuuid) then
       match_offsets[#match_offsets + 1] = location.match.preview.offset
     end
   end
 
+  if #match_offsets == 0 then
+    return false
+  end
+
   local succeed, replace_error = yoz.replace.replace_file_by_matches({
-    filepath = filepath,
-    search_pattern = search_pattern,
-    replace_pattern = replace_pattern,
-    flag_regex = flag_regex,
-    flag_case_sensitive = flag_case_sensitive,
+    filepath = yoz.canonical_path.to_os_path(data.filepath),
+    search_pattern = self.search_pattern:snapshot(),
+    replace_pattern = self.replace_pattern:snapshot(),
+    flag_regex = self.flag_regex:snapshot(),
+    flag_case_sensitive = self.flag_case_sensitive:snapshot(),
     match_offsets = match_offsets,
   })
 

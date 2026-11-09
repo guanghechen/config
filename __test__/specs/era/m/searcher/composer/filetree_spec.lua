@@ -224,13 +224,13 @@ t:test("bulk replacement updates producer locations and leaves the captured meta
   local key = Paths.key(root .. "/dir/a.lua")
   local original = tree:retrieve(key, frame)
   local replacements = {}
-  t:patch_table(yoz.replace, "replace_file", function(options)
+  t:patch_table(yoz.replace, "replace_file_by_matches", function(options)
     replacements[#replacements + 1] = options.filepath
     return true
   end)
   action(composer, "searcher: replace all files")()
   t.assert_eq(3, #replacements)
-  t.assert_nil(tree.entries[key].locations)
+  t.assert_same({}, tree.entries[key].locations)
   t.assert_eq(1, #original.locations)
   t.assert_eq("match 1", original.locations[1].text)
 end)
