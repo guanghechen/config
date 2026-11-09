@@ -594,6 +594,37 @@ t:test("a match that ends inside a CRLF line break of a buffer is left as it is"
   t.assert_eq(1, #warnings, "told")
 end)
 
+t:test("a file changed after the search is left as it is and told", function()
+  local dir = fixture()
+  local composer, controls = new_composer(dir)
+  local warnings = capture_warnings()
+  search(composer, controls, "pin")
+
+  -- Another program deletes the first line: every listed offset of alpha.txt now falls elsewhere.
+  vim.fn.writefile({ "a needle and a Needle", "nothing here" }, dir .. "/alpha.txt")
+  action(composer, "searcher: replace all files")()
+  treeview.await(composer.result.draw())
+  t.assert_same({ "a needle and a Needle", "nothing here" }, vim.fn.readfile(dir .. "/alpha.txt"), "alpha as it is")
+  t.assert_same({ "pin upper", "pin" }, vim.fn.readfile(dir .. "/beta.txt"), "beta replaced")
+  t.assert_eq(1, #warnings, "told once")
+  t.assert_true(warnings[1]:find("alpha.txt changed after the search", 1, true) ~= nil, warnings[1])
+  t.assert_eq(3, #composer._treeview:retrieve(composer._uuids_order[1]).locations, "its matches stay listed")
+
+  -- A change of the modification time alone tells as well.
+  local beta = dir .. "/beta.txt"
+  vim.fn.writefile(FILES["beta.txt"], beta)
+  settle(composer, "the search did not publish")
+  action(composer, "searcher: refresh")()
+  settle(composer, "the refresh did not publish", function()
+    return #composer._uuids_order == 2
+  end)
+  local stat = assert(vim.uv.fs_stat(beta))
+  assert(vim.uv.fs_utime(beta, stat.atime.sec, stat.mtime.sec + 10))
+  action(composer, "searcher: replace all files")()
+  t.assert_same(FILES["beta.txt"], vim.fn.readfile(beta), "beta as it is")
+  t.assert_eq(2, #warnings, "told again")
+end)
+
 local test_result = t:run({ exit = false })
 vim.fn.delete(workspace, "rf")
 os.exit(test_result.failed > 0 and 1 or 0)

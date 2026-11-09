@@ -53,6 +53,9 @@ local function fixture(on_attached, frecency)
       text = "match " .. index,
       match = { preview = { offset = index, lnum = index + 2, col = 1 } },
     })
+    -- As a search finds them: empty and modified at the epoch, which `as_searched` reports.
+    tree.entries[Paths.key(root .. "/" .. path)].filematch =
+      { filepath = root .. "/" .. path, relative = path, matches = {}, size = 0, mtime_sec = 0, mtime_nsec = 0 }
   end
   composer.result:create_win({ border = "none", number = false, winhighlight = "" }, {
     row = 0,
@@ -66,6 +69,14 @@ local function fixture(on_attached, frecency)
   t.assert_true(composer:__is_search_projection_current__())
   t.assert_true(tree.view:_valid())
   return composer
+end
+
+-- The files of the fixture, which exist nowhere, as the search found them.
+---@return nil
+local function as_searched()
+  t:patch_table(vim.uv, "fs_stat", function()
+    return { size = 0, mtime = { sec = 0, nsec = 0 } }
+  end)
 end
 
 ---@param composer                      era.m.searcher.FiletreeComposer
@@ -224,6 +235,7 @@ t:test("bulk replacement updates producer locations and leaves the captured meta
   local key = Paths.key(root .. "/dir/a.lua")
   local original = tree:retrieve(key, frame)
   local replacements = {}
+  as_searched()
   t:patch_table(yoz.replace, "replace_file_by_matches", function(options)
     replacements[#replacements + 1] = options.filepath
     return true

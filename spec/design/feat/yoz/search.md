@@ -55,6 +55,9 @@ export interface ITextMatch extends ITextRange {
 export interface IFileMatch {
   readonly p: string // relative filepath
   readonly utf8: boolean // Whether the file is UTF-8 text, a leading BOM aside: the only text replacement takes
+  readonly size: number // Size of the file as searched
+  readonly mtime_sec: number // Modification time of the file as searched, as stat gives it
+  readonly mtime_nsec: number
   readonly matches: ITextMatch[]
 }
 
@@ -196,6 +199,9 @@ active request，清空 search projection 与有序结果列表，保留 root co
 新请求运行或失败时，可保留最近一次成功的非空 projection；其 immutable snapshot 一旦与当前输入
 不同，就只能只读展示。所有 destructive replace 在 native file write 前都必须重新比较 snapshot。
 不匹配时 warning 并拒绝操作，不能用新 query、replacement、root 或 flags 解释旧 match locations。
+
+列出的 match offsets 只对应搜索时的文件内容。文件搜索为每个文件记下打开时的大小与修改时间；替换一个文件前再取一次，
+不同就不替换该文件、保留它的 matches，并提示刷新搜索。替换写盘后更新记录，同一文件可以继续替换。
 
 替换不覆盖 Neovim 中的未保存修改。文件已加载且 buffer 有未保存修改时，替换改在 buffer 中进行，不写盘，由用户保存；
 一次替换在每个 buffer 中是一个 undo 步骤，只改写 match 所在的范围。列出的 matches 来自磁盘内容，因此先按行比较磁盘与

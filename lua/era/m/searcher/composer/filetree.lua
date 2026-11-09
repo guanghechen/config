@@ -199,6 +199,30 @@ local function loaded_bufnr(filepath)
   return nil
 end
 
+-- Whether the file is as the search found it: the offsets of its listed matches index the text it had then.
+---@param filematch                     ?era.m.searcher.view.filetree.IResolvedFileMatch
+---@param filepath                      string OS path
+---@return boolean
+local function unchanged_since_search(filematch, filepath)
+  local stat = vim.uv.fs_stat(filepath) ---@type uv.fs_stat.result|nil
+  return filematch ~= nil
+    and stat ~= nil
+    and stat.size == filematch.size
+    and stat.mtime.sec == filematch.mtime_sec
+    and stat.mtime.nsec == filematch.mtime_nsec
+end
+
+-- A replacement that writes the file leaves its other listed matches where it moved them.
+---@param filematch                     ?era.m.searcher.view.filetree.IResolvedFileMatch
+---@param filepath                      string OS path
+---@return nil
+local function restamp(filematch, filepath)
+  local stat = vim.uv.fs_stat(filepath) ---@type uv.fs_stat.result|nil
+  if filematch ~= nil and stat ~= nil then
+    filematch.size, filematch.mtime_sec, filematch.mtime_nsec = stat.size, stat.mtime.sec, stat.mtime.nsec
+  end
+end
+
 ---@param props                         era.m.searcher.IFiletreeComposerProps
 ---@return era.m.searcher.FiletreeComposer
 function M.new(props)
@@ -743,6 +767,12 @@ function M.new(props)
           end
           ---@cast leafnodestate          era.m.searcher.view.filetree.IEntry
 
+          local filepath = yoz.canonical_path.to_os_path(leafdata.filepath) ---@type string
+          if not unchanged_since_search(leafnodestate.filematch, filepath) then
+            self:__warn_changed__("replace_in_node", leafdata.filepath)
+            return
+          end
+
           local bufnr = loaded_bufnr(leafdata.filepath) ---@type integer|nil
           if stl.nvim.buf.has_unsaved_changes(bufnr) then
             ---@cast bufnr                integer
@@ -785,7 +815,6 @@ function M.new(props)
             end
           end
 
-          local filepath = yoz.canonical_path.to_os_path(leafdata.filepath) ---@type string
           local advance_result, advance_error = yoz.replace.replace_file_by_matches_advance({
             filepath = filepath,
             search_pattern = search_pattern,
@@ -856,6 +885,7 @@ function M.new(props)
 
           plainfile:mark_dirty()
           treeview:remove_location(leafnodestate, nodestate.locationuuid)
+          restamp(treeview.entries[nodestate.leafuuid].filematch, filepath)
           if bufnr ~= nil then
             vim.cmd.checktime(bufnr)
           end
@@ -2382,6 +2412,12 @@ function M:__replace_file__(data, nodestate)
     return false
   end
 
+  local filepath = yoz.canonical_path.to_os_path(data.filepath) ---@type string
+  if not unchanged_since_search(nodestate.filematch, filepath) then
+    self:__warn_changed__("replace_file", data.filepath)
+    return false
+  end
+
   local bufnr = loaded_bufnr(data.filepath) ---@type integer|nil
   if stl.nvim.buf.has_unsaved_changes(bufnr) then
     ---@cast bufnr                      integer
@@ -2389,7 +2425,7 @@ function M:__replace_file__(data, nodestate)
   end
 
   local succeed, replace_error = yoz.replace.replace_file_by_matches({
-    filepath = yoz.canonical_path.to_os_path(data.filepath),
+    filepath = filepath,
     search_pattern = self.search_pattern:snapshot(),
     replace_pattern = self.replace_pattern:snapshot(),
     flag_regex = self.flag_regex:snapshot(),
@@ -2399,6 +2435,7 @@ function M:__replace_file__(data, nodestate)
 
   if succeed == true then
     treeview:remove_visible_locations(nodestate)
+    restamp(treeview.entries[nodestate.key].filematch, filepath)
     -- A buffer without changes shows the replaced file at once, not when the file is next checked.
     if bufnr ~= nil then
       vim.cmd.checktime(bufnr)
@@ -2412,6 +2449,22 @@ function M:__replace_file__(data, nodestate)
     })
   end
   return succeed == true
+end
+
+---Tells that a file changed after the search listed its matches, which replacement then leaves alone.
+---@protected
+---@param subject                       string
+---@param filepath                      string
+---@return nil
+function M:__warn_changed__(subject, filepath)
+  stl.reporter.warn({
+    from = self.fullname,
+    subject = subject,
+    message = string.format(
+      "%s changed after the search; refresh the search to replace in it",
+      yoz.canonical_path.relative(yoz.canonical_path.get_cwd(), filepath, false)
+    ),
+  })
 end
 
 ---Replaces listed matches of a file in its buffer with unsaved changes rather than in the file: writing the buffer

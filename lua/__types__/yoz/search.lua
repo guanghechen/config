@@ -33,6 +33,9 @@ local M = {}
 ---@class yoz.search.IFileMatch
 ---@field public p                      string
 ---@field public utf8                   boolean Whether the file is UTF-8 text, the only text replacement takes.
+---@field public size                   integer Size of the file as searched
+---@field public mtime_sec              integer Modification time of the file as searched, as `stat` gives it
+---@field public mtime_nsec             integer
 ---@field public matches                yoz.search.ITextMatch[]
 
 ---@class yoz.search.ISearchFileResult

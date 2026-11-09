@@ -43,6 +43,10 @@ pub struct IFileMatch {
     pub p: String,
     /// Whether the file is UTF-8 text, a leading byte order mark aside: the only text replacement takes.
     pub utf8: bool,
+    /// The size and modification time of the file as searched, which tell whether it changed before a replacement.
+    pub size: u64,
+    pub mtime_sec: i64,
+    pub mtime_nsec: u32,
     pub matches: Vec<ITextMatch>,
 }
 
@@ -54,9 +58,12 @@ impl IntoLua for IFileMatch {
 
 impl IntoLua for &IFileMatch {
     fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
-        let table = lua.create_table_with_capacity(0, 3)?;
+        let table = lua.create_table_with_capacity(0, 6)?;
         table.set("p", self.p.as_str())?;
         table.set("utf8", self.utf8)?;
+        table.set("size", self.size)?;
+        table.set("mtime_sec", self.mtime_sec)?;
+        table.set("mtime_nsec", self.mtime_nsec)?;
         table.set("matches", lua.create_sequence_from(self.matches.iter())?)?;
         Ok(LuaValue::Table(table))
     }

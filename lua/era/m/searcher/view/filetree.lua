@@ -8,6 +8,9 @@ local Paths = require("era.view.result_paths")
 ---@field public filepath               string
 ---@field public relative               string
 ---@field public matches                yoz.search.ITextMatch[]
+---@field public size                   integer Size and modification time of the file as searched
+---@field public mtime_sec              integer
+---@field public mtime_nsec             integer
 
 ---@class era.m.searcher.view.filetree.ISearchParams
 ---@field public flag_case_sensitive    boolean
@@ -198,6 +201,9 @@ function M:normalize_search_result(params, results)
       filepath = filepath,
       relative = relpath,
       matches = filematch.matches or {},
+      size = filematch.size,
+      mtime_sec = filematch.mtime_sec,
+      mtime_nsec = filematch.mtime_nsec,
     }
 
     -- Replacing a file that is not UTF-8 text fails, so its rows show the search alone.

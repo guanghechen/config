@@ -28,6 +28,8 @@ use std::path::PathBuf;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use std::time::Instant;
+use std::time::SystemTime;
+use std::time::UNIX_EPOCH;
 
 #[derive(Clone, Debug)]
 pub(crate) enum SearchInFilesOutcome {
@@ -149,6 +151,21 @@ impl<R: Read> Read for Utf8Reader<R> {
         self.eof = read == 0 && !buffer.is_empty();
         self.check(&buffer[..read]);
         Ok(read)
+    }
+}
+
+/// Seconds and nanoseconds since the Unix epoch, as `stat` gives them: the nanoseconds count up from the second, before
+/// the epoch too.
+fn unix_time(time: SystemTime) -> (i64, u32) {
+    match time.duration_since(UNIX_EPOCH) {
+        Ok(after) => (after.as_secs() as i64, after.subsec_nanos()),
+        Err(error) => {
+            let before = error.duration();
+            match before.subsec_nanos() {
+                0 => (-(before.as_secs() as i64), 0),
+                nanos => (-(before.as_secs() as i64) - 1, 1_000_000_000 - nanos),
+            }
+        }
     }
 }
 
@@ -731,6 +748,15 @@ pub(crate) fn search_in_files_cancellable(
             }
         };
 
+        /* Taken from the file opened, before reading it: a change during the search shows as one after it. */
+        let (size, (mtime_sec, mtime_nsec)) = match file.metadata() {
+            Ok(metadata) => (
+                metadata.len(),
+                metadata.modified().map_or((0, 0), unix_time),
+            ),
+            Err(_) => (0, (0, 0)),
+        };
+
         let mut lines: Vec<LineMatch> = Vec::new();
         let mut sink = FileMatchSink {
             matcher: &matcher,
@@ -773,6 +799,9 @@ pub(crate) fn search_in_files_cancellable(
         items.push(IFileMatch {
             p: display_path(&path, &base_dir),
             utf8: reader.utf8(),
+            size,
+            mtime_sec,
+            mtime_nsec,
             matches,
         });
     }
@@ -1137,6 +1166,46 @@ mod tests {
         assert!(result.limit_reached);
         let last = result.items.last().unwrap();
         assert_eq!((last.p.as_str(), last.utf8), ("d.txt", false));
+    }
+
+    #[test]
+    fn t_search_in_files_records_the_size_and_modification_time_of_each_file() {
+        let dir = TempDir::new();
+        let path = dir.path().join("a.txt");
+        fs::write(&path, "foo\n").unwrap();
+        let options = ISearchInFilesOptions {
+            cwd: Some(dir.path().to_string_lossy().to_string()),
+            flag_case_sensitive: true,
+            flag_gitignore: false,
+            flag_regex: false,
+            max_filesize: Some("1M".to_string()),
+            max_matches: None,
+            search_pattern: "foo".to_string(),
+            search_paths: ".".to_string(),
+            include_patterns: String::new(),
+            exclude_patterns: String::new(),
+            specified_filepath: None,
+        };
+
+        let result = search_in_files(&options).expect("expected successful search");
+        let item = &result.items[0];
+        let (mtime_sec, mtime_nsec) = unix_time(fs::metadata(&path).unwrap().modified().unwrap());
+        assert_eq!(
+            (item.size, item.mtime_sec, item.mtime_nsec),
+            (4, mtime_sec, mtime_nsec)
+        );
+    }
+
+    #[test]
+    fn t_unix_time_counts_the_nanoseconds_up_from_the_second() {
+        use std::time::Duration;
+        assert_eq!(unix_time(UNIX_EPOCH + Duration::new(5, 250)), (5, 250));
+        assert_eq!(unix_time(UNIX_EPOCH - Duration::new(5, 0)), (-5, 0));
+        /* 5.00000025 s before the epoch is 999999750 ns after the start of second -6. */
+        assert_eq!(
+            unix_time(UNIX_EPOCH - Duration::new(5, 250)),
+            (-6, 999_999_750)
+        );
     }
 
     #[test]
