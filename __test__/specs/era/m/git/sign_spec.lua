@@ -110,6 +110,23 @@ t:test("an unchanged update writes nothing and unknown marks are dropped", funct
   t.assert_eq(0, writes, "nothing to write")
 end)
 
+t:test("an update drops a mark that replacing every line left after the last line", function()
+  local bufnr = create_buffer()
+  sign.update(bufnr, { { lnum = 3, type = "change" } }, nil)
+  -- As a hunk reset does, which writes the restored text over the whole buffer.
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "one", "two", "three" })
+  t.assert_same(
+    { 3 },
+    vim.tbl_map(function(mark)
+      return mark[2]
+    end, marks(bufnr)),
+    "the mark is past the last row"
+  )
+
+  sign.update(bufnr, {}, nil)
+  t.assert_same({}, marks(bufnr), "no mark left")
+end)
+
 t:test("an update marks the lines windows show and drops the marks of the others", function()
   local lines = {} ---@type string[]
   for i = 1, 100 do

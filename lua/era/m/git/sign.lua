@@ -139,9 +139,12 @@ end
 ---@param last                          integer Row past the last, 0-based, or -1 for the end of the buffer.
 function Signs:clear_rows(bufnr, first, last)
   if last < 0 then
-    last = vim.api.nvim_buf_line_count(bufnr)
-  end
-  if first < last then
+    -- To the end, after the last line too: replacing every line, as a hunk reset does, moves the marks of the
+    -- replaced lines past it, where no row range reaches.
+    if #vim.api.nvim_buf_get_extmarks(bufnr, self._ns, { first, 0 }, -1, { limit = 1 }) > 0 then
+      vim.api.nvim_buf_clear_namespace(bufnr, self._ns, first, -1)
+    end
+  elseif first < last then
     vim.api.nvim_buf_clear_namespace(bufnr, self._ns, first, last)
   end
 end
