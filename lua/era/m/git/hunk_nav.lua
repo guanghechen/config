@@ -27,8 +27,8 @@ local M = {}
 ---@field public bufnr_b                integer
 ---@field public changedtick_a          integer
 ---@field public changedtick_b          integer
----@field public endofline_a            boolean
----@field public endofline_b            boolean
+---@field public final_eol_a            boolean
+---@field public final_eol_b            boolean
 ---@field public ranges                 table<integer, era.m.git.hunk_nav.IDiffNavRange[]>
 ---@field public total                  integer
 ---@field public winnr_a                integer
@@ -166,8 +166,8 @@ local function get_diff_nav_cache(winnr)
 
   local changedtick_a = vim.api.nvim_buf_get_changedtick(bufnr_a) ---@type integer
   local changedtick_b = vim.api.nvim_buf_get_changedtick(bufnr_b) ---@type integer
-  local endofline_a = vim.api.nvim_get_option_value("endofline", { buf = bufnr_a }) ---@type boolean
-  local endofline_b = vim.api.nvim_get_option_value("endofline", { buf = bufnr_b }) ---@type boolean
+  local final_eol_a = git_staging.writes_final_eol(bufnr_a) ---@type boolean
+  local final_eol_b = git_staging.writes_final_eol(bufnr_b) ---@type boolean
   local cache = diff_nav_cache
   if
     cache ~= nil
@@ -177,8 +177,8 @@ local function get_diff_nav_cache(winnr)
     and cache.bufnr_b == bufnr_b
     and cache.changedtick_a == changedtick_a
     and cache.changedtick_b == changedtick_b
-    and cache.endofline_a == endofline_a
-    and cache.endofline_b == endofline_b
+    and cache.final_eol_a == final_eol_a
+    and cache.final_eol_b == final_eol_b
   then
     return cache
   end
@@ -200,8 +200,8 @@ local function get_diff_nav_cache(winnr)
     bufnr_b = bufnr_b,
     changedtick_a = changedtick_a,
     changedtick_b = changedtick_b,
-    endofline_a = endofline_a,
-    endofline_b = endofline_b,
+    final_eol_a = final_eol_a,
+    final_eol_b = final_eol_b,
     ranges = { [bufnr_a] = ranges_a, [bufnr_b] = ranges_b },
     total = #hunks,
     winnr_a = winnr_a,

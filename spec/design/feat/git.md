@@ -204,13 +204,15 @@ Hunk navigation 持有一个 transient state `{ winnr, bufnr, index, total }`。
 canonical hunk map，并记录 source 位置；motion 后用同一 map 解析 target。
 Map 从两侧 `era.m.git.staging.from_buffer()` document lines 构建。
 
-- Document 区分 empty bytes、single final newline 与 missing final newline。
+- Document 区分 empty bytes、single final newline 与 missing final newline。末尾是否换行按写盘结果：
+  `endofline`，或未设 `binary` 时的 `fixendofline`（默认开启，写盘会补上 `noendofline` 省去的换行，
+  `endofline` 仍保持关闭）。因此不以换行结尾的文件打开后，末行即显示为改动，与 `:w` 的结果一致。
 - 输入按 layout 语义排序：side-by-side 为 left→right，stacked 为 top→bottom，不依赖 buffer 分配顺序。
 - Map 使用 `era.m.git.diff.run_diff()` 的 histogram 契约。Pane-local `linematch` 只影响原生光标目标，不拆分 canonical Git hunk。
 - 同一个 hunk 在两侧共享 index/total；zero-count side 映射到 BOF、普通 filler 或 EOF anchor。同一 anchor 可以对应多个 hunk。
 
 Map 只由 navigation module 缓存。Cache identity 包含有序 window pair、两侧 `bufnr`、`changedtick`
-与 `endofline`；任一变化都重建。一次构建生成两侧有序 line ranges，后续按键不再同步遍历全部 hunks。
+与两侧写盘时是否以换行结尾；任一变化都重建。一次构建生成两侧有序 line ranges，后续按键不再同步遍历全部 hunks。
 
 #### 原生 motion 与位置解析
 

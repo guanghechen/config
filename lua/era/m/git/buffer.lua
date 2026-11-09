@@ -1269,7 +1269,7 @@ function M.setup()
   vim.api.nvim_create_autocmd("OptionSet", {
     group = augroup,
     -- Patterns match full option names, and the event runs in the buffer whose option changed with `buf` unset.
-    pattern = { "fileformat", "bomb", "endofline" },
+    pattern = { "fileformat", "bomb", "endofline", "fixendofline", "binary" },
     callback = function()
       local bufnr = vim.api.nvim_get_current_buf() ---@type integer
       local buf_cache = cache[bufnr]

@@ -128,4 +128,35 @@ t:test("from_buffer: preserves document text without reparsing buffer lines", fu
   end
 end)
 
+t:test("from_buffer: ends with the line break writing the buffer ends with", function()
+  -- 'fixendofline' writes the line break that 'noendofline' leaves out, unless 'binary' is set.
+  local cases = {
+    { eol = true, fixeol = true, binary = false },
+    { eol = false, fixeol = true, binary = false },
+    { eol = false, fixeol = false, binary = false },
+    { eol = false, fixeol = true, binary = true },
+  }
+
+  for _, case in ipairs(cases) do
+    local filepath = vim.fn.tempname() ---@type string
+    local bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
+    vim.api.nvim_buf_set_name(bufnr, filepath)
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, { "a", "b" })
+    for name, value in pairs({ endofline = case.eol, fixendofline = case.fixeol, binary = case.binary }) do
+      vim.api.nvim_set_option_value(name, value, { buf = bufnr })
+    end
+    vim.api.nvim_buf_call(bufnr, function()
+      vim.cmd("silent write!")
+    end)
+
+    local file = assert(io.open(filepath, "rb"))
+    local written = file:read("*a") ---@type string
+    file:close()
+    t.assert_eq(written, staging.from_buffer(bufnr).text, vim.inspect(case))
+
+    vim.api.nvim_buf_delete(bufnr, { force = true })
+    vim.fn.delete(filepath)
+  end
+end)
+
 t:run()

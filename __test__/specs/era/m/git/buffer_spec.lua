@@ -261,7 +261,11 @@ end)
 
 t:test("a line ending option change refreshes the buffer it changed in", function()
   local Buffer, callbacks, _, _, _, _, _, patterns = setup({ [11] = true })
-  t.assert_same({ "fileformat", "bomb", "endofline" }, patterns.OptionSet, "full option names")
+  t.assert_same(
+    { "fileformat", "bomb", "endofline", "fixendofline", "binary" },
+    patterns.OptionSet,
+    "full option names"
+  )
   local current = assert(Buffer.get_cache(11))
   local updates = 0 ---@type integer
   current.force_next_update = false

@@ -67,6 +67,18 @@ function M.encode(document)
   return bytes, nil
 end
 
+---Whether writing the buffer ends its last line with a line break: 'endofline', or 'fixendofline' without 'binary',
+---which writes the line break back while 'endofline' stays off.
+---@param bufnr                         integer
+---@return boolean
+function M.writes_final_eol(bufnr)
+  local function option(name)
+    return vim.api.nvim_get_option_value(name, { buf = bufnr })
+  end
+  return option("endofline") or (option("fixendofline") and not option("binary"))
+end
+
+---The text writing the buffer would produce.
 ---@param bufnr                         integer
 ---@return era.m.git.Document
 function M.from_buffer(bufnr)
@@ -74,9 +86,8 @@ function M.from_buffer(bufnr)
   local eol = M.eol_from_fileformat(fileformat) ---@type string
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false) ---@type string[]
   local text = table.concat(lines, eol) ---@type string
-  local has_eol = vim.api.nvim_get_option_value("eol", { buf = bufnr }) ---@type boolean
 
-  if has_eol then
+  if M.writes_final_eol(bufnr) then
     local is_empty = #lines == 1
       and lines[1] == ""
       and vim.api.nvim_buf_call(bufnr, function()
