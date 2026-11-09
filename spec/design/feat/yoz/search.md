@@ -25,8 +25,9 @@ composer -> Lua file-search controller -> Rust job -> controller -> composer
   替换与替换预览按同样的正文匹配，写回时保留 BOM。
 - 搜索不列出空匹配，替换也不改动空匹配。
 - 替换只处理 UTF-8 文本。能匹配 UTF-8 以外字节的模式（如 `(?-u:\xFF)`）只用于搜索：替换模式下首次发布其结果时提示一次原因，
-  修改替换串不再提示；结果行与预览不显示替换，替换操作拒绝执行。非 UTF-8 文件仍可搜索，预览按只搜索的样式显示，
-  替换时报告 `not UTF-8 text` 并保持文件不变。
+  修改替换串不再提示；结果行与预览不显示替换，替换操作拒绝执行。非 UTF-8 文件（包括 UTF-16）仍可搜索，结果行与预览
+  按只搜索的样式显示，替换时报告 `not UTF-8 text` 并保持文件不变。文件搜索按读到的原始字节为每个文件给出 `utf8`，
+  与替换读文件的规则一致；搜索停在有匹配的文件中间时（如到达 match limit），读完该文件再判断。
 - 替换串只识别 `$n`、`$nn` 与 `$$`，规则同 JavaScript：`$nn` 在第 nn 组存在时取该组，否则按 `$n` 后接一个数字；
   未参与匹配的组展开为空，不存在的组与其他 `$` 写法保留字面量，捕获内容不再二次展开。
 
@@ -50,6 +51,7 @@ export interface ITextMatch {
 
 export interface IFileMatch {
   readonly p: string // relative filepath
+  readonly utf8: boolean // Whether the file is UTF-8 text, a leading BOM aside: the only text replacement takes
   readonly matches: ITextMatch[]
 }
 

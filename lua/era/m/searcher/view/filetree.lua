@@ -170,7 +170,6 @@ function M:normalize_search_result(params, results)
     and params.replace_error == nil
     and replace_pattern ~= nil
     and replace_pattern ~= ""
-  local search_highlight = has_replace_preview and "m_ss_search" or "m_ss_matches"
 
   ---@param relpath                     string
   ---@return string
@@ -201,6 +200,10 @@ function M:normalize_search_result(params, results)
       matches = filematch.matches or {},
     }
 
+    -- Replacing a file that is not UTF-8 text fails, so its rows show the search alone.
+    local replaced = has_replace_preview and filematch.utf8 ---@type boolean
+    local search_highlight = replaced and "m_ss_search" or "m_ss_matches" ---@type string
+
     for _, match in ipairs(filematch.matches or {}) do
       local preview_text = match.s or "" ---@type string
       local sx = match.sx or 0 ---@type integer
@@ -212,7 +215,7 @@ function M:normalize_search_result(params, results)
       local text ---@type string
       local highlights ---@type stl.t.IHighlightInline[]
 
-      if has_replace_preview then
+      if replaced then
         local prefix = preview_text:sub(1, stop) ---@type string
         local suffix = preview_text:sub(stop + 1) ---@type string
         local match_chunk = preview_text:sub(sx + 1, stop) ---@type string

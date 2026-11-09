@@ -30,6 +30,7 @@ local M = {}
 
 ---@class yoz.search.IFileMatch
 ---@field public p                      string
+---@field public utf8                   boolean Whether the file is UTF-8 text, the only text replacement takes.
 ---@field public matches                yoz.search.ITextMatch[]
 
 ---@class yoz.search.ISearchFileResult

@@ -80,6 +80,78 @@ impl<R: Read> Read for CancellableReader<'_, R> {
     }
 }
 
+/// Tells whether the bytes read through it are UTF-8 text, as replacement reads a file: the raw bytes, before the
+/// searcher leaves out a byte order mark or transcodes UTF-16.
+struct Utf8Reader<R> {
+    inner: R,
+    valid: bool,
+    /// The bytes of a character that a read cut, completed by the next.
+    cut: [u8; 4],
+    cut_len: usize,
+    eof: bool,
+}
+
+impl<R> Utf8Reader<R> {
+    fn new(inner: R) -> Self {
+        Self {
+            inner,
+            valid: true,
+            cut: [0; 4],
+            cut_len: 0,
+            eof: false,
+        }
+    }
+
+    /// Whether the bytes read so far are UTF-8 text; the whole file once read to the end.
+    fn utf8(&self) -> bool {
+        self.valid && self.cut_len == 0
+    }
+
+    fn check(&mut self, mut bytes: &[u8]) {
+        if !self.valid {
+            return;
+        }
+        if self.cut_len > 0 {
+            /* The lead byte of a cut character is valid, so it gives the width. */
+            let width = match self.cut[0] {
+                0xC0..=0xDF => 2,
+                0xE0..=0xEF => 3,
+                _ => 4,
+            };
+            let take = (width - self.cut_len).min(bytes.len());
+            self.cut[self.cut_len..self.cut_len + take].copy_from_slice(&bytes[..take]);
+            self.cut_len += take;
+            bytes = &bytes[take..];
+            if self.cut_len < width {
+                return;
+            }
+            self.cut_len = 0;
+            if std::str::from_utf8(&self.cut[..width]).is_err() {
+                self.valid = false;
+                return;
+            }
+        }
+        if let Err(error) = std::str::from_utf8(bytes) {
+            if error.error_len().is_some() {
+                self.valid = false;
+                return;
+            }
+            let rest = &bytes[error.valid_up_to()..];
+            self.cut[..rest.len()].copy_from_slice(rest);
+            self.cut_len = rest.len();
+        }
+    }
+}
+
+impl<R: Read> Read for Utf8Reader<R> {
+    fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
+        let read = self.inner.read(buffer)?;
+        self.eof = read == 0 && !buffer.is_empty();
+        self.check(&buffer[..read]);
+        Ok(read)
+    }
+}
+
 #[derive(Clone)]
 struct MatchRange {
     start: usize,
@@ -668,8 +740,13 @@ pub(crate) fn search_in_files_cancellable(
             cancelled,
         };
 
-        let reader = CancellableReader::new(file, cancelled);
-        if let Err(error) = searcher.search_reader(&matcher, reader, &mut sink) {
+        let mut reader = Utf8Reader::new(CancellableReader::new(file, cancelled));
+        let mut searched = searcher.search_reader(&matcher, &mut reader, &mut sink);
+        /* A search that stops early, as at the match limit, leaves the rest of the file to tell whether it is UTF-8. */
+        if searched.is_ok() && !lines.is_empty() && !reader.eof {
+            searched = io::copy(&mut reader, &mut io::sink()).map(drop);
+        }
+        if let Err(error) = searched {
             if is_cancelled(cancelled) {
                 return SearchInFilesOutcome::Cancelled;
             }
@@ -695,6 +772,7 @@ pub(crate) fn search_in_files_cancellable(
 
         items.push(IFileMatch {
             p: display_path(&path, &base_dir),
+            utf8: reader.utf8(),
             matches,
         });
     }
@@ -995,6 +1073,99 @@ mod tests {
         )
         .unwrap();
         assert_eq!(expected, "#\nbar\n#\nbaz\n");
+    }
+
+    #[test]
+    fn t_search_in_files_tells_which_files_are_utf8_text() {
+        let dir = TempDir::new();
+        let far = "x\n".repeat(100_000);
+        fs::write(dir.path().join("a.txt"), "café foo\n").unwrap();
+        fs::write(dir.path().join("b.txt"), b"\xEF\xBB\xBFcaf\xC3\xA9 foo\n").unwrap();
+        fs::write(dir.path().join("c.txt"), b"caf\xE9 foo\n").unwrap();
+        fs::write(
+            dir.path().join("d.txt"),
+            [b"foo\n", far.as_bytes(), b"\xE9"].concat(),
+        )
+        .unwrap();
+        let utf16: Vec<u8> = "café foo\n"
+            .encode_utf16()
+            .flat_map(u16::to_le_bytes)
+            .collect();
+        fs::write(
+            dir.path().join("e.txt"),
+            [&[0xFF, 0xFE], &utf16[..]].concat(),
+        )
+        .unwrap();
+        let options = ISearchInFilesOptions {
+            cwd: Some(dir.path().to_string_lossy().to_string()),
+            flag_case_sensitive: true,
+            flag_gitignore: false,
+            flag_regex: false,
+            max_filesize: Some("1M".to_string()),
+            max_matches: None,
+            search_pattern: "foo".to_string(),
+            search_paths: ".".to_string(),
+            include_patterns: String::new(),
+            exclude_patterns: String::new(),
+            specified_filepath: None,
+        };
+
+        let result = search_in_files(&options).expect("expected successful search");
+        let flags: Vec<_> = result
+            .items
+            .iter()
+            .map(|item| (item.p.as_str(), item.utf8))
+            .collect();
+        /* A byte order mark aside; a byte outside UTF-8 far after the match; UTF-16, which search transcodes. */
+        assert_eq!(
+            flags,
+            [
+                ("a.txt", true),
+                ("b.txt", true),
+                ("c.txt", false),
+                ("d.txt", false),
+                ("e.txt", false)
+            ]
+        );
+
+        /* The search stops in d.txt at the limit; the rest of the file still tells. */
+        let options = ISearchInFilesOptions {
+            max_matches: Some(4),
+            ..options
+        };
+        let result = search_in_files(&options).expect("expected successful search");
+        assert!(result.limit_reached);
+        let last = result.items.last().unwrap();
+        assert_eq!((last.p.as_str(), last.utf8), ("d.txt", false));
+    }
+
+    #[test]
+    fn t_utf8_reader_completes_characters_cut_by_reads() {
+        /* One byte a read cuts every character that takes more. */
+        struct ByteReader<'bytes>(&'bytes [u8]);
+
+        impl Read for ByteReader<'_> {
+            fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
+                let Some((&byte, rest)) = self.0.split_first() else {
+                    return Ok(0);
+                };
+                buffer[0] = byte;
+                self.0 = rest;
+                Ok(1)
+            }
+        }
+
+        let utf8 = |bytes: &[u8]| {
+            let mut reader = Utf8Reader::new(ByteReader(bytes));
+            io::copy(&mut reader, &mut io::sink()).unwrap();
+            reader.utf8()
+        };
+        assert!(utf8("aé中😀b".as_bytes()));
+        assert!(utf8(b"\xEF\xBB\xBFbom"));
+        assert!(!utf8(b"caf\xE9"), "Latin-1");
+        assert!(!utf8(b"\xE2ab"), "a lead byte without its continuation");
+        assert!(!utf8(b"\xED\xA0\x80"), "a surrogate");
+        assert!(!utf8(b"a\xF0\x9F\x98"), "a character cut by the end");
     }
 
     #[test]

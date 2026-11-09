@@ -402,7 +402,7 @@ t:test("a pattern that matches bytes outside UTF-8 is searched but tells once th
   t.assert_eq(3, #warnings, "entering replace mode again tells it again")
 end)
 
-t:test("replacing all leaves a file that is not UTF-8 text as it is and says so", function()
+t:test("a file that is not UTF-8 text lists the search alone, and replacing all leaves it and says so", function()
   local dir = fixture()
   local latin1 = dir .. "/latin1.txt"
   vim.fn.writefile({ "caf\233 needle" }, latin1)
@@ -413,6 +413,16 @@ t:test("replacing all leaves a file that is not UTF-8 text as it is and says so"
   end)
 
   search(composer, controls, "pin")
+  local rows = {} ---@type table<string, string>
+  for _, fileuuid in ipairs(composer._uuids_order) do
+    local location = composer._treeview:retrieve(fileuuid).locations[1]
+    local highlights = location.highlights
+    rows[vim.fs.basename(location.match.filepath)] = location.text .. " " .. highlights[#highlights].hlname
+  end
+  t.assert_eq("needlepin one m_ss_replace", rows["alpha.txt"], "a row with its replacement")
+  -- The byte outside UTF-8 shows as U+FFFD.
+  t.assert_eq("caf\239\191\189 needle m_ss_matches", rows["latin1.txt"], "the row of the file that is not UTF-8 text")
+
   action(composer, "searcher: replace all files")()
   t.assert_same({ "pin one", "a pin and a pin", "nothing here" }, vim.fn.readfile(dir .. "/alpha.txt"), "alpha")
   t.assert_same({ "caf\233 needle" }, vim.fn.readfile(latin1), "the file that is not UTF-8 text")
