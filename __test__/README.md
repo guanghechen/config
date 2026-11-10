@@ -193,8 +193,8 @@ node script/healcheck.mjs
 The entry can also be invoked by absolute path from another working directory.
 It resolves the checkout's real path from its own location and gives every spec a fresh
 `--headless -u NONE -i NONE -n` Neovim process. Suites run concurrently; each suite's output is
-written as one block in discovery order. Suite processes do not inherit `TMUX`, and `XDG_STATE_HOME` points at a
-directory of the run, removed after it, so undo files and other state stay out of the user's. The slowest suites
+written as one block in discovery order. Suite processes do not inherit `TMUX`, and each has an `XDG_STATE_HOME` of
+its own under a directory of the run, removed after it, so undo files and other state stay out of the user's. The slowest suites
 of earlier runs start first, from durations the runner records in Neovim's cache directory
 (`test-suite-durations.json`); without a record, suites start in discovery order. Tests use this checkout's runtime
 alongside Neovim's built-in runtime and library directories, including its bundled

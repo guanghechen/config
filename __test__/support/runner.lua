@@ -111,15 +111,12 @@ local function declared_timeout_ms(suite)
   return declared
 end
 
----The environment of suite processes: the runner's own, without tmux and with a state directory of the run. Children
----inherit it, so a regression in code that drives tmux panes cannot reach the user's real session, and the undo files,
----logs and saved context the configuration writes stay out of the user's state.
----@param state                         string
+---The environment of suite processes: the runner's own, without tmux. Children inherit it, so a regression in code
+---that drives tmux panes cannot reach the user's real session.
 ---@return table<string, string>
-local function suite_env(state)
+local function suite_env()
   local env = vim.fn.environ() ---@type table<string, string>
   env.TMUX, env.TMUX_PANE = nil, nil
-  env.XDG_STATE_HOME = state
   return env
 end
 
@@ -243,9 +240,11 @@ function M.run_all(opts)
   end)
 
   local results = {} ---@type table<integer, __test__.support.runner.IResult>
+  -- Each suite keeps its undo files, logs and saved context in a state directory of its own under one of the run:
+  -- out of the user's state, and away from suites that create the same directories at the same time.
   local state = vim.fn.tempname() ---@type string
   vim.fn.mkdir(state, "p")
-  local env = suite_env(state) ---@type table<string, string>
+  local env = suite_env() ---@type table<string, string>
   local started, running, written = 0, 0, 0 ---@type integer, integer, integer
   local failed, skipped = 0, 0 ---@type integer, integer
   while written < #suites do
@@ -253,10 +252,17 @@ function M.run_all(opts)
       started = started + 1
       local index = order[started] ---@type integer
       running = running + 1
-      local ok, err = pcall(start_suite, suites[index], timeout_ms, env, function(result)
-        results[index] = result
-        running = running - 1
-      end)
+      local suite_state = { XDG_STATE_HOME = state .. "/" .. index } ---@type table<string, string>
+      local ok, err = pcall(
+        start_suite,
+        suites[index],
+        timeout_ms,
+        vim.tbl_extend("force", env, suite_state),
+        function(result)
+          results[index] = result
+          running = running - 1
+        end
+      )
       if not ok then
         local name = display_path(suites[index]) ---@type string
         results[index] = { output = "FAIL " .. name .. ": " .. tostring(err) .. "\n", failed = true, skipped = 0 }
