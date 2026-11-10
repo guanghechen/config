@@ -34,6 +34,8 @@ state / terminal → env
   且只在当前模式不属于 `concealcursor` 时；`concealcursor` 改变时（render-markdown 在模式切换之后才设置它）重新判断。
 - Insert 与 Replace 模式下，若当前模式不属于 `concealcursor`，光标所在行上会被 conceal 的新 placement 暂不创建，
   等离开该模式或光标离开该行后再建：逐字输入的公式只转换最终内容，而不是每个中间状态。
+- 当前 tab 没有窗口显示 buffer 时（如后台 tab 中的文档被重新加载、会话恢复），不查找也不建 placement，切到显示它的
+  tab（`TabEnter`）后再查找：那时建的 placement 画不出来，也无法凭 extmark 找回，之后每次更新都会再建一个。
 - Insert 与 Replace 模式下改动超过 64 KB 的行（如行内 base64 图片）不触发重新查找，等离开该模式后再查找：每个按键
   都重新解析整行会让 1 MB 的行每键多花约 250 ms。
 - 前后有文字的公式总在本行，占一行高、宽度按图片宽高比计算，不论多高都缩放进这一行；其他图片超过两行高时放在下一行，

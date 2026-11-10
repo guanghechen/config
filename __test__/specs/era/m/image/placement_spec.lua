@@ -358,6 +358,48 @@ t:test("a document reloaded from disk keeps following its edits", function()
   end, 2000, "edit after the reload")
 end)
 
+t:test("a document reloaded while another tab shows draws once its tab does, with one placement an image", function()
+  load_placement(function(src)
+    return vim.tbl_extend("force", fake_image({ ready = true }), { src = src })
+  end)
+  local Inline = assert(loadfile("lua/era/m/image/inline.lua"))()
+  local file, bufnr = edited_file({ "img:a" })
+  local inline = Inline.new(bufnr, line_document)
+  t:defer(function()
+    inline:dispose()
+  end)
+  inline:update()
+  local document_tab = vim.api.nvim_get_current_tabpage() ---@type integer
+  vim.cmd("tabnew")
+  t:defer(function()
+    pcall(vim.cmd, "tabonly!")
+  end)
+
+  vim.fn.writefile({ "img:a", "text" }, file)
+  local later = os.time() + 10 ---@type integer
+  vim.uv.fs_utime(file, later, later)
+  vim.cmd("checktime " .. bufnr)
+  t.wait_until(function()
+    return vim.api.nvim_buf_line_count(bufnr) == 2
+  end, 2000, "reloaded while another tab shows")
+  vim.wait(300)
+
+  vim.api.nvim_set_current_tabpage(document_tab)
+  t.wait_until(function()
+    for _, placement in pairs(inline.imgs) do
+      if placement.img.src == "a" and #placement.eids > 0 then
+        return true
+      end
+    end
+    return false
+  end, 2000, "drawn once its tab shows")
+
+  vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, { "more" })
+  vim.wait(300)
+  inline:update()
+  t.assert_same({ "a" }, sources(inline), "one placement after more updates")
+end)
+
 t:test("turning dressing_image off removes every image until it is on again", function()
   local shown = true ---@type boolean
   t:patch_table(dot.context.flight, "dressing_image", {

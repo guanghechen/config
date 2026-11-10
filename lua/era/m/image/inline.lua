@@ -17,6 +17,7 @@ local LONG_LINE_BYTES = 64 * 1024 ---@type integer Lines typed in from this size
 ---@field protected _augroup              integer
 ---@field protected _flag_unsub           ?stl.c.IUnsubscribable
 ---@field protected _held                 ?boolean
+---@field protected _offscreen            ?boolean An update waits for a window of the current tab to show the buffer.
 local M = {}
 M.__index = M
 
@@ -46,6 +47,14 @@ function M.new(bufnr, document)
     group = self._augroup,
     buf = bufnr,
     callback = vim.schedule_wrap(update),
+  })
+  vim.api.nvim_create_autocmd("TabEnter", {
+    group = self._augroup,
+    callback = function()
+      if self._offscreen then ---@diagnostic disable-line: invisible
+        update()
+      end
+    end,
   })
   vim.api.nvim_create_autocmd({ "ModeChanged", "CursorMoved" }, {
     group = self._augroup,
@@ -222,6 +231,18 @@ end
 ---@return nil
 function M:update()
   if self.disposed or not dot.context.flight.dressing_image:snapshot() then
+    return
+  end
+  -- A placement made while no window of this tab shows the buffer would not be drawn, nor found again by its marks:
+  -- the next update would add another. The scan waits for a tab that shows the buffer.
+  self._offscreen = true
+  for _, winnr in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    if vim.api.nvim_win_get_buf(winnr) == self.bufnr then
+      self._offscreen = false
+      break
+    end
+  end
+  if self._offscreen then
     return
   end
   local s = require("era.m.image.state").data
