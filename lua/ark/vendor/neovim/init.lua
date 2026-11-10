@@ -17,7 +17,10 @@ era.dressing.setup({
 require("era.command")
 
 if dot.path.is_git_repo() then
-  era.m.git.setup()
+  -- It attaches the buffers loaded by then; the first screen comes first.
+  vim.schedule(function()
+    era.m.git.setup()
+  end)
 end
 
 require("era.plugin")

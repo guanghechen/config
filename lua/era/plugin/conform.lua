@@ -174,7 +174,7 @@ local biome_enabled = {} ---@type table<string, boolean>
 return {
   name = "conform.nvim",
   cmd = "ConformInfo",
-  event = { "LspAttach", "BufReadPost", "BufNewFile" },
+  event = "VeryLazy",
   opts = {
     log_level = vim.log.levels.ERROR,
     notify_on_error = true,

@@ -239,7 +239,7 @@ end
 
 return {
   name = "nvim-lint",
-  event = { "BufReadPost", "BufNewFile" },
+  event = "VeryLazy",
   config = function()
     local lint = require("lint")
     for name, linter in pairs(linters) do
