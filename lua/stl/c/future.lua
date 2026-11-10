@@ -23,6 +23,18 @@ local __module_name__ = "stl.c.future" ---@type string
 local M = {}
 M.__index = M
 
+---Calls a listener. One that fails is reported, as no one else sees its error; a cancellation is not.
+---@param listener                      fun(ok: boolean, result: any): nil
+---@param ok                            boolean
+---@param result                        any
+---@return nil
+local function call_listener(listener, ok, result)
+  local done, err = xpcall(listener, debug.traceback, ok, result)
+  if not done and not stl.async.is_cancellation(err) then
+    stl.reporter.error({ from = __module_name__, subject = "listener", message = err })
+  end
+end
+
 ---Create a new Future.
 ---ES Promise-compatible: new(executor) where executor receives (resolve, reject)
 ---Also supports: new(props) for backward compatibility
@@ -145,9 +157,9 @@ function M:finally(callback)
     -- `nil` would otherwise hand the callback the error slot, so the same future delivered
     -- different values depending on whether the callback subscribed before or after it settled.
     if self._state == "resolved" then
-      pcall(callback, true, self._result)
+      call_listener(callback, true, self._result)
     else
-      pcall(callback, false, self._error)
+      call_listener(callback, false, self._error)
     end
   else
     self._listeners[#self._listeners + 1] = callback
@@ -474,7 +486,7 @@ end
 ---@return nil
 function M:__notify_listeners__(ok, result)
   for _, listener in ipairs(self._listeners) do
-    pcall(listener, ok, result)
+    call_listener(listener, ok, result)
   end
   self._listeners = {}
 end

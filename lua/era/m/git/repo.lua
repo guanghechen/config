@@ -52,28 +52,24 @@ function M.create(toplevel, token)
     return create_inflight[toplevel]
   end
 
-  local future = stl.c.Future.new(function(resolve)
+  -- A failure rejects the future, which then leaves the inflight slot for the next request to retry.
+  local future = stl.async.run_future(function()
     if token and token:is_cancelled() then
-      resolve(nil)
-      return
+      return nil
     end
 
-    stl.async.run(function()
-      local result = stl.git.info.get_repo_info(toplevel, token):await()
-      if not result then
-        resolve(nil)
-        return
-      end
+    local result = stl.git.info.get_repo_info(toplevel, token):await()
+    if not result then
+      return nil
+    end
 
-      local self = setmetatable({}, M)
-      self.abbrev_head = result.abbrev_head
-      self.commondir = resolve_commondir(result.gitdir)
-      self.detached = result.detached
-      self.gitdir = result.gitdir
-      self.toplevel = result.toplevel
-
-      resolve(self)
-    end)
+    local self = setmetatable({}, M)
+    self.abbrev_head = result.abbrev_head
+    self.commondir = resolve_commondir(result.gitdir)
+    self.detached = result.detached
+    self.gitdir = result.gitdir
+    self.toplevel = result.toplevel
+    return self
   end)
 
   if token == nil then

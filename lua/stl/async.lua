@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "stl.async" ---@type string
+
 ---@class stl.async
 ---@field public scheduler              async fun()
 local M = {}
@@ -7,21 +10,16 @@ local yield_marker = {}
 ----------------------------------------------------------------------------------------------------
 
 ---@param thread                      thread
----@param on_error                    fun(err: string)|nil
+---@param on_error                    fun(err: string)
 ---@param err                         any
 ---@return nil
 local function report_error(thread, on_error, err)
-  local message = debug.traceback(thread, tostring(err)) ---@type string
-  if on_error then
-    on_error(message)
-    return
-  end
-  error(message, 0)
+  on_error(debug.traceback(thread, tostring(err)))
 end
 
 ---@param thread                      thread
 ---@param on_complete                 fun(result: any)|nil
----@param on_error                    fun(err: string)|nil
+---@param on_error                    fun(err: string)
 ---@param ...                         any
 local function resume(thread, on_complete, on_error, ...)
   ---@type [boolean, {}, string|fun(callback: fun(...))]
@@ -68,11 +66,24 @@ end
 
 ----------------------------------------------------------------------------------------------------
 
----Executes a future with a callback when it is done.
+---Whether an error is a cancellation: a cancelled future or token ends what awaits it with one, as a newer request
+---replacing an older one does.
+---@param err                         any
+---@return boolean
+function M.is_cancellation(err)
+  return vim.endswith(tostring(err):match("^[^\n]*"), "Operation cancelled")
+end
+
+---Executes an async function on its own. Nothing awaits it to see how it ends, so an error that ends it is reported,
+---after an await as before one; a cancellation ends it quietly.
 ---@param async_fn                    async fun()
 ---@param ...                         any
 function M.run(async_fn, ...)
-  resume(coroutine.create(async_fn), nil, nil, ...)
+  resume(coroutine.create(async_fn), nil, function(message)
+    if not M.is_cancellation(message) then
+      stl.reporter.error({ from = __module_name__, subject = "run", message = message })
+    end
+  end, ...)
 end
 
 ---Execute an async function and settle a Future when its coroutine completes or fails.

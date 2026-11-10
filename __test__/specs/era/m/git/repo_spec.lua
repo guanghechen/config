@@ -7,6 +7,7 @@ local t = harness.new()
 
 ---@class era.m.git.repo.test.IRequest
 ---@field resolve                      fun(result: table|nil): nil
+---@field future                       stl.c.Future
 ---@field token                        stl.c.CancellationToken|nil
 
 local requests = {} ---@type era.m.git.repo.test.IRequest[]
@@ -18,7 +19,7 @@ bootstrap.with_global(t, "stl", {
     info = {
       get_repo_info = function(_, token)
         local future, resolve = Future.new_with_resolver()
-        requests[#requests + 1] = { resolve = resolve, token = token }
+        requests[#requests + 1] = { resolve = resolve, future = future, token = token }
         return future
       end,
     },
@@ -83,6 +84,19 @@ t:test("failed create releases the in-flight entry", function()
   local second = Repo.create("/repo")
 
   t.assert_true(first ~= second, "new future after failure")
+  t.assert_eq(2, #requests, "retried repo query")
+  requests[2].resolve(nil)
+end)
+
+t:test("a failing repository read fails the create and releases the in-flight entry", function()
+  reset()
+
+  local first = Repo.create("/repo")
+  requests[1].future:__reject__("git failed") ---@diagnostic disable-line: invisible
+  t.assert_true(first:is_failed(), "the create fails rather than staying pending")
+  local second = Repo.create("/repo")
+
+  t.assert_true(first ~= second, "new future after the failure")
   t.assert_eq(2, #requests, "retried repo query")
   requests[2].resolve(nil)
 end)

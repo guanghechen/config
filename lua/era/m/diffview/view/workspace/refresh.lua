@@ -115,27 +115,20 @@ function Refresh:__start__()
   self._current_token = token
   self._running = true
 
-  local ok, err = pcall(stl.async.run, function()
+  stl.async.run(function()
     local succeeded, run_err = xpcall(function()
       self._run(token)
     end, debug.traceback)
     self:__finish__(token, succeeded)
-    if not succeeded then
-      if not token:is_cancelled() and not self._disposed and self._is_valid() then
-        local reason = tostring(run_err):match("^[^\r\n]+") or "Unknown error" ---@type string
-        stl.reporter.error({
-          from = __module_name__,
-          subject = "refresh",
-          message = "Failed to refresh Changes pane: " .. reason,
-        })
-      end
-      error(run_err, 0)
+    if not succeeded and not token:is_cancelled() and not self._disposed and self._is_valid() then
+      local reason = tostring(run_err):match("^[^\r\n]+") or "Unknown error" ---@type string
+      stl.reporter.error({
+        from = __module_name__,
+        subject = "refresh",
+        message = "Failed to refresh Changes pane: " .. reason,
+      })
     end
   end)
-  if not ok then
-    self:__finish__(token, false)
-    error(err, 0)
-  end
 end
 
 ---Request a refresh even if the current entries appear up to date.

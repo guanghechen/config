@@ -130,7 +130,8 @@ t:test("watcher refreshes stale peer views without repeating the originating vie
   peer_state.completions[1]()
 end)
 
-t:test("deferred failure releases the owner", function()
+t:test("deferred failure is reported and releases the owner", function()
+  reported_errors = {}
   local owner, state = new_owner()
   local callbacks = 0
   state.fail_runs[1] = true
@@ -138,9 +139,9 @@ t:test("deferred failure releases the owner", function()
   owner:request(function()
     callbacks = callbacks + 1
   end)
-  local ok, err = pcall(state.completions[1])
-  t.assert_false(ok, "deferred failure propagated")
-  t.assert_true(tostring(err):find("deferred refresh failure", 1, true) ~= nil, "failure preserved")
+  state.completions[1]()
+  t.assert_eq(1, #reported_errors, "failure reported once")
+  t.assert_true(reported_errors[1].message:find("deferred refresh failure", 1, true) ~= nil, "failure preserved")
   t.assert_eq(0, callbacks, "failed refresh callback discarded")
 
   owner:request()
@@ -196,8 +197,7 @@ t:test("successful trailing refresh completes callbacks after an earlier failure
   end)
   owner:request()
 
-  local ok = pcall(state.completions[1])
-  t.assert_false(ok, "earlier failure propagated")
+  state.completions[1]()
   t.assert_eq(2, state.runs, "trailing refresh started")
   t.assert_eq(0, callbacks, "callback waits for trailing success")
 

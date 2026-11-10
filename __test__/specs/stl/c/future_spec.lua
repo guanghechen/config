@@ -5,7 +5,15 @@ local CancellationToken = require("stl.c.cancellation_token")
 
 local t = harness.new()
 
-t:patch_global("stl", { async = async })
+local reported = {} ---@type table[]
+t:patch_global("stl", {
+  async = async,
+  reporter = {
+    error = function(value)
+      reported[#reported + 1] = value
+    end,
+  },
+})
 
 ---@type table<string, fun(): stl.c.Future>
 local STATES = {
@@ -258,7 +266,8 @@ t:test("finally: multiple listeners all called", function()
   t.assert_eq(3, count, "all listeners called")
 end)
 
-t:test("finally: handles callback errors gracefully", function()
+t:test("finally: a failing listener is reported and the others still run", function()
+  reported = {}
   local future = Future.new()
   local second_called = false
 
@@ -268,9 +277,20 @@ t:test("finally: handles callback errors gracefully", function()
   future:finally(function()
     second_called = true
   end)
+  future:finally(function()
+    error("Operation cancelled", 0)
+  end)
 
   future:__resolve__("value")
   t.assert_true(second_called, "second listener should still be called")
+  t.assert_eq(1, #reported, "the failure reported, the cancellation not")
+  t.assert_true(reported[1].message:find("intentional error", 1, true) ~= nil, reported[1].message)
+
+  reported = {}
+  future:finally(function()
+    error("late listener error")
+  end)
+  t.assert_eq(1, #reported, "a listener of a settled future too")
 end)
 
 t:test("cancel: finally called on cancellation", function()

@@ -602,7 +602,10 @@ function M.attach(bufnr, opts)
 
   local toplevel = dot.path.workspace() ---@type string
   era.m.git.repo.create(toplevel):finally(function(resolved, r)
-    if resolved and r then
+    if not resolved then
+      r = nil
+    end
+    if r then
       repo = r
       era.m.git.state.o_branch:next(r.abbrev_head)
       era.m.git.watcher.update(r.gitdir, r.commondir)
