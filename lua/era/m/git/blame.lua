@@ -1,7 +1,7 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.git.blame" ---@type string
 
-local jobs = require("era.m.git.job")
+local jobs = require("era.m.job")
 local exiting = false ---@type boolean
 
 local NS_INLINE = "dot_module_git_inline_blame"

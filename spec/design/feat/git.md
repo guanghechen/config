@@ -13,7 +13,6 @@ era.m.git/
 ├── cmd.lua       -- Git 命令封装（async/sync）
 ├── index.lua     -- 主 index mutation 串行化
 ├── ignore.lua    -- Native ignore cache 的事件与 Future adapter
-├── job.lua       -- Status / ignore / blame 共用的 polling、取消与退出清理
 ├── watcher.lua   -- 文件系统监听（gitdir、index、commondir）
 ├── buffer.lua    -- Buffer 级别的 Hunk 计算和缓存
 ├── hunk.lua      -- Hunk 数据、查询和 stage/unstage/reset 操作
@@ -28,6 +27,8 @@ era.m.git/
 ```
 
 Status / ignore / blame、staging 与 word-diff 纯计算位于 `yoz` crate 内的 `rust/yoz/src/git/`，不单独创建 Git crate。
+Status / ignore / blame job 的 polling、取消与退出清理由 `era.m.job` 提供（Find Files 的遍历也用它），native 侧共用
+`rust/yoz/src/job.rs` 的 worker job。
 核心模块不依赖 Lua 或 Neovim；`rust/yoz/src/git/lua/` 负责 `yoz.git` binding，worker 不持有 Lua values。
 Histogram diff、legacy iconv 与 index 写入仍由 Lua 调用。
 

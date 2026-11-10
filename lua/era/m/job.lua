@@ -1,16 +1,19 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "era.m.git.job" ---@type string
+local __module_name__ = "era.m.job" ---@type string
 
 local POLL_MS = 5 ---@type integer
 local CANCELLED = "Operation cancelled" ---@type string
-local pending = {} ---@type table<yoz.git.StatusJob|yoz.git.IgnoreJob|yoz.git.BlameJob, fun(): nil>
+local pending = {} ---@type table<era.m.job.INative, fun(): nil>
 local exiting = false ---@type boolean
 
----@class era.m.git.job
+---@alias era.m.job.INative yoz.git.StatusJob|yoz.git.IgnoreJob|yoz.git.BlameJob|yoz.find.FindFilesJob
+---@alias era.m.job.IResult yoz.git.StatusSnapshot|yoz.git.IgnoreReport|yoz.git.BlameSnapshot|yoz.find.IFindFilesSucceedResult
+
+---@class era.m.job
 local M = {}
 
 ---Lua owns scheduling; native jobs own their workers and cancellation acknowledgement.
----@param start                         fun(): yoz.git.StatusJob|yoz.git.IgnoreJob|yoz.git.BlameJob
+---@param start                         fun(): era.m.job.INative
 ---@param token                         ?stl.c.CancellationToken
 ---@return stl.c.Future
 function M.run(start, token)
@@ -21,7 +24,7 @@ function M.run(start, token)
     end
     local timer = vim.uv.new_timer()
     if not timer then
-      reject("Failed to allocate Git query poll timer")
+      reject("Failed to allocate a native job poll timer")
       return
     end
     local started, job = pcall(start)
@@ -35,7 +38,7 @@ function M.run(start, token)
     local cancellation = nil ---@type stl.c.IUnsubscribable|nil
 
     ---@param ok                        boolean
-    ---@param result                    yoz.git.StatusSnapshot|yoz.git.IgnoreReport|yoz.git.BlameSnapshot|string|nil
+    ---@param result                    era.m.job.IResult|string|nil
     ---@return nil
     local function finish(ok, result)
       if settled then
@@ -71,7 +74,7 @@ function M.run(start, token)
         elseif state == "completed" then
           finish(true, result)
         else
-          finish(false, tostring(err or "Git query failed"))
+          finish(false, tostring(err or "Native job failed"))
         end
       end
     end
@@ -99,7 +102,7 @@ end
 
 ---@return nil
 function M.setup()
-  local group = vim.api.nvim_create_augroup("DotModuleGitJobs", { clear = true })
+  local group = vim.api.nvim_create_augroup("DotModuleNativeJobs", { clear = true })
   vim.api.nvim_create_autocmd("VimLeavePre", {
     group = group,
     callback = function()
@@ -107,7 +110,7 @@ function M.setup()
       for job in pairs(pending) do
         job:cancel()
       end
-      -- Bound the exit wait while workers kill and reap their Git processes.
+      -- Bound the exit wait while workers stop; Git queries kill and reap their processes first.
       vim.wait(100, function()
         return next(pending) == nil
       end, 1)

@@ -127,12 +127,14 @@ entry 与隐藏集合覆盖。`fields` 中以下键由 ResultTree 的 viewport �
   （`locate_in_lines`，只取匹配位置），`orders` 为去重后的 key 数组。
 - Searcher 的跨文件检索使用 `yoz.search` Job 与 Lua FileSearch generation，终态结果经 ResultFiles 准备后导入，
   遵循 [Yoz Search](../feat/yoz/search.md)；它不使用 Treeview 的 native Query session，两种查询入口的边界见 [query.md](query.md)。
-- 大批普通文件列表使用 `FiletreeComposer:prepare_filepaths`：复制输入数组，在独立 producer 中分片构建路径和 entries，
-  完成后一次性接管 records，保持原 Source 对象的引用有效，再分片构建匹配 corpus。每个文件的 frecency 只读取一次，
-  作为 corpus 权重；空查询按权重稳定排序，相同权重保留 source 顺序。新的请求、同步 mutation、切根、hide 或 dispose
-  使旧准备失效；准备期间旧 Frame 保持可读，首次 render 等待准备完成，当前 query 在新 source 发布前应用。
-  时间片限制长循环，不承诺中断单次 Lua/VM/native 调用，也不修改全局 GC 参数。Find Files 使用此流程；
-  需要立即附加 locations/diagnostics 的 producer 使用同步 reset。
+- 大批普通文件列表使用 `FiletreeComposer:prepare_filepaths`：输入为路径数组（复制后使用）或路径的 Future；Future
+  结束前请求已经 pending，按键按 [Yoz Fuzzy](../feat/yoz/fuzzy.md) 等待，结束后才记下 producer revision。之后在独立
+  producer 中分片构建路径和 entries，完成后一次性接管 records，保持原 Source 对象的引用有效，再分片构建匹配
+  corpus。每个文件的 frecency 只读取一次，作为 corpus 权重；空查询按权重稳定排序，相同权重保留 source 顺序。新的
+  请求、同步 mutation、切根、hide 或 dispose 使旧准备失效；准备期间旧 Frame 保持可读，首次 render 等待准备完成，
+  当前 query 在新 source 发布前应用。时间片限制长循环，不承诺中断单次 Lua/VM/native 调用，也不修改全局 GC 参数。
+  Find Files 使用此流程：路径由 `yoz.find.start_find_files` 在 worker 上并行遍历（结果排序），经 `era.m.job` poll，
+  新的请求、关闭或 hide 取消旧遍历；需要立即附加 locations/diagnostics 的 producer 使用同步 reset。
 - 完整 Forest import 若保留所有既有节点的 data、parent、completeness 和 sibling prefix，只生成追加操作；
   操作仍经过相同的原子提交、状态更新及资源检查。其他 import 使用完整 reconciliation。
 

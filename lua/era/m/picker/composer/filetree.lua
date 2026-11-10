@@ -586,9 +586,10 @@ function M.new(props)
   -- A query typed ahead of a key, faster than the match debounce, decides what the key does: the input takes in the
   -- query, which reaches the match scheduler only on a later tick, and a match for it runs at once. The key waits for
   -- the result to show it in place rather than later, since an action restores the mode it runs in. Keys typed after
-  -- it do not change a deferred action. Paths prepare_filepaths loads are waited for the same way until they show as
-  -- a tree: the key runs on the rows of its query, not the ones shown before, and keys typed meanwhile stay in the
-  -- typeahead. A wait cut short, by PATHS_WAIT_MS or Ctrl-C, leaves the key acting on the rows shown.
+  -- it do not change a deferred action. Paths prepare_filepaths loads, from finding them until they show as a tree,
+  -- are waited for the same way: the key runs on the rows of its query, not the ones shown before, and keys typed
+  -- meanwhile stay in the typeahead. A wait cut short, by PATHS_WAIT_MS or Ctrl-C, leaves the key acting on the rows
+  -- shown.
   ---@return nil
   local function settle()
     if self._disposed then
@@ -1294,13 +1295,14 @@ end
 
 ---Prepare a plain file collection cooperatively, then replace the live producer once.
 ---@param cwd                           string
----@param filepaths                     string[]
+---@param filepaths                     string[]|stl.c.Future The paths, or a future of them while they are being found.
 ---@param opts                          ?era.m.picker.composer.filetree.IPrepareOptions
 ---@return stl.c.Future
 function M:prepare_filepaths(cwd, filepaths, opts)
   self:__health__()
   cwd = yoz.canonical_path.from_os_path(cwd, false)
-  local paths = vim.list_slice(filepaths)
+  local found = getmetatable(filepaths) == stl.c.Future and filepaths or nil ---@type stl.c.Future|nil
+  local paths = not found and vim.list_slice(filepaths) or nil ---@type string[]|nil
   local prepare_entry, token = opts and opts.prepare_entry, opts and opts.token
   local retained_root = opts and opts.keep_root and self._uuid_root or nil
   local source, treeview = self._filetree, self._treeview
@@ -1335,7 +1337,14 @@ function M:prepare_filepaths(cwd, filepaths, opts)
       end
     end
     local ok, failure = pcall(function()
-      local prepared = source:prepare(cwd, paths, checkpoint)
+      if found then
+        -- The request stays pending while the paths are found; the producer may change meanwhile.
+        paths = found:await()
+        source_revision, revision = source.revision, treeview._revision
+        deadline = vim.uv.hrtime() + 2000000
+        checkpoint()
+      end
+      local prepared = source:prepare(cwd, assert(paths), checkpoint)
       local entries = {}
       for key, record in pairs(prepared.records) do
         local entry = prepare_entry and prepare_entry(record.data) or {}
@@ -1362,7 +1371,8 @@ function M:prepare_filepaths(cwd, filepaths, opts)
       self._path_request = nil
     end
     if not ok then
-      if failure == cancelled then
+      -- Finding the paths is cancelled when a newer request or a close replaces this one.
+      if failure == cancelled or found and stl.async.is_cancellation(failure) then
         return { kind = "Superseded" }
       end
       error(failure, 0)

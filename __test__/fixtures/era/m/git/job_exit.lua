@@ -35,7 +35,7 @@ yoz.git[factory] = function(options)
   }
 end
 
-local jobs = require("era.m.git.job")
+local jobs = require("era.m.job")
 jobs.setup()
 local future
 if kind == "blame" then

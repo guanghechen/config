@@ -74,7 +74,7 @@ local M = setmetatable({
 function M.setup()
   M.state.setup()
   M.ignore.setup()
-  require("era.m.git.job").setup()
+  require("era.m.job").setup()
   M.buffer.setup()
   M.blame.setup()
   M.watcher.setup()

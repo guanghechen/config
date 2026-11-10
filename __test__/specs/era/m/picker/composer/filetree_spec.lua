@@ -1199,6 +1199,23 @@ t:test("<CR> while paths load waits for them and confirms from its query", funct
   t.assert_true(ui:lua("return current"), "confirmed on the rows of the loaded paths")
 end)
 
+t:test("<CR> while the paths are still being found waits for them", function()
+  local ui, root = open_typed_ahead()
+  ui:lua("local root = ... " .. WIDE_PATHS .. [[
+    local found, resolve = stl.c.Future.new_with_resolver()
+    picker:prepare_filepaths(root, found)
+    vim.api.nvim_input("igamma<CR>")
+    vim.defer_fn(function()
+      resolve(paths)
+    end, 200)
+  ]], root)
+  ui:wait_until(function()
+    return ui:lua("return confirmed ~= nil")
+  end, 5000, "confirmed")
+  t.assert_eq("gamma.txt", ui:lua("return confirmed"))
+  t.assert_true(ui:lua("return current"), "confirmed on the rows of the found paths")
+end)
+
 t:test("<CR> while loaded paths publish waits for them to show", function()
   local ui, root = open_typed_ahead()
   ui:lua("local root = ... " .. WIDE_PATHS .. [[

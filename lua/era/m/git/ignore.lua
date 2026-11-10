@@ -1,7 +1,7 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.git.ignore" ---@type string
 
-local jobs = require("era.m.git.job")
+local jobs = require("era.m.job")
 local cache = nil ---@type yoz.git.IgnoreCache|nil
 local workspace = nil ---@type string|nil
 

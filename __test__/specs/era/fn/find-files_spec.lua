@@ -12,7 +12,6 @@ local function controls()
     "regex",
     "case_sensitive",
     "selected",
-    "textonly",
   }) do
     values["flag_" .. name] = stl.c.Observable.from_value(false)
   end
@@ -61,18 +60,30 @@ end
 
 t:test("Find Files coalesces a pending root and applies flag changes to that requested root", function()
   local values, picker = controls(), facade()
+  values.includes:next({ "*.lua", "*.md" })
   t:patch_table(dot.context.select, "find_file", values)
   t:patch_table(dot.path, "cwd", function()
     return "/context"
   end)
-  local scans = {}
-  t:patch_table(yoz.find, "find_files", function(options)
+  local scans, cancels = {}, 0
+  t:patch_table(yoz.find, "start_find_files", function(options)
     scans[#scans + 1] = options
-    return { filepaths = { "one.lua" } }
+    local cancelled = false
+    return {
+      poll = function()
+        return cancelled and "cancelled" or "running"
+      end,
+      cancel = function()
+        cancelled, cancels = true, cancels + 1
+      end,
+      dispose = function() end,
+    }
   end)
   local find = assert(loadfile("lua/era/fn/find-files.lua"))()
   find("/requested")
   local first = picker.preparations[#picker.preparations]
+  t.assert_true(getmetatable(first.paths) == stl.c.Future, "the paths load while the walk finds them")
+  t.assert_eq("*.lua,*.md", scans[#scans].include_patterns, "the includes reach the walk")
   local count = #scans
   find("/requested")
   t.assert_eq(count, #scans, "focusing the same pending root does not rescan")
@@ -82,13 +93,35 @@ t:test("Find Files coalesces a pending root and applies flag changes to that req
   end, 1000)
   t.assert_eq("/requested", scans[#scans].cwd)
   t.assert_true(scans[#scans].flag_gitignore)
+  t.assert_eq(1, cancels, "the walk the flag change replaced stops")
   first.resolve({ kind = "Superseded" })
   count = #scans
   find("/requested")
   t.assert_eq(count, #scans, "an older completion cannot clear the current pending root")
   picker.props.on_hidden()
+  t.assert_eq(2, cancels, "hiding stops the pending walk")
   find("/requested")
   t.assert_eq(count + 1, #scans, "reopening a cancelled root starts fresh preparation")
+end)
+
+t:test("Find Files lists no files when the walk rejects a pattern", function()
+  local values, picker = controls(), facade()
+  values.flag_exclude:next(true)
+  values.excludes:next({ "[" })
+  t:patch_table(dot.context.select, "find_file", values)
+  local warnings = {}
+  t:patch_table(stl.reporter, "warn", function(report)
+    warnings[#warnings + 1] = report.message
+  end)
+  local find = assert(loadfile("lua/era/fn/find-files.lua"))()
+  find("/requested")
+  local paths = picker.preparations[#picker.preparations].paths
+  t.wait_until(function()
+    return paths:is_done()
+  end, 1000)
+  t.assert_same({}, paths:get_result(), "no file matches a rejected pattern")
+  t.assert_eq(1, #warnings)
+  t.assert_true(vim.startswith(warnings[1], "Invalid exclude glob '['"), warnings[1])
 end)
 
 t:run()

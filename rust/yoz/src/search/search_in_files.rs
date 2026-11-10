@@ -422,7 +422,7 @@ fn display_path(path: &Path, base: &Path) -> String {
     }
 }
 
-fn build_overrides(
+pub(crate) fn build_overrides(
     base: &Path,
     include_patterns: &[String],
     exclude_patterns: &[String],

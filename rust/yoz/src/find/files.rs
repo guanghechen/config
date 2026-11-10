@@ -1,13 +1,27 @@
+use crate::job::{self, QueryJob};
+use crate::search::build_overrides;
 use crate::string;
-use crate::types::IFindFilesFailedResult;
 use crate::types::IFindFilesOptions;
 use crate::types::IFindFilesSucceedResult;
-use ignore::WalkBuilder;
 use ignore::overrides::Override;
-use ignore::overrides::OverrideBuilder;
+use ignore::{DirEntry, ParallelVisitor, ParallelVisitorBuilder, WalkBuilder, WalkState};
+use regex::Regex;
 use regex::RegexBuilder;
 use std::path::Path;
 use std::path::PathBuf;
+use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, Ordering};
+
+pub type FindFilesJob = QueryJob<IFindFilesSucceedResult>;
+
+/// A walk checked before its worker starts, so that a bad pattern fails at once.
+struct Walk {
+    cwd: PathBuf,
+    roots: Vec<PathBuf>,
+    matcher: Option<Regex>,
+    overrides: Option<Override>,
+    gitignore: bool,
+}
 
 fn normalize_root(base: &Path, entry: &str) -> PathBuf {
     let path = Path::new(entry);
@@ -18,7 +32,7 @@ fn normalize_root(base: &Path, entry: &str) -> PathBuf {
     }
 }
 
-fn build_matcher(options: &IFindFilesOptions) -> Result<Option<regex::Regex>, String> {
+fn build_matcher(options: &IFindFilesOptions) -> Result<Option<Regex>, String> {
     if options.search_pattern.trim().is_empty() {
         return Ok(None);
     }
@@ -37,99 +51,75 @@ fn build_matcher(options: &IFindFilesOptions) -> Result<Option<regex::Regex>, St
         .map_err(|error| format!("Failed to build search pattern: {}", error))
 }
 
-fn build_overrides(
-    cwd: &Path,
-    patterns: &[String],
-    case_sensitive: bool,
-) -> Result<Option<Override>, String> {
-    if patterns.is_empty() {
-        return Ok(None);
+fn prepare(options: &IFindFilesOptions) -> Result<Walk, String> {
+    let cwd = PathBuf::from(&options.cwd);
+    let matcher = build_matcher(options)?;
+    let overrides = build_overrides(
+        &cwd,
+        &string::parse_comma_list(&options.include_patterns),
+        &string::parse_comma_list(&options.exclude_patterns),
+        options.flag_case_sensitive,
+    )?;
+
+    let mut roots: Vec<PathBuf> = string::parse_comma_list(&options.search_paths)
+        .iter()
+        .filter(|entry| !entry.is_empty())
+        .map(|entry| normalize_root(&cwd, entry))
+        .collect();
+    if roots.is_empty() {
+        roots.push(cwd.clone());
     }
 
-    let mut builder = OverrideBuilder::new(cwd);
-    builder
-        .case_insensitive(!case_sensitive)
-        .map_err(|error| format!("Failed to configure exclude globs: {}", error))?;
-
-    for pattern in patterns {
-        let trimmed = pattern.trim();
-        if trimmed.is_empty() {
-            continue;
-        }
-        builder
-            .add(&format!("!{}", trimmed))
-            .map_err(|error| format!("Invalid exclude glob '{}': {}", trimmed, error))?;
-    }
-
-    builder
-        .build()
-        .map(Some)
-        .map_err(|error| format!("Failed to build exclude overrides: {}", error))
+    Ok(Walk {
+        cwd,
+        roots,
+        matcher,
+        overrides,
+        gitignore: options.flag_gitignore,
+    })
 }
 
-pub fn find_files(
-    options: &IFindFilesOptions,
-) -> Result<IFindFilesSucceedResult, IFindFilesFailedResult> {
-    let cwd = PathBuf::from(&options.cwd);
-    let search_paths = string::parse_comma_list(&options.search_paths);
-    let exclude_patterns = string::parse_comma_list(&options.exclude_patterns);
+/// What every walker thread shares: the files each one finds join `found` when the thread is done.
+#[derive(Clone, Copy)]
+struct Collect<'s> {
+    cwd: &'s Path,
+    matcher: Option<&'s Regex>,
+    cancelled: &'s AtomicBool,
+    found: &'s Mutex<Vec<String>>,
+}
 
-    let matcher = build_matcher(options).map_err(|error| IFindFilesFailedResult { error })?;
-    let overrides = build_overrides(&cwd, &exclude_patterns, options.flag_case_sensitive)
-        .map_err(|error| IFindFilesFailedResult { error })?;
+impl<'s> ParallelVisitorBuilder<'s> for Collect<'s> {
+    fn build(&mut self) -> Box<dyn ParallelVisitor + 's> {
+        Box::new(Visitor {
+            scope: *self,
+            filepaths: Vec::new(),
+        })
+    }
+}
 
-    let mut roots: Vec<PathBuf> = Vec::new();
-    if search_paths.is_empty() {
-        roots.push(cwd.clone());
-    } else {
-        for entry in search_paths {
-            if entry.is_empty() {
-                continue;
-            }
-            roots.push(normalize_root(&cwd, &entry));
+struct Visitor<'s> {
+    scope: Collect<'s>,
+    filepaths: Vec<String>,
+}
+
+impl ParallelVisitor for Visitor<'_> {
+    fn visit(&mut self, entry: Result<DirEntry, ignore::Error>) -> WalkState {
+        if self.scope.cancelled.load(Ordering::Relaxed) {
+            return WalkState::Quit;
         }
-        if roots.is_empty() {
-            roots.push(cwd.clone());
-        }
-    }
-
-    let mut walk_builder = WalkBuilder::new(&roots[0]);
-    for additional in roots.iter().skip(1) {
-        walk_builder.add(additional);
-    }
-
-    walk_builder.hidden(false);
-    walk_builder.ignore(options.flag_gitignore);
-    walk_builder.git_ignore(options.flag_gitignore);
-    walk_builder.git_global(options.flag_gitignore);
-    walk_builder.git_exclude(options.flag_gitignore);
-    if let Some(overrides) = overrides {
-        walk_builder.overrides(overrides);
-    }
-    if options.flag_gitignore {
-        walk_builder.add_custom_ignore_filename(".gitignore");
-    }
-
-    let mut filepaths: Vec<String> = Vec::new();
-
-    for entry in walk_builder.build() {
-        let entry = match entry {
-            Ok(entry) => entry,
-            Err(_) => {
-                continue;
-            }
+        let Ok(entry) = entry else {
+            return WalkState::Continue;
         };
-
         if !entry
             .file_type()
             .map(|file_type| file_type.is_file())
             .unwrap_or(false)
         {
-            continue;
+            return WalkState::Continue;
         }
 
         let path = entry.path();
-        let relative = path.strip_prefix(&cwd).unwrap_or(path);
+        let relative = path.strip_prefix(self.scope.cwd).unwrap_or(path);
 
         #[allow(unused_mut)]
         let mut display = relative.to_string_lossy().to_string();
@@ -138,29 +128,84 @@ pub fn find_files(
             display = display.replace('\\', "/");
         }
 
-        if matcher
-            .as_ref()
+        if self
+            .scope
+            .matcher
             .is_some_and(|regex| !regex.is_match(&display))
         {
-            continue;
+            return WalkState::Continue;
         }
 
-        filepaths.push(display);
+        self.filepaths.push(display);
+        WalkState::Continue
+    }
+}
+
+impl Drop for Visitor<'_> {
+    fn drop(&mut self) {
+        self.scope
+            .found
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .append(&mut self.filepaths);
+    }
+}
+
+fn collect(walk: Walk, cancelled: &AtomicBool) -> IFindFilesSucceedResult {
+    let mut walk_builder = WalkBuilder::new(&walk.roots[0]);
+    for additional in walk.roots.iter().skip(1) {
+        walk_builder.add(additional);
     }
 
-    filepaths.sort();
-    filepaths.dedup();
+    walk_builder.hidden(false);
+    walk_builder.ignore(walk.gitignore);
+    walk_builder.git_ignore(walk.gitignore);
+    walk_builder.git_global(walk.gitignore);
+    walk_builder.git_exclude(walk.gitignore);
+    if let Some(overrides) = walk.overrides {
+        walk_builder.overrides(overrides);
+    }
+    if walk.gitignore {
+        walk_builder.add_custom_ignore_filename(".gitignore");
+    }
 
-    Ok(IFindFilesSucceedResult { filepaths })
+    let found = Mutex::new(Vec::new());
+    walk_builder.build_parallel().visit(&mut Collect {
+        cwd: &walk.cwd,
+        matcher: walk.matcher.as_ref(),
+        cancelled,
+        found: &found,
+    });
+
+    let mut filepaths = found
+        .into_inner()
+        .unwrap_or_else(|error| error.into_inner());
+    filepaths.sort_unstable();
+    filepaths.dedup();
+    IFindFilesSucceedResult { filepaths }
+}
+
+/// Walks on a worker thread, several directories at a time; the files come sorted.
+pub fn start_find_files(options: &IFindFilesOptions) -> Result<FindFilesJob, String> {
+    let walk = prepare(options)?;
+    job::spawn("yoz-find-files", move |cancelled| {
+        Ok(collect(walk, cancelled))
+    })
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::job::Outcome;
     use crate::test_support::TempDir;
+    use crate::test_support::eventually;
     use std::collections::HashSet;
     use std::fs;
     use std::path::PathBuf;
+
+    fn find(options: &IFindFilesOptions) -> Result<IFindFilesSucceedResult, String> {
+        Ok(collect(prepare(options)?, &AtomicBool::new(false)))
+    }
 
     fn setup_workspace() -> TempDir {
         let workspace = TempDir::new();
@@ -233,10 +278,11 @@ mod tests {
             flag_regex: false,
             search_pattern: String::new(),
             search_paths: ".".to_string(),
+            include_patterns: String::new(),
             exclude_patterns: String::new(),
         };
 
-        let result = find_files(&options).expect("expected successful search");
+        let result = find(&options).expect("expected successful search");
         result.filepaths.into_iter().collect()
     }
 
@@ -249,10 +295,11 @@ mod tests {
             flag_regex: false,
             search_pattern: String::new(),
             search_paths: ".".to_string(),
+            include_patterns: String::new(),
             exclude_patterns: String::new(),
         };
 
-        let result = find_files(&options).expect("expected successful search");
+        let result = find(&options).expect("expected successful search");
         result.filepaths.into_iter().collect()
     }
 
@@ -266,10 +313,11 @@ mod tests {
             flag_regex: false,
             search_pattern: "testfile".to_string(),
             search_paths: String::new(),
+            include_patterns: String::new(),
             exclude_patterns: String::new(),
         };
 
-        let files: HashSet<_> = find_files(&options)
+        let files: HashSet<_> = find(&options)
             .expect("expected successful search")
             .filepaths
             .into_iter()
@@ -295,10 +343,11 @@ mod tests {
             flag_regex: true,
             search_pattern: r"nested/.+\.TXT$".to_string(),
             search_paths: String::new(),
+            include_patterns: String::new(),
             exclude_patterns: String::new(),
         };
 
-        let files: HashSet<_> = find_files(&options)
+        let files: HashSet<_> = find(&options)
             .expect("expected successful search")
             .filepaths
             .into_iter()
@@ -324,10 +373,11 @@ mod tests {
             flag_regex: false,
             search_pattern: String::new(),
             search_paths: "nested".to_string(),
+            include_patterns: String::new(),
             exclude_patterns: String::new(),
         };
 
-        let files: HashSet<_> = find_files(&options)
+        let files: HashSet<_> = find(&options)
             .expect("expected successful search")
             .filepaths
             .into_iter()
@@ -357,10 +407,11 @@ mod tests {
             flag_regex: false,
             search_pattern: String::new(),
             search_paths: String::new(),
+            include_patterns: String::new(),
             exclude_patterns: "*.md".to_string(),
         };
 
-        let files: HashSet<_> = find_files(&options)
+        let files: HashSet<_> = find(&options)
             .expect("expected successful search")
             .filepaths
             .into_iter()
@@ -450,5 +501,79 @@ mod tests {
             files.contains("ignored_dir/nested.txt"),
             "nested ignored files should be visible when gitignore is disabled"
         );
+    }
+
+    #[test]
+    fn t_find_files_lists_only_included_files() {
+        let workspace = setup_pattern_workspace();
+        let options = IFindFilesOptions {
+            cwd: workspace.path().to_string_lossy().to_string(),
+            flag_case_sensitive: true,
+            flag_gitignore: false,
+            flag_regex: false,
+            search_pattern: String::new(),
+            search_paths: String::new(),
+            include_patterns: "*.md,*.rs".to_string(),
+            exclude_patterns: "deep/".to_string(),
+        };
+
+        let result = find(&options).expect("expected successful search");
+        assert_eq!(vec!["nested/notes.md".to_string()], result.filepaths);
+    }
+
+    #[test]
+    fn t_find_files_job_completes_with_every_file_sorted() {
+        let workspace = TempDir::new();
+        let mut expected = Vec::new();
+        for directory in 0..12 {
+            for depth in 0..3 {
+                let relative = format!("d{directory:02}/{}", "sub/".repeat(depth));
+                fs::create_dir_all(workspace.path().join(&relative))
+                    .expect("failed to create a directory");
+                for file in 0..8 {
+                    let filepath = format!("{relative}f{file}.txt");
+                    fs::write(workspace.path().join(&filepath), "x\n")
+                        .expect("failed to write a file");
+                    expected.push(filepath);
+                }
+            }
+        }
+        expected.sort();
+
+        let options = IFindFilesOptions {
+            cwd: workspace.path().to_string_lossy().to_string(),
+            flag_case_sensitive: false,
+            flag_gitignore: false,
+            flag_regex: false,
+            search_pattern: String::new(),
+            search_paths: String::new(),
+            include_patterns: String::new(),
+            exclude_patterns: String::new(),
+        };
+        let mut job = start_find_files(&options).expect("the worker should start");
+        eventually(|| job.poll().unwrap().is_some());
+        let Some(Outcome::Completed(result)) = job.poll().unwrap() else {
+            panic!("completed")
+        };
+        assert_eq!(expected, result.filepaths);
+    }
+
+    #[test]
+    fn t_find_files_job_rejects_a_bad_glob_before_its_worker() {
+        let workspace = setup_pattern_workspace();
+        let options = IFindFilesOptions {
+            cwd: workspace.path().to_string_lossy().to_string(),
+            flag_case_sensitive: false,
+            flag_gitignore: false,
+            flag_regex: false,
+            search_pattern: String::new(),
+            search_paths: String::new(),
+            include_patterns: "[".to_string(),
+            exclude_patterns: String::new(),
+        };
+        let Err(error) = start_find_files(&options) else {
+            panic!("an invalid include glob must not start a walk")
+        };
+        assert!(error.contains("Invalid include glob '['"), "{error}");
     }
 }

@@ -1,6 +1,5 @@
 use mlua::Error as LuaError;
 use mlua::FromLua;
-use mlua::IntoLua;
 use mlua::Lua;
 use mlua::Result as LuaResult;
 use mlua::Value as LuaValue;
@@ -13,11 +12,6 @@ pub struct IFindFilesSucceedResult {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct IFindFilesFailedResult {
-    pub error: String,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct IFindFilesOptions {
     pub cwd: String,
     pub flag_case_sensitive: bool,
@@ -25,6 +19,7 @@ pub struct IFindFilesOptions {
     pub flag_regex: bool,
     pub search_pattern: String,
     pub search_paths: String,
+    pub include_patterns: String,
     pub exclude_patterns: String,
 }
 
@@ -38,6 +33,7 @@ impl FromLua for IFindFilesOptions {
                 flag_regex: table.get("flag_regex")?,
                 search_pattern: table.get("search_pattern")?,
                 search_paths: table.get("search_paths")?,
+                include_patterns: table.get("include_patterns")?,
                 exclude_patterns: table.get("exclude_patterns")?,
             }),
             other => Err(LuaError::FromLuaConversionError {
@@ -46,22 +42,5 @@ impl FromLua for IFindFilesOptions {
                 message: Some("expected table".into()),
             }),
         }
-    }
-}
-
-impl IntoLua for IFindFilesSucceedResult {
-    fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
-        let table = lua.create_table()?;
-        let filepaths = lua.create_sequence_from(self.filepaths)?;
-        table.set("filepaths", filepaths)?;
-        Ok(LuaValue::Table(table))
-    }
-}
-
-impl IntoLua for IFindFilesFailedResult {
-    fn into_lua(self, lua: &Lua) -> LuaResult<LuaValue> {
-        let table = lua.create_table()?;
-        table.set("error", self.error)?;
-        Ok(LuaValue::Table(table))
     }
 }

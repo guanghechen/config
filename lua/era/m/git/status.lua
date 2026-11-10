@@ -1,7 +1,7 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.git.status" ---@type string
 
-local jobs = require("era.m.git.job")
+local jobs = require("era.m.job")
 
 local DEFAULT_GIT_STATUS_HL = "m_ft_git_other"
 ---@type table<string, string>

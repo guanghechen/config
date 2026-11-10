@@ -7,6 +7,7 @@ pub mod r#fn;
 pub mod fs;
 pub mod fuzzy;
 pub mod git;
+pub mod job;
 pub mod path;
 pub mod replace;
 pub mod search;
@@ -997,22 +998,7 @@ fn replace_module(lua: &Lua) -> LuaResult<LuaTable> {
 }
 
 fn find_module(lua: &Lua) -> LuaResult<LuaTable> {
-    lua.create_table_from([(
-        "find_files",
-        f(lua, |lua, options: LuaValue| -> LuaResult<LuaMultiValue> {
-            let options = find::IFindFilesOptions::from_lua(options, lua)?;
-            match find::find_files(&options) {
-                Ok(result) => {
-                    let data = result.into_lua(lua)?;
-                    Ok(LuaMultiValue::from_vec(vec![data, LuaValue::Nil]))
-                }
-                Err(error) => {
-                    let err = error.into_lua(lua)?;
-                    Ok(LuaMultiValue::from_vec(vec![LuaValue::Nil, err]))
-                }
-            }
-        })?,
-    )])
+    lua.create_table_from([("start_find_files", lua.create_function(find::lua::start)?)])
 }
 
 fn search_module(lua: &Lua) -> LuaResult<LuaTable> {

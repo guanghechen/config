@@ -1,8 +1,11 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.fn.find_files" ---@type string
 
+local jobs = require("era.m.job")
+
 local name = "era.fn.find_files" ---@type string
 local title = "Find Files" ---@type string
+local LOADING_TITLE_DELAY_MS = 100 ---@type integer A walk that takes longer marks the title.
 local o_rootpath = stl.c.Observable.from_value(dot.path.cwd())
 
 local o_flag_exclude = dot.context.select.find_file.flag_exclude
@@ -12,7 +15,6 @@ local o_flag_gitignore = dot.context.select.find_file.flag_gitignore
 local o_flag_regex = dot.context.select.find_file.flag_regex
 local o_flag_case_sensitive = dot.context.select.find_file.flag_case_sensitive
 local o_flag_selected = dot.context.select.find_file.flag_selected
-local o_flag_textonly = dot.context.select.find_file.flag_textonly
 local o_flag_viewtype = dot.context.select.find_file.flag_viewtype
 
 local o_search_pattern = dot.context.select.find_file.search_pattern
@@ -25,7 +27,23 @@ local o_includes = dot.context.select.find_file.includes
 ---@field public includes               string[]
 ---@field public excludes               string[]
 
-local pending_refresh
+---@class era.fn.find_files.IRefresh
+---@field public rootpath               string
+---@field public options                yoz.find.IFindFilesOptions
+---@field public token                  stl.c.CancellationToken
+
+local pending_refresh ---@type era.fn.find_files.IRefresh|nil
+local loading = false ---@type boolean
+local render_title ---@type fun(): nil
+
+---Stop the walk of a pending refresh that no longer has a use.
+---@return nil
+local function forget_refresh()
+  if pending_refresh then
+    pending_refresh.token:cancel()
+    pending_refresh = nil
+  end
+end
 
 ---@param picker                        era.m.picker.FiletreeComposer
 ---@return nil
@@ -96,7 +114,8 @@ end
 local function refresh(picker, rootpath)
   local enabled_exclude = o_flag_exclude:snapshot() ---@type boolean
   local enabled_gitignore = o_flag_gitignore:snapshot() ---@type boolean
-  local excludes = enabled_exclude and dot.context.select.find_file.excludes:snapshot() or {} ---@type string[]
+  local includes = o_includes:snapshot() ---@type string[]
+  local excludes = enabled_exclude and o_excludes:snapshot() or {} ---@type string[]
 
   ---@type yoz.find.IFindFilesOptions
   local find_files_options = {
@@ -106,29 +125,45 @@ local function refresh(picker, rootpath)
     flag_regex = false,
     search_pattern = "",
     search_paths = "",
+    include_patterns = table.concat(includes, ","),
     exclude_patterns = table.concat(excludes, ","),
   }
   if pending_refresh and vim.deep_equal(pending_refresh.options, find_files_options) then
     return
   end
-  local request = { rootpath = rootpath, options = find_files_options }
-
-  local filepaths = {}
-  local result, err = yoz.find.find_files(find_files_options)
-  if err ~= nil then
-    stl.reporter.warn({
-      from = name,
-      subject = "find_files",
-      message = err.error,
-    })
-  elseif result ~= nil then
-    filepaths = result.filepaths or {}
-  end
-
+  forget_refresh()
+  local token = stl.c.CancellationToken.new()
+  local request = { rootpath = rootpath, options = find_files_options, token = token } ---@type era.fn.find_files.IRefresh
   pending_refresh = request
-  picker:prepare_filepaths(rootpath, filepaths):finally(function(ok, error)
+
+  -- The walk runs on a worker; a pattern it rejects leaves an empty tree, as no file matches it.
+  local found = jobs
+    .run(function()
+      return yoz.find.start_find_files(find_files_options)
+    end, token)
+    :then_(function(result)
+      return result.filepaths
+    end, function(failure)
+      if stl.async.is_cancellation(failure) then
+        error(failure, 0)
+      end
+      stl.reporter.warn({ from = name, subject = "find_files", message = tostring(failure):match("^[^\n]*") })
+      return {}
+    end)
+  vim.defer_fn(function()
+    if pending_refresh == request then
+      loading = true
+      render_title()
+    end
+  end, LOADING_TITLE_DELAY_MS)
+
+  picker:prepare_filepaths(rootpath, found):finally(function(ok, error)
     if pending_refresh == request then
       pending_refresh = nil
+    end
+    if loading and pending_refresh == nil then
+      loading = false
+      render_title()
     end
     if not ok then
       stl.reporter.error({ from = name, subject = "prepare files", message = tostring(error) })
@@ -145,7 +180,7 @@ local function attach(picker, rootpath)
     return
   end
   if picker:isexistent(rootuuid) then
-    pending_refresh = nil
+    forget_refresh()
     picker:attach(rootuuid)
   else
     refresh(picker, rootpath)
@@ -226,52 +261,45 @@ picker = era.m.picker.FiletreeComposer.new({
         return stl.icon.symbols.flag_gitignore, enabled and "picker_flag_blue" or "picker_flag_grey"
       end,
     },
-    {
-      desc = string.format("%s: toggle textonly", name),
-      callback = function()
-        local enabled = o_flag_textonly:snapshot() ---@type boolean
-        o_flag_textonly:next(not enabled)
-      end,
-      snapshot = function()
-        local enabled = o_flag_textonly:snapshot() ---@type boolean
-        return stl.icon.symbols.flag_textonly, enabled and "picker_flag_blue" or "picker_flag_grey"
-      end,
-    },
   },
 
   on_attached = function(_, rootpath)
     o_rootpath:next(rootpath)
   end,
   on_closed = function()
-    pending_refresh = nil
+    forget_refresh()
   end,
   on_hidden = function()
-    pending_refresh = nil
+    forget_refresh()
   end,
 
   on_refresh = function(self)
     local rootpath = pending_refresh and pending_refresh.rootpath or o_rootpath:snapshot()
-    pending_refresh = nil
+    forget_refresh()
     refresh(self, rootpath)
   end,
 })
 
-stl.fn.observe({ o_rootpath }, function()
+render_title = function()
   local rootpath = yoz.canonical_path.from_os_path(o_rootpath:snapshot(), false) ---@type string
   local workspace = yoz.canonical_path.from_os_path(dot.path.workspace(), false) ---@type string
   local cwd = yoz.canonical_path.get_cwd_without_trailing() ---@type string
+  local text ---@type string
   if rootpath == workspace then
-    picker.finder:set_title(string.format("%s (workspace)", title))
+    text = string.format("%s (workspace)", title)
   elseif rootpath == cwd then
-    picker.finder:set_title(string.format("%s (cwd)", title))
+    text = string.format("%s (cwd)", title)
   else
     ---@type string
     local relative_path = yoz.canonical_path.is_descendant(workspace, rootpath)
         and yoz.canonical_path.relative(cwd, rootpath, false)
       or rootpath
-    picker.finder:set_title(string.format("%s (%s)", title, relative_path))
+    text = string.format("%s (%s)", title, relative_path)
   end
-end)
+  picker.finder:set_title(loading and string.format("%s %s", text, stl.anim.spinner()) or text)
+end
+
+stl.fn.observe({ o_rootpath }, render_title)
 
 stl.fn.observe({ o_flag_exclude, o_flag_gitignore, o_includes, o_excludes }, function()
   local rootpath = pending_refresh and pending_refresh.rootpath or o_rootpath:snapshot()

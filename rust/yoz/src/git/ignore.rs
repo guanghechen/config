@@ -1,6 +1,6 @@
-use super::job::{self, Outcome, QueryJob};
 use super::model::parent;
 use super::process;
+use crate::job::{self, Outcome, QueryJob};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::ffi::OsString;
