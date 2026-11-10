@@ -882,6 +882,14 @@ t:test("range actions retain subtree and Visual semantics and release a throwing
     t.assert_true(visual)
   end)
   t.assert_eq("n", vim.fn.mode())
+  -- The view's own listener sets the minimum and polls at once, even before range_action returns when the command
+  -- completes at once; a publication that poll completes clears it, so it is read as the poll starts.
+  local minimum_commit
+  local poll = tree.view._poll
+  t:patch_table(tree.view, "_poll", function(view, ...)
+    minimum_commit = minimum_commit or view._minimum_commit
+    return poll(view, ...)
+  end)
   local submitted
   local dispatched = tree:range_action(function(frame)
     submitted = tree.state:dispatch({
@@ -892,11 +900,6 @@ t:test("range actions retain subtree and Visual semantics and release a throwing
     return submitted
   end)
   t.assert_true(dispatched == submitted, "native command receipts retain their Future")
-  -- Read the minimum right after the view's own listener sets it: a later publication may already clear it.
-  local minimum_commit
-  dispatched:finally(function()
-    minimum_commit = tree.view._minimum_commit
-  end)
   local receipt = support.applied(dispatched)
   t.assert_eq(receipt.revisions.commit, minimum_commit)
   local old_errors = #reports.error
