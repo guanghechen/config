@@ -55,7 +55,6 @@
 ---@field public get_show_text          fun(self: era.m.git.Repo, object: string, token: stl.c.CancellationToken|nil): stl.c.Future
 ---@field public gitdir                 string
 ---@field public hash_object            fun(self: era.m.git.Repo, file: string, content: string, token: stl.c.CancellationToken|nil): stl.c.Future
----@field public refresh_head           fun(self: era.m.git.Repo, token: stl.c.CancellationToken|nil): stl.c.Future
 ---@field public reset_file             fun(self: era.m.git.Repo, file: string, token: stl.c.CancellationToken|nil): stl.c.Future
 ---@field public stage_file             fun(self: era.m.git.Repo, file: string, token: stl.c.CancellationToken|nil): stl.c.Future
 ---@field public toplevel               string

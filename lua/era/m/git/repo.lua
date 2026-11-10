@@ -141,26 +141,6 @@ function M:hash_object(file, content, token)
   return stl.git.act.hash_object(self.toplevel, relpath, content, token)
 end
 
----@param token                      ?stl.c.CancellationToken
----@return stl.c.Future              Resolves with nil
-function M:refresh_head(token)
-  return stl.c.Future.new(function(resolve)
-    if token and token:is_cancelled() then
-      resolve(nil)
-      return
-    end
-
-    stl.async.run(function()
-      local result = stl.git.info.get_abbrev_head(self.toplevel, token):await()
-      if result then
-        self.abbrev_head = result.abbrev_head
-        self.detached = result.detached
-      end
-      resolve(nil)
-    end)
-  end)
-end
-
 ---@param file                       string
 ---@param token                      ?stl.c.CancellationToken
 ---@return stl.c.Future              Resolves with boolean
