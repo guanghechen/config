@@ -27,6 +27,63 @@ t:test("matches standalone keywords only", function()
   t.assert_eq("f_hipattern_error", err and err.hlgroup, "error group")
 end)
 
+t:test("keywords decorate exactly what one scan per keyword found", function()
+  local keyword = require("era.dressing.hipattern.rule.keyword")
+  local scan = require("era.dressing.hipattern.rule.scan")
+  ---@type table<string, string[]>
+  local specs = {
+    f_hipattern_error = { "FIXME", "CAUTION", "FAILURE", "FAIL", "MISSING", "DANGER", "ERROR", "BUG" },
+    f_hipattern_warn = { "HACK", "WARN", "WARNING", "QUESTION", "HELP", "ATTENTION" },
+    f_hipattern_todo = { "TODO", "WIP" },
+    f_hipattern_info = { "NOTE", "ABSTRACT", "SUMMARY", "TLDR", "INFO" },
+    f_hipattern_success = { "TIP", "HINT", "SUCCESS", "CHECK", "DONE" },
+    f_hipattern_hint = { "IMPORTANT", "EXAMPLE" },
+    f_hipattern_quote = { "QUOTE", "CITE" },
+  }
+  local groups = {} ---@type table<string, string>
+  for hlgroup, words in pairs(specs) do
+    for _, word in ipairs(words) do
+      groups[word] = hlgroup
+    end
+  end
+  ---@param decorations                 { coll: integer, colr: integer, hlgroup: string }[]
+  ---@return string[]
+  local function keys(decorations)
+    local out = {} ---@type string[]
+    for _, d in ipairs(decorations) do
+      out[#out + 1] = string.format("%d:%d:%s", d.coll, d.colr, d.hlgroup)
+    end
+    table.sort(out)
+    return out
+  end
+  ---@param line                        string
+  ---@return string[]
+  local function reference(line)
+    local decorations = {} ---@type { coll: integer, colr: integer, hlgroup: string }[]
+    for word, hlgroup in pairs(groups) do
+      for _, match in ipairs(scan.collect(line, "%f[%w]()" .. word .. "()%f[%W]")) do
+        decorations[#decorations + 1] = { coll = match.coll, colr = match.colr, hlgroup = hlgroup }
+      end
+    end
+    return keys(decorations)
+  end
+
+  local tokens = vim.tbl_keys(groups) ---@type string[]
+  table.sort(tokens)
+  vim.list_extend(tokens, { "todo", "Todo", "TODO1", "1TODO", "TODOS", "XTODO", "TODO_", "_TODO", "ABC", "HTTP" })
+  vim.list_extend(tokens, { "42", "abc", "\195\137TODO", "TODO\195\169", "WARN-ING", "(NOTE)", "FIXME:", "a" })
+  local separators = { "", "", " ", ",", "-", "_", ".", "/", "+", "=", "\t", ":", "#" }
+  math.randomseed(9)
+  for _ = 1, 2000 do
+    local parts = {} ---@type string[]
+    for _ = 1, math.random(1, 12) do
+      parts[#parts + 1] = tokens[math.random(#tokens)] .. separators[math.random(#separators)]
+    end
+    local line = table.concat(parts)
+    t.assert_same(reference(line), keys(keyword.match(line, "lua")), line)
+  end
+end)
+
 t:test("matches long and shorthand hex colors", function()
   local decorations = matcher.match("#12AbEf #0f8", "lua")
   t.assert_eq(2, #decorations, "color count")

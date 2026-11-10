@@ -1,8 +1,6 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.dressing.hipattern.rule.keyword" ---@type string
 
-local scan = require("era.dressing.hipattern.rule.scan")
-
 ---@class era.dressing.hipattern.rule.keyword.ISpec
 ---@field public hlgroup                string
 ---@field public words                  string[]
@@ -24,10 +22,10 @@ local specs = {
   { hlgroup = "f_hipattern_quote", words = { "QUOTE", "CITE" } },
 }
 
-local patterns = {} ---@type { pattern: string, hlgroup: string }[]
+local hlgroups = {} ---@type table<string, string>
 for _, spec in ipairs(specs) do
   for _, word in ipairs(spec.words) do
-    patterns[#patterns + 1] = { pattern = "%f[%w]()" .. word .. "()%f[%W]", hlgroup = spec.hlgroup }
+    hlgroups[word] = spec.hlgroup
   end
 end
 
@@ -40,14 +38,12 @@ local M = {}
 ---@diagnostic disable-next-line: unused-local
 function M.match(line, _filetype)
   local decorations = {} ---@type era.dressing.hipattern.IDecoration[]
-  for _, spec in ipairs(patterns) do
-    for _, match in ipairs(scan.collect(line, spec.pattern)) do
-      decorations[#decorations + 1] = {
-        kind = "highlight",
-        coll = match.coll,
-        colr = match.colr,
-        hlgroup = spec.hlgroup,
-      }
+  -- A keyword stands alone between non-alphanumerics and is written in capitals: one pass finds such words, and a
+  -- lookup tells which are keywords, where a scan per keyword read a long line once for each.
+  for from, word, to in line:gmatch("%f[%w]()(%u+)()%f[%W]") do
+    local hlgroup = hlgroups[word] ---@type string|nil
+    if hlgroup ~= nil then
+      decorations[#decorations + 1] = { kind = "highlight", coll = from - 1, colr = to - 1, hlgroup = hlgroup }
     end
   end
   return decorations
