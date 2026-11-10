@@ -68,6 +68,32 @@ local function answer_search(answers)
   end)
 end
 
+---A layout 5 session on `diffview.repository`, its filetree listing the files of the only commit and focused on
+---`path`.
+---@param path                          string
+---@return era.m.diffview.CommitsSession session, era.m.diffview.ICommit commit
+local function filetree_at(path)
+  diffview.repository(t)
+  local session = diffview.open_log(t, { layout = 5 })
+  local commit = session.state:get_commits()[1]
+  action.__select_commit_for_filetree__(session, commit)
+  local lyt = session.layout
+  local row = nil ---@type integer|nil
+  t.wait_until(function()
+    for lnum = 1, vim.api.nvim_buf_line_count(lyt.filetree_bufnr) do
+      local item = tree.item(lyt.filetree_bufnr, lnum)
+      if item and item.entry and item.entry.filepath == path then
+        row = lnum
+        return true
+      end
+    end
+    return false
+  end, 10000, "the filetree row of " .. path)
+  vim.api.nvim_set_current_win(lyt.filetree_winnr)
+  vim.api.nvim_win_set_cursor(lyt.filetree_winnr, { assert(row), 0 })
+  return session, commit
+end
+
 t:test("commit details popup opens above a trigger near the bottom", function()
   local anchor_row = vim.o.lines - 3 ---@type integer
   action.__show_commit_popup__("abc123", { "commit abc123", "Author: Alice" }, {
@@ -399,6 +425,39 @@ t:test("restore writes back the bytes of the commit, CRLF and binary content inc
     end, 10000, path .. " restored byte for byte")
   end
   t.assert_eq("", git.run(root, { "status", "--porcelain" }), "worktree and index match the commit")
+end)
+
+t:test("Enter on a file of the filetree shows its diff beside Commits in layout 2", function()
+  local session, commit = filetree_at("a.txt")
+
+  action.view_diff(session)
+
+  t.assert_eq(2, session.layout.layout_type, "layout 2")
+  t.assert_true(session.state:get_current_commit() == commit, "the commit the filetree shows")
+  t.assert_eq("a.txt", session.state:get_current_entry().filepath, "the current file")
+  t.wait_until(function()
+    local winnr = session.layout.sbs_right_winnr
+    return winnr ~= nil
+      and vim.api.nvim_win_is_valid(winnr)
+      and vim.deep_equal(
+        { "one", "two", "three" },
+        vim.api.nvim_buf_get_lines(vim.api.nvim_win_get_buf(winnr), 0, -1, false)
+      )
+  end, 10000, "the file of the commit on the right")
+end)
+
+t:test("restore on a file of the filetree takes the version of the commit it shows", function()
+  t:patch_table(vim.ui, "select", function(_, _, on_choice)
+    on_choice("Yes")
+  end)
+  local session = filetree_at("a.txt")
+  local path = dot.path.workspace() .. "/a.txt"
+
+  action.restore_file(session)
+
+  t.wait_until(function()
+    return vim.deep_equal({ "one", "two", "three" }, vim.fn.readfile(path))
+  end, 10000, "a.txt restored")
 end)
 
 t:run()

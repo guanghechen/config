@@ -98,7 +98,8 @@ Commits pane 使用与 workspace History 相同的 commit-domain bindings，并�
 
 ### Filetree pane
 
-- `<CR>`、`<2-LeftMouse>`：选择文件。
+- `<CR>`、`<2-LeftMouse>`：选择文件。文件树列出当前 commit 的文件，选中的文件成为当前文件；布局 5 没有 SBS，随之切到
+  布局 2（Commits 在左）显示其 diff，`p5` 回到文件树。
 - `gf` / `gF`：打开文件。
 - `gR`：将文件恢复到当前 commit 版本。
 - `t1` / `t2`：切换 viewtype / compact paths。

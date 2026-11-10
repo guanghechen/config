@@ -33,6 +33,20 @@ local function get_item_at_cursor()
   return pane_commits.get_item_at_line(bufnr, lnum)
 end
 
+---The commit a file item belongs to. The filetree pane lists the files of the current commit, so its items carry none.
+---@param ctx                           era.m.diffview.view.commits.IContext
+---@param item                          era.m.diffview.ICommitsItem
+---@return era.m.diffview.ICommit|nil
+local function get_item_commit(ctx, item)
+  if item.commit or not item.entry then
+    return item.commit
+  end
+  if vim.api.nvim_get_current_buf() == ctx.layout.filetree_bufnr then
+    return ctx.state:get_current_commit()
+  end
+  return nil
+end
+
 ---Update lnum_present based on commit hash
 ---@param ctx                           era.m.diffview.view.commits.IContext
 ---@param hash                          string
@@ -173,15 +187,23 @@ function M.view_diff(ctx)
         M.__expand_commit__(ctx, item.commit)
       end)
     end
-  elseif item.type == "file" and item.commit and item.entry then
+  elseif item.type == "file" and item.entry then
+    local commit = get_item_commit(ctx, item)
+    if not commit then
+      return
+    end
     -- Open file in side-by-side view
-    ctx.state:set_current_commit(item.commit)
+    ctx.state:set_current_commit(commit)
     ctx.state:set_current_entry(item.entry)
-    update_lnum_present(ctx, item.commit.hash)
+    update_lnum_present(ctx, commit.hash)
     dot.state.status.dirtier_tabline:mark_dirty()
+    -- Layout 5 has no side-by-side windows: the diff shows in layout 2, which keeps Commits on the left.
+    if ctx.layout.layout_type == 5 then
+      M.switch_to_layout(ctx, 2)
+    end
 
     stl.async.run(function()
-      commits_view.open_entry(ctx, item.commit, item.entry)
+      commits_view.open_entry(ctx, commit, item.entry)
     end)
   end
 end
@@ -647,7 +669,7 @@ function M.restore_file(ctx)
     return
   end
 
-  local commit = item.commit
+  local commit = get_item_commit(ctx, item)
   local entry = item.entry
 
   if not commit or not entry then
