@@ -42,7 +42,10 @@ for _, case in ipairs({
     t.assert_eq(destination, widget:get_root_filepath())
     t.assert_true(vim.uv.fs_stat(target) ~= nil)
     t.assert_eq(mark == "copy", vim.uv.fs_stat(path .. "/source.txt") ~= nil)
-    t.assert_eq(before, watches(view))
+    -- The watch ends as the follow navigation settles, which can come after its frame shows the target.
+    t.wait_until(function()
+      return watches(view) == before
+    end, 10000, "following must release its focus watch")
   end)
 end
 
