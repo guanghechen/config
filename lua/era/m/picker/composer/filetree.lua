@@ -2,6 +2,7 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.picker.composer.filetree" ---@type string
 local FRECENCY_WEIGHT = 16 ---@type integer Match points for the most frecent file; see the fuzzy quality benchmark.
+local PATHS_WAIT_MS = 10000 ---@type integer Longest a key waits for the paths being loaded to show.
 
 ---@alias era.m.picker.composer.filetree.IOnAttached
 ---| fun(self: era.m.picker.FiletreeComposer, rootpath: string): nil
@@ -585,14 +586,24 @@ function M.new(props)
   -- A query typed ahead of a key, faster than the match debounce, decides what the key does: the input takes in the
   -- query, which reaches the match scheduler only on a later tick, and a match for it runs at once. The key waits for
   -- the result to show it in place rather than later, since an action restores the mode it runs in. Keys typed after
-  -- it do not change a deferred action. Until the paths prepare_filepaths loads show as a tree, the key acts on the
-  -- rows shown: the wait would last the whole load and import.
+  -- it do not change a deferred action. Paths prepare_filepaths loads are waited for the same way until they show as
+  -- a tree: the key runs on the rows of its query, not the ones shown before, and keys typed meanwhile stay in the
+  -- typeahead. A wait cut short, by PATHS_WAIT_MS or Ctrl-C, leaves the key acting on the rows shown.
   ---@return nil
   local function settle()
     if self._disposed then
       return
     end
     self._composer.finder:sync()
+    if self._path_request or (self._path_adopted == treeview._revision and not treeview:is_current()) then
+      local shown = self._composer.result:draw_now() ---@type stl.c.Future
+      vim.wait(PATHS_WAIT_MS, function()
+        return shown:is_done()
+      end, 1)
+      if self._disposed then
+        return
+      end
+    end
     local matched = self._matched_input ---@type string|nil
     if
       not self._path_request

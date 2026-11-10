@@ -1182,22 +1182,24 @@ t:test("keys typed after a deferred <CR> leave its query", function()
   t.assert_eq(root .. "/alpha.txt", ui:lua("return confirmed"), "the selection <Tab> made")
 end)
 
-t:test("<CR> while paths load acts at once on the rows shown", function()
+t:test("<CR> while paths load waits for them and confirms from its query", function()
   local ui, root = open_typed_ahead()
-  -- Typeahead runs before the next slice of the preparation.
+  -- Typeahead runs before the next slice of the preparation; zz, typed after <CR>, waits in it.
   local preparing = ui:lua("local root = ... " .. WIDE_PATHS .. [[
     picker:prepare_filepaths(root, paths)
-    vim.api.nvim_input("igamma<CR>")
+    vim.api.nvim_input("igamma<CR>zz")
     return picker._path_request ~= nil
   ]], root)
   t.assert_true(preparing, "a wide path set loads across ticks")
   ui:wait_until(function()
     return ui:lua("return confirmed ~= nil")
   end, 5000, "confirmed")
-  t.assert_true(ui:lua("return loading"), "confirmed before the paths loaded")
+  t.assert_eq("gamma.txt", ui:lua("return confirmed"))
+  t.assert_false(ui:lua("return loading"), "confirmed after the paths loaded")
+  t.assert_true(ui:lua("return current"), "confirmed on the rows of the loaded paths")
 end)
 
-t:test("<CR> while loaded paths publish acts at once on the rows shown", function()
+t:test("<CR> while loaded paths publish waits for them to show", function()
   local ui, root = open_typed_ahead()
   ui:lua("local root = ... " .. WIDE_PATHS .. [[
     picker:prepare_filepaths(root, paths):finally(function()
@@ -1207,11 +1209,11 @@ t:test("<CR> while loaded paths publish acts at once on the rows shown", functio
   ui:wait_until(function()
     return ui:lua("return confirmed ~= nil")
   end, 5000, "confirmed")
-  t.assert_false(ui:lua("return loading"), "confirmed after the paths loaded")
-  t.assert_false(ui:lua("return current"), "confirmed before the loaded paths showed")
+  t.assert_eq("gamma.txt", ui:lua("return confirmed"))
+  t.assert_true(ui:lua("return current"), "confirmed on the rows of the loaded paths")
 end)
 
-t:test("<CR> after a hide cancels matching the adopted paths acts at once on the rows shown", function()
+t:test("<CR> after a hide cancels matching the adopted paths waits for them to show", function()
   local ui, root = open_typed_ahead()
   ui:lua("local root = ... " .. WIDE_PATHS .. [[
     local tree = picker._treeview
@@ -1233,7 +1235,8 @@ t:test("<CR> after a hide cancels matching the adopted paths acts at once on the
   ui:wait_until(function()
     return ui:lua("return confirmed ~= nil")
   end, 5000, "confirmed")
-  t.assert_false(ui:lua("return current"), "confirmed before the adopted paths showed")
+  t.assert_eq("gamma.txt", ui:lua("return confirmed"))
+  t.assert_true(ui:lua("return current"), "confirmed on the rows of the adopted paths")
 end)
 
 t:run()
