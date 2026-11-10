@@ -171,11 +171,14 @@ function M.setup()
       if vim.fn.pumvisible() == 1 and (session == nil or not session.menu.active) then
         return
       end
-      if Context.enabled(context) then
+      if not Context.enabled(context) then
+        if session ~= nil then
+          session:hide()
+          session.signature:hide()
+        end
+      -- In data the menu opens only on request; one asked for keeps following the input.
+      elseif not Context.in_data(context) or (session ~= nil and session:is_visible()) then
         get_session():update(context)
-      elseif session ~= nil then
-        session:hide()
-        session.signature:hide()
       end
     end)
   end

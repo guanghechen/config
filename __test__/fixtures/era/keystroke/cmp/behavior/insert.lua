@@ -163,6 +163,12 @@ return {
     expect = { { menu = false }, { menu = true }, { menu = false }, { menu = false } },
   },
   {
+    name = "data_run_opens_menu_on_request",
+    options = { lines = { string.rep("iVBORw0KGgoAAAANSUhEUg+/", 12) } },
+    steps = { "A", "al", "<C-space>" },
+    expect = { { menu = false }, { menu = false }, { menu = true, labels = { "alpha", "alpine" } } },
+  },
+  {
     name = "member_trigger",
     options = { lines = { "obj." } },
     steps = { "A", "<C-h>", "<Left>", "<Right>" },

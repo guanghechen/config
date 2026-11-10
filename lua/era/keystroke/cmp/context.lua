@@ -33,6 +33,15 @@ function M.start_col(line, col)
   return start_col and from + start_col or col
 end
 
+---Whether the word window before the cursor holds only the characters of encoded data, such as base64: there the
+---menu would offer fragments of the data, so it opens only when asked for.
+---@param context                       era.keystroke.cmp.IContext
+---@return boolean
+function M.in_data(context)
+  return context.col >= WORD_WINDOW
+    and not context.line:sub(context.col - WORD_WINDOW + 1, context.col):find("[^%w+/=_%-]")
+end
+
 ---@param before                        era.keystroke.cmp.IContext
 ---@param after                         era.keystroke.cmp.IContext
 ---@param include_start                 boolean
