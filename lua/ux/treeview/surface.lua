@@ -131,6 +131,24 @@ local function retry(view, guard)
   async.watch(view._state._data)
 end
 
+-- Not in the closure `publish` makes per publication: a loop compiled there would keep its view alive (see `stage`).
+---@param bufnr                         integer
+---@param header                        table
+---@param staging                       table[]
+---@return nil
+local function write(bufnr, header, staging)
+  vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
+  for index = #header.splices, 1, -1 do
+    local splice = header.splices[index]
+    local first, last = splice[1], splice[2]
+    if header.mode == "Reset" then
+      first, last = 0, -1
+    end
+    vim.api.nvim_buf_set_lines(bufnr, first, last, true, staging[index])
+  end
+  vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
+end
+
 ---@param view                          ux.treeview.View
 ---@param plan                          yoz.ux.treeview.RenderPlan
 ---@param header                        table
@@ -275,16 +293,7 @@ local function publish(view, plan, header, staging, guard)
   view._publishing = true
   local ok, error = pcall(function()
     if header.mode ~= "Swap" then
-      vim.api.nvim_set_option_value("modifiable", true, { buf = view.bufnr })
-      for index = #header.splices, 1, -1 do
-        local splice = header.splices[index]
-        local first, last = splice[1], splice[2]
-        if header.mode == "Reset" then
-          first, last = 0, -1
-        end
-        vim.api.nvim_buf_set_lines(view.bufnr, first, last, true, staging[index])
-      end
-      vim.api.nvim_set_option_value("modifiable", false, { buf = view.bufnr })
+      write(view.bufnr, header, staging)
     end
     view._frame, view._header = target, target_header
     view._decorations = prepared
