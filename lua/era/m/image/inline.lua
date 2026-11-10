@@ -1,5 +1,6 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.image.inline" ---@type string
+local LONG_LINE_BYTES = 64 * 1024 ---@type integer Lines typed in from this size on rescan only once typing ends.
 
 ---@class era.m.image.inline.IDocument
 ---@field public find_visible            fun(bufnr: integer, cb: era.m.image.find): nil
@@ -66,9 +67,19 @@ function M.new(bufnr, document)
     end,
   })
   vim.api.nvim_buf_attach(bufnr, false, {
-    on_lines = function()
+    on_lines = function(_, _, _, first, _, new_last)
       if self.disposed then
         return true
+      end
+      -- Each key typed in a line such as an inline base64 image would parse all of it again: the rescan waits until
+      -- typing ends (see `conceal`).
+      local mode = vim.fn.mode():sub(1, 1):lower() ---@type string
+      if
+        (mode == "i" or mode == "r")
+        and vim.api.nvim_buf_get_offset(bufnr, new_last) - vim.api.nvim_buf_get_offset(bufnr, first) > LONG_LINE_BYTES
+      then
+        self._held = true ---@diagnostic disable-line: invisible
+        return
       end
       update()
     end,

@@ -454,6 +454,52 @@ t:test("a formula on the line being typed waits until typing ends", function()
   end, 2000, "drawn once typing ended")
 end)
 
+t:test("keys typed in a very long line rescan the images once typing ends", function()
+  load_placement(fake_image({ ready = false }))
+  local Inline = assert(loadfile("lua/era/m/image/inline.lua"))()
+  local _, bufnr = edited_file({ "text", string.rep("x", 70 * 1024), "text" })
+  local scans = 0 ---@type integer
+  local inline = Inline.new(bufnr, {
+    find_visible = function(_, cb)
+      scans = scans + 1
+      cb({})
+    end,
+    math_enabled = function()
+      return false
+    end,
+  })
+  t:defer(function()
+    inline:dispose()
+  end)
+  t.wait_until(function()
+    return scans == 1
+  end, 1000, "first scan")
+  local mode = "i" ---@type string
+  t:patch_table(vim.fn, "mode", function()
+    return mode
+  end)
+
+  for _ = 1, 3 do
+    vim.api.nvim_buf_set_text(bufnr, 1, 0, 1, 0, { "y" })
+  end
+  vim.wait(300)
+  t.assert_eq(1, scans, "keys typed in the long line wait")
+  vim.api.nvim_buf_set_text(bufnr, 0, 0, 0, 0, { "y" })
+  t.wait_until(function()
+    return scans == 2
+  end, 1000, "a key typed in a short line rescans")
+  vim.api.nvim_buf_set_text(bufnr, 1, 0, 1, 0, { "y" })
+  mode = "n"
+  vim.api.nvim_exec_autocmds("ModeChanged", { buffer = bufnr })
+  t.wait_until(function()
+    return scans == 3
+  end, 1000, "rescanned once typing ended")
+  vim.api.nvim_buf_set_text(bufnr, 1, 0, 1, 0, { "y" })
+  t.wait_until(function()
+    return scans == 4
+  end, 1000, "a change outside Insert mode rescans at once")
+end)
+
 t:test("a formula that concealcursor shows while typing is drawn at once", function()
   local inline = typed_formulas("nvic")
   t:patch_table(vim.fn, "mode", function()
