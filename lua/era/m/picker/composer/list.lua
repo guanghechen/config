@@ -79,6 +79,7 @@ local PRESENTATION = {}
 ---
 ---@field public render_preview         ?era.m.picker.composer.list.IRenderPreview
 ---@field public present                ?era.m.picker.composer.list.IPresent
+---@field public rewrite_query          ?fun(input: string): string The query an input matches as.
 ---
 ---@field public on_cancel              ?era.m.picker.composer.list.IOnCancel
 ---@field public on_closed              ?era.m.picker.composer.list.IOnClosed
@@ -112,6 +113,7 @@ local PRESENTATION = {}
 ---@field protected _autosort           boolean
 ---@field protected _scheme             yoz.fuzzy.Scheme
 ---@field protected _corpus             yoz.fuzzy.Corpus Item texts, keyed by item node.
+---@field protected _rewrite_query      ?fun(input: string): string
 ---@field protected _orders             ?era.view.result_tree.Orders
 ---@field protected _matched_input      string
 ---@field protected _uuid_current       string|nil
@@ -410,6 +412,7 @@ function M.new(props)
   self._autosort = autosort
   self._scheme = scheme
   self._corpus = yoz.fuzzy.new_corpus({ scheme = scheme })
+  self._rewrite_query = props.rewrite_query
   self._orders = nil
   self._uuid_current = nil
   self._uuid_present = nil
@@ -516,6 +519,7 @@ function M:dispose()
   self._autosort = nil
   self._scheme = nil
   self._corpus = nil
+  self._rewrite_query = nil
   self._orders = nil
   self._matched_input = nil
   self._uuid_current = nil
@@ -704,7 +708,7 @@ function M:__match__(input)
   local orders ---@type era.view.result_tree.Orders|nil
   if #input > 0 then
     local result, error = self._corpus:query({
-      pattern = input,
+      pattern = self._rewrite_query and self._rewrite_query(input) or input,
       fuzzy = self.flag_fuzzy:snapshot(),
       regex = self.flag_regex:snapshot(),
       case = self.flag_case_sensitive:snapshot() and "respect" or "smart",

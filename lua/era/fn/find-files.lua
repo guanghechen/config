@@ -307,6 +307,34 @@ stl.fn.observe({ o_flag_exclude, o_flag_gitignore, o_includes, o_excludes }, fun
   refresh(picker, rootpath)
 end, true)
 
+---The path a query names outside the root: a single term, after an optional `'` or `^`, that names an absolute path
+---(see `dot.path.typed_path`) and is neither the root, a path under it, nor the root still being typed.
+---@param pattern                       string
+---@param rootpath                      string
+---@return string|nil
+local function outside_root(pattern, rootpath)
+  local term = vim.trim(pattern):match("^['^]*(%S+)$") ---@type string|nil
+  local path = term and dot.path.typed_path(term)
+  if path == nil then
+    return nil
+  end
+  local root = yoz.canonical_path.from_os_path(rootpath, false) ---@type string
+  if path == root or vim.startswith(path, root .. "/") or vim.startswith(root, path) then
+    return nil
+  end
+  return term
+end
+
+-- No file outside the root is in this list; an open buffer may be one, so Find Buffers takes the path over.
+stl.fn.observe({ o_search_pattern }, function()
+  local term = outside_root(o_search_pattern:snapshot(), o_rootpath:snapshot())
+  if term and picker:isfocused() then
+    picker.finder:set_content("")
+    picker:close()
+    era.fn.find_buffers(nil, term)
+  end
+end, true)
+
 ---@param rootpath                      string|"cwd"|"directory"|"workspace"|nil
 ---@param reset_input                   boolean|nil
 ---@return nil

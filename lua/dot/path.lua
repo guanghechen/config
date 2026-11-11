@@ -114,6 +114,21 @@ function M.relative(from, to, sep)
   return yoz.path.relative(from, to, false, sep or SEP)
 end
 
+---The absolute path a query term names: one under an existing top directory, so that a term such as `/init.lua`
+---that matches a separator stays a pattern, or one under `~/`. Nil otherwise.
+---@param term                          string
+---@return string|nil
+function M.typed_path(term)
+  if term:sub(1, 2) == "~/" then
+    return vim.uv.os_homedir() .. term:sub(2)
+  end
+  local top = term:match("^/[^/]+")
+  if top and yoz.path.is_exist_directory(top) then
+    return term
+  end
+  return nil
+end
+
 ---@param cwd                           string
 ---@param to                            string
 function M.resolve(cwd, to)

@@ -28,16 +28,24 @@ end
 
 ---@return table
 local function facade()
-  local state = { preparations = {} }
+  local state = { preparations = {}, contents = {}, closed = 0 }
   t:patch_table(era.m.picker.FiletreeComposer, "new", function(props)
     state.props = props
     return {
-      finder = { set_title = function() end, set_content = function() end },
+      finder = {
+        set_title = function() end,
+        set_content = function(_, content)
+          state.contents[#state.contents + 1] = content
+        end,
+      },
       isexistent = function()
         return false
       end,
       isfocused = function()
-        return false
+        return state.focused == true
+      end,
+      close = function()
+        state.closed = state.closed + 1
       end,
       attach = function()
         error("a pending uncached root must not be attached")
@@ -122,6 +130,47 @@ t:test("Find Files lists no files when the walk rejects a pattern", function()
   t.assert_same({}, paths:get_result(), "no file matches a rejected pattern")
   t.assert_eq(1, #warnings)
   t.assert_true(vim.startswith(warnings[1], "Invalid exclude glob '['"), warnings[1])
+end)
+
+t:test("Find Files hands a path outside its root to Find Buffers", function()
+  local values, picker = controls(), facade()
+  local root, sibling = t:tempdir(), t:tempdir()
+  t:patch_table(dot.context.select, "find_file", values)
+  t:patch_table(dot.path, "cwd", function()
+    return root
+  end)
+  local handed = {}
+  t:patch_table(era.fn, "find_buffers", function(scope, pattern)
+    handed[#handed + 1] = { scope = scope, pattern = pattern }
+  end)
+  assert(loadfile("lua/era/fn/find-files.lua"))()
+  ---@param query                       string
+  ---@return integer
+  local function type_query(query)
+    values.search_pattern:next(query)
+    vim.wait(20)
+    return #handed
+  end
+  picker.focused = true
+  for _, query in ipairs({
+    root .. "/lua",
+    root:sub(1, 8),
+    "/init.lua",
+    "!" .. sibling,
+    sibling .. " lua",
+    "lua",
+  }) do
+    t.assert_eq(0, type_query(query), query)
+  end
+  picker.focused = false
+  t.assert_eq(0, type_query(sibling), "only while Find Files has the focus")
+  picker.focused = true
+  t.assert_eq(1, type_query("'" .. sibling .. "/a.lua"))
+  t.assert_same({ pattern = sibling .. "/a.lua" }, handed[1], "the path without its marks")
+  t.assert_eq("", picker.contents[#picker.contents], "its own query clears")
+  t.assert_eq(1, picker.closed)
+  t.assert_eq(2, type_query("~/elsewhere"))
+  t.assert_same({ pattern = "~/elsewhere" }, handed[2])
 end)
 
 t:run()

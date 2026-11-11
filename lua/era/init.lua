@@ -34,7 +34,7 @@ local __fn__mods = {
 ---@class era.fn
 ---@field public __mods                 era.fn.__mods
 ---@field public add_locations_to_ai    fun(locations: dot.t.ILocation[]): nil
----@field public find_buffers           fun(scope: dot.e.FindBufferScope|nil): nil
+---@field public find_buffers           fun(scope: dot.e.FindBufferScope|nil, pattern: string|nil): nil
 ---@field public find_diagnostics       fun(): nil
 ---@field public find_explorer          fun(specified_filepath: string|nil): nil
 ---@field public find_files             fun(rootpath: string|"cwd"|"directory"|"workspace"|nil, reset_input: boolean|nil): nil

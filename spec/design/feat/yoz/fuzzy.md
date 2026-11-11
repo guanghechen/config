@@ -119,6 +119,9 @@ local filter = result:ids(source)                                    -- yoz.ux.t
 - 查询中写成 root 下绝对路径的部分先转为相对路径再匹配：fuzzy/exact 逐词处理（保留词首的 `!`、`'`、`^`），
   regex 处理开头（可带 `^`），root 原样或完整转义均可；`~/` 视为 home 目录；只剩 root 本身时等同空查询，列出全部条目。
   root 外的绝对路径保持原样。
+- 查询词是否为路径由 `dot.path.typed_path` 判定：首段为已存在顶层目录的绝对路径，或 `~/` 开头；`/init.lua` 这类
+  首段不存在的写法仍是普通查询。Find Files 的查询是 root 外的单个路径时（仍在输入 root 前缀时不算），它清空自己的查询并
+  转交 Find Buffers；Find Buffers 把查询中的路径按当前目录转为列表显示的相对形式（如 `../other/b.lua`）再匹配。
 - 返回的 orders 在结果集与顺序不变时保持身份，`_display` 因此不重新提交 display；高亮则始终跟随最新查询，
   并刷新当前 Frame 的装饰。
 - `_display` 收到结果句柄时，用 `orders:ids(source)` 生成 filter。

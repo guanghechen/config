@@ -109,6 +109,21 @@ local function create_buffer_item(bufnr, cwd)
   }
 end
 
+---A term that names an absolute path (see `dot.path.typed_path`) names a buffer as the list shows it, relative to the
+---working directory; its `!`, `'` or `^` stays in front.
+---@param input                         string
+---@return string
+local function rewrite_query(input)
+  local cwd = dot.path.cwd() ---@type string
+  return (
+    input:gsub("%S+", function(term)
+      local marks, rest = term:match("^([!'^]*)(.*)$")
+      local path = dot.path.typed_path(rest)
+      return path and marks .. dot.path.relative(cwd, path, "/") or term
+    end)
+  )
+end
+
 ---@return era.m.picker.composer.list.IResetData
 local function fetch_data()
   local cwd = dot.path.cwd() ---@type string
@@ -141,6 +156,7 @@ picker = era.m.picker.ListComposer.new({
   width = 120,
 
   search_pattern = o_search_pattern,
+  rewrite_query = rewrite_query,
   flag_fuzzy = o_flag_fuzzy,
   flag_regex = o_flag_regex,
   flag_case_sensitive = o_flag_case_sensitive,
@@ -252,12 +268,17 @@ stl.fn.observe({ o_scope }, function()
 end, false)
 
 ---@param scope                         dot.e.FindBufferScope|nil
+---@param pattern                       ?string The query to start with, such as a path Find Files hands over.
 ---@return nil
-local function find_buffers(scope)
+local function find_buffers(scope, pattern)
   if scope ~= nil then
     o_scope:next(scope)
   end
-  o_search_pattern:next("")
+  if pattern then
+    picker.finder:set_content(pattern)
+  else
+    o_search_pattern:next("")
+  end
   local data = fetch_data()
   picker:reset_data(data)
   picker:focus()
