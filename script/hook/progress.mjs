@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { execFileSync } from "node:child_process"
-import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 
@@ -41,9 +41,11 @@ function main() {
     case "Notification":
       rmSync(marker, { force: true })
       rmSync(question, { force: true })
+      reapAgents(dir, event.background_tasks)
       break
     case "SubagentStop":
       rmSync(marker, { force: true })
+      reapAgents(dir, event.background_tasks)
       break
     // The bell alone cannot mark a pending question: tmux records none on a visible window
     // and clears it once viewed. Declining or "Chat about this" denies the tool without
@@ -78,6 +80,32 @@ function readEvent() {
     return JSON.parse(readFileSync(0, "utf-8"))
   } catch {
     return null
+  }
+}
+
+// Claude Code skips SubagentStop for a subagent aborted mid-query, as TaskStop on the agent
+// or its workflow does, and TaskStop names only the task it stopped. Stop and SubagentStop
+// list the session's in-flight background work, so an agent marker missing from that list
+// is stale. Workflow agents are not listed one by one, so reaping waits until no workflow
+// is in flight, and it spares markers younger than Claude Code's snapshot could know about.
+function reapAgents(dir, tasks) {
+  if (!Array.isArray(tasks)) return
+  const inFlight = tasks.filter((task) => task && !["completed", "failed", "killed"].includes(task.status))
+  if (inFlight.some((task) => task.type === "workflow")) return
+  const live = new Set(inFlight.filter((task) => task.type === "subagent").map((task) => `agent-${task.id}`))
+  const fresh = Date.now() - 10_000
+  let markers
+  try {
+    markers = readdirSync(dir)
+  } catch {
+    return
+  }
+  for (const name of markers) {
+    if (!name.startsWith("agent-") || live.has(name)) continue
+    const file = join(dir, name)
+    try {
+      if (statSync(file).mtimeMs < fresh) rmSync(file, { force: true })
+    } catch {}
   }
 }
 
