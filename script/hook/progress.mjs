@@ -7,8 +7,9 @@ import { join } from "node:path"
 
 // Claude Code keeps a static terminal title under multiplexers, so a busy pane looks
 // idle. Report activity as an OSC 9;4 progress state instead; tmux captures it as
-// pane_pb_state. Background subagents outlive the turn, so busy means an open turn or
-// any live subagent, tracked as one marker file each under a per-session directory.
+// pane_pb_state. Background subagents outlive the turn, so busy means any live subagent
+// or an open turn not waiting on the user, tracked as one marker file each under a
+// per-session directory.
 const BUSY = "\x1b]9;4;3\x07"
 const IDLE = "\x1b]9;4;0\x07"
 
@@ -21,7 +22,7 @@ function main() {
   const name = event.hook_event_name
   const marker = join(dir, name.startsWith("Subagent") ? `agent-${event.agent_id}` : "turn")
 
-  switch (name) {
+  switch (event.tool_name ? `${name}:${event.tool_name}` : name) {
     case "UserPromptSubmit":
     case "SubagentStart":
       mkdirSync(dir, { recursive: true })
@@ -34,8 +35,18 @@ function main() {
     case "SubagentStop":
       rmSync(marker, { force: true })
       break
+    // A question parks the open turn until PostToolUse delivers the answer. The bell alone
+    // cannot mark the wait: tmux records none on a visible window and clears it once
+    // viewed. Declining or "Chat about this" denies the tool, so no PostToolUse follows.
+    case "PreToolUse:AskUserQuestion":
+      rmSync(marker, { force: true })
+      break
+    case "PostToolUse:AskUserQuestion":
+      mkdirSync(dir, { recursive: true })
+      writeFileSync(marker, "")
+      break
     // TaskStop kills a subagent without firing SubagentStop; its task_id is the agent_id.
-    case "PostToolUse":
+    case "PostToolUse:TaskStop":
       rmSync(join(dir, `agent-${event.tool_input?.task_id}`), { force: true })
       break
     // A starting process has no open turn or subagent; resetting also clears a busy

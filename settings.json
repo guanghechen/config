@@ -70,13 +70,18 @@
             "type": "command",
             "command": "node \"$CLAUDE_CONFIG_DIR/script/hook/notify.mjs\"",
             "async": true
+          },
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_CONFIG_DIR/script/hook/progress.mjs\"",
+            "timeout": 5
           }
         ]
       }
     ],
     "PostToolUse": [
       {
-        "matcher": "^TaskStop$",
+        "matcher": "^(TaskStop|AskUserQuestion)$",
         "hooks": [
           {
             "type": "command",
