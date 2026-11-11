@@ -2,7 +2,7 @@
 local __module_name__ = "__test__.support.dressing" ---@type string
 
 -- Doubles of the runtime around `era.dressing` modules: flight switches, autocommand groups, timers, bars and
--- ephemeral decorations.
+-- ephemeral decorations; the indentscope runtime with its buffers, drawn guide rows and screen reads.
 
 local bootstrap = require("__test__.support.bootstrap")
 local nvim_fn = require("stl.nvim.fn")
@@ -130,6 +130,89 @@ function M.with_indentline(t)
       },
     },
   })
+end
+
+---Declares the globals `era.dressing.indentscope` reads and returns the module, which its keymaps reach as
+---`era.dressing.indentscope`.
+---@param t                             __test__.support.Harness
+---@return era.dressing.indentscope
+function M.with_indentscope(t)
+  bootstrap.with_runtime(t, {
+    stl = {
+      filetype = require("stl.filetype"),
+      nvim = { fn = nvim_fn },
+      timer = require("stl.timer"),
+    },
+    era = { dressing = {} },
+  })
+  local Indentscope = require("era.dressing.indentscope")
+  era.dressing.indentscope = Indentscope
+  return Indentscope
+end
+
+---Shows `lines` as two-space indented Lua in the current window; the drawn scope is cleared and the window gets its
+---fold method back when the case ends.
+---@param t                             __test__.support.Harness
+---@param lines                         string[]
+---@return integer
+function M.indentscope_buffer(t, lines)
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local foldmethod = vim.api.nvim_get_option_value("foldmethod", { win = winnr }) ---@type string
+  local bufnr = t:buffer(lines, { filetype = "lua", current = true }) ---@type integer
+  t:defer(function()
+    require("era.dressing.indentscope").undraw()
+    if vim.api.nvim_win_is_valid(winnr) then
+      vim.api.nvim_set_option_value("foldmethod", foldmethod, { win = winnr })
+    end
+  end)
+  vim.api.nvim_set_option_value("expandtab", true, { buf = bufnr })
+  vim.api.nvim_set_option_value("shiftwidth", 2, { buf = bufnr })
+  vim.api.nvim_set_option_value("tabstop", 2, { buf = bufnr })
+  return bufnr
+end
+
+---Lines of one indented scope, `count` lines long, between the lines "root" and "tail".
+---@param count                         integer
+---@return string[]
+function M.indented_lines(count)
+  local lines = { "root" } ---@type string[]
+  for index = 2, count + 1 do
+    lines[index] = "  line"
+  end
+  lines[count + 2] = "tail"
+  return lines
+end
+
+---Redraws `winnr` (the current window by default) and returns the rows indentscope draws guides on, in order.
+---@param t                             __test__.support.Harness
+---@param winnr                         ?integer
+---@return integer[]
+function M.indentscope_rows(t, winnr)
+  require("era.dressing.indentscope.draw")
+  local namespace = vim.api.nvim_get_namespaces()["era.dressing.indentscope"] ---@type integer
+  local extmarks = M.ephemeral_extmarks(t, namespace, function()
+    vim.api.nvim__redraw({ win = winnr or vim.api.nvim_get_current_win(), valid = false, flush = true })
+  end)
+  local rows = {} ---@type integer[]
+  for _, extmark in ipairs(extmarks) do
+    rows[#rows + 1] = extmark.row
+  end
+  table.sort(rows)
+  return rows
+end
+
+---The character on the screen at display column `col` (0 by default) of line `lnum` in `winnr`.
+---@param winnr                         integer
+---@param lnum                          integer
+---@param col                           ?integer
+---@return string
+function M.screen_char(winnr, lnum, col)
+  local position = vim.api.nvim_win_get_position(winnr) ---@type integer[]
+  local info = vim.fn.getwininfo(winnr)[1] ---@type table
+  local topline = vim.api.nvim_win_call(winnr, function()
+    return vim.fn.line("w0")
+  end) ---@type integer
+  return vim.fn.screenstring(position[1] + lnum - topline + 1, position[2] + info.textoff + (col or 0) + 1)
 end
 
 ---@param timeout                       integer

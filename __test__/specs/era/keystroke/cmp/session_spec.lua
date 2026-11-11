@@ -274,16 +274,6 @@ t:test("workspace paths do not delay buffer fallback while scanning", function()
   t.assert_eq(2, #state.session.items, "workspace paths and fallback words remain available")
 end)
 
-t:test("source policy distinguishes workspace paths before starting requests", function()
-  local Policy = require("era.keystroke.cmp.policy")
-  local workspace = Policy.sources_for(runtime.context("@a"), false)
-  local ordinary = Policy.sources_for(runtime.context("./a"), false)
-  t.assert_true(vim.list_contains(workspace, "path_at"), "workspace path owner")
-  t.assert_false(vim.list_contains(workspace, "path"), "one path source is requested")
-  t.assert_true(vim.list_contains(ordinary, "path"), "ordinary paths retain buffer dependency")
-  t.assert_false(vim.list_contains(ordinary, "path_at"), "policy does not mutate shared source lists")
-end)
-
 t:test("eligible buffer fallback keeps its completed snapshot across prefix changes", function()
   local state = fixture()
   state.names = { "lsp", "buffer" }

@@ -1,90 +1,6 @@
 require("ark.bootstrap").setup()
 local t = require("__test__.support.harness").new()
-local diffview = require("__test__.support.diffview")
 local pane_sbs = require("era.m.diffview.pane.sbs")
-
----@param winnr                         integer
----@param command                       string
-local function normal(winnr, command)
-  vim.api.nvim_win_call(winnr, function()
-    vim.cmd("normal! " .. command)
-  end)
-end
-
----@param winnr                         integer
----@return boolean
-local function is_fold_closed(winnr)
-  return vim.api.nvim_win_call(winnr, function()
-    return vim.fn.foldclosed(1) ~= -1
-  end)
-end
-
----Folds lines 1 to 3 of window `winnr` by hand.
----@param winnr                         integer
----@return nil
-local function fold(winnr)
-  vim.api.nvim_set_option_value("foldenable", true, { win = winnr, scope = "local" })
-  vim.api.nvim_set_option_value("foldmethod", "manual", { win = winnr, scope = "local" })
-  vim.api.nvim_win_call(winnr, function()
-    vim.cmd("1,3fold")
-  end)
-end
-
----Runs the scheduled fold commands and the work they schedule in turn.
----@return nil
-local function wait_for_scheduled()
-  t.drain()
-  t.drain()
-end
-
-t:test("side-by-side fold policy is deterministic and preserves panel focus", function()
-  local panel_winnr = vim.api.nvim_get_current_win() ---@type integer
-  local lines = { "one", "two", "three", "four", "five" }
-  t:buffer(lines, { current = true })
-  local left_winnr, right_winnr = diffview.sbs_windows(t, lines)
-  for _, winnr in ipairs({ panel_winnr, left_winnr, right_winnr }) do
-    fold(winnr)
-  end
-  normal(panel_winnr, "zR")
-
-  normal(left_winnr, "zM")
-  normal(right_winnr, "zM")
-  vim.api.nvim_set_current_win(panel_winnr)
-  pane_sbs.apply_fold_unchanged_pair(left_winnr, right_winnr, false)
-  t.wait_until(function()
-    return not is_fold_closed(left_winnr) and not is_fold_closed(right_winnr)
-  end, 5000, "expanded diff folds")
-  t.assert_eq(panel_winnr, vim.api.nvim_get_current_win(), "panel focus after expand")
-
-  normal(right_winnr, "zM")
-  pane_sbs.apply_fold_unchanged_pair(left_winnr, right_winnr, false)
-  t.wait_until(function()
-    return not is_fold_closed(left_winnr) and not is_fold_closed(right_winnr)
-  end, 5000, "reapplied expanded diff folds")
-
-  normal(left_winnr, "zR")
-  normal(right_winnr, "zM")
-  pane_sbs.apply_fold_unchanged_pair(left_winnr, right_winnr, true)
-  t.wait_until(function()
-    return is_fold_closed(left_winnr) and is_fold_closed(right_winnr)
-  end, 5000, "collapsed diff folds")
-  wait_for_scheduled()
-  t.assert_eq(panel_winnr, vim.api.nvim_get_current_win(), "panel focus after collapse")
-  t.assert_false(is_fold_closed(panel_winnr), "panel folds unchanged")
-
-  local fold_unchanged = true
-  local left_bufnr, right_bufnr = vim.api.nvim_win_get_buf(left_winnr), vim.api.nvim_win_get_buf(right_winnr)
-  pane_sbs.__apply_buffers__(left_winnr, right_winnr, left_bufnr, right_bufnr, {
-    get_fold_unchanged = function()
-      return fold_unchanged
-    end,
-  })
-  fold_unchanged = false
-  t.wait_until(function()
-    return not is_fold_closed(left_winnr) and not is_fold_closed(right_winnr)
-  end, 5000, "latest fold policy applied")
-  wait_for_scheduled()
-end)
 
 t:test("fold actions separate the current view from the global default", function()
   local default = dot.context.diffview.flag_fold_unchanges
@@ -127,18 +43,6 @@ t:test("fold actions separate the current view from the global default", functio
     t.assert_eq("false,true,false", table.concat(vim.tbl_map(tostring, applied), ","), kind .. " applied policies")
   end
   t.assert_eq(2, dirty_count, "both defaults dirty the tabline")
-end)
-
-t:test("workspace status assigns fold default to flag 3 and untracked to flag 4", function()
-  diffview.repository(t)
-  local session = diffview.open_workspace(t)
-
-  local tabline = require("era.m.diffview.view.workspace.tabline")
-  local component = tabline.status_component()
-  local context = { tabnr = session.tabnr }
-  local text = component.render(component.refresh(context), context, 120)
-  t.assert_true(text:find(stl.icon.symbols.flag_fold .. "³", 1, true) ~= nil, "fold default flag")
-  t.assert_true(text:find(stl.icon.symbols.flag_untracked .. "⁴", 1, true) ~= nil, "untracked flag")
 end)
 
 t:run()

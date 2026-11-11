@@ -1,57 +1,9 @@
 local UI = require("__test__.support.ui")
+local picker = require("__test__.support.picker")
 local t = require("__test__.support.harness").new()
 
----@return __test__.support.UI
-local function session()
-  local ui = UI.open(t, { width = 100, height = 32, runtime = "ark" })
-  ui:lua([[
-    errors = {}
-    stl.reporter.error = function(value) errors[#errors + 1] = value end
-    controls = {
-      search_pattern = stl.c.Observable.from_value(""),
-      flag_fuzzy = stl.c.Observable.from_value(false),
-      flag_regex = stl.c.Observable.from_value(false),
-      flag_case_sensitive = stl.c.Observable.from_value(false),
-    }
-    original = {opaque = newproxy(false)}
-    items = {
-      {uuid="one", text="needle first", text_lower="needle first", data=original},
-      {uuid="two", text="needle second", text_lower="needle second", data={}},
-      {uuid="three", text="other", text_lower="other", data={}},
-    }
-    picker = era.m.picker.ListComposer.new(vim.tbl_extend("force", controls, {
-      name="native list", title="native list", permanent=true,
-      present=function(_, item)
-        local prefix="中:"
-        return {label=prefix..item.text, match_regions={{0, #item.text, #prefix}}}
-      end,
-    }))
-    writes, matches = 0, {}
-    local set_lines = vim.api.nvim_buf_set_lines
-    vim.api.nvim_buf_set_lines = function(bufnr, ...)
-      if bufnr == picker.result:get_bufnr() then writes = writes + 1 end
-      return set_lines(bufnr, ...)
-    end
-    local set_extmark = vim.api.nvim_buf_set_extmark
-    vim.api.nvim_buf_set_extmark = function(bufnr, nsnr, row, col, options)
-      if bufnr == picker.result:get_bufnr() and options.ephemeral and options.hl_group == "TreeviewMatch" then
-        matches[row] = {col, options.end_col}
-      end
-      return set_extmark(bufnr, nsnr, row, col, options)
-    end
-    picker:reset_data({items=items, uuid_current="one", uuid_present="two"})
-    picker:focus()
-  ]])
-  ui:wait_lua(
-    "return picker._treeview.view and picker._treeview.view:frame() and picker._treeview:linecount() == 3",
-    5000,
-    "three rows"
-  )
-  return ui
-end
-
 t:test("native List preserves callback payload identity, match byte offsets and warm buffers", function()
-  local ui = session()
+  local ui = picker.list_ui(t)
   t.assert_eq("userdata", ui:lua("return type(picker._treeview.state:native())"))
   t.assert_true(ui:lua("return picker:retrieve(1) == items[1]"), "original item identity")
   t.assert_true(ui:lua("return picker:retrieve(1).data == original"), "original payload identity")
@@ -79,7 +31,7 @@ t:test("native List preserves callback payload identity, match byte offsets and 
 end)
 
 t:test("a Visual frame keeps its published payloads while a replacement reorders the List", function()
-  local ui = session()
+  local ui = picker.list_ui(t)
   ui:lua([[
     vim.cmd.stopinsert()
     vim.api.nvim_set_current_win(picker.result:get_winnr())
@@ -109,7 +61,7 @@ t:test("a Visual frame keeps its published payloads while a replacement reorders
 end)
 
 t:test("equal presentation replaces action payloads through a new revision without rewriting text", function()
-  local ui = session()
+  local ui = picker.list_ui(t)
   ui:lua([[
     previous_revision=picker._treeview:frame():header().data_revision
     replacement={}
@@ -132,7 +84,7 @@ t:test("equal presentation replaces action payloads through a new revision witho
 end)
 
 t:test("multiple occurrences remain on one native row with the best alignment highlighted", function()
-  local ui = session()
+  local ui = picker.list_ui(t)
   ui:lua([[
     spans={}
     local set_extmark=vim.api.nvim_buf_set_extmark
@@ -154,7 +106,7 @@ t:test("multiple occurrences remain on one native row with the best alignment hi
 end)
 
 t:test("fuzzy queries rank with smart case and regex queries keep their escapes", function()
-  local ui = session()
+  local ui = picker.list_ui(t)
   ui:lua([[
     picker:reset_data({items={
       {uuid="space", text=" ", data={}},
@@ -190,7 +142,7 @@ t:test("fuzzy queries rank with smart case and regex queries keep their escapes"
 end)
 
 t:test("an invalid regex lists nothing and says why", function()
-  local ui = session()
+  local ui = picker.list_ui(t)
   ui:lua("controls.flag_regex:next(true)")
   ui:lua("picker.finder:set_content(...)", "(")
   ui:wait_lua(
@@ -203,7 +155,7 @@ t:test("an invalid regex lists nothing and says why", function()
 end)
 
 t:test("a newer reset supersedes partially prepared producer records", function()
-  local ui = session()
+  local ui = picker.list_ui(t)
   ui:lua([[
     local now=vim.uv.hrtime
     local clock=now()
@@ -223,44 +175,8 @@ t:test("a newer reset supersedes partially prepared producer records", function(
   t.assert_eq(0, ui:lua("return #errors"))
 end)
 
-t:test("Snacks items with equal names retain distinct native rows and action payloads", function()
-  local ui = session()
-  ui:lua([[
-    choices={{name="same",text="same",value=1},{name="same",text="same",value=2}}
-    local data=require("era.m.select.provider-snacks")(choices,{format_item=function(item) return item.text end})
-    picker:reset_data(data)
-  ]])
-  ui:wait_lua("return picker._treeview:linecount()==2 or #errors>0", 5000, "choices published")
-  t.assert_eq(0, ui:lua("return #errors"))
-  t.assert_true(ui:lua("return picker:retrieve(1).data.original_item==choices[1]"))
-  t.assert_true(ui:lua("return picker:retrieve(2).data.original_item==choices[2]"))
-end)
-
-for _, provider in ipairs({ "fallback", "snacks" }) do
-  t:test(provider .. " escapes control characters while preserving original choices", function()
-    local ui = session()
-    ui:lua(
-      [[
-      local provider=...
-      choices={"carriage\rreturn", "zero\0byte"}
-      local data=require("era.m.select.provider-"..provider)(choices,{format_item=function(item) return item end})
-      picker:reset_data(data)
-    ]],
-      provider
-    )
-    ui:wait_lua("return picker._treeview:linecount()==2 or #errors>0", 5000, "choices published")
-    t.assert_eq(0, ui:lua("return #errors"))
-    t.assert_true(ui:lua("return picker:retrieve(1).data.original_item==choices[1]"))
-    t.assert_true(ui:lua("return picker:retrieve(2).data.original_item==choices[2]"))
-    t.assert_true(ui:lua([[
-      local text=table.concat(vim.api.nvim_buf_get_lines(picker.result:get_bufnr(),0,-1,false))
-      return text:find("carriage\\rreturn",1,true)~=nil and text:find("zero\\0byte",1,true)~=nil
-    ]]))
-  end)
-end
-
 t:test("flat replacements keep stable native identities and selection through a full import", function()
-  local ui = session()
+  local ui = picker.list_ui(t)
   ui:lua([[
     before=picker._treeview:frame():source():id("item:one")
     picker._treeview:set_selected("item:one",true)
@@ -291,7 +207,7 @@ t:test("flat replacements keep stable native identities and selection through a 
 end)
 
 t:test("a rejected flat reset leaves the published payloads and selection intact", function()
-  local ui = session()
+  local ui = picker.list_ui(t)
   ui:lua([[
     picker._treeview:set_selected("item:one",true)
     picker:reset_data({items={items[1],items[1]}})

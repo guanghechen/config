@@ -1,4 +1,5 @@
 local bootstrap = require("__test__.support.bootstrap")
+local git_buffer = require("__test__.support.git_buffer")
 local harness = require("__test__.support.harness")
 local t = harness.new()
 bootstrap.with_runtime(t, { yoz = require("yoz") })
@@ -60,6 +61,75 @@ t:test("missing status leaves the row unchanged", function()
   local snapshot, calls = snapshot_of({ codes = 4, display = "M", staged_display = "", stage = "unstaged" })
   t.assert_eq("", status.calc_info(snapshot, "", "file", 0, {}), "empty path")
   t.assert_eq(0, #calls, "an empty path is not looked up")
+end)
+
+---A native status job, running until the case sets its `state`, that `status.collect` starts in the workspace /repo
+---for the rest of the case.
+---@return table
+local function status_job()
+  git_buffer.with_futures(t)
+  local job = { state = "running", cancelled = 0, disposed = 0, snapshot = {} }
+  ---@return string
+  ---@return table
+  function job:poll()
+    return self.state, self.snapshot
+  end
+  ---@return nil
+  function job:cancel()
+    self.cancelled = self.cancelled + 1
+    self.state = "cancelled"
+  end
+  ---@return nil
+  function job:dispose()
+    self.disposed = self.disposed + 1
+  end
+  bootstrap.with_runtime(t, {
+    dot = {
+      path = {
+        workspace = function()
+          return "/repo"
+        end,
+        is_git_repo = function()
+          return true
+        end,
+      },
+    },
+    yoz = {
+      git = {
+        start_status = function(options)
+          job.options = options
+          return job
+        end,
+      },
+    },
+  })
+  return job
+end
+
+t:test("native snapshot is published without materializing its entries", function()
+  local job = status_job()
+  local future = status.collect({ base = "HEAD", include_numstat = true, include_untracked = false })
+  t.assert_false(future:is_done(), "running job")
+  t.assert_eq("/repo", job.options.cwd, "workspace captured")
+  t.assert_false(job.options.include_untracked, "untracked exclusion")
+  t.assert_true(job.options.include_numstat, "numstat request")
+  t.assert_eq("HEAD", job.options.base, "base")
+  job.state = "completed"
+  t.settle(future)
+  t.assert_true(future:get_result() == job.snapshot, "native handle passed through")
+  t.assert_eq(1, job.disposed, "completed job disposed")
+end)
+
+t:test("a collection's cancellation token reaches its native job", function()
+  local job = status_job()
+  local token = stl.c.CancellationToken.new()
+  local future = status.collect(nil, token)
+  token:cancel()
+  job.state = "completed"
+  t.settle(future)
+  t.assert_eq(1, job.cancelled, "native cancel requested")
+  t.assert_true(future:is_failed(), "stale completion rejected")
+  t.assert_eq(1, job.disposed, "cancelled job disposed")
 end)
 
 t:run()

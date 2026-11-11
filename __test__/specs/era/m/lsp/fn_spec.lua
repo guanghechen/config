@@ -1,4 +1,5 @@
 local bootstrap = require("__test__.support.bootstrap")
+local fs = require("__test__.support.fs")
 local harness = require("__test__.support.harness")
 
 local t = harness.new()
@@ -54,6 +55,15 @@ t:test("locate_lsp_root: preserves the search root for nested markers", function
 
   t.assert_eq(root, rootdir, "project root")
   t.assert_eq(root .. "/theme/static_src/tailwind.config.js", marker, "nested marker")
+end)
+
+t:test("non-executable package binaries do not shadow a working ancestor binary", function()
+  local root = t:tempdir()
+  local binpath = root .. "/node_modules/.bin/biome"
+  fs.write(binpath, { "#!/bin/sh" })
+  fs.write(root .. "/src/node_modules/.bin/biome", { "" })
+  assert(vim.uv.fs_chmod(binpath, 493))
+  t.assert_eq(binpath, Fn.locate_node_bin(root .. "/src", "biome"), "executable ancestor")
 end)
 
 t:test("locate_js_project_root: keeps Node and Deno roots mutually exclusive", function()

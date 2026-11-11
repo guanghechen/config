@@ -1,32 +1,17 @@
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
+local support = require("__test__.support.image")
 local t = harness.new()
 
----Declares the globals `dressing` reads, inside tmux when `tmux` is and in the tmux pane `pane`, and an image state
----that supports the terminal.
+---Declares the globals `dressing` reads as `with_dressing` does, inside tmux when `tmux` is and in the tmux pane `pane`,
+---and returns the image state.
 ---@param tmux                          boolean
 ---@param pane                          ?string
 ---@return table
 local function tmux_runtime(tmux, pane)
-  local state = {
-    did_setup = false,
-    data = { extnames = { ".png" }, doc = { enabled = false } },
-    is_support_terminal = function()
-      return true
-    end,
-  }
-  t:patch_global("stl", {
-    env = { IS_OSX = true, IS_TMUX = tmux },
-    fn = { observe = function() end },
-    nvim = { fn = {
-      augroup = function()
-        return 1
-      end,
-    } },
-  })
-  t:patch_global("dot", { context = { theme = {} } })
+  local state = support.with_dressing(t)
+  t:patch_table(stl.env, "IS_TMUX", tmux)
   t:patch_table(vim, "env", { TMUX_PANE = pane })
-  t:patch_table(package.loaded, "era.m.image.state", state)
   return state
 end
 

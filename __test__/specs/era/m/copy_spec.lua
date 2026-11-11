@@ -87,59 +87,55 @@ local function use_buffer(filepath)
   return t:buffer(lines, { name = filepath ~= "" and filepath or nil, current = true })
 end
 
-t:test("copies the current line with a GitHub location fragment", function()
-  use_buffer("/workspace/lua/test.lua")
-  vim.api.nvim_win_set_cursor(0, { 23, 0 })
-  copied = nil
-  local options = nil ---@type table|nil
-  local on_choice = nil ---@type (fun(choice: string|nil): nil)|nil
+-- Without a scope, the location is copied in the filepath form chosen from a picker whose title shows the fragment.
+for _, case in ipairs({
+  {
+    name = "copies the current line with a GitHub location fragment",
+    cursor = { 23, 0 },
+    title = "Copy Filepath (#L23)",
+    choice = "relative",
+    copied = "lua/test.lua#L23",
+  },
+  {
+    name = "sorts a reversed visual selection into a GitHub line range",
+    keys = "42Gv23G",
+    title = "Copy Filepath (#L23-L42)",
+    choice = "filename",
+    copied = "test.lua#L23-L42",
+  },
+  {
+    name = "uses a single-line fragment for a visual selection within one line",
+    keys = "23G0v5l",
+    choice = "relative",
+    copied = "lua/test.lua#L23",
+  },
+}) do
+  t:test(case.name, function()
+    use_buffer("/workspace/lua/test.lua")
+    if case.cursor ~= nil then
+      vim.api.nvim_win_set_cursor(0, case.cursor)
+    end
+    copied = nil
+    local options = nil ---@type table|nil
+    local on_choice = nil ---@type (fun(choice: string|nil): nil)|nil
 
-  t:patch_table(vim.ui, "select", function(_, opts, callback)
-    options = opts
-    on_choice = callback
+    t:patch_table(vim.ui, "select", function(_, opts, callback)
+      options = opts
+      on_choice = callback
+    end)
+
+    if case.keys ~= nil then
+      vim.cmd("normal! " .. case.keys)
+    end
+    copy.copy_filepath_location()
+
+    if case.title ~= nil then
+      t.assert_eq(case.title, assert(options).prompt, "picker title")
+    end
+    assert(on_choice)(case.choice)
+    t.assert_eq(case.copied, copied, "clipboard content")
   end)
-
-  copy.copy_filepath_location()
-
-  t.assert_eq("Copy Filepath (#L23)", assert(options).prompt, "picker title")
-  assert(on_choice)("relative")
-  t.assert_eq("lua/test.lua#L23", copied, "clipboard content")
-end)
-
-t:test("sorts a reversed visual selection into a GitHub line range", function()
-  use_buffer("/workspace/lua/test.lua")
-  copied = nil
-  local options = nil ---@type table|nil
-  local on_choice = nil ---@type (fun(choice: string|nil): nil)|nil
-
-  t:patch_table(vim.ui, "select", function(_, opts, callback)
-    options = opts
-    on_choice = callback
-  end)
-
-  vim.cmd("normal! 42Gv23G")
-  copy.copy_filepath_location()
-
-  t.assert_eq("Copy Filepath (#L23-L42)", assert(options).prompt, "picker title")
-  assert(on_choice)("filename")
-  t.assert_eq("test.lua#L23-L42", copied, "clipboard content")
-end)
-
-t:test("uses a single-line fragment for a visual selection within one line", function()
-  use_buffer("/workspace/lua/test.lua")
-  copied = nil
-  local on_choice = nil ---@type (fun(choice: string|nil): nil)|nil
-
-  t:patch_table(vim.ui, "select", function(_, _, callback)
-    on_choice = callback
-  end)
-
-  vim.cmd("normal! 23G0v5l")
-  copy.copy_filepath_location()
-
-  assert(on_choice)("relative")
-  t.assert_eq("lua/test.lua#L23", copied, "clipboard content")
-end)
+end
 
 t:test("copies an absolute filepath when the scope is provided", function()
   use_buffer("/workspace/lua/test.lua")

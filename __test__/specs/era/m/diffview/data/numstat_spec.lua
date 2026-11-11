@@ -87,118 +87,6 @@ t:test("numstat: preserves literal special paths from the NUL protocol", functio
   t.assert_eq(2, multiline.deletions, "newline path deletions")
 end)
 
-t:test("fetch: applies tracked stats from the shared status snapshot", function()
-  local collect_opts = nil ---@type era.m.git.status.ICollectOpts|nil
-  t:patch_table(era, "m", {
-    git = {
-      status = {
-        collect = function(opts)
-          collect_opts = opts
-          return {
-            await = function()
-              local result = {
-                status_map = {
-                  ["/repo/a.lua"] = {
-                    relative = "a.lua",
-                    staged = { A = true },
-                    unstaged = {},
-                    staged_new_object_name = "index-a",
-                  },
-                  ["/repo/b.lua"] = {
-                    relative = "b.lua",
-                    staged = {},
-                    unstaged = { M = true },
-                    unstaged_old_object_name = "index-b",
-                  },
-                },
-                numstats = {
-                  staged = { ["a.lua"] = { insertions = 7, deletions = 0 } },
-                  unstaged = { ["b.lua"] = { insertions = 2, deletions = 3 } },
-                },
-              }
-              return {
-                export = function()
-                  return result
-                end,
-              }
-            end,
-          }
-        end,
-      },
-    },
-  })
-  t:patch_table(dot, "path", {
-    workspace = function()
-      return "/repo"
-    end,
-  })
-
-  local entries = data.fetch_diff_entries()
-  local by_stage = {} ---@type table<string, era.m.diffview.IFileEntry>
-  for _, entry in ipairs(entries) do
-    by_stage[assert(entry.stage_type)] = entry
-  end
-
-  t.assert_true(collect_opts ~= nil and collect_opts.include_numstat == true, "single tracked snapshot requested")
-  t.assert_eq(7, by_stage.staged.insertions, "staged insertions")
-  t.assert_eq(0, by_stage.staged.deletions, "staged deletions")
-  t.assert_eq(2, by_stage.unstaged.insertions, "unstaged insertions")
-  t.assert_eq(3, by_stage.unstaged.deletions, "unstaged deletions")
-  t.assert_eq("index-a", by_stage.staged.new_object_name, "staged snapshot identity")
-  t.assert_eq("index-b", by_stage.unstaged.old_object_name, "unstaged snapshot identity")
-end)
-
-t:test("entries: equality ignores order and compares the complete semantic snapshot", function()
-  local staged = {
-    filepath = "new.lua",
-    stage_type = "staged",
-    status = "R",
-    insertions = 7,
-    deletions = 2,
-    prev_filepath = "old.lua",
-    old_object_name = "head-a",
-    new_object_name = "index-a",
-  } ---@type era.m.diffview.IFileEntry
-  local unstaged = {
-    filepath = "work.lua",
-    stage_type = "unstaged",
-    status = "M",
-    insertions = 3,
-    deletions = 1,
-  } ---@type era.m.diffview.IFileEntry
-  local entries = { staged, unstaged }
-
-  t.assert_true(
-    data.equal_diff_entries(entries, { vim.deepcopy(unstaged), vim.deepcopy(staged) }),
-    "collection order ignored"
-  )
-
-  local mutations = {
-    { "filepath", "other.lua" },
-    { "stage_type", "unstaged" },
-    { "status", "M" },
-    { "insertions", 8 },
-    { "deletions", 3 },
-    { "prev_filepath", "older.lua" },
-    { "old_object_name", "head-b" },
-    { "new_object_name", "index-b" },
-  }
-  for _, mutation in ipairs(mutations) do
-    local changed = vim.deepcopy(entries)
-    changed[1][mutation[1]] = mutation[2]
-    t.assert_false(data.equal_diff_entries(entries, changed), "changed " .. mutation[1])
-  end
-
-  t.assert_false(data.equal_diff_entries(entries, { staged }), "different entry count")
-  t.assert_false(
-    data.equal_diff_entries(
-      { { filepath = "binary.dat", stage_type = "unstaged", status = "M" } },
-      { { filepath = "binary.dat", stage_type = "unstaged", status = "M", insertions = 0, deletions = 0 } }
-    ),
-    "unknown and zero stats stay distinct"
-  )
-end)
-
 t:test("numstat: batches all untracked files through one isolated index", function()
   local commands = {} ---@type string[][]
   local command_opts = {} ---@type stl.git.exec.IExecOpts[]
@@ -258,113 +146,50 @@ t:test("numstat: degrades an untracked temporary-index query failure", function(
   t.assert_nil(untracked.deletions, "failed untracked deletions remain unknown")
 end)
 
-t:test("numstat: cancellation stops the isolated-index pipeline and removes its temp directory", function()
-  local command_count = 0 ---@type integer
-  local temp_index = nil ---@type string|nil
-  local token = CancellationToken.new()
-  use_git(function(_, opts, exec_token)
-    command_count = command_count + 1
-    if command_count == 1 then
-      temp_index = opts.env.GIT_INDEX_FILE
+for _, case in ipairs({
+  {
+    name = "numstat: cancellation stops the isolated-index pipeline and removes its temp directory",
+    token = true,
+    -- The query is cancelled while its first command runs.
+    fail = function(exec_token)
       exec_token:cancel()
       return { code = -1, lines = {}, stderr = "Operation cancelled" }
-    end
-    return { code = 0, lines = {}, stderr = "" }
-  end, "/repo")
-
-  local ok = pcall(data.__fetch_untracked_numstat__, {
-    { filepath = "new.lua", stage_type = "unstaged", status = "?" },
-  }, token)
-
-  t.assert_false(ok, "cancelled query rejected")
-  t.assert_eq(1, command_count, "later temporary-index commands skipped")
-  local temp_dir = assert(temp_index):match("^(.*)/index$")
-  t.assert_true(temp_dir ~= nil and vim.uv.fs_stat(temp_dir) == nil, "temporary index removed")
-end)
-
-t:test("numstat: unexpected temporary-index errors propagate after cleanup", function()
-  local command_count = 0 ---@type integer
-  local temp_index = nil ---@type string|nil
-  use_git(function(_, opts)
-    command_count = command_count + 1
-    if command_count == 1 then
-      temp_index = opts.env.GIT_INDEX_FILE
+    end,
+  },
+  {
+    name = "numstat: unexpected temporary-index errors propagate after cleanup",
+    fail = function()
       error("unexpected executor bug")
+    end,
+    error = "unexpected executor bug",
+  },
+}) do
+  t:test(case.name, function()
+    local command_count = 0 ---@type integer
+    local temp_index = nil ---@type string|nil
+    use_git(function(_, opts, exec_token)
+      command_count = command_count + 1
+      if command_count == 1 then
+        temp_index = opts.env.GIT_INDEX_FILE
+        return case.fail(exec_token)
+      end
+      return { code = 0, lines = {}, stderr = "" }
+    end, "/repo")
+
+    local token = case.token and CancellationToken.new() or nil
+    local ok, err = pcall(data.__fetch_untracked_numstat__, {
+      { filepath = "new.lua", stage_type = "unstaged", status = "?" },
+    }, token)
+
+    t.assert_false(ok, "query rejected")
+    if case.error then
+      t.assert_true(tostring(err):find(case.error, 1, true) ~= nil, "the unexpected error propagates as it was raised")
     end
-    return { code = 0, lines = {}, stderr = "" }
-  end, "/repo")
-
-  t.assert_error(function()
-    data.__fetch_untracked_numstat__({ { filepath = "new.lua", stage_type = "unstaged", status = "?" } })
-  end, "unexpected executor bug", "the unexpected error propagates as it was raised")
-  local temp_dir = assert(temp_index):match("^(.*)/index$")
-  t.assert_true(temp_dir ~= nil and vim.uv.fs_stat(temp_dir) == nil, "temporary index removed")
-end)
-
-t:test("status conversion keeps stage-specific rename sources", function()
-  local entries = data.__convert_status_to_entries__({
-    ["/repo/new.lua"] = {
-      relative = "new.lua",
-      stage = "mixed",
-      staged = { R = true },
-      unstaged = { R = true },
-      staged_prev_relative = "head.lua",
-      unstaged_prev_relative = "index.lua",
-      staged_old_object_name = "head-old",
-      staged_new_object_name = "index-new",
-      unstaged_old_object_name = "index-old",
-    },
-  })
-
-  local sources = {} ---@type table<string, string>
-  local identities = {} ---@type table<string, era.m.diffview.IFileEntry>
-  for _, entry in ipairs(entries) do
-    sources[assert(entry.stage_type)] = assert(entry.prev_filepath)
-    identities[assert(entry.stage_type)] = entry
-  end
-  t.assert_eq("head.lua", sources.staged, "staged source")
-  t.assert_eq("index.lua", sources.unstaged, "unstaged source")
-  t.assert_eq("head-old", identities.staged.old_object_name, "staged old identity")
-  t.assert_eq("index-new", identities.staged.new_object_name, "staged new identity")
-  t.assert_eq("index-old", identities.unstaged.old_object_name, "unstaged old identity")
-  t.assert_nil(identities.unstaged.new_object_name, "unstaged worktree identity")
-
-  local staged_only = data.__convert_status_to_entries__({
-    ["/repo/plain.lua"] = {
-      relative = "plain.lua",
-      stage = "mixed",
-      staged = { M = true },
-      unstaged = { R = true },
-      unstaged_prev_relative = "index.lua",
-    },
-  })
-  for _, entry in ipairs(staged_only) do
-    if entry.stage_type == "staged" then
-      t.assert_nil(entry.prev_filepath, "staged source does not fall through")
-    end
-  end
-end)
-
-t:test("status conversion keeps staged deletion and same-path untracked replacement", function()
-  local entries = data.__convert_status_to_entries__({
-    ["/repo/replaced.lua"] = {
-      relative = "replaced.lua",
-      stage = "staged",
-      staged = { D = true },
-      unstaged = { ["?"] = true },
-      codes = { D = true, ["?"] = true },
-    },
-  })
-
-  local statuses = {} ---@type table<string, string>
-  for _, entry in ipairs(entries) do
-    statuses[assert(entry.stage_type)] = entry.status
-  end
-
-  t.assert_eq(2, #entries, "independent stage entries")
-  t.assert_eq("D", statuses.staged, "staged deletion")
-  t.assert_eq("?", statuses.unstaged, "unstaged replacement")
-end)
+    t.assert_eq(1, command_count, "later temporary-index commands skipped")
+    local temp_dir = assert(temp_index):match("^(.*)/index$")
+    t.assert_true(temp_dir ~= nil and vim.uv.fs_stat(temp_dir) == nil, "temporary index removed")
+  end)
+end
 
 t:test("numstat: consumes Git's real NUL-delimited rename format", function()
   local repo = git.repo(t)

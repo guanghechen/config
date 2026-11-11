@@ -23,7 +23,7 @@
 ## 验证
 
 ```sh
-nvim -l __test__/run.lua __test__/specs/era/dressing/indentscope_spec.lua
+nvim -l __test__/run.lua __test__/specs/era/dressing/indentscope/
 nvim -l __test__/run.lua __test__/specs/era/dressing/dim_spec.lua
 nvim -l __test__/run.lua era/keystroke/textobject/
 ```

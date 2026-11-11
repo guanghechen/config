@@ -5,7 +5,6 @@ local fs = require("__test__.support.fs")
 local git = require("__test__.support.git")
 local action = require("era.m.diffview.view.workspace.action")
 local commits_view = require("era.m.diffview.view.commits.view")
-local pane_changes = require("era.m.diffview.pane.changes")
 local tree = require("era.m.diffview.pane.tree")
 local workspace_view = require("era.m.diffview.view.workspace.view")
 
@@ -77,18 +76,6 @@ local function current(session)
   local entry = session.state:get_current_entry()
   return entry and (entry.stage_type .. ":" .. entry.filepath)
 end
-
-t:test("changes panel order groups stages and follows filetree traversal", function()
-  local unstaged = { filepath = "a.lua", stage_type = "unstaged", status = "M" }
-  local staged_root = { filepath = "z.lua", stage_type = "staged", status = "M" }
-  local staged_nested = { filepath = "dir/a.lua", stage_type = "staged", status = "M" }
-
-  local ordered = pane_changes.get_entries_in_render_order({ unstaged, staged_root, staged_nested })
-
-  t.assert_eq(staged_nested, ordered[1], "nested staged entry")
-  t.assert_eq(staged_root, ordered[2], "root staged entry")
-  t.assert_eq(unstaged, ordered[3], "unstaged entry")
-end)
 
 t:test("hiding untracked files selects the first remaining rendered entry", function()
   local flag_untracked = dot.context.diffview.flag_untracked

@@ -143,4 +143,27 @@ t:test("hunk pairing, unequal line counts and input ownership remain unchanged",
   end
 end)
 
+t:test("compute_word_diff: native byte diff preserves byte-column ranges", function()
+  local changes = diff.compute_word_diff("fooBar", "fooBaz")
+  t.assert_eq(1, #changes, "change count")
+  t.assert_eq(4, changes[1].old_start, "old start")
+  t.assert_eq(6, changes[1].old_end, "old end")
+  t.assert_eq(4, changes[1].new_start, "new start")
+  t.assert_eq(6, changes[1].new_end, "new end")
+end)
+
+t:test("compute_hunk_word_diff: large hunks produce one change per line", function()
+  local old_line = string.rep("a", 500) ---@type string
+  local new_line = string.rep("b", 500) ---@type string
+  ---@diagnostic disable-next-line: missing-fields
+  local hunk = { type = "change", removed = { lines = {} }, added = { lines = {} } } ---@type era.m.git.Hunk
+  for index = 1, 200 do
+    hunk.removed.lines[index] = old_line
+    hunk.added.lines[index] = new_line
+  end
+
+  local changes = diff.compute_hunk_word_diff(hunk)
+  t.assert_eq(200, #changes, "line changes")
+end)
+
 t:run()

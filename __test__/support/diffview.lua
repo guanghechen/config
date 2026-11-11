@@ -322,6 +322,42 @@ local function float(t, bufnr, width, height, enter)
   return t:window(bufnr, { relative = "editor", row = 0, col = 0, width = width, height = height }, enter)
 end
 
+---Shows the panel buffer `bufnr`, which is wiped once no window shows it, in a focused floating window 60 columns wide
+---and 10 rows high at the top left of the editor for the rest of the case.
+---@param t                             __test__.support.Harness
+---@param bufnr                         integer
+---@return integer
+function M.panel_window(t, bufnr)
+  return float(t, bufnr, 60, 10, true)
+end
+
+---Waits until `owner` shows `count` rows and is ready, then asserts that its buffer has as many lines.
+---@param t                             __test__.support.Harness
+---@param owner                         era.view.ResultTree
+---@param count                         integer
+---@return nil
+function M.await_rows(t, owner, count)
+  t.wait_until(function()
+    return owner:linecount() == count
+  end, 5000, "native expansion did not reach the surface")
+  treeview.await(owner:ready())
+  t.assert_eq(count, vim.api.nvim_buf_line_count(owner.view.bufnr))
+end
+
+---Publishes `keys` as container rows under the root of `owner`, a root that does not fold.
+---@param owner                         era.view.ResultTree
+---@param keys                          string[]
+---@return nil
+function M.populate_tree(owner, keys)
+  local root = owner.source.root
+  owner.entries[root] = { nodetype = "container", foldable = false }
+  for _, key in ipairs(keys) do
+    owner.source:insert(root, key, { presentation = { label = key } })
+    owner.entries[key] = { nodetype = "container" }
+  end
+  treeview.publish(owner)
+end
+
 ---A Changes pane in a 50x10 floating window, focused when `enter` is set, for the rest of the case: a new tree renders
 ---`entries` with the render `options` there.
 ---@param t                             __test__.support.Harness
@@ -375,6 +411,17 @@ function M.commits_pane(t, commits, current, height, enter)
   })
   treeview.await(require("era.m.diffview.view.commits.view").render_commits(ctx))
   return ctx, state:get_tree("commits")
+end
+
+---A Commits pane of one current commit, "review", with `files`, in a focused floating window 10 rows high, as
+---`commits_pane` makes it.
+---@param t                             __test__.support.Harness
+---@param files                         ?era.m.diffview.IFileEntry[]
+---@return table ctx
+---@return era.view.ResultTree owner
+function M.review_pane(t, files)
+  local commit = { hash = "review", abbrev_hash = "review", author = "A", date = 0, message = "review", files = files }
+  return M.commits_pane(t, { commit }, commit, 10, true)
 end
 
 return M

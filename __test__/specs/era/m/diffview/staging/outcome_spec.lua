@@ -23,54 +23,65 @@ local function select_row(session, stage_type, path)
   diffview.cursor_on(session, stage_type, path)
 end
 
-t:test("staging a file selects the next unstaged file and keeps the focus in Unstaged", function()
-  local root = diffview.committed(t, { ["first.lua"] = { "1" }, ["second.lua"] = { "2" } })
-  fs.write(root .. "/first.lua", { "one" })
-  fs.write(root .. "/second.lua", { "two" })
-  local session = diffview.open_workspace(t)
-  local refreshes = diffview.count_refreshes(t, session.state)
+for _, case in ipairs({
+  {
+    name = "staging a file selects the next unstaged file and keeps the focus in Unstaged",
+    committed = { ["first.lua"] = { "1" }, ["second.lua"] = { "2" } },
+    edited = { ["first.lua"] = { "one" }, ["second.lua"] = { "two" } },
+    staged = {},
+    stage_type = "unstaged",
+    path = "first.lua",
+    transfer = "stage",
+    current = "unstaged:second.lua",
+    current_label = "stage selects the next unstaged entry",
+    focus = "unstaged",
+    focus_label = "stage keeps unstaged focus",
+  },
+  {
+    name = "unstaging a file selects the next staged file and keeps the focus in Staged",
+    committed = { ["first.lua"] = { "1" }, ["second.lua"] = { "2" }, ["third.lua"] = { "3" } },
+    edited = { ["first.lua"] = { "one" }, ["second.lua"] = { "two" }, ["third.lua"] = { "three" } },
+    staged = { "first.lua", "third.lua" },
+    stage_type = "staged",
+    path = "first.lua",
+    transfer = "unstage",
+    current = "staged:third.lua",
+    current_label = "unstage selects the next staged entry",
+    focus = "staged",
+    focus_label = "unstage keeps staged focus",
+  },
+  {
+    name = "staging the last unstaged file follows it to Staged",
+    committed = { ["second.lua"] = { "2" }, ["third.lua"] = { "3" } },
+    edited = { ["second.lua"] = { "two" }, ["third.lua"] = { "three" } },
+    staged = { "third.lua" },
+    stage_type = "unstaged",
+    path = "second.lua",
+    transfer = "stage",
+    current = "staged:second.lua",
+    current_label = "last transfer follows the canonical destination entry",
+    focus = "staged",
+    focus_label = "empty source moves focus to destination",
+  },
+}) do
+  t:test(case.name, function()
+    local root = diffview.committed(t, case.committed)
+    for path, lines in pairs(case.edited) do
+      fs.write(root .. "/" .. path, lines)
+    end
+    if #case.staged > 0 then
+      git.run(root, vim.list_extend({ "add" }, case.staged))
+    end
+    local session = diffview.open_workspace(t)
+    local refreshes = diffview.count_refreshes(t, session.state)
 
-  select_row(session, "unstaged", "first.lua")
-  action.stage(session)
-  diffview.await_refreshes(refreshes, 1)
-  t.assert_eq("unstaged:second.lua", current(session), "stage selects the next unstaged entry")
-  t.assert_eq(session.layout.changes.unstaged.winnr, vim.api.nvim_get_current_win(), "stage keeps unstaged focus")
-end)
-
-t:test("unstaging a file selects the next staged file and keeps the focus in Staged", function()
-  local root = diffview.committed(t, { ["first.lua"] = { "1" }, ["second.lua"] = { "2" }, ["third.lua"] = { "3" } })
-  fs.write(root .. "/first.lua", { "one" })
-  fs.write(root .. "/second.lua", { "two" })
-  fs.write(root .. "/third.lua", { "three" })
-  git.run(root, { "add", "first.lua", "third.lua" })
-  local session = diffview.open_workspace(t)
-  local refreshes = diffview.count_refreshes(t, session.state)
-
-  select_row(session, "staged", "first.lua")
-  action.unstage(session)
-  diffview.await_refreshes(refreshes, 1)
-  t.assert_eq("staged:third.lua", current(session), "unstage selects the next staged entry")
-  t.assert_eq(session.layout.changes.staged.winnr, vim.api.nvim_get_current_win(), "unstage keeps staged focus")
-end)
-
-t:test("staging the last unstaged file follows it to Staged", function()
-  local root = diffview.committed(t, { ["second.lua"] = { "2" }, ["third.lua"] = { "3" } })
-  fs.write(root .. "/second.lua", { "two" })
-  fs.write(root .. "/third.lua", { "three" })
-  git.run(root, { "add", "third.lua" })
-  local session = diffview.open_workspace(t)
-  local refreshes = diffview.count_refreshes(t, session.state)
-
-  select_row(session, "unstaged", "second.lua")
-  action.stage(session)
-  diffview.await_refreshes(refreshes, 1)
-  t.assert_eq("staged:second.lua", current(session), "last transfer follows the canonical destination entry")
-  t.assert_eq(
-    session.layout.changes.staged.winnr,
-    vim.api.nvim_get_current_win(),
-    "empty source moves focus to destination"
-  )
-end)
+    select_row(session, case.stage_type, case.path)
+    action[case.transfer](session)
+    diffview.await_refreshes(refreshes, 1)
+    t.assert_eq(case.current, current(session), case.current_label)
+    t.assert_eq(session.layout.changes[case.focus].winnr, vim.api.nvim_get_current_win(), case.focus_label)
+  end)
+end
 
 t:test("staging the last visible file follows it to Staged when only collapsed directories remain", function()
   local root =

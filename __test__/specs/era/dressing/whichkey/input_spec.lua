@@ -97,124 +97,21 @@ t:test("attaching reads each mode's mappings once and leaves mapped keys alone",
   t.assert_eq(callback, vim.fn.maparg("z", "n", false, true).callback, "the buffer mapping is preserved")
 end)
 
-t:test("exact native mapping is resolved after the which-key tree was built", function()
-  local bufnr = t:buffer() ---@type integer
-  t:defer(function()
-    State.buf_trees[bufnr] = nil
-  end)
-  State.__load_keymaps__(bufnr, "n")
-  local tree = assert(State.buf_trees[bufnr].n)
-  Tree.add(tree, { "gs", group = "surround" })
-  vim.keymap.set("n", "gs", function() end, {
-    buffer = bufnr,
-    desc = "diffview: stage",
-    nowait = true,
-  })
+---@class era.dressing.whichkey.input.test.ILoop
+---@field prefixes                      string[] Prefixes looked up in the which-key tree, in order.
+---@field reads                         integer Keys read.
+---@field executed                      era.dressing.whichkey.INode|false The node executed, if any.
+---@field executed_keys                 ?string The keys it was executed with.
+---@field stopped                       boolean Whether the input stopped.
 
-  local node = assert(Tree.find(tree, "gs"))
-  local mapping = assert(State.__get_keymap__(bufnr, "n", "gs"))
-  t.assert_true(node.is_group, "static group metadata")
-  t.assert_eq("diffview: stage", mapping.desc, "late buffer-local mapping")
-  t.assert_eq(1, mapping.nowait, "native nowait")
-end)
-
-t:test("exact nowait mapping executes without reading a third key", function()
-  local reads = 0
-  local executed = nil ---@type {node: era.dressing.whichkey.INode|nil, keys: string}|nil
-  local bufnr = t:buffer() ---@type integer
-  vim.keymap.set("n", "gs", function() end, {
-    buffer = bufnr,
-    desc = "diffview: stage",
-    nowait = true,
-  })
-  local node = {
-    key = "s",
-    lhs = "gs",
-    desc = "diffview: stage",
-    is_group = true,
-    children = {},
-  } ---@type era.dressing.whichkey.INode
-
-  t:patch_table(vim.fn, "getcharstr", function()
-    reads = reads + 1
-    if reads == 1 then
-      return "s"
-    end
-    error("unexpected third key read")
-  end)
-  t:patch_table(State, "get_node", function(keys)
-    t.assert_eq("gs", keys, "resolved prefix")
-    return node
-  end)
-  t:patch_table(State, "bufnr", bufnr)
-  t:patch_table(State, "mode", "n")
-  t:patch_table(State, "keys", "")
-  t:patch_table(State, "show_popup", false)
-  t:patch_table(Input, "__cancel_delay__", function() end)
-  t:patch_table(Input, "__is_timedout__", function()
-    return false
-  end)
-  t:patch_table(Input, "__execute__", function(actual_node, keys)
-    executed = { node = actual_node, keys = keys }
-  end)
-
-  Input.__loop__("g")
-
-  t.assert_eq(1, reads, "input count")
-  t.assert_true(executed ~= nil and executed.node == node, "passthrough executed")
-  t.assert_eq("gs", executed and executed.keys or nil, "executed keys")
-end)
-
-t:test("group-only prefix still waits for a child key", function()
-  local reads = 0
-  local executed = false
-  local stopped = false
-  local node = {
-    key = "s",
-    lhs = "gs",
-    desc = "surround",
-    is_group = true,
-    children = {},
-  } ---@type era.dressing.whichkey.INode
-
-  t:patch_table(vim.fn, "getcharstr", function()
-    reads = reads + 1
-    if reads == 1 then
-      return "s"
-    end
-    error("no child key")
-  end)
-  t:patch_table(State, "get_node", function()
-    return node
-  end)
-  t:patch_table(State, "__get_keymap__", function()
-    return nil
-  end)
-  t:patch_table(State, "keys", "")
-  t:patch_table(State, "show_popup", false)
-  t:patch_table(Input, "__cancel_delay__", function() end)
-  t:patch_table(Input, "__reschedule_popup__", function() end)
-  t:patch_table(Input, "__is_timedout__", function()
-    return false
-  end)
-  t:patch_table(Input, "__execute__", function()
-    executed = true
-  end)
-  t:patch_table(Input, "stop", function()
-    stopped = true
-  end)
-
-  Input.__loop__("g")
-
-  t.assert_eq(2, reads, "group waits for child")
-  t.assert_false(executed, "group is not executed as a mapping")
-  t.assert_true(stopped, "input stops after child read fails")
-end)
-
+-- Runs the input loop from the prefix "g" with "s" as the only key typed next and `node` as every prefix's node;
+-- `get_keymap`, when given, replaces the native mapping lookup.
 ---@param node                          era.dressing.whichkey.INode
----@return { reads: integer, executed: era.dressing.whichkey.INode|false, stopped: boolean }
-local function loop_declared(node)
-  local result = { reads = 0, executed = false, stopped = false }
+---@param get_keymap                    ?fun(bufnr: integer, mode: string, lhs: string): table|nil
+---@return era.dressing.whichkey.input.test.ILoop
+local function loop(node, get_keymap)
+  ---@type era.dressing.whichkey.input.test.ILoop
+  local result = { prefixes = {}, reads = 0, executed = false, stopped = false }
   t:patch_table(vim.fn, "getcharstr", function()
     result.reads = result.reads + 1
     if result.reads == 1 then
@@ -222,12 +119,13 @@ local function loop_declared(node)
     end
     error("no further key")
   end)
-  t:patch_table(State, "get_node", function()
+  t:patch_table(State, "get_node", function(keys)
+    result.prefixes[#result.prefixes + 1] = keys
     return node
   end)
-  t:patch_table(State, "__get_keymap__", function()
-    error("a declared action does not look up a native mapping")
-  end)
+  if get_keymap ~= nil then
+    t:patch_table(State, "__get_keymap__", get_keymap)
+  end
   t:patch_table(State, "keys", "")
   t:patch_table(State, "show_popup", false)
   t:patch_table(Input, "__cancel_delay__", function() end)
@@ -235,8 +133,8 @@ local function loop_declared(node)
   t:patch_table(Input, "__is_timedout__", function()
     return false
   end)
-  t:patch_table(Input, "__execute__", function(actual_node)
-    result.executed = actual_node
+  t:patch_table(Input, "__execute__", function(actual_node, keys)
+    result.executed, result.executed_keys = actual_node, keys
   end)
   t:patch_table(Input, "stop", function()
     result.stopped = true
@@ -246,10 +144,60 @@ local function loop_declared(node)
   return result
 end
 
+---@return nil
+local function declared_keymap()
+  error("a declared action does not look up a native mapping")
+end
+
+t:test("exact nowait mapping executes without reading a third key", function()
+  local bufnr = t:buffer() ---@type integer
+  vim.keymap.set("n", "gs", function() end, {
+    buffer = bufnr,
+    desc = "diffview: stage",
+    nowait = true,
+  })
+  local node = {
+    key = "s",
+    lhs = "gs",
+    desc = "diffview: stage",
+    is_group = true,
+    children = {},
+  } ---@type era.dressing.whichkey.INode
+  t:patch_table(State, "bufnr", bufnr)
+  t:patch_table(State, "mode", "n")
+
+  local result = loop(node)
+
+  t.assert_eq(1, result.reads, "input count")
+  for _, prefix in ipairs(result.prefixes) do
+    t.assert_eq("gs", prefix, "resolved prefix")
+  end
+  t.assert_true(result.executed == node, "passthrough executed")
+  t.assert_eq("gs", result.executed_keys, "executed keys")
+end)
+
+t:test("group-only prefix still waits for a child key", function()
+  local node = {
+    key = "s",
+    lhs = "gs",
+    desc = "surround",
+    is_group = true,
+    children = {},
+  } ---@type era.dressing.whichkey.INode
+
+  local result = loop(node, function()
+    return nil
+  end)
+
+  t.assert_eq(2, result.reads, "group waits for child")
+  t.assert_false(result.executed, "group is not executed as a mapping")
+  t.assert_true(result.stopped, "input stops after child read fails")
+end)
+
 t:test("a declared action without nowait runs when no longer key starts with it", function()
   local node = { key = "s", lhs = "gs", desc = "surround", action = function() end, children = {} }
 
-  local result = loop_declared(node --[[@as era.dressing.whichkey.INode]])
+  local result = loop(node --[[@as era.dressing.whichkey.INode]], declared_keymap)
 
   t.assert_eq(1, result.reads, "input count")
   t.assert_true(result.executed == node, "declared action executed")
@@ -259,7 +207,7 @@ t:test("a declared action without nowait waits for the next key when longer keys
   local child = { key = "a", lhs = "gsa", desc = "add", children = {} }
   local node = { key = "s", lhs = "gs", desc = "surround", action = function() end, children = { a = child } }
 
-  local result = loop_declared(node --[[@as era.dressing.whichkey.INode]])
+  local result = loop(node --[[@as era.dressing.whichkey.INode]], declared_keymap)
 
   t.assert_eq(2, result.reads, "the prefix waits for a child")
   t.assert_false(result.executed, "the action waits for the next key")

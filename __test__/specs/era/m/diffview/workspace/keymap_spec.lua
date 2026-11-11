@@ -213,32 +213,6 @@ t:test("help keeps normal and visual mappings for the same key", function()
   t.assert_true(modes.x, "visual ghu")
 end)
 
-t:test("shared side-by-side mappings do not retain their installation context", function()
-  local sbs_keymap = require("era.m.diffview.view.sbs_keymap")
-  local bufnr = t:buffer()
-  local retained = setmetatable({}, { __mode = "v" })
-  local function install()
-    local ctx = { payload = "installation context" }
-    retained.ctx = ctx
-    local probe = {
-      modes = { "n" },
-      key = "gz",
-      desc = "gc probe",
-      callback = function()
-        return ctx
-      end,
-    }
-    sbs_keymap.setup({ probe }, bufnr, function()
-      return nil
-    end)
-  end
-
-  install()
-  collectgarbage("collect")
-  collectgarbage("collect")
-  t.assert_nil(retained.ctx, "installation context")
-end)
-
 t:test("the refresh key refreshes the session from every workspace pane", function()
   local refreshes = 0
   local ctx = diffview.workspace_context({

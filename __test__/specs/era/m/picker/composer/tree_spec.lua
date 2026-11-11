@@ -331,4 +331,32 @@ t:test("keys typed after a deferred <CR> leave its query", function()
   )
 end)
 
+t:test("era.m.picker.composer.tree resolves a published parent identity for collapse", function()
+  local tree = picker.branch_tree(t)
+  treeview.applied(tree:publish({ mode = "tree", rootuuid = "root" }))
+  local composer = setmetatable({ _treeview = tree }, { __index = Composer })
+  local row, key = composer:__retrieve_lnum_parent__("two")
+  t.assert_eq(1, row)
+  t.assert_eq("dir", key)
+  t.assert_nil(composer:__retrieve_lnum_parent__(nil))
+  t.assert_nil(composer:__retrieve_lnum_parent__("absent"))
+  tree:collapse(key, "collapse", true)
+  treeview.applied(tree:ready())
+  t.assert_nil(tree:retrieve_lnum("two"))
+  t.assert_true(tree:retrieve("dir").collapsed)
+end)
+
+t:test("era.m.picker.composer.tree navigates from a List location to its displayed file", function()
+  local tree = picker.branch_tree(t)
+  tree:insert("one", {
+    nodetype = "leaf",
+    locations = { { nodetype = "location", leafuuid = "one", locationuuid = "one:1", lnum = 1 } },
+  })
+  treeview.applied(tree:publish({ mode = "list", rootuuid = "root", orders = { "one" } }))
+  local composer = setmetatable({ _treeview = tree }, { __index = Composer })
+  local row, key = composer:__retrieve_lnum_parent__("one:1")
+  t.assert_eq(1, row)
+  t.assert_eq("one", key)
+end)
+
 t:run()

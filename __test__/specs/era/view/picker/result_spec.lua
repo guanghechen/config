@@ -171,4 +171,122 @@ t:test("flag callbacks are unregistered when a result is disposed", function()
   t.assert_nil(dot.G[names[1]])
 end)
 
+---A result of the whole of `owner`, drawn as a tree, under `uuid`.
+---@param owner                         era.view.ResultTree
+---@param uuid                          string
+---@return era.view.PickerResult
+local function tree_result(owner, uuid)
+  return result(owner, "picker", {
+    uuid = uuid,
+    draw = function()
+      return owner:publish({ mode = "tree", rootuuid = "root" })
+    end,
+  })
+end
+
+t:test("Result publishes native counts and preserves state through hide and reopen", function()
+  local tree = picker.file_tree(t)
+  local value = tree_result(tree, "native result")
+  value:create_win({ border = "none", number = true, winhighlight = "" }, { row = 0, col = 0, width = 40, height = 6 })
+  treeview.await(tree:ready())
+  t.assert_eq(2, value.lnum_total:snapshot())
+  local state = tree.state
+  tree:toggle_select("file", true, false)
+  treeview.await(tree:ready())
+  local old_bufnr = value:get_bufnr()
+  local view = tree.view
+  local writes = 0
+  local set_lines = vim.api.nvim_buf_set_lines
+  t:patch_table(vim.api, "nvim_buf_set_lines", function(bufnr, ...)
+    if bufnr == old_bufnr then
+      writes = writes + 1
+    end
+    return set_lines(bufnr, ...)
+  end)
+  value:hide()
+  t.assert_true(vim.api.nvim_buf_is_valid(old_bufnr))
+  t.assert_true(view:is_suspended())
+  value:create_win({ border = "none", number = true, winhighlight = "" }, { row = 0, col = 0, width = 40, height = 6 })
+  treeview.await(tree:ready())
+  t.wait_until(function()
+    return not view:status().preparing
+  end, 5000)
+  t.assert_true(tree.state == state)
+  t.assert_true(tree:isselected("file"))
+  t.assert_eq(2, value.lnum_total:snapshot())
+  t.assert_eq(old_bufnr, value:get_bufnr())
+  t.assert_true(tree.view == view)
+  t.assert_eq(0, writes, "reopening unchanged results must not rebuild buffer text")
+end)
+
+for _, change in ipairs({ "producer", "published", "edited", "deleted" }) do
+  t:test("a hidden result recovers a " .. change .. " buffer or source on reopen", function()
+    local tree = picker.file_tree(t)
+    local value = tree_result(tree, "hidden " .. change)
+    value:create_win(
+      { border = "none", number = false, winhighlight = "" },
+      { row = 0, col = 0, width = 40, height = 6 }
+    )
+    treeview.await(tree:ready())
+    local bufnr, state = value:get_bufnr(), tree.state
+    value:hide()
+    if change == "producer" or change == "published" then
+      tree.source:update("file", { label = "changed.lua" })
+      if change == "published" then
+        for index = 1, 4 do
+          tree.source:update("file", { label = "changed.lua", value = index })
+          treeview.await(tree:publish({ mode = "tree", rootuuid = "root" }))
+          t.assert_true(vim.tbl_count(tree._versions) <= 2, "hidden updates retain only current and displayed metadata")
+        end
+        t.assert_eq("changed.lua", tree:data("file").label)
+        t.assert_true(vim.api.nvim_buf_get_lines(bufnr, 1, 2, true)[1]:find("file.lua", 1, true) ~= nil)
+      end
+    elseif change == "edited" then
+      vim.api.nvim_set_option_value("modifiable", true, { buf = bufnr })
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, { "external change" })
+    else
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
+    value:create_win(
+      { border = "none", number = true, winhighlight = "" },
+      { row = 0, col = 0, width = 55, height = 4 }
+    )
+    treeview.await(tree:ready())
+    t.wait_until(function()
+      return tree.view and not tree.view:status().preparing
+    end, 5000)
+    local expected = (change == "producer" or change == "published") and "changed.lua" or "file.lua"
+    t.assert_true(vim.api.nvim_buf_get_lines(value:get_bufnr(), 1, 2, true)[1]:find(expected, 1, true) ~= nil)
+    t.assert_true(state == tree.state)
+    t.assert_eq(change ~= "deleted", bufnr == value:get_bufnr())
+    t.assert_true(vim.api.nvim_get_option_value("number", { win = value:get_winnr() }))
+    t.assert_false(vim.api.nvim_get_option_value("modifiable", { buf = value:get_bufnr() }))
+    value:hide()
+    local retained = value:get_bufnr()
+    value:dispose()
+    t.assert_false(vim.api.nvim_buf_is_valid(retained), "disposal releases the retained hidden buffer")
+  end)
+end
+
+t:test("a late cursor acknowledgement preserves the current Visual endpoint", function()
+  local tree = picker.file_tree(t)
+  local value = tree_result(tree, "cursor acknowledgement")
+  t:defer(function()
+    vim.cmd.normal({ args = { vim.keycode("<Esc>") }, bang = true })
+  end)
+  value:create_win({ border = "none", number = false, winhighlight = "" }, { row = 0, col = 0, width = 40, height = 6 })
+  treeview.await(tree:ready())
+  value:focus()
+  local acknowledged = tree:frame()
+  vim.cmd.normal({ args = { "ggVj" }, bang = true })
+  value.lnum_current:next(2, { silent = true })
+  t.assert_eq(1, acknowledged:header().cursor_row)
+  -- An unchanged-layout publication keeps Visual endpoints even when its cursor acknowledgement is older.
+  tree.view._options.on_frame(acknowledged)
+  t.assert_eq(2, value.lnum_current:snapshot())
+  vim.wait(20)
+  t.assert_eq("V", vim.api.nvim_get_mode().mode)
+  t.assert_eq(2, vim.api.nvim_win_get_cursor(value:get_winnr())[1])
+end)
+
 t:run()

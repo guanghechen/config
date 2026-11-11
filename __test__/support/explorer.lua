@@ -58,6 +58,99 @@ function M.open_ui(t, options)
   return ui, grid
 end
 
+---@class __test__.support.explorer.IPromptContext
+---@field ui                            __test__.support.UI
+---@field grid                          table
+---@field path                          string
+
+---@class __test__.support.explorer.IPrompt
+---@field open                          fun(names: string[]): __test__.support.explorer.IPromptContext
+---@field dialog                        fun(context: __test__.support.explorer.IPromptContext): table
+---@field answer                        fun(context: __test__.support.explorer.IPromptContext, keys: string): nil
+
+---Prompt helpers for the cases of `t`. `open(names)` writes `names` to a new directory, each file holding its own
+---name and a name ending in "/" making a directory, and starts an Explorer UI child, as `open_ui` does, whose
+---`widget`, `session` and `view` show that directory once it settles; the child answers `vim.ui.input` with
+---`era.m.input` and fails any picker. `dialog(context)` waits for the input dialog and returns its height, width, lines
+---and wrap, asserting that it is the only floating window and stays anchored to the Explorer window. `answer(context,
+---keys)` types `keys` and waits until the operation settles back in the Explorer, asserting that nothing reported an
+---error.
+---@param t                             __test__.support.Harness
+---@return __test__.support.explorer.IPrompt
+function M.prompt(t)
+  local prompt = {} ---@type __test__.support.explorer.IPrompt
+
+  function prompt.open(names)
+    local path = t:tempdir()
+    for _, name in ipairs(names) do
+      if name:sub(-1) == "/" then
+        assert(vim.uv.fs_mkdir(path .. "/" .. name:sub(1, -2), 448))
+      else
+        vim.fn.writefile({ name }, path .. "/" .. name)
+      end
+    end
+    local ui, grid = M.open_ui(t, { width = 142, height = 69, path = path })
+    ui:lua(
+      [[
+      local path, count = ...
+      dot.context.explorer.trash.snapshot = function() return false end
+      vim.ui.input = require("era.m.input").open
+      vim.ui.select = function() error("a confirmation must not open a picker") end
+      widget = require("era.m.explorer.widget").new({ name = "compact-prompt", root = path })
+      widget:focus()
+      session, view = shown(widget, count, function(current_session, current)
+        return not current_session.data:native():is_busy() and current_session.state:native():applicable(current:frame())
+      end)
+    ]],
+      path,
+      #names
+    )
+    return { ui = ui, grid = grid, path = path }
+  end
+
+  function prompt.dialog(context)
+    local result
+    context.ui:wait_until(function()
+      result = context.ui:lua([[
+        local result, floats = nil, 0
+        for _, winnr in ipairs(vim.api.nvim_list_wins()) do
+          local config = vim.api.nvim_win_get_config(winnr)
+          if config.relative ~= "" then floats = floats + 1 end
+          if vim.w[winnr].wintype == stl.e.WinTypeEnum.INPUT then
+            local bufnr = vim.api.nvim_win_get_buf(winnr)
+            result = {
+              height = config.height, width = config.width, relative = config.relative,
+              origin = config.win == view.winnr,
+              lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false),
+              wrap = vim.api.nvim_get_option_value("wrap", {win = winnr}),
+            }
+          end
+        end
+        if result then result.floats = floats end
+        return result
+      ]])
+      return result ~= nil
+    end, 10000, "the input dialog must open")
+    t.assert_eq(1, result.floats, "confirmation must use one compact surface")
+    t.assert_eq("win", result.relative)
+    t.assert_true(result.origin, "confirmation must stay anchored to the Explorer window")
+    return result
+  end
+
+  function prompt.answer(context, keys)
+    context.ui:rpc("nvim_input", keys)
+    context.ui:wait_lua(
+      "return not session:busy() and vim.api.nvim_get_current_win() == view.winnr",
+      10000,
+      "the answer must settle the operation and return to the Explorer"
+    )
+    local errors = context.ui:lua("return errors")
+    t.assert_eq(0, #errors, vim.inspect(errors))
+  end
+
+  return prompt
+end
+
 ---@param view                          ?ux.filetree.View
 ---@return boolean
 local function published(view)
@@ -190,6 +283,81 @@ function M.new(t)
       return session ~= nil
     end, 10000)
     fixture.settle(assert(session))
+  end
+
+  ---Waits until `widget` is open in the current tab on the display root `path`, and its session has settled.
+  ---@param widget                      era.m.explorer.Widget
+  ---@param path                        string
+  ---@return nil
+  function fixture.root_is(widget, path)
+    t.wait_until(function()
+      return fixture.context(widget) ~= nil and widget:get_root_filepath() == path
+    end, 10000)
+    fixture.idle(widget)
+  end
+
+  ---An Explorer on a new directory holding the file `a`, where its cursor is, and the empty directory `branch`, where a
+  ---case can materialize source updates unrelated to `a`.
+  ---@return era.m.explorer.Widget widget
+  ---@return string path
+  function fixture.file_and_branch()
+    local path = t:tempdir()
+    fixture.write(path .. "/a")
+    assert(vim.uv.fs_mkdir(path .. "/branch", 448))
+    local widget = fixture.widget(path)
+    fixture.cursor(widget, path .. "/a")
+    return widget, path
+  end
+
+  ---Marks the cursor row or Visual range of `widget` for `purpose` and waits until its view can show the committed
+  ---selection.
+  ---@param widget                      era.m.explorer.Widget
+  ---@param purpose                     string
+  ---@return nil
+  function fixture.mark(widget, purpose)
+    local result = fixture.await(widget:action():mark(purpose))
+    local session, view = widget:context()
+    if result.revisions then
+      t.wait_until(function()
+        return session.state:native():applicable(view:frame(), result.revisions.commit)
+      end, 10000)
+    end
+  end
+
+  ---Types `keys` and runs them before returning.
+  ---@param keys                        string
+  ---@return nil
+  function fixture.press(keys)
+    vim.api.nvim_feedkeys(vim.keycode(keys), "xt", false)
+  end
+
+  ---Asserts that `session` selects the single subtree of `node` for `purpose`, or nothing when `node` is nil.
+  ---@param session                     era.m.explorer.Session
+  ---@param node                        ?string
+  ---@param purpose                     ?string
+  ---@return nil
+  function fixture.assert_selection(session, node, purpose)
+    local value = fixture.await(session.state:inspect_selection())
+    t.assert_eq(node and 1 or 0, value.subtree_roots:len())
+    if node then
+      t.assert_eq(node, value.subtree_roots:get(1))
+    end
+    t.assert_eq(purpose, session.state:status().selection_purpose)
+  end
+
+  ---Waits until the view of `widget` shows `count` selected roots in `mode`, which is nil without a selection.
+  ---@param widget                      era.m.explorer.Widget
+  ---@param mode                        ?string
+  ---@param count                       integer
+  ---@return nil
+  function fixture.selected(widget, mode, count)
+    local session, view = widget:context()
+    t.wait_until(function()
+      local frame = view:frame()
+      return session.state:native():applicable(frame)
+        and session:mode(frame) == mode
+        and frame:header().summary.known_roots == count
+    end, 10000, "unexpected selection after a keypress")
   end
 
   ---Runs `interject` once inside Explorer's await, right after the first reply whose kind is one of `kinds`. The

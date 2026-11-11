@@ -6,6 +6,43 @@ local __module_name__ = "__test__.fixtures.era.keystroke.cmp.behavior.insert" --
 -- covered were recorded from Era and later reviewed against the completion design, plain Neovim for native keys and
 -- Blink's preview prefix. Only listed fields are compared, so a state that must be off is listed as false.
 
+-- The menu over the typed "al" with its first candidate selected and nothing inserted yet.
+local MENU = {
+  menu = true,
+  labels = { "alpha", "alpine" },
+  selected = "alpha",
+  lines = { "al" },
+  cursor = { 1, 2 },
+  mode = "i",
+  snippet = false,
+}
+-- The second candidate previewed in place of "al".
+local PREVIEW = {
+  menu = true,
+  labels = { "alpha", "alpine" },
+  selected = "alpine",
+  lines = { "alpine" },
+  cursor = { 1, 6 },
+  mode = "i",
+  snippet = false,
+}
+-- The menu over "al" with no candidate selected.
+local UNSELECTED = {
+  menu = true,
+  labels = { "alpha", "alpine" },
+  selected = false,
+  lines = { "al" },
+  cursor = { 1, 2 },
+  mode = "i",
+  snippet = false,
+}
+-- An empty line in Insert mode, without a menu.
+local EMPTY = { menu = false, lines = { "" }, cursor = { 1, 0 }, mode = "i", snippet = false }
+-- "x" typed where there are no candidates.
+local TYPED = { menu = false, lines = { "x" }, cursor = { 1, 1 }, mode = "i", snippet = false }
+-- "al" ended by a new line.
+local NEW_LINE = { menu = false, lines = { "al", "" }, cursor = { 2, 0 }, mode = "i", snippet = false }
+
 return {
   {
     name = "null_insertion_falls_back_to_label",
@@ -96,16 +133,8 @@ return {
     name = "insert_enter",
     steps = { "i", "al", "<Esc>", "a" },
     expect = {
-      { menu = false, lines = { "" }, cursor = { 1, 0 }, mode = "i", snippet = false },
-      {
-        menu = true,
-        labels = { "alpha", "alpine" },
-        selected = "alpha",
-        lines = { "al" },
-        cursor = { 1, 2 },
-        mode = "i",
-        snippet = false,
-      },
+      EMPTY,
+      MENU,
       { menu = false, lines = { "al" }, cursor = { 1, 1 }, mode = "n", snippet = false },
       { menu = false, lines = { "al" }, cursor = { 1, 2 }, mode = "i", snippet = false },
     },
@@ -120,35 +149,11 @@ return {
     name = "space_and_punctuation",
     steps = { "ial", " ", "<BS>", ";", "<BS>" },
     expect = {
-      {
-        menu = true,
-        labels = { "alpha", "alpine" },
-        selected = "alpha",
-        lines = { "al" },
-        cursor = { 1, 2 },
-        mode = "i",
-        snippet = false,
-      },
+      MENU,
       { menu = false, lines = { "al " }, cursor = { 1, 3 }, mode = "i", snippet = false },
-      {
-        menu = true,
-        labels = { "alpha", "alpine" },
-        selected = "alpha",
-        lines = { "al" },
-        cursor = { 1, 2 },
-        mode = "i",
-        snippet = false,
-      },
+      MENU,
       { menu = false, lines = { "al;" }, cursor = { 1, 3 }, mode = "i", snippet = false },
-      {
-        menu = true,
-        labels = { "alpha", "alpine" },
-        selected = "alpha",
-        lines = { "al" },
-        cursor = { 1, 2 },
-        mode = "i",
-        snippet = false,
-      },
+      MENU,
     },
   },
   {
@@ -178,15 +183,7 @@ return {
     name = "cursor_in_query",
     steps = { "ial", "<Left>", "<Right>", "<Home>", "<Right>" },
     expect = {
-      {
-        menu = true,
-        labels = { "alpha", "alpine" },
-        selected = "alpha",
-        lines = { "al" },
-        cursor = { 1, 2 },
-        mode = "i",
-        snippet = false,
-      },
+      MENU,
       { menu = false, lines = { "al" }, cursor = { 1, 1 }, mode = "i", snippet = false },
       { menu = false, lines = { "al" }, cursor = { 1, 2 }, mode = "i", snippet = false },
       { menu = false, lines = { "al" }, cursor = { 1, 0 }, mode = "i", snippet = false },
@@ -214,31 +211,15 @@ return {
         mode = "i",
         snippet = false,
       },
-      {
-        menu = true,
-        labels = { "alpha", "alpine" },
-        selected = "alpha",
-        lines = { "al" },
-        cursor = { 1, 2 },
-        mode = "i",
-        snippet = false,
-      },
+      MENU,
     },
   },
   {
     name = "delete_word",
     steps = { "ial", "<C-w>", "a", "<C-h>", "<C-w>" },
     expect = {
-      {
-        menu = true,
-        labels = { "alpha", "alpine" },
-        selected = "alpha",
-        lines = { "al" },
-        cursor = { 1, 2 },
-        mode = "i",
-        snippet = false,
-      },
-      { menu = false, lines = { "" }, cursor = { 1, 0 }, mode = "i", snippet = false },
+      MENU,
+      EMPTY,
       {
         menu = true,
         labels = { "alpha", "alpine" },
@@ -249,7 +230,7 @@ return {
         snippet = false,
       },
       { menu = false, lines = { "a" }, cursor = { 1, 1 }, mode = "i", snippet = false },
-      { menu = false, lines = { "" }, cursor = { 1, 0 }, mode = "i", snippet = false },
+      EMPTY,
     },
   },
   {
@@ -275,33 +256,9 @@ return {
     name = "navigation_cycle",
     steps = { "ial", "<Tab>", "<Tab>", "<Tab>", "<S-Tab>", "<S-Tab>" },
     expect = {
-      {
-        menu = true,
-        labels = { "alpha", "alpine" },
-        selected = "alpha",
-        lines = { "al" },
-        cursor = { 1, 2 },
-        mode = "i",
-        snippet = false,
-      },
-      {
-        menu = true,
-        labels = { "alpha", "alpine" },
-        selected = "alpine",
-        lines = { "alpine" },
-        cursor = { 1, 6 },
-        mode = "i",
-        snippet = false,
-      },
-      {
-        menu = true,
-        labels = { "alpha", "alpine" },
-        selected = false,
-        lines = { "al" },
-        cursor = { 1, 2 },
-        mode = "i",
-        snippet = false,
-      },
+      MENU,
+      PREVIEW,
+      UNSELECTED,
       {
         menu = true,
         labels = { "alpha", "alpine" },
@@ -311,39 +268,15 @@ return {
         mode = "i",
         snippet = false,
       },
-      {
-        menu = true,
-        labels = { "alpha", "alpine" },
-        selected = false,
-        lines = { "al" },
-        cursor = { 1, 2 },
-        mode = "i",
-        snippet = false,
-      },
-      {
-        menu = true,
-        labels = { "alpha", "alpine" },
-        selected = "alpine",
-        lines = { "alpine" },
-        cursor = { 1, 6 },
-        mode = "i",
-        snippet = false,
-      },
+      UNSELECTED,
+      PREVIEW,
     },
   },
   {
     name = "accept_and_undo",
     steps = { "ial", "<C-y>", "<Esc>", "u", "<C-r>" },
     expect = {
-      {
-        menu = true,
-        labels = { "alpha", "alpine" },
-        selected = "alpha",
-        lines = { "al" },
-        cursor = { 1, 2 },
-        mode = "i",
-        snippet = false,
-      },
+      MENU,
       { menu = false, lines = { "alpha" }, cursor = { 1, 5 }, mode = "i", snippet = false },
       { menu = false, lines = { "alpha" }, cursor = { 1, 4 }, mode = "n", snippet = false },
       { menu = false, lines = { "al" }, cursor = { 1, 1 }, mode = "n", snippet = false },
@@ -353,57 +286,27 @@ return {
   {
     name = "enter_with_default_selection",
     steps = { "ial", "<CR>" },
-    expect = {
-      {
-        menu = true,
-        labels = { "alpha", "alpine" },
-        selected = "alpha",
-        lines = { "al" },
-        cursor = { 1, 2 },
-        mode = "i",
-        snippet = false,
-      },
-      { menu = false, lines = { "al", "" }, cursor = { 2, 0 }, mode = "i", snippet = false },
-    },
+    expect = { MENU, NEW_LINE },
   },
   {
     name = "enter_accepts_selection",
     steps = { "ial", "<Tab>", "<CR>" },
     expect = {
-      [2] = {
-        menu = true,
-        labels = { "alpha", "alpine" },
-        selected = "alpine",
-        lines = { "alpine" },
-        cursor = { 1, 6 },
-        mode = "i",
-        snippet = false,
-      },
+      [2] = PREVIEW,
       [3] = { menu = false, lines = { "alpine" }, cursor = { 1, 6 }, mode = "i", snippet = false },
     },
   },
   {
     name = "enter_after_deselect",
     steps = { "ial", "<Up>", "<CR>" },
-    expect = {
-      [2] = {
-        menu = true,
-        labels = { "alpha", "alpine" },
-        selected = false,
-        lines = { "al" },
-        cursor = { 1, 2 },
-        mode = "i",
-        snippet = false,
-      },
-      [3] = { menu = false, lines = { "al", "" }, cursor = { 2, 0 }, mode = "i", snippet = false },
-    },
+    expect = { [2] = UNSELECTED, [3] = NEW_LINE },
   },
   {
     name = "enter_fallback",
     options = { items = {} },
     steps = { "ix", "<CR>" },
     expect = {
-      { menu = false, lines = { "x" }, cursor = { 1, 1 }, mode = "i", snippet = false },
+      TYPED,
       { menu = false, lines = { "x", "" }, cursor = { 2, 0 }, mode = "i", snippet = false },
     },
   },
@@ -412,7 +315,7 @@ return {
     options = { items = {} },
     steps = { "ix", "<Tab>", "<S-Tab>" },
     expect = {
-      { menu = false, lines = { "x" }, cursor = { 1, 1 }, mode = "i", snippet = false },
+      TYPED,
       { menu = false, lines = { "x\t" }, cursor = { 1, 2 }, mode = "i", snippet = false },
       { menu = false, lines = { "x\t\t" }, cursor = { 1, 3 }, mode = "i", snippet = false },
     },
@@ -422,46 +325,10 @@ return {
     options = { inline = true },
     steps = { "ial", "<C-y>", "<C-l>", "<Tab>" },
     expect = {
-      {
-        menu = true,
-        labels = { "alpha", "alpine" },
-        selected = "alpha",
-        lines = { "al" },
-        cursor = { 1, 2 },
-        mode = "i",
-        snippet = false,
-        inline_calls = 0,
-      },
-      {
-        menu = true,
-        labels = { "alpha", "alpine" },
-        selected = "alpha",
-        lines = { "al" },
-        cursor = { 1, 2 },
-        mode = "i",
-        snippet = false,
-        inline_calls = 1,
-      },
-      {
-        menu = true,
-        labels = { "alpha", "alpine" },
-        selected = "alpha",
-        lines = { "al" },
-        cursor = { 1, 2 },
-        mode = "i",
-        snippet = false,
-        inline_calls = 2,
-      },
-      {
-        menu = true,
-        labels = { "alpha", "alpine" },
-        selected = "alpine",
-        lines = { "alpine" },
-        cursor = { 1, 6 },
-        mode = "i",
-        snippet = false,
-        inline_calls = 2,
-      },
+      vim.tbl_extend("force", MENU, { inline_calls = 0 }),
+      vim.tbl_extend("force", MENU, { inline_calls = 1 }),
+      vim.tbl_extend("force", MENU, { inline_calls = 2 }),
+      vim.tbl_extend("force", PREVIEW, { inline_calls = 2 }),
     },
   },
   {
@@ -472,7 +339,7 @@ return {
     },
     steps = { "ix", "<C-j>", "<C-k>", "<C-h>" },
     expect = {
-      { menu = false, lines = { "x" }, cursor = { 1, 1 }, mode = "i", snippet = false },
+      TYPED,
       { menu = false, lines = { "xj" }, cursor = { 1, 2 }, mode = "i", snippet = false, fallback_calls = { "<C-j>" } },
       {
         menu = false,
@@ -496,23 +363,7 @@ return {
     name = "mapping_only_fallback",
     options = { items = {} },
     steps = { "ix", "<C-j>", "<C-k>" },
-    expect = {
-      { menu = false, lines = { "x" }, cursor = { 1, 1 }, mode = "i", snippet = false },
-      { menu = false, lines = { "x" }, cursor = { 1, 1 }, mode = "i", snippet = false },
-      { menu = false, lines = { "x" }, cursor = { 1, 1 }, mode = "i", snippet = false },
-    },
-  },
-  {
-    name = "disabled_completion_newline",
-    options = { filetype = "gitcommit", items = {} },
-    steps = { "iabc<C-j>def" },
-    expect = { { menu = false, lines = { "abc", "def" } } },
-  },
-  {
-    name = "disabled_completion_digraph",
-    options = { filetype = "gitcommit", items = {} },
-    steps = { "i<C-k>ae" },
-    expect = { { menu = false, lines = { "æ" } } },
+    expect = { TYPED, TYPED, TYPED },
   },
   {
     name = "stale_response_on_leave",

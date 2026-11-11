@@ -167,62 +167,57 @@ t:test("provider repaints blank lines affected by an adjacent edit", function()
   t.assert_eq("│ │ │ ", extmarks[1].options.virt_text[1][1], "updated blank guide")
 end)
 
-t:test("provider renders tabs using tabstop and listchars", function()
-  local bufnr, winnr = buffer({ "\tvalue", "tail" })
-  vim.api.nvim_set_option_value("tabstop", 8, { buf = bufnr })
-  vim.api.nvim_set_option_value("list", true, { win = winnr })
-  vim.api.nvim_set_option_value("listchars", "tab:>-,space:·", { win = winnr })
+for _, case in ipairs({
+  {
+    name = "provider renders tabs using tabstop and listchars",
+    lines = { "\tvalue", "tail" },
+    tabstop = 8,
+    listchars = "tab:>-,space:·",
+    guides = { "│-│-│-│-" },
+  },
+  {
+    name = "provider uses the tab end glyph for a one-column tab",
+    lines = { " \tvalue", "tail" },
+    tabstop = 2,
+    listchars = "tab:>-<,space:·",
+    guides = { "│<" },
+  },
+  {
+    name = "provider preserves native tabs when listchars.tab is absent",
+    lines = { "\tvalue", "tail" },
+    tabstop = 8,
+    listchars = "space:·",
+    guides = {},
+  },
+  {
+    name = "provider preserves leading and trailing listchars",
+    lines = { "    value", "    ", "tail" },
+    listchars = "leadmultispace:ab,trail:x,tab:>-",
+    guides = { "│b│b", "│x│x" },
+  },
+  {
+    name = "provider gives lead precedence over multispace",
+    lines = { "    value", "tail" },
+    listchars = "lead:x,multispace:ab,tab:>-",
+    guides = { "│x│x" },
+  },
+}) do
+  t:test(case.name, function()
+    local bufnr, winnr = buffer(case.lines)
+    if case.tabstop ~= nil then
+      vim.api.nvim_set_option_value("tabstop", case.tabstop, { buf = bufnr })
+    end
+    vim.api.nvim_set_option_value("list", true, { win = winnr })
+    vim.api.nvim_set_option_value("listchars", case.listchars, { win = winnr })
 
-  Render.invalidate()
-  local extmarks = render(winnr)
-  t.assert_eq(1, #extmarks, "guide count")
-  t.assert_eq("│-│-│-│-", extmarks[1].options.virt_text[1][1], "tab guides")
-end)
-
-t:test("provider uses the tab end glyph for a one-column tab", function()
-  local bufnr, winnr = buffer({ " \tvalue", "tail" })
-  vim.api.nvim_set_option_value("tabstop", 2, { buf = bufnr })
-  vim.api.nvim_set_option_value("list", true, { win = winnr })
-  vim.api.nvim_set_option_value("listchars", "tab:>-<,space:·", { win = winnr })
-
-  Render.invalidate()
-  local extmarks = render(winnr)
-  t.assert_eq(1, #extmarks, "guide count")
-  t.assert_eq("│<", extmarks[1].options.virt_text[1][1], "one-column tab guide")
-end)
-
-t:test("provider preserves native tabs when listchars.tab is absent", function()
-  local bufnr, winnr = buffer({ "\tvalue", "tail" })
-  vim.api.nvim_set_option_value("tabstop", 8, { buf = bufnr })
-  vim.api.nvim_set_option_value("list", true, { win = winnr })
-  vim.api.nvim_set_option_value("listchars", "space:·", { win = winnr })
-
-  Render.invalidate()
-  t.assert_eq(0, #render(winnr), "native tab row has no overlay")
-end)
-
-t:test("provider preserves leading and trailing listchars", function()
-  local _, winnr = buffer({ "    value", "    ", "tail" })
-  vim.api.nvim_set_option_value("list", true, { win = winnr })
-  vim.api.nvim_set_option_value("listchars", "leadmultispace:ab,trail:x,tab:>-", { win = winnr })
-
-  Render.invalidate()
-  local extmarks = render(winnr)
-  t.assert_eq(2, #extmarks, "guide count")
-  t.assert_eq("│b│b", extmarks[1].options.virt_text[1][1], "leading multispace")
-  t.assert_eq("│x│x", extmarks[2].options.virt_text[1][1], "blank trail")
-end)
-
-t:test("provider gives lead precedence over multispace", function()
-  local _, winnr = buffer({ "    value", "tail" })
-  vim.api.nvim_set_option_value("list", true, { win = winnr })
-  vim.api.nvim_set_option_value("listchars", "lead:x,multispace:ab,tab:>-", { win = winnr })
-
-  Render.invalidate()
-  local extmarks = render(winnr)
-  t.assert_eq(1, #extmarks, "guide count")
-  t.assert_eq("│x│x", extmarks[1].options.virt_text[1][1], "leading spaces")
-end)
+    Render.invalidate()
+    local guides = {} ---@type string[]
+    for _, extmark in ipairs(render(winnr)) do
+      guides[#guides + 1] = extmark.options.virt_text[1][1]
+    end
+    t.assert_same(case.guides, guides, "guides by row")
+  end)
+end
 
 t:test("provider skips a closed fold and restores guides when opened", function()
   local lines = { "root" } ---@type string[]

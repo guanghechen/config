@@ -3,11 +3,6 @@ local CancellationToken = require("stl.c.cancellation_token")
 
 local t = harness.new()
 
-t:test("new: creates token with cancelled=false", function()
-  local token = CancellationToken.new()
-  t.assert_false(token:is_cancelled(), "should not be cancelled initially")
-end)
-
 t:test("new: accepts on_cancel callback in props", function()
   local called = false
   local token = CancellationToken.new({
@@ -19,21 +14,21 @@ t:test("new: accepts on_cancel callback in props", function()
   t.assert_true(called, "on_cancel callback should be invoked")
 end)
 
-t:test("new: works with nil props", function()
-  local token = CancellationToken.new(nil)
-  t.assert_false(token:is_cancelled(), "should create valid token")
-end)
-
-t:test("is_cancelled: returns false before cancel", function()
-  local token = CancellationToken.new()
-  t.assert_false(token:is_cancelled(), "should be false")
-end)
-
-t:test("is_cancelled: returns true after cancel", function()
-  local token = CancellationToken.new()
-  token:cancel()
-  t.assert_true(token:is_cancelled(), "should be true")
-end)
+-- isdisposed mirrors is_cancelled.
+for _, case in ipairs({
+  { name = "is_cancelled: returns false before cancel", method = "is_cancelled", cancel = false },
+  { name = "is_cancelled: returns true after cancel", method = "is_cancelled", cancel = true },
+  { name = "isdisposed: returns false before cancel", method = "isdisposed", cancel = false },
+  { name = "isdisposed: returns true after cancel", method = "isdisposed", cancel = true },
+}) do
+  t:test(case.name, function()
+    local token = CancellationToken.new()
+    if case.cancel then
+      token:cancel()
+    end
+    t.assert_eq(case.cancel, token[case.method](token), case.method)
+  end)
+end
 
 t:test("cancel: triggers registered callbacks", function()
   local token = CancellationToken.new()
@@ -58,10 +53,7 @@ t:test("cancel: triggers multiple callbacks in order", function()
     order[#order + 1] = 3
   end)
   token:cancel()
-  t.assert_eq(3, #order, "all callbacks called")
-  t.assert_eq(1, order[1], "first callback first")
-  t.assert_eq(2, order[2], "second callback second")
-  t.assert_eq(3, order[3], "third callback third")
+  t.assert_same({ 1, 2, 3 }, order, "all callbacks called, in registration order")
 end)
 
 t:test("cancel: is idempotent (second call does nothing)", function()
@@ -79,12 +71,23 @@ end)
 t:test("cancel: clears callbacks after execution", function()
   local token = CancellationToken.new()
   local called = false
-  token:on_cancel(function()
-    called = true
-  end)
+  local registered = setmetatable({}, { __mode = "k" }) ---@type table<function, true>
+  -- Registers from a frame of its own, so that only the token holds the callback.
+  local function register()
+    local callback = function()
+      called = true
+    end
+    registered[callback] = true
+    token:on_cancel(callback)
+  end
+  register()
+  collectgarbage("collect")
+  t.assert_true(next(registered) ~= nil, "the token holds the callback until it runs")
+
   token:cancel()
-  -- Internal _callbacks should be empty now
   t.assert_true(called, "callback was called")
+  collectgarbage("collect")
+  t.assert_nil(next(registered), "the token released the callback after running it")
 end)
 
 t:test("cancel: handles callback errors gracefully", function()
@@ -214,17 +217,6 @@ t:test("throw_if_cancelled: throws if cancelled", function()
   end, "cancelled", "should throw error")
 end)
 
-t:test("isdisposed: returns false before cancel", function()
-  local token = CancellationToken.new()
-  t.assert_false(token:isdisposed(), "should not be disposed")
-end)
-
-t:test("isdisposed: returns true after cancel", function()
-  local token = CancellationToken.new()
-  token:cancel()
-  t.assert_true(token:isdisposed(), "should be disposed")
-end)
-
 t:test("dispose: cancels the token", function()
   local token = CancellationToken.new()
   local called = false
@@ -236,17 +228,19 @@ t:test("dispose: cancels the token", function()
   t.assert_true(called, "callback should be called")
 end)
 
-t:test("dispose: returns true on first call", function()
-  local token = CancellationToken.new()
-  local result = token:dispose()
-  t.assert_true(result, "should return true on first dispose")
-end)
-
-t:test("dispose: returns false on subsequent calls", function()
-  local token = CancellationToken.new()
-  token:dispose()
-  local result = token:dispose()
-  t.assert_false(result, "should return false on second dispose")
-end)
+-- Only the first disposal cancels the token.
+for _, case in ipairs({
+  { name = "dispose: returns true on first call", disposals = 1, result = true },
+  { name = "dispose: returns false on subsequent calls", disposals = 2, result = false },
+}) do
+  t:test(case.name, function()
+    local token = CancellationToken.new()
+    local result ---@type boolean
+    for _ = 1, case.disposals do
+      result = token:dispose()
+    end
+    t.assert_eq(case.result, result, "result of dispose call " .. case.disposals)
+  end)
+end
 
 t:run()

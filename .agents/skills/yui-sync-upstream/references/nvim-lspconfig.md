@@ -57,10 +57,10 @@
 ## 验证
 
 ```sh
-nvim -l __test__/run.lua era/m/lsp/
+nvim -l __test__/run.lua lsp/
 ```
 
-现有 `init`、`fn`、`event`、`biome`、`typescript`、`typescript_activation`、`server_commands`、`rust_analyzer` suites
+现有 `era/m/lsp/` 下的 `init`、`fn`、`event`、`typescript/` 与 `specs/lsp/` 下的 server 配置 suites
 覆盖启用入口、root/executable 查找、公共事件、Biome/ESLint 与 TypeScript 选择等行为，不代表每个 server 的配置均已验证。
 修改其他 server 时补对应配置/回调的定向用例；需要真实 server 时使用任务 fixture 与已安装工具，
 按 [LSP headless debug guide](../../../../spec/debug/lsp.md) 检查实际 attach、root、settings 和目标行为，

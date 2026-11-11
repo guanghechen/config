@@ -335,4 +335,58 @@ t:test("the Explorer window refuses commands that would show another buffer in i
   t.assert_eq(view.bufnr, vim.api.nvim_win_get_buf(view.winnr), "the Explorer stays in its window")
 end)
 
+t:test("opening enters one preconfigured scratch buffer and native attachment keeps its identity", function()
+  local path = t:tempdir()
+  fixture.write(path .. "/file")
+  local entered = {}
+  local group = vim.api.nvim_create_augroup("ExplorerEntryOwnershipTest", { clear = true })
+  t:defer(function()
+    vim.api.nvim_del_augroup_by_id(group)
+  end)
+  vim.api.nvim_create_autocmd("BufEnter", {
+    group = group,
+    callback = function(event)
+      entered[#entered + 1] = {
+        bufnr = event.buf,
+        filetype = vim.api.nvim_get_option_value("filetype", { buf = event.buf }),
+        buftype = vim.api.nvim_get_option_value("buftype", { buf = event.buf }),
+      }
+    end,
+  })
+  local widget = fixture.widget(path)
+  local _, view = widget:context()
+  t.assert_eq(1, #entered)
+  t.assert_eq(view.bufnr, entered[1].bufnr)
+  t.assert_eq("explorer", entered[1].filetype)
+  t.assert_eq("nofile", entered[1].buftype)
+end)
+
+t:test("reveal chooses the most specific child alias and preserves an alias workspace root", function()
+  if stl.env.IS_WIN then
+    t.skip("needs Unix symbolic links and aliases")
+  end
+  local base = t:tempdir()
+  local workspace = base .. "/workspace"
+  assert(vim.uv.fs_mkdir(workspace, 448))
+  assert(vim.uv.fs_mkdir(base .. "/target", 448))
+  assert(vim.uv.fs_mkdir(base .. "/target/nested", 448))
+  fixture.write(base .. "/target/nested/file")
+  assert(vim.uv.fs_symlink("../target", workspace .. "/broad"))
+  assert(vim.uv.fs_symlink("../target/nested", workspace .. "/specific"))
+  local widget = fixture.widget(workspace)
+  await(widget:reveal(base .. "/target/nested/file"))
+  local session, view = widget:context()
+  t.wait_until(function()
+    return widget:get_cursor_filepath() == workspace .. "/specific/file"
+  end, 10000)
+  t.assert_eq(workspace, session:root(view:frame()):path())
+  assert(vim.uv.fs_symlink("target", base .. "/alias"))
+  local aliased = fixture.widget(base .. "/alias")
+  await(aliased:reveal(base .. "/target/nested/file"))
+  t.wait_until(function()
+    return aliased:get_cursor_filepath() == base .. "/alias/nested/file"
+  end, 10000)
+  t.assert_eq(base .. "/alias", aliased:get_root_filepath())
+end)
+
 t:run()

@@ -1,59 +1,20 @@
 local bootstrap = require("__test__.support.bootstrap")
 local fs = require("__test__.support.fs")
 local harness = require("__test__.support.harness")
+local support = require("__test__.support.image")
 
 local t = harness.new()
 
-bootstrap.with_native(t)
-bootstrap.with_runtime(t, {
-  dot = {
-    path = {
-      join = function(left, right)
-        return yoz.path.join(left, right, true, "/")
-      end,
-      normalize = function(path)
-        return yoz.path.normalize(path, true, "/")
-      end,
-    },
-  },
-  stl = {
-    c = { Proc = require("stl.c.proc") },
-    env = {
-      IS_GHOSTTY = false,
-      IS_KITTY = false,
-      IS_TMUX = false,
-      IS_WIN = false,
-      mkdirs = function(path)
-        vim.fn.mkdir(path, "p")
-      end,
-    },
-    table = require("stl.table"),
-    timer = require("stl.timer"),
-  },
-})
-
--- Identification runs this `magick`, so the suite needs no ImageMagick.
-local bin = t:tempdir() ---@type string
-vim.fn.writefile({ "#!/bin/sh", "echo 'PNG 4x2 96x96'" }, bin .. "/magick")
-vim.fn.setfperm(bin .. "/magick", "rwxr-xr-x")
-local path_env = vim.env.PATH ---@type string
-vim.env.PATH = bin .. ":" .. path_env
-t:defer(function()
-  vim.env.PATH = path_env
-end)
-
 local requests = {} ---@type table[]
-t:patch_table(package.loaded, "era.m.image.terminal", {
-  request = function(opts)
-    requests[#requests + 1] = opts
-  end,
-  size = function()
-    return { width = 1000, height = 1000, columns = 100, rows = 50, cell_width = 10, cell_height = 20, scale = 1 }
-  end,
-})
+local bin = support.with_conversion(t, function(opts)
+  requests[#requests + 1] = opts
+end)
+-- Placements debounce their updates.
+bootstrap.with_global(t, "stl", { timer = require("stl.timer") })
+-- Identification runs this `magick`, so the suite needs no ImageMagick.
+support.executable(bin, "magick", { "#!/bin/sh", "echo 'PNG 4x2 96x96'" })
 
 local state = require("era.m.image.state")
-t:patch_table(state.data, "tmpdir", t:tempdir())
 
 ---@param n                             integer
 ---@return string
@@ -69,15 +30,6 @@ end
 ---@return nil
 local function write_png(path, width, height, padding)
   fs.write(path, "\137PNG\r\n\26\n" .. u32(13) .. "IHDR" .. u32(width) .. u32(height) .. string.rep("\0", padding or 0))
-end
-
----@param conversion                    era.m.image.Convert
----@return nil
-local function finish(conversion)
-  conversion:run()
-  t.wait_until(function()
-    return conversion:done()
-  end, 5000, "conversion")
 end
 
 ---@param bufnr                         integer
@@ -119,7 +71,7 @@ t:test("conversion outputs are reused only after a run completed", function()
   vim.fn.writefile({ "partial" }, identify.file)
   t.assert_false(identify.done, "partial output")
 
-  finish(first)
+  support.finish(first)
 
   t.assert_nil(first:error(), "conversion error")
   t.assert_same({ width = 4, height = 2 }, assert(first.meta.info).size, "identified size")
@@ -302,7 +254,7 @@ t:test("discarding a conversion deletes only its own files in the cache", functi
   write_png(file, 4, 2)
   vim.fn.writefile({ "keep" }, outside)
   local conversion = convert.convert({ source = convert.source(file) })
-  finish(conversion)
+  support.finish(conversion)
   local output = conversion.steps[1].file ---@type string
   conversion.steps[2] = vim.tbl_extend("force", conversion.steps[1], { file = outside })
 

@@ -123,11 +123,6 @@ local workspace_state = {
   end,
 }
 
-t:test("Changes delegates dirty winline renders to its window-owned nvimbar", function()
-  local filetype = assert(loadfile("lua/stl/filetype.lua"))()
-  t.assert_true(filetype.has_external_winline(filetype.DIFFVIEW_CHANGES), "external Changes winline")
-end)
-
 t:test("workspace sidebar winlines own pane labels and search count", function()
   local staged_winnr = vim.api.nvim_get_current_win() ---@type integer
   local previous_winbar = vim.api.nvim_get_option_value("winbar", { win = staged_winnr }) ---@type string

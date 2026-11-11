@@ -34,15 +34,6 @@ local function load(loader, object, bufnr, opts)
   return outcome[1], outcome[2]
 end
 
----The messages of `reports`.
----@param reports                       { message: string }[]
----@return string[]
-local function messages(reports)
-  return vim.tbl_map(function(report)
-    return report.message
-  end, reports)
-end
-
 ---Counts buffer rewrites for the rest of the case.
 ---@return { count: integer }
 local function count_writes()
@@ -300,7 +291,7 @@ t:test("revision caching never bypasses a failed resolution or request ownership
   t.assert_false(load(loader, "HEAD:f.txt", bufnr), "resolution failure rejected")
   t.assert_eq(0, blob_calls, "failed resolution does not read blob")
   t.assert_nil(vim.b[bufnr].git_content_object_name, "failure does not commit identity")
-  t.assert_same({ "resolution failed" }, messages(errors), "the failure is reported")
+  t.assert_same({ "resolution failed" }, bootstrap.messages(errors), "the failure is reported")
 
   git.get_object_name = function()
     return Future.resolve({ ok = false, missing = true, err = "object missing" })
@@ -418,7 +409,11 @@ t:test("index caching never bypasses a failure or request ownership", function()
   info_result = { ok = true, info = { has_conflicts = true, object_name = object_name } }
   t.assert_false(load(loader, ":./f.txt", bufnr), "conflict rejects cached stage-zero object")
   t.assert_eq(2, blob_calls, "conflict does not read blob")
-  t.assert_same({ "read failed", "Unable to inspect index object" }, messages(errors), "failures are reported")
+  t.assert_same(
+    { "read failed", "Unable to inspect index object" },
+    bootstrap.messages(errors),
+    "failures are reported"
+  )
 
   local cancelled_token = {
     is_cancelled = function()

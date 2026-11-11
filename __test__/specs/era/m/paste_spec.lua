@@ -248,18 +248,23 @@ t:test("buffers insert mode streams", function()
   t.assert_same({ "alphabeta" }, calls[1].lines, "lines")
 end)
 
-t:test("passes terminal streams through unchanged", function()
-  local paste, calls = setup({ mode = "t" })
+for _, case in ipairs({
+  { name = "passes terminal streams through unchanged", mode = "t" },
+  { name = "passes replace mode streams through", mode = "R" },
+}) do
+  t:test(case.name, function()
+    local paste, calls = setup({ mode = case.mode })
 
-  paste({ "alpha" }, 1)
-  paste({ "beta" }, 2)
-  paste({ "gamma" }, 3)
+    paste({ "alpha" }, 1)
+    paste({ "beta" }, 2)
+    paste({ "gamma" }, 3)
 
-  t.assert_eq(3, #calls, "calls")
-  t.assert_eq(1, calls[1].phase, "start phase")
-  t.assert_eq(2, calls[2].phase, "continue phase")
-  t.assert_eq(3, calls[3].phase, "end phase")
-end)
+    t.assert_eq(3, #calls, "calls")
+    t.assert_eq(1, calls[1].phase, "start phase")
+    t.assert_eq(2, calls[2].phase, "continue phase")
+    t.assert_eq(3, calls[3].phase, "end phase")
+  end)
+end
 
 t:test("passes cmdline and unmodifiable streams through", function()
   local paste_cmdline, cmdline_calls = setup({ cmdtype = ":" })
@@ -273,19 +278,6 @@ t:test("passes cmdline and unmodifiable streams through", function()
   paste_unmodifiable({ "only" }, 3)
 
   t.assert_eq(2, #unmodifiable_calls, "unmodifiable calls")
-end)
-
-t:test("passes replace mode streams through", function()
-  local paste, calls = setup({ mode = "R" })
-
-  paste({ "alpha" }, 1)
-  paste({ "beta" }, 2)
-  paste({ "gamma" }, 3)
-
-  t.assert_eq(3, #calls, "calls")
-  t.assert_eq(1, calls[1].phase, "start phase")
-  t.assert_eq(2, calls[2].phase, "continue phase")
-  t.assert_eq(3, calls[3].phase, "end phase")
 end)
 
 t:test("rewraps a later image handler around complete streamed text", function()

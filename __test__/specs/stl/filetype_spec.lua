@@ -46,4 +46,9 @@ t:test("surrounds stay out of interface buffers but not notes or code", function
   end
 end)
 
+t:test("Changes delegates dirty winline renders to its window-owned nvimbar", function()
+  local filetype = assert(loadfile("lua/stl/filetype.lua"))()
+  t.assert_true(filetype.has_external_winline(filetype.DIFFVIEW_CHANGES), "external Changes winline")
+end)
+
 t:run()

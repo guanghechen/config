@@ -358,4 +358,70 @@ t:test("closing or disposing the originating pane suppresses a delayed action", 
   end
 end)
 
+t:test("read-only selection uses one snapshot across unrelated source updates", function()
+  local widget, path = fixture.file_and_branch()
+  local session = widget:context()
+  await(widget:action():mark("copy"))
+  fixture.idle(widget)
+  fixture.write(path .. "/branch/new")
+  local changed = false
+  fixture.interject({ "Inspected", "Ready" }, function(reply)
+    changed = true
+    Session.await(session.data:resolve(path .. "/branch/new"))
+    t.assert_true(reply.revisions.data ~= session.data:source():revision())
+  end)
+  local copied = fixture.record_copy()
+  await(widget:action():auxiliary("copy_path"))
+  t.assert_true(changed)
+  t.assert_same({ path .. "/a" }, copied.filepaths)
+  t.assert_false(session:busy())
+end)
+
+t:test("complete read-only selection coexists with an active job", function()
+  local widget, path = fixture.file_and_branch()
+  local session, view = widget:context()
+  fixture.write(path .. "/branch/a")
+  local target = await(session.data:resolve(path .. "/branch"))
+  await(widget:action():mark("copy"))
+  local confirming = false
+  t:patch_table(vim.ui, "input", function()
+    confirming = true
+  end)
+  local job = await(session:operate(view, { kind = "paste", target = target }))
+  t.wait_until(function()
+    return confirming
+  end, 10000)
+  local copied = fixture.record_copy()
+  await(widget:action():auxiliary("copy_path"))
+  t.assert_same({ path .. "/a" }, copied.filepaths)
+  t.assert_true(session.job == job)
+  t.assert_nil(session._preparation)
+  t.assert_true(session.state:status().locked)
+  jobs.cancel(session)
+  fixture.idle(widget)
+end)
+
+t:test("cancelling a complete inspection discards its late snapshot without a task", function()
+  local widget = fixture.file_and_branch()
+  local session = widget:context()
+  await(widget:action():mark("copy"))
+  local pending, resolve = stl.c.Future.new_with_resolver()
+  local waiting = false
+  fixture.interject({ "Inspected" }, function()
+    waiting = true
+    Session.await(pending)
+  end)
+  local copied = fixture.record_copy()
+  local future = widget:action():auxiliary("copy_path")
+  t.wait_until(function()
+    return waiting
+  end, 10000)
+  t.assert_false(session.state:status().locked)
+  jobs.cancel(session)
+  resolve(true)
+  await(future)
+  t.assert_nil(copied.filepaths)
+  t.assert_false(session:busy() or jobs.pending())
+end)
+
 t:run()

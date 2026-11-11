@@ -22,17 +22,30 @@ local function frame(prompt_line, footer)
   }, "\n")
 end
 
-t:test("extract_input: strips ❯ marker but keeps a user-typed '>'", function()
-  t.assert_eq("> quote this", T.extract_input(frame("❯ > quote this")), "leading user '>' must survive")
-end)
-
-t:test("extract_input: strips a single '>' prompt marker", function()
-  t.assert_eq("hello world", T.extract_input(frame("> hello world")), "one marker stripped")
-end)
-
-t:test("extract_input: normal ❯ prompt", function()
-  t.assert_eq("hello world", T.extract_input(frame("❯ hello world")), "marker stripped, content intact")
-end)
+for _, case in ipairs({
+  {
+    name = "extract_input: strips ❯ marker but keeps a user-typed '>'",
+    prompt_line = "❯ > quote this",
+    input = "> quote this",
+    message = "leading user '>' must survive",
+  },
+  {
+    name = "extract_input: strips a single '>' prompt marker",
+    prompt_line = "> hello world",
+    input = "hello world",
+    message = "one marker stripped",
+  },
+  {
+    name = "extract_input: normal ❯ prompt",
+    prompt_line = "❯ hello world",
+    input = "hello world",
+    message = "marker stripped, content intact",
+  },
+}) do
+  t:test(case.name, function()
+    t.assert_eq(case.input, T.extract_input(frame(case.prompt_line)), case.message)
+  end)
+end
 
 t:test("classify: '>'-prefixed prompt still in the box is pending, not submitted", function()
   local sig = T.make_signature("> quote this")
@@ -54,35 +67,41 @@ t:test("classify: an unparseable frame is unknown", function()
   t.assert_eq("unknown", T.classify("no horizontal rules here", sig, nil), "cannot judge => unknown")
 end)
 
-t:test("shipped busy_pattern: matches the live spinner footer", function()
-  t.assert_true(
-    T.footer_has("✶ Composing… (3s · thinking with xhigh effort)", CLAUDE.busy_pattern),
-    "the active spinner must read as busy"
-  )
-end)
-
-t:test("shipped busy_pattern: matches a multi-word spinner the old anchored shape missed", function()
-  -- "Compacting conversation…" — the ellipsis follows the 2nd word, which the prior
-  -- "^<glyph> <word>…" pattern could not match; that false-idle is what risked
-  -- Escaping a busy agent.
-  t.assert_true(
-    T.footer_has("✻ Compacting conversation… (12s · thinking)", CLAUDE.busy_pattern),
-    "a multi-word busy state must still read as busy"
-  )
-end)
-
-t:test("shipped busy_pattern: does NOT match an idle footer", function()
-  t.assert_false(
-    T.footer_has("~/.config/nvim · main · claude-opus-4-8 · Context 80% left", CLAUDE.busy_pattern),
-    "an idle footer (no spinner ellipsis) must not read as busy"
-  )
-end)
-
-t:test("shipped busy_pattern: does NOT match the lingering thinking summary", function()
-  -- "Crunched for 4s" stays above the response after thinking; it has no ellipsis and
-  -- must not read as an active generation, or delivery would stall waiting for idle.
-  t.assert_false(T.footer_has("✻ Crunched for 4s", CLAUDE.busy_pattern), "the thinking summary must not read as busy")
-end)
+for _, case in ipairs({
+  {
+    name = "shipped busy_pattern: matches the live spinner footer",
+    footer = "✶ Composing… (3s · thinking with xhigh effort)",
+    busy = true,
+    message = "the active spinner must read as busy",
+  },
+  {
+    name = "shipped busy_pattern: matches a multi-word spinner the old anchored shape missed",
+    -- "Compacting conversation…" — the ellipsis follows the 2nd word, which the prior
+    -- "^<glyph> <word>…" pattern could not match; that false-idle is what risked
+    -- Escaping a busy agent.
+    footer = "✻ Compacting conversation… (12s · thinking)",
+    busy = true,
+    message = "a multi-word busy state must still read as busy",
+  },
+  {
+    name = "shipped busy_pattern: does NOT match an idle footer",
+    footer = "~/.config/nvim · main · claude-opus-4-8 · Context 80% left",
+    busy = false,
+    message = "an idle footer (no spinner ellipsis) must not read as busy",
+  },
+  {
+    name = "shipped busy_pattern: does NOT match the lingering thinking summary",
+    -- "Crunched for 4s" stays above the response after thinking; it has no ellipsis and
+    -- must not read as an active generation, or delivery would stall waiting for idle.
+    footer = "✻ Crunched for 4s",
+    busy = false,
+    message = "the thinking summary must not read as busy",
+  },
+}) do
+  t:test(case.name, function()
+    t.assert_eq(case.busy, T.footer_has(case.footer, CLAUDE.busy_pattern), case.message)
+  end)
+end
 
 t:test("shipped insert_pattern: matches the modal INSERT indicator", function()
   t.assert_true(T.footer_has("-- INSERT --", CLAUDE.insert_pattern), "the INSERT modeline must match")

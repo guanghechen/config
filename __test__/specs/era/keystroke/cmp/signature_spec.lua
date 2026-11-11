@@ -157,4 +157,172 @@ t:test("failed request submission clears stale signature help", function()
   t.assert_eq(false, state:update("foo(ab"), "failed refresh releases the active state")
 end)
 
+t:test("numeric signature parameter offsets are UTF-16 regardless of client encoding", function()
+  local signature = Signature.new()
+  t:defer(function()
+    signature:destroy()
+  end)
+  vim.api.nvim_buf_set_lines(0, 0, -1, false, { "call(" })
+  signature:render(runtime.context("call("), {
+    activeSignature = 0,
+    activeParameter = 0,
+    signatures = { { label = "call(😀 value)", parameters = { { label = { 8, 13 } } } } },
+  })
+  local bufnr = signature.bufnr
+  local marks = vim.api.nvim_buf_get_extmarks(bufnr, -1, 0, -1, { details = true })
+  t.assert_eq(1, #marks, "active parameter")
+  local mark = marks[1]
+  local text = vim.api.nvim_buf_get_lines(bufnr, mark[2], mark[2] + 1, false)[1]
+  t.assert_eq("value", text:sub(mark[3] + 1, mark[4].end_col), "highlighted parameter")
+end)
+
+t:test("string signature parameters start after the server's trigger characters", function()
+  local signature = Signature.new()
+  t:defer(function()
+    signature:destroy()
+  end)
+  vim.api.nvim_buf_set_lines(0, 0, -1, false, { "foo(" })
+  for _, example in ipairs({
+    { label = "foo(foo)", parameter = 0, start_col = 4, end_col = 7 },
+    { label = "(foo)", parameter = 0, start_col = 1, end_col = 4 },
+    { label = "pkg.foo(foo)", parameter = 0, start_col = 8, end_col = 11 },
+    { label = "foo(foo, foo)", parameter = 1, start_col = 9, end_col = 12 },
+  }) do
+    local parameters = { { label = "foo" } }
+    if example.parameter == 1 then
+      parameters[2] = { label = "foo" }
+    end
+    signature:render(runtime.context("foo("), {
+      activeParameter = example.parameter,
+      signatures = { { label = example.label, parameters = parameters } },
+    }, { "(", "," })
+    local marks = vim.api.nvim_buf_get_extmarks(signature.bufnr, -1, 0, -1, {
+      details = true,
+    })
+    t.assert_eq(1, #marks, example.label)
+    t.assert_eq(0, marks[1][2], "plain signature label row")
+    t.assert_eq(example.start_col, marks[1][3], "parameter start")
+    t.assert_eq(example.end_col, marks[1][4].end_col, "parameter end")
+  end
+end)
+
+t:test("signature nulls and overload projection preserve the server response", function()
+  local signature = Signature.new()
+  t:defer(function()
+    signature:destroy()
+  end)
+  local context = runtime.context("call(")
+  vim.api.nvim_buf_set_lines(context.bufnr, 0, -1, false, { context.line })
+  local result = vim.json.decode([[
+    {"activeSignature":null,"activeParameter":null,
+     "signatures":[{"label":"call(value)","parameters":null,"documentation":null}]}
+  ]])
+  local original = vim.deepcopy(result)
+  signature:render(context, result)
+  t.assert_true(vim.api.nvim_win_is_valid(assert(signature.winnr)), "nullable signature is displayed")
+  t.assert_eq(0, #vim.api.nvim_buf_get_extmarks(signature.bufnr, -1, 0, -1, {}))
+  t.assert_same(original, result, "nullable response is immutable")
+
+  result = {
+    activeSignature = 1,
+    activeParameter = 0,
+    signatures = {
+      { label = "unused()", parameters = vim.NIL, documentation = { kind = "markdown", value = "unused docs" } },
+      { label = "call(😀 value)", parameters = { { label = { 8, 13 }, documentation = "parameter docs" } } },
+    },
+  }
+  original = vim.deepcopy(result)
+  signature:render(context, result)
+  local bufnr = assert(signature.bufnr)
+  t.assert_eq("call(😀 value)", vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1], "selected overload")
+  t.assert_eq(1, vim.api.nvim_buf_line_count(bufnr), "unselected overload and documentation are omitted")
+  local mark = vim.api.nvim_buf_get_extmarks(bufnr, -1, 0, -1, { details = true })[1]
+  local line = vim.api.nvim_buf_get_lines(bufnr, mark[2], mark[2] + 1, false)[1]
+  t.assert_eq("value", line:sub(mark[3] + 1, mark[4].end_col), "UTF-16 parameter remains highlighted")
+  t.assert_same(original, result, "retrigger response retains original offsets and documentation")
+end)
+
+t:test("signature explicit null overrides the response active parameter", function()
+  local signature = Signature.new()
+  t:defer(function()
+    signature:destroy()
+  end)
+  for _, example in ipairs({ { count = 1 }, { active = vim.NIL, count = 0 }, { active = 0, count = 1 } }) do
+    local result = {
+      activeParameter = 0,
+      signatures = { { label = "call(value)", activeParameter = example.active, parameters = { { label = "value" } } } },
+    }
+    local before = vim.deepcopy(result)
+    signature:render(runtime.context("call("), result, { "(" })
+    local marks = vim.api.nvim_buf_get_extmarks(signature.bufnr, -1, 0, -1, {})
+    t.assert_eq(example.count, #marks, "only a missing signature field inherits the response value")
+    t.assert_same(before, result, "explicit null remains available to retrigger requests")
+  end
+end)
+
+t:test("signature ranges cover label boundaries, multiline text and mixed parameter labels", function()
+  local signature = Signature.new()
+  t:defer(function()
+    signature:destroy()
+  end)
+  for _, example in ipairs({
+    {
+      label = "entire label",
+      parameters = { { label = { 0, 12 } } },
+      row = 0,
+      col = 0,
+      finish = 12,
+      text = "entire label",
+    },
+    {
+      label = "foo(\n  😀 value\n)",
+      parameters = { { label = { 10, 15 } } },
+      row = 1,
+      col = 7,
+      finish = 12,
+      text = "value",
+    },
+    {
+      label = "foo(a, b)",
+      activeParameter = 1,
+      parameters = { { label = { 4, 5 } }, { label = "b" } },
+      row = 0,
+      col = 7,
+      finish = 8,
+      text = "b",
+    },
+  }) do
+    signature:render(runtime.context("foo("), { activeParameter = 0, signatures = { example } }, { "(", "," })
+    local bufnr = assert(signature.bufnr)
+    local mark = vim.api.nvim_buf_get_extmarks(bufnr, -1, 0, -1, { details = true })[1]
+    t.assert_true(mark ~= nil, example.label)
+    t.assert_eq(example.row, mark[2])
+    t.assert_eq(example.col, mark[3])
+    t.assert_eq(example.finish, mark[4].end_col)
+    local line = vim.api.nvim_buf_get_lines(bufnr, mark[2], mark[2] + 1, false)[1]
+    t.assert_eq(example.text, line:sub(mark[3] + 1, mark[4].end_col), "highlight covers the intended parameter")
+  end
+end)
+
+t:test("plain signatures wrap wide characters and reuse only their text", function()
+  local signature = Signature.new()
+  t:defer(function()
+    signature:destroy()
+  end)
+  local context = runtime.context("call(")
+  vim.api.nvim_buf_set_lines(context.bufnr, 0, -1, false, { context.line })
+  local width = math.min(88, vim.o.columns - 4)
+  local label = "a" .. ("中"):rep(width - 1) .. "b"
+  signature:render(context, { signatures = { { label = label } } })
+  t.assert_eq(width, vim.api.nvim_win_get_width(signature.winnr))
+  t.assert_eq(3, vim.api.nvim_win_get_height(signature.winnr), "wide characters wrap without Markdown fence rows")
+  local tick = vim.api.nvim_buf_get_changedtick(signature.bufnr)
+  signature:hide()
+  signature:render(context, { signatures = { { label = label } } })
+  t.assert_eq(tick, vim.api.nvim_buf_get_changedtick(signature.bufnr), "reopening does not rewrite identical text")
+  t.assert_eq(3, vim.api.nvim_win_get_height(signature.winnr))
+  signature:render(context, { signatures = { { label = "short()" } } })
+  t.assert_eq(1, vim.api.nvim_win_get_height(signature.winnr), "short content has no cached or fenced padding")
+end)
+
 t:run()

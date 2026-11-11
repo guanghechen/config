@@ -94,22 +94,6 @@ local function open_select(title, on_choice)
   })
 end
 
-t:test("input keeps a user-selected window after BufLeave cancellation", function()
-  local _, other_winnr = create_window_pair()
-  local callback_winnr = nil ---@type integer|nil
-  local input_winnr = input.open({ prompt = "Race", startinsert = false }, function()
-    callback_winnr = vim.api.nvim_get_current_win()
-  end)
-
-  vim.api.nvim_set_current_win(other_winnr)
-  t.wait_until(function()
-    return not vim.api.nvim_win_is_valid(input_winnr) and callback_winnr ~= nil
-  end, 5000, "input window was not disposed")
-
-  t.assert_eq(other_winnr, vim.api.nvim_get_current_win(), "current window")
-  t.assert_eq(other_winnr, callback_winnr, "callback window")
-end)
-
 t:test("input does not restore a cursor into a replacement parent buffer", function()
   local parent_winnr, other_winnr = create_window_pair()
   local parent_bufnr = vim.api.nvim_win_get_buf(parent_winnr) ---@type integer
@@ -135,106 +119,77 @@ t:test("input does not restore a cursor into a replacement parent buffer", funct
   t.assert_eq(other_winnr, vim.api.nvim_get_current_win(), "current window")
 end)
 
-t:test("input retains deferred focus after nvim_win_call", function()
-  local origin_winnr, anchor_winnr = create_window_pair()
-  local input_winnr ---@type integer
-  local callback_winnr = nil ---@type integer|nil
-
-  vim.api.nvim_win_call(anchor_winnr, function()
-    input_winnr = input.open({ prompt = "Call", startinsert = false }, function()
+-- The input and the select window take the deferred focus and give it back alike.
+for _, modal in ipairs({
+  {
+    kind = "input",
+    ---@param prompt                    string
+    ---@param on_done                   fun(): nil
+    ---@return integer
+    open = function(prompt, on_done)
+      return input.open({ prompt = prompt, startinsert = false }, on_done)
+    end,
+  },
+  { kind = "select", open = open_select },
+}) do
+  t:test(modal.kind .. " keeps a user-selected window after BufLeave cancellation", function()
+    local _, other_winnr = create_window_pair()
+    local callback_winnr = nil ---@type integer|nil
+    local modal_winnr = modal.open("Race", function()
       callback_winnr = vim.api.nvim_get_current_win()
     end)
+
+    vim.api.nvim_set_current_win(other_winnr)
+    t.wait_until(function()
+      return not vim.api.nvim_win_is_valid(modal_winnr) and callback_winnr ~= nil
+    end, 5000, modal.kind .. " window was not disposed")
+
+    t.assert_eq(other_winnr, vim.api.nvim_get_current_win(), "current window")
+    t.assert_eq(other_winnr, callback_winnr, "callback window")
   end)
 
-  t.wait_until(function()
-    return vim.api.nvim_get_current_win() == input_winnr
-  end, 5000, "input did not receive deferred focus")
-  t.assert_true(vim.api.nvim_win_is_valid(input_winnr), "input window")
+  t:test(modal.kind .. " retains deferred focus after nvim_win_call", function()
+    local origin_winnr, anchor_winnr = create_window_pair()
+    local modal_winnr ---@type integer
+    local callback_winnr = nil ---@type integer|nil
 
-  vim.api.nvim_win_close(input_winnr, true)
-  t.wait_until(function()
-    return callback_winnr ~= nil
-  end, 5000, "input callback was not delivered")
-  t.assert_eq(origin_winnr, vim.api.nvim_get_current_win(), "origin window")
-  t.assert_eq(origin_winnr, callback_winnr, "callback window")
-end)
-
-t:test("input cancels deferred focus after entering a third window", function()
-  local _, anchor_winnr, third_winnr = create_window_triplet()
-  local input_winnr ---@type integer
-  local callback_winnr = nil ---@type integer|nil
-
-  vim.api.nvim_win_call(anchor_winnr, function()
-    input_winnr = input.open({ prompt = "Call", startinsert = false }, function()
-      callback_winnr = vim.api.nvim_get_current_win()
+    vim.api.nvim_win_call(anchor_winnr, function()
+      modal_winnr = modal.open("Call", function()
+        callback_winnr = vim.api.nvim_get_current_win()
+      end)
     end)
-  end)
-  vim.api.nvim_set_current_win(third_winnr)
 
-  t.wait_until(function()
-    return not vim.api.nvim_win_is_valid(input_winnr) and callback_winnr ~= nil
-  end, 5000, "input deferred focus was not cancelled")
-  t.assert_eq(third_winnr, vim.api.nvim_get_current_win(), "current window")
-  t.assert_eq(third_winnr, callback_winnr, "callback window")
-end)
+    t.wait_until(function()
+      return vim.api.nvim_get_current_win() == modal_winnr
+    end, 5000, modal.kind .. " did not receive deferred focus")
+    t.assert_true(vim.api.nvim_win_is_valid(modal_winnr), modal.kind .. " window")
 
-t:test("select keeps a user-selected window after BufLeave cancellation", function()
-  local _, other_winnr = create_window_pair()
-  local callback_winnr = nil ---@type integer|nil
-  local select_winnr = open_select("Race", function()
-    callback_winnr = vim.api.nvim_get_current_win()
+    vim.api.nvim_win_close(modal_winnr, true)
+    t.wait_until(function()
+      return callback_winnr ~= nil
+    end, 5000, modal.kind .. " callback was not delivered")
+    t.assert_eq(origin_winnr, vim.api.nvim_get_current_win(), "origin window")
+    t.assert_eq(origin_winnr, callback_winnr, "callback window")
   end)
 
-  vim.api.nvim_set_current_win(other_winnr)
-  t.wait_until(function()
-    return not vim.api.nvim_win_is_valid(select_winnr) and callback_winnr ~= nil
-  end, 5000, "select window was not disposed")
+  t:test(modal.kind .. " cancels deferred focus after entering a third window", function()
+    local _, anchor_winnr, third_winnr = create_window_triplet()
+    local modal_winnr ---@type integer
+    local callback_winnr = nil ---@type integer|nil
 
-  t.assert_eq(other_winnr, vim.api.nvim_get_current_win(), "current window")
-  t.assert_eq(other_winnr, callback_winnr, "callback window")
-end)
-
-t:test("select retains deferred focus after nvim_win_call", function()
-  local origin_winnr, anchor_winnr = create_window_pair()
-  local select_winnr ---@type integer
-  local callback_winnr = nil ---@type integer|nil
-
-  vim.api.nvim_win_call(anchor_winnr, function()
-    select_winnr = open_select("Call", function()
-      callback_winnr = vim.api.nvim_get_current_win()
+    vim.api.nvim_win_call(anchor_winnr, function()
+      modal_winnr = modal.open("Call", function()
+        callback_winnr = vim.api.nvim_get_current_win()
+      end)
     end)
+    vim.api.nvim_set_current_win(third_winnr)
+
+    t.wait_until(function()
+      return not vim.api.nvim_win_is_valid(modal_winnr) and callback_winnr ~= nil
+    end, 5000, modal.kind .. " deferred focus was not cancelled")
+    t.assert_eq(third_winnr, vim.api.nvim_get_current_win(), "current window")
+    t.assert_eq(third_winnr, callback_winnr, "callback window")
   end)
-
-  t.wait_until(function()
-    return vim.api.nvim_get_current_win() == select_winnr
-  end, 5000, "select did not receive deferred focus")
-  t.assert_true(vim.api.nvim_win_is_valid(select_winnr), "select window")
-
-  vim.api.nvim_win_close(select_winnr, true)
-  t.wait_until(function()
-    return callback_winnr ~= nil
-  end, 5000, "select callback was not delivered")
-  t.assert_eq(origin_winnr, vim.api.nvim_get_current_win(), "origin window")
-  t.assert_eq(origin_winnr, callback_winnr, "callback window")
-end)
-
-t:test("select cancels deferred focus after entering a third window", function()
-  local _, anchor_winnr, third_winnr = create_window_triplet()
-  local select_winnr ---@type integer
-  local callback_winnr = nil ---@type integer|nil
-
-  vim.api.nvim_win_call(anchor_winnr, function()
-    select_winnr = open_select("Call", function()
-      callback_winnr = vim.api.nvim_get_current_win()
-    end)
-  end)
-  vim.api.nvim_set_current_win(third_winnr)
-
-  t.wait_until(function()
-    return not vim.api.nvim_win_is_valid(select_winnr) and callback_winnr ~= nil
-  end, 5000, "select deferred focus was not cancelled")
-  t.assert_eq(third_winnr, vim.api.nvim_get_current_win(), "current window")
-  t.assert_eq(third_winnr, callback_winnr, "callback window")
-end)
+end
 
 t:run()

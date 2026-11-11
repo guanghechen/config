@@ -12,9 +12,6 @@ vim.fn.writefile(
 )
 
 bootstrap.with_global(t, "stl", {
-  filetype = {
-    NOTEPAD = "notepad",
-  },
   nvim = {
     fn = {
       augroup = function()
@@ -203,18 +200,6 @@ t:test("the installed parsers are on the runtimepath once from startup on", func
   ---@diagnostic disable-next-line: missing-parameter
   setup({}, {}, {})
   t.assert_eq(1, entries(), "once the plugin has loaded")
-end)
-
-t:test("notepad owns its markdown mapping", function()
-  local mappings = {} ---@type table<string, string>
-  t:patch_table(vim.treesitter.language, "register", function(lang, filetype)
-    mappings[filetype] = lang
-  end)
-  t:patch_table(package.loaded, "era.m.notepad", nil)
-
-  require("era.m.notepad")
-
-  t.assert_eq("markdown", mappings[stl.filetype.NOTEPAD], "notepad mapping")
 end)
 
 t:test("C# filetype uses the c_sharp parser", function()

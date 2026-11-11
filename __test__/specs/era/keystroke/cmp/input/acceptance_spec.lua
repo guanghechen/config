@@ -621,4 +621,103 @@ t:test("multiline plain-text completions retain their cursor and undo semantics"
   )
 end)
 
+t:test("a wide edit that changes the namespace waits for acceptance", function()
+  local ui = embedded.themed_editor(t, {
+    lines = { "obj." },
+    items = {
+      {
+        label = "alpha_one",
+        textEdit = {
+          range = { start = { line = 0, character = 0 }, ["end"] = { line = 0, character = 6 } },
+          newText = "other.alpha_one",
+        },
+      },
+    },
+  })
+  ui:rpc("nvim_input", "Aap")
+  embedded.wait(t, ui, [[return vim.fn.complete_info({'selected'}).selected == 0]], "wide replacement menu")
+  t.assert_eq("ap", ui:lua([[return vim.fn.complete_info({'items'}).items[1].word]]), "safe native preview")
+  ui:lua([[vim.api.nvim_select_popupmenu_item(0,true,true,{})]])
+  embedded.wait(
+    t,
+    ui,
+    [[return vim.fn.pumvisible() == 0 and vim.api.nvim_get_current_line() == 'other.alpha_one']],
+    "native acceptance still replaces the complete namespace"
+  )
+end)
+
+for _, prefix in ipairs({ "obj.", "😀 obj." }) do
+  t:test("wide acceptance records dot repeat after a projected preview for " .. prefix, function()
+    local result = prefix .. "alpha_one"
+    local ui = embedded.themed_editor(t, {
+      lines = { prefix, prefix },
+      items = {
+        {
+          label = "alpha_one",
+          textEdit = {
+            range = {
+              start = { line = 0, character = 0 },
+              ["end"] = { line = 0, character = vim.str_utfindex(prefix .. "ap", "utf-16") },
+            },
+            newText = result,
+          },
+        },
+      },
+    })
+    ui:rpc("nvim_input", "Aap")
+    embedded.wait(t, ui, [[return vim.fn.complete_info({'selected'}).selected == 0]], "wide replacement menu")
+    ui:lua([[vim.api.nvim_select_popupmenu_item(0,true,false,{})]])
+    embedded.wait(
+      t,
+      ui,
+      "return vim.api.nvim_get_current_line() == " .. string.format("%q", result),
+      "projected preview"
+    )
+    ui:rpc("nvim_input", "<CR>")
+    embedded.wait(t, ui, [[return vim.fn.pumvisible() == 0]], "accepted wide edit")
+    ui:rpc("nvim_input", "<Esc>j$.")
+    embedded.wait(
+      t,
+      ui,
+      "return vim.api.nvim_buf_get_lines(0,1,2,false)[1] == " .. string.format("%q", result),
+      "dot repeat applies the complete edit at the second namespace"
+    )
+  end)
+end
+
+t:test("wide snippets project their preview without trimming the accepted snippet", function()
+  local ui = embedded.themed_editor(t, {
+    lines = { "obj." },
+    items = {
+      {
+        label = "alpha_snippet",
+        kind = 15,
+        insertTextFormat = 2,
+        textEdit = {
+          range = { start = { line = 0, character = 0 }, ["end"] = { line = 0, character = 6 } },
+          newText = "obj.alpha_${1:value}$0",
+        },
+      },
+    },
+  })
+  ui:rpc("nvim_input", "Aap")
+  embedded.wait(t, ui, [[return vim.fn.complete_info({'selected'}).selected == 0]], "wide snippet menu")
+  t.assert_eq(
+    "alpha_value",
+    ui:lua([[return vim.fn.complete_info({'items'}).items[1].word]]),
+    "projected snippet prefix"
+  )
+  ui:lua([[vim.api.nvim_select_popupmenu_item(0,true,false,{})]])
+  embedded.wait(t, ui, [[return vim.api.nvim_get_current_line() == 'obj.alpha_value']], "native snippet preview")
+  ui:rpc("nvim_input", "<CR>")
+  embedded.wait(
+    t,
+    ui,
+    [[return vim.snippet.active() and vim.api.nvim_get_current_line() == 'obj.alpha_value']],
+    "the original wide snippet still owns its placeholder"
+  )
+  ui:rpc("nvim_input", "replacement<Tab>")
+  embedded.wait(t, ui, [[return vim.api.nvim_get_current_line() == 'obj.alpha_replacement']], "placeholder editing")
+end)
+
 t:run()

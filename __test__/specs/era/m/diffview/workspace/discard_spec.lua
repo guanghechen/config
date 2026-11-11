@@ -221,63 +221,62 @@ t:test("cancellation without completed IO preserves the file without reporting a
   t.assert_eq(0, #f.reports)
 end)
 
-t:test("completed IO with a synchronization error refreshes the pane and reports the separate failure", function()
-  local f = fixture({ "file.txt" })
-  vim.fn.writefile({ "delete" }, f.path)
-  local run = Jobs.run
-  t:patch_table(Jobs, "run", function(data, plan)
-    return run(data, plan):map(function(result)
+for _, case in ipairs({
+  {
+    name = "completed IO with a synchronization error refreshes the pane and reports the separate failure",
+    complete = function(result)
       result.items[1].sync_error = { code = "Stale", message = "source changed after IO" }
-      return result
-    end)
-  end)
-  local ok, result = t.settle(action.reset(f.context))
-  t.assert_true(ok, result)
-  t.assert_true(result.success, result.error)
-  t.assert_nil(vim.uv.fs_lstat(f.path))
-  t.assert_eq(1, f.state.refreshed)
-  t.assert_eq(1, #f.reports)
-  t.assert_eq("source changed after IO", f.reports[1].details.error)
-  t.assert_true(f.reports[1].message:find("synchronization failed", 1, true) ~= nil)
-end)
-
-t:test("a Job completion error cannot hide an already completed delete or its error", function()
-  local f = fixture({ "file.txt" })
-  vim.fn.writefile({ "delete" }, f.path)
-  local run = Jobs.run
-  t:patch_table(Jobs, "run", function(data, plan)
-    return run(data, plan):map(function(result)
+    end,
+    success = true,
+    error = "source changed after IO",
+    message = "synchronization failed",
+  },
+  {
+    name = "a Job completion error cannot hide an already completed delete or its error",
+    complete = function(result)
       result.success = false
       result.error = "job completion failed"
-      return result
-    end)
-  end)
-  local ok, result = t.settle(action.reset(f.context))
-  t.assert_true(ok, result)
-  t.assert_false(result.success)
-  t.assert_nil(vim.uv.fs_lstat(f.path))
-  t.assert_eq(1, f.state.refreshed)
-  t.assert_eq(1, #f.reports)
-  t.assert_eq("job completion failed", f.reports[1].details.error)
-end)
-
-t:test("cancellation after completed IO still refreshes the deleted file", function()
-  local f = fixture({ "file.txt" })
-  vim.fn.writefile({ "delete" }, f.path)
-  local run = Jobs.run
-  t:patch_table(Jobs, "run", function(data, plan)
-    return run(data, plan):map(function(result)
+    end,
+    success = false,
+    error = "job completion failed",
+  },
+  {
+    name = "cancellation after completed IO still refreshes the deleted file",
+    complete = function(result)
       result.success = false
       result.status.cancelled = true
-      return result
+    end,
+    cancelled = true,
+  },
+}) do
+  t:test(case.name, function()
+    local f = fixture({ "file.txt" })
+    vim.fn.writefile({ "delete" }, f.path)
+    local run = Jobs.run
+    t:patch_table(Jobs, "run", function(data, plan)
+      return run(data, plan):map(function(result)
+        case.complete(result)
+        return result
+      end)
     end)
+    local ok, result = t.settle(action.reset(f.context))
+    t.assert_true(ok, result)
+    if case.success ~= nil then
+      t.assert_eq(case.success, result.success, result.error)
+    end
+    if case.cancelled then
+      t.assert_true(result.status.cancelled)
+    end
+    t.assert_nil(vim.uv.fs_lstat(f.path))
+    t.assert_eq(1, f.state.refreshed)
+    t.assert_eq(case.error and 1 or 0, #f.reports)
+    if case.error then
+      t.assert_eq(case.error, f.reports[1].details.error)
+    end
+    if case.message then
+      t.assert_true(f.reports[1].message:find(case.message, 1, true) ~= nil)
+    end
   end)
-  local ok, result = t.settle(action.reset(f.context))
-  t.assert_true(ok, result)
-  t.assert_true(result.status.cancelled)
-  t.assert_nil(vim.uv.fs_lstat(f.path))
-  t.assert_eq(1, f.state.refreshed)
-  t.assert_eq(0, #f.reports)
-end)
+end
 
 t:run()

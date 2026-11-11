@@ -1,80 +1,7 @@
 local explorer = require("__test__.support.explorer")
 local t = require("__test__.support.harness").new()
-
----@param names                         string[]
----@return table
-local function open_ui(names)
-  local path = t:tempdir()
-  for _, name in ipairs(names) do
-    if name:sub(-1) == "/" then
-      assert(vim.uv.fs_mkdir(path .. "/" .. name:sub(1, -2), 448))
-    else
-      vim.fn.writefile({ name }, path .. "/" .. name)
-    end
-  end
-  local ui, grid = explorer.open_ui(t, { width = 142, height = 69, path = path })
-  ui:lua(
-    [[
-    local path, count = ...
-    dot.context.explorer.trash.snapshot = function() return false end
-    vim.ui.input = require("era.m.input").open
-    vim.ui.select = function() error("a confirmation must not open a picker") end
-    widget = require("era.m.explorer.widget").new({ name = "compact-prompt", root = path })
-    widget:focus()
-    session, view = shown(widget, count, function(current_session, current)
-      return not current_session.data:native():is_busy() and current_session.state:native():applicable(current:frame())
-    end)
-  ]],
-    path,
-    #names
-  )
-  return { ui = ui, grid = grid, path = path }
-end
-
----@param context                       table
----@return table
-local function dialog(context)
-  local result
-  context.ui:wait_until(function()
-    result = context.ui:lua([[
-      local result, floats = nil, 0
-      for _, winnr in ipairs(vim.api.nvim_list_wins()) do
-        local config = vim.api.nvim_win_get_config(winnr)
-        if config.relative ~= "" then floats = floats + 1 end
-        if vim.w[winnr].wintype == stl.e.WinTypeEnum.INPUT then
-          local bufnr = vim.api.nvim_win_get_buf(winnr)
-          result = {
-            height = config.height, width = config.width, relative = config.relative,
-            origin = config.win == view.winnr,
-            lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false),
-            wrap = vim.api.nvim_get_option_value("wrap", {win = winnr}),
-          }
-        end
-      end
-      if result then result.floats = floats end
-      return result
-    ]])
-    return result ~= nil
-  end, 10000, "the input dialog must open")
-  t.assert_eq(1, result.floats, "confirmation must use one compact surface")
-  t.assert_eq("win", result.relative)
-  t.assert_true(result.origin, "confirmation must stay anchored to the Explorer window")
-  return result
-end
-
----@param context                       table
----@param keys                          string
----@return nil
-local function answer(context, keys)
-  context.ui:rpc("nvim_input", keys)
-  context.ui:wait_lua(
-    "return not session:busy() and vim.api.nvim_get_current_win() == view.winnr",
-    10000,
-    "the answer must settle the operation and return to the Explorer"
-  )
-  local errors = context.ui:lua("return errors")
-  t.assert_eq(0, #errors, vim.inspect(errors))
-end
+local prompt = explorer.prompt(t)
+local open_ui, dialog, answer = prompt.open, prompt.dialog, prompt.answer
 
 t:test("single-file deletion uses one input line with y, n, Escape and default No", function()
   local context = open_ui({ "b.rs" })
@@ -221,34 +148,6 @@ t:test("a newline in the create parent keeps a usable input and the original dir
   t.assert_true(vim.uv.fs_stat(context.path .. "/a\nb/child.txt") ~= nil)
   t.assert_eq(nil, vim.uv.fs_stat(context.path .. "/child.txt"))
   t.assert_eq(0, context.ui:lua("return #errors"))
-end)
-
-t:test("confirmation descriptions preserve trailing colons and spaces exactly", function()
-  local context = open_ui({ "placeholder.txt" })
-  context.ui:lua([[
-    reply = false
-    vim.ui.input({prompt = "  Overwrite?  \nTarget: target:\nSource: source:  ", inputtype = "confirmation"}, function(value)
-      reply = value
-    end)
-  ]])
-  local popup = dialog(context)
-  t.assert_eq("Target: target:", popup.lines[1])
-  t.assert_eq("Source: source:  ", popup.lines[2])
-  answer(context, "<CR>")
-  context.ui:wait_lua("return reply ~= false", 10000, "the confirmation must reply")
-  t.assert_eq("", context.ui:lua("return reply"))
-end)
-
-t:test("invalid single-line defaults fail before allocating an input surface", function()
-  local context = open_ui({ "placeholder.txt" })
-  local result = context.ui:lua([[
-    local wins, bufs = #vim.api.nvim_list_wins(), #vim.api.nvim_list_bufs()
-    local ok = pcall(vim.ui.input, {prompt = "Input", default = "a\nb"}, function() end)
-    return {ok = ok, windows = #vim.api.nvim_list_wins() - wins, buffers = #vim.api.nvim_list_bufs() - bufs}
-  ]])
-  t.assert_false(result.ok)
-  t.assert_eq(0, result.windows)
-  t.assert_eq(0, result.buffers)
 end)
 
 t:run()

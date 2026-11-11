@@ -1,251 +1,221 @@
-require("ark.bootstrap").setup()
-local t = require("__test__.support.harness").new()
-local diffview = require("__test__.support.diffview")
-local fs = require("__test__.support.fs")
-local action = require("era.m.diffview.view.workspace.action")
-local workspace_view = require("era.m.diffview.view.workspace.view")
+local harness = require("__test__.support.harness")
+local async = require("stl.async")
+local Future = require("stl.c.future")
 
----Opens the workspace on a repository of a.lua, b.lua and c.lua whose `changed` files have unstaged edits.
----@param changed                       string[]
----@return era.m.diffview.WorkspaceSession
-local function open(changed)
-  local root = diffview.committed(t, { ["a.lua"] = { "a" }, ["b.lua"] = { "b" }, ["c.lua"] = { "c" } })
-  for _, path in ipairs(changed) do
-    fs.write(root .. "/" .. path, { "changed " .. path })
-  end
-  return diffview.open_workspace(t)
+local t = harness.new()
+
+local reported_errors = {} ---@type table[]
+local CancellationToken = {}
+CancellationToken.__index = CancellationToken
+
+function CancellationToken.new()
+  return setmetatable({ cancelled = false }, CancellationToken)
 end
 
----A fresh copy of the session's entry, as a new snapshot carries it.
----@param session                       era.m.diffview.WorkspaceSession
----@param path                          string
----@param stage_type                    ?"staged"|"unstaged"
----@return era.m.diffview.IFileEntry
-local function entry(session, path, stage_type)
-  local found = session.state:find_entry(path, "unstaged")
-  local copy = vim.deepcopy(found or { filepath = path, status = "M" })
-  copy.stage_type = stage_type or "unstaged"
-  return copy
+function CancellationToken:cancel()
+  self.cancelled = true
 end
 
----@class era.m.diffview.test.IApplied
----@field opened                         era.m.diffview.IFileEntry[]
----@field open_opts                      era.m.diffview.view.workspace.IOpenEntryOpts[]
----@field cleared                        integer
----@field renders                        integer
----@field height_syncs                   integer
----@field sets                           integer
----@field commits                        integer
-
----Records what applying snapshots does to the session for the rest of the case. Previews are recorded rather than
----opened; `failures` makes the next renders or preview cleanups fail.
----@param session                       era.m.diffview.WorkspaceSession
----@param failures                      ?{ render: integer|nil, clear: integer|nil }
----@return era.m.diffview.test.IApplied
-local function observe(session, failures)
-  failures = failures or {}
-  local seen = { opened = {}, open_opts = {}, cleared = 0, renders = 0, height_syncs = 0, sets = 0, commits = 0 }
-  t:patch_table(workspace_view, "open_entry", function(_, opened, _, opts)
-    seen.opened[#seen.opened + 1] = opened
-    seen.open_opts[#seen.open_opts + 1] = opts
-  end)
-  local clear_sbs = workspace_view.clear_sbs
-  t:patch_table(workspace_view, "clear_sbs", function(...)
-    if (failures.clear or 0) > 0 then
-      failures.clear = failures.clear - 1
-      error("injected clear failure")
-    end
-    seen.cleared = seen.cleared + 1
-    return clear_sbs(...)
-  end)
-  local render_changes = workspace_view.render_changes
-  t:patch_table(workspace_view, "render_changes", function(...)
-    seen.renders = seen.renders + 1
-    if (failures.render or 0) > 0 then
-      failures.render = failures.render - 1
-      error("injected render failure")
-    end
-    return render_changes(...)
-  end)
-  local sync_changes_heights = workspace_view.sync_changes_heights
-  t:patch_table(workspace_view, "sync_changes_heights", function(...)
-    seen.height_syncs = seen.height_syncs + 1
-    return sync_changes_heights(...)
-  end)
-  local state = session.state
-  local set_entries, commit_entries_snapshot = state.set_entries, state.commit_entries_snapshot
-  t:patch_table(state, "set_entries", function(self, entries)
-    seen.sets = seen.sets + 1
-    return set_entries(self, entries)
-  end)
-  t:patch_table(state, "commit_entries_snapshot", function(self)
-    seen.commits = seen.commits + 1
-    return commit_entries_snapshot(self)
-  end)
-  return seen
+function CancellationToken:is_cancelled()
+  return self.cancelled
 end
 
----Applies `entries` to the session and waits.
----@param session                       era.m.diffview.WorkspaceSession
----@param entries                       era.m.diffview.IFileEntry[]
----@param token                         ?stl.c.CancellationToken
----@return boolean ok                   Whether applying completed without an error.
-local function apply(session, entries, token)
-  local ok = t.settle(stl.async.run_future(function()
-    action.apply_entries(session, entries, token)
-  end))
-  return ok
+t:patch_global("stl", {
+  async = async,
+  c = { CancellationToken = CancellationToken, Future = Future },
+  reporter = {
+    error = function(opts)
+      reported_errors[#reported_errors + 1] = opts
+    end,
+  },
+})
+
+local Refresh = require("era.m.diffview.view.workspace.refresh")
+
+---@return era.m.diffview.view.workspace.Refresh owner
+---@return table state
+local function new_owner()
+  local state = {
+    completions = {},
+    runs = 0,
+    stale = false,
+    tokens = {},
+    valid = true,
+    fail_runs = {},
+  }
+  local owner = Refresh.new({
+    is_stale = function()
+      return state.stale
+    end,
+    is_valid = function()
+      return state.valid
+    end,
+    run = function(token)
+      state.runs = state.runs + 1
+      state.tokens[state.runs] = token
+      local run = state.runs
+      async.await(function(callback)
+        state.completions[run] = callback
+      end)
+      if state.fail_runs[run] then
+        error("deferred refresh failure")
+      end
+    end,
+  })
+  return owner, state
 end
 
-t:test("the first snapshot is committed and rendered even when it is empty", function()
-  local session = open({})
-  session.state:set_entries({})
-  local seen = observe(session)
+t:test("local requests collapse into one trailing refresh", function()
+  local owner, state = new_owner()
+  local callbacks = 0
 
-  t.assert_true(apply(session, {}), "applied")
-  t.assert_nil(session.state:get_current_entry(), "selection remains empty")
-  t.assert_eq(0, #seen.opened, "no preview opened")
-  t.assert_eq(1, seen.sets, "initial snapshot committed")
-  t.assert_eq(1, seen.renders, "empty panes rendered")
-  t.assert_eq(1, seen.commits, "initial snapshot marked applied")
-  t.assert_eq(0, seen.cleared, "already empty preview not rewritten")
+  owner:request(function()
+    callbacks = callbacks + 1
+  end)
+  owner:request()
+  owner:request()
+
+  t.assert_eq(1, state.runs, "running refresh")
+  state.completions[1]()
+  t.assert_eq(2, state.runs, "single trailing refresh")
+  t.assert_eq(0, callbacks, "callback waits for trailing refresh")
+  state.completions[2]()
+  t.assert_eq(1, callbacks, "callback after refresh settles")
 end)
 
-t:test("an unchanged snapshot keeps the panes but refreshes the selected preview", function()
-  local session = open({ "a.lua" })
-  local current = session.state:get_current_entry()
-  local seen = observe(session)
+t:test("local trailing refresh consumes an older watcher check", function()
+  local owner, state = new_owner()
 
-  t.assert_true(apply(session, { entry(session, "a.lua") }), "applied")
-  t.assert_true(session.state:get_current_entry() == current, "existing canonical selection retained")
-  t.assert_true(seen.opened[1] == current, "selected preview refreshed from existing snapshot")
-  t.assert_true(seen.open_opts[1].preserve_view, "same preview preserves view")
-  t.assert_eq(0, seen.sets, "state snapshot not replaced")
-  t.assert_eq(0, seen.renders, "Changes panes not rendered")
-  t.assert_eq(0, seen.commits, "already applied snapshot not recommitted")
-  t.assert_eq(1, seen.height_syncs, "cheap pane height invariant synchronized")
-  t.assert_eq(0, seen.cleared, "preview retained")
+  owner:request()
+  state.stale = true
+  owner:request_if_stale()
+  owner:request()
+
+  state.completions[1]()
+  t.assert_eq(2, state.runs, "single mixed trailing refresh")
+  state.completions[2]()
+  t.assert_eq(2, state.runs, "older watcher check consumed")
 end)
 
-t:test("a failed render keeps the snapshot pending so an identical retry completes", function()
-  local session = open({ "a.lua" })
-  local seen = observe(session, { render = 1 })
-  local refreshed = { entry(session, "a.lua"), entry(session, "b.lua") }
+t:test("watcher requests refresh only when entries remain stale", function()
+  local owner, state = new_owner()
 
-  t.assert_false(apply(session, refreshed), "injected render failure propagated")
-  t.assert_eq(0, seen.commits, "failed snapshot remains pending")
+  owner:request()
+  owner:request_if_stale()
+  state.stale = false
+  state.completions[1]()
+  t.assert_eq(1, state.runs, "matching watcher event coalesced")
 
-  t.assert_true(apply(session, refreshed), "retry applied")
-  t.assert_true(session.state:get_current_entry() == refreshed[1], "retry commits canonical selection")
-  t.assert_true(seen.opened[1] == refreshed[1], "retry opens refreshed preview")
-  t.assert_eq(2, seen.sets, "identical retry still takes slow path")
-  t.assert_eq(2, seen.renders, "failed render retried")
-  t.assert_eq(1, seen.commits, "retry marks snapshot applied")
+  state.stale = true
+  owner:request_if_stale()
+  t.assert_eq(2, state.runs, "stale watcher event refreshed")
+  state.completions[2]()
 end)
 
-t:test("a failed preview cleanup preserves the selection until an identical retry completes", function()
-  local session = open({ "a.lua" })
-  local removed = session.state:get_current_entry()
-  local seen = observe(session, { clear = 1 })
+t:test("watcher refreshes stale peer views without repeating the originating view", function()
+  local originating, originating_state = new_owner()
+  local peer, peer_state = new_owner()
 
-  t.assert_false(apply(session, {}), "injected cleanup failure propagated")
-  t.assert_true(session.state:get_current_entry() == removed, "failed cleanup keeps prior selection for retry")
-  t.assert_eq(0, seen.commits, "failed snapshot remains pending")
+  originating:request()
+  originating_state.stale = true
+  originating:request_if_stale()
 
-  t.assert_true(apply(session, {}), "retry applied")
-  t.assert_nil(session.state:get_current_entry(), "retry clears selection")
-  t.assert_eq(1, seen.cleared, "retry completes preview cleanup")
-  t.assert_eq(2, seen.sets, "identical retry still takes slow path")
-  t.assert_eq(2, seen.renders, "retry restores panel application")
-  t.assert_eq(1, seen.commits, "retry marks snapshot applied")
+  peer_state.stale = true
+  peer:request_if_stale()
+  t.assert_eq(1, peer_state.runs, "stale peer refreshed")
+
+  originating_state.stale = false
+  originating_state.completions[1]()
+  t.assert_eq(1, originating_state.runs, "matching origin coalesced")
+  peer_state.completions[1]()
 end)
 
-t:test("a changed snapshot rebinds the selection to its canonical entry", function()
-  local session = open({ "a.lua" })
-  local seen = observe(session)
-  local refreshed = { entry(session, "a.lua"), entry(session, "c.lua") }
+t:test("deferred failure is reported and releases the owner", function()
+  reported_errors = {}
+  local owner, state = new_owner()
+  local callbacks = 0
+  state.fail_runs[1] = true
 
-  t.assert_true(apply(session, refreshed), "applied")
-  t.assert_true(session.state:get_current_entry() == refreshed[1], "canonical selection")
-  t.assert_true(seen.opened[1] == refreshed[1], "canonical preview")
-  t.assert_true(seen.open_opts[1].preserve_view, "same entry preserves view")
-  t.assert_eq(0, seen.cleared, "preview retained")
+  owner:request(function()
+    callbacks = callbacks + 1
+  end)
+  state.completions[1]()
+  t.assert_eq(1, #reported_errors, "failure reported once")
+  t.assert_true(reported_errors[1].message:find("deferred refresh failure", 1, true) ~= nil, "failure preserved")
+  t.assert_eq(0, callbacks, "failed refresh callback discarded")
+
+  owner:request()
+  t.assert_eq(2, state.runs, "owner accepts a later request")
+  state.completions[2]()
 end)
 
-t:test("the selection follows a file across a stage transition", function()
-  local session = open({ "a.lua" })
-  local seen = observe(session)
-  local staged = entry(session, "a.lua", "staged")
+t:test("asynchronous rejection reports once, preserves state, and permits recovery", function()
+  reported_errors = {}
+  local published = "old"
+  local runs = 0
+  local futures = {} ---@type stl.c.Future[]
+  local owner = Refresh.new({
+    is_stale = function()
+      return false
+    end,
+    is_valid = function()
+      return true
+    end,
+    run = function()
+      runs = runs + 1
+      local future = Future.new()
+      futures[runs] = future
+      future:await()
+      published = "new"
+    end,
+  })
 
-  t.assert_true(apply(session, { staged }), "applied")
-  t.assert_true(session.state:get_current_entry() == staged, "staged counterpart")
-  t.assert_true(seen.opened[1] == staged, "staged preview")
-  t.assert_false(seen.open_opts[1].preserve_view, "stage transition replaces view")
-end)
+  owner:request()
+  futures[1]:__reject__("Git status staged diff failed") ---@diagnostic disable-line: invisible
 
-t:test("the next visible entry is selected when the current one disappears", function()
-  local session = open({ "a.lua", "b.lua", "c.lua" })
-  session.state:set_current_entry(assert(session.state:find_entry("b.lua", "unstaged")))
-  local seen = observe(session)
-  local refreshed = { entry(session, "a.lua"), entry(session, "c.lua") }
-
-  t.assert_true(apply(session, refreshed), "applied")
-  t.assert_true(session.state:get_current_entry() == refreshed[2], "next selection")
-  t.assert_true(seen.opened[1] == refreshed[2], "next preview")
-end)
-
-t:test("the previous visible entry is selected when no later one remains", function()
-  local session = open({ "a.lua", "b.lua" })
-  session.state:set_current_entry(assert(session.state:find_entry("b.lua", "unstaged")))
-  local seen = observe(session)
-  local refreshed = { entry(session, "a.lua") }
-
-  t.assert_true(apply(session, refreshed), "applied")
-  t.assert_true(session.state:get_current_entry() == refreshed[1], "previous selection")
-  t.assert_true(seen.opened[1] == refreshed[1], "previous preview")
-end)
-
-t:test("the selection and preview clear when no entries remain", function()
-  local session = open({ "a.lua" })
-  local seen = observe(session)
-
-  t.assert_true(apply(session, {}), "applied")
-  t.assert_nil(session.state:get_current_entry(), "cleared selection")
-  t.assert_eq(0, #seen.opened, "no preview")
-  t.assert_eq(1, seen.cleared, "preview cleared")
-end)
-
-t:test("a cancelled refresh leaves the view alone", function()
-  local session = open({ "a.lua" })
-  local current = session.state:get_current_entry()
-  local seen = observe(session)
-  local token = stl.c.CancellationToken.new()
-  token:cancel()
-
-  t.assert_true(apply(session, { entry(session, "a.lua", "staged") }, token), "applied")
-  t.assert_true(session.state:get_current_entry() == current, "selection unchanged")
-  t.assert_eq(0, #seen.opened, "preview unchanged")
-  t.assert_eq(0, seen.cleared, "preview not cleared")
-  t.assert_eq(0, seen.sets, "snapshot unchanged")
-end)
-
-t:test("refreshes leave a History preview alone while the Changes selection follows them", function()
-  local session = open({ "a.lua", "b.lua" })
-  session.history:begin_preview()
-  local seen = observe(session)
-
-  t.assert_true(apply(session, { entry(session, "a.lua"), entry(session, "b.lua") }), "unchanged snapshot applied")
+  t.assert_eq("old", published, "failed refresh preserves state")
+  t.assert_eq(1, #reported_errors, "failure reported once")
   t.assert_true(
-    apply(session, { entry(session, "a.lua"), entry(session, "b.lua"), entry(session, "c.lua") }),
-    "changed snapshot applied"
+    reported_errors[1].message:find("Git status staged diff failed", 1, true) ~= nil,
+    "failure reason preserved"
   )
-  t.assert_true(apply(session, { entry(session, "c.lua") }), "snapshot without the selection applied")
-  t.assert_eq("c.lua", session.state:get_current_entry().filepath, "selection moved to the next entry")
-  t.assert_true(apply(session, {}), "empty snapshot applied")
-  t.assert_nil(session.state:get_current_entry(), "selection emptied")
-  t.assert_eq(0, #seen.opened, "Changes previews opened")
-  t.assert_eq(0, seen.cleared, "previews cleared")
-  t.assert_eq("history", session.layout.preview_source)
+
+  owner:request()
+  t.assert_eq(2, runs, "owner accepts a later request")
+  futures[2]:__resolve__(nil) ---@diagnostic disable-line: invisible
+  t.assert_eq("new", published, "later refresh succeeds")
+  t.assert_eq(1, #reported_errors, "success emits no additional error")
+end)
+
+t:test("successful trailing refresh completes callbacks after an earlier failure", function()
+  local owner, state = new_owner()
+  local callbacks = 0
+  state.fail_runs[1] = true
+
+  owner:request(function()
+    callbacks = callbacks + 1
+  end)
+  owner:request()
+
+  state.completions[1]()
+  t.assert_eq(2, state.runs, "trailing refresh started")
+  t.assert_eq(0, callbacks, "callback waits for trailing success")
+
+  state.completions[2]()
+  t.assert_eq(1, callbacks, "trailing success completes callback")
+end)
+
+t:test("dispose cancels owned resources and pending work", function()
+  local owner, state = new_owner()
+
+  owner:request()
+  owner:request_if_stale()
+  owner:dispose()
+
+  t.assert_true(state.tokens[1].cancelled, "running refresh cancelled")
+  state.completions[1]()
+  owner:request()
+  t.assert_eq(1, state.runs, "no refresh after dispose")
 end)
 
 t:run()

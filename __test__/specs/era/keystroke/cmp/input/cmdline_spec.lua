@@ -159,12 +159,19 @@ t:test("expression registers preserve native digraph and confirmation keys", fun
   ui:wait_lua([[return vim.fn.getcmdtype() == '=']], 5000, "expression register")
   ui:rpc("nvim_input", "'<C-k>ae'")
   ui:wait_lua([[return vim.fn.getcmdline() == "'æ'"]], 5000, "native digraph")
+  -- A menu that must not open gets the time it would take.
+  vim.wait(100)
+  t.assert_false(ui:lua([[return require('era.keystroke.cmp').is_menu_visible()]]), "no menu in the expression")
   ui:rpc("nvim_input", "<C-j>")
   ui:wait_lua(
     [[return vim.api.nvim_get_mode().mode:sub(1, 1) == 'i' and vim.api.nvim_get_current_line() == 'æ']],
     5000,
     "native confirmation"
   )
+  vim.wait(100)
+  t.assert_same({ "æ" }, ui:lua([[return vim.api.nvim_buf_get_lines(0, 0, -1, false)]]), "confirmed text")
+  t.assert_same({ 1, 2 }, ui:lua([[return vim.api.nvim_win_get_cursor(0)]]), "cursor after the confirmed text")
+  t.assert_false(ui:lua([[return require('era.keystroke.cmp').is_menu_visible()]]), "no menu after confirmation")
 end)
 
 t:run()

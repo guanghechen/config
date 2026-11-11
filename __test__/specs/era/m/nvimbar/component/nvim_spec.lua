@@ -49,46 +49,50 @@ local function setup(message, search_pattern, search_count)
   return assert(loadfile("lua/era/m/nvimbar/component/nvim.lua"))()
 end
 
-t:test("transient messages keep both ends when truncated", function()
-  local nvim = setup("0123456789")
-  local component = nvim.msg_transient("f_sl")
+for _, case in ipairs({
+  {
+    name = "transient messages keep both ends when truncated",
+    message = "0123456789",
+    width = 5,
+    text = "01…89",
+    label = "truncated message",
+  },
+  {
+    name = "transient truncation respects display width",
+    message = "甲乙丙丁",
+    width = 5,
+    text = "甲…丁",
+    label = "wide character message",
+    display_width = 5,
+  },
+  {
+    name = "transient messages remain intact when space is available",
+    message = "ready",
+    width = 5,
+    text = "ready",
+    label = "full message",
+  },
+  {
+    name = "transient messages stay hidden when only an ellipsis would fit",
+    message = "0123456789",
+    width = 4,
+    text = "",
+    label = "narrow message",
+  },
+}) do
+  t:test(case.name, function()
+    local nvim = setup(case.message)
+    local component = nvim.msg_transient("f_sl")
 
-  ---@diagnostic disable-next-line: missing-fields
-  local text = component.render(component.refresh({}), {}, 5)
+    ---@diagnostic disable-next-line: missing-fields
+    local text = component.render(component.refresh({}), {}, case.width)
 
-  t.assert_eq("01…89", text, "truncated message")
-end)
-
-t:test("transient truncation respects display width", function()
-  local nvim = setup("甲乙丙丁")
-  local component = nvim.msg_transient("f_sl")
-
-  ---@diagnostic disable-next-line: missing-fields
-  local text = component.render(component.refresh({}), {}, 5)
-
-  t.assert_eq("甲…丁", text, "wide character message")
-  t.assert_eq(5, vim.api.nvim_strwidth(text), "display width")
-end)
-
-t:test("transient messages remain intact when space is available", function()
-  local nvim = setup("ready")
-  local component = nvim.msg_transient("f_sl")
-
-  ---@diagnostic disable-next-line: missing-fields
-  local text = component.render(component.refresh({}), {}, 5)
-
-  t.assert_eq("ready", text, "full message")
-end)
-
-t:test("transient messages stay hidden when only an ellipsis would fit", function()
-  local nvim = setup("0123456789")
-  local component = nvim.msg_transient("f_sl")
-
-  ---@diagnostic disable-next-line: missing-fields
-  local text = component.render(component.refresh({}), {}, 4)
-
-  t.assert_eq("", text, "narrow message")
-end)
+    t.assert_eq(case.text, text, case.label)
+    if case.display_width ~= nil then
+      t.assert_eq(case.display_width, vim.api.nvim_strwidth(text), "display width")
+    end
+  end)
+end
 
 t:test("command messages remain visible until the API clears them", function()
   local nvim = setup("2,1 All")
@@ -105,46 +109,58 @@ t:test("command messages remain visible until the API clears them", function()
   t.assert_eq("2,1 All", component.refresh({}).text, "persistent command message")
 end)
 
-t:test("search count renders at the right edge for its source window", function()
-  local nvim = setup("", "foo", "2/10")
-  local component = nvim.search_count("f_wl")
-  ---@diagnostic disable-next-line: missing-fields
-  local context = { winnr = 42 } ---@type era.m.nvimbar.INvimbarContext
+for _, case in ipairs({
+  {
+    name = "search count renders at the right edge for its source window",
+    pattern = "foo",
+    count = "2/10",
+    width = 20,
+    text = " S foo 2/10",
+    label = "search state",
+    -- Only the window the search state belongs to shows it.
+    source_window = true,
+  },
+  {
+    name = "search count preserves native boundary forms without brackets",
+    pattern = "foo",
+    count = "?/??",
+    width = 20,
+    text = " S foo ?/??",
+    label = "boundary count",
+  },
+  {
+    name = "search pattern remains visible before a count arrives",
+    pattern = "foo",
+    width = 20,
+    text = " S foo",
+    label = "pattern",
+  },
+  {
+    name = "long search patterns truncate without dropping the count",
+    pattern = "abcdefghijkl",
+    count = "2/10",
+    width = 12,
+    text = " S abc… 2/10",
+    label = "truncated search",
+  },
+}) do
+  t:test(case.name, function()
+    local nvim = setup("", case.pattern, case.count)
+    local component = nvim.search_count("f_wl")
+    ---@diagnostic disable-next-line: missing-fields
+    local context = { winnr = 42 } ---@type era.m.nvimbar.INvimbarContext
 
-  t.assert_true(component.condition(context), "source window")
-  local text = component.render(component.refresh(context), context, 20)
-  t.assert_eq(" S foo 2/10", text, "search state")
-
-  ---@diagnostic disable-next-line: missing-fields
-  t.assert_false(component.condition({ winnr = 43 }), "other window")
-end)
-
-t:test("search count preserves native boundary forms without brackets", function()
-  local nvim = setup("", "foo", "?/??")
-  local component = nvim.search_count("f_wl")
-  ---@diagnostic disable-next-line: missing-fields
-  local text = component.render(component.refresh({ winnr = 42 }), { winnr = 42 }, 20)
-
-  t.assert_eq(" S foo ?/??", text, "boundary count")
-end)
-
-t:test("search pattern remains visible before a count arrives", function()
-  local nvim = setup("", "foo", nil)
-  local component = nvim.search_count("f_wl")
-  ---@diagnostic disable-next-line: missing-fields
-  local text = component.render(component.refresh({ winnr = 42 }), { winnr = 42 }, 20)
-
-  t.assert_eq(" S foo", text, "pattern")
-end)
-
-t:test("long search patterns truncate without dropping the count", function()
-  local nvim = setup("", "abcdefghijkl", "2/10")
-  local component = nvim.search_count("f_wl")
-  ---@diagnostic disable-next-line: missing-fields
-  local text = component.render(component.refresh({ winnr = 42 }), { winnr = 42 }, 12)
-
-  t.assert_eq(" S abc… 2/10", text, "truncated search")
-end)
+    if case.source_window then
+      t.assert_true(component.condition(context), "source window")
+    end
+    local text = component.render(component.refresh(context), context, case.width)
+    t.assert_eq(case.text, text, case.label)
+    if case.source_window then
+      ---@diagnostic disable-next-line: missing-fields
+      t.assert_false(component.condition({ winnr = 43 }), "other window")
+    end
+  end)
+end
 
 ---@param cmd                           string[]
 ---@return integer bufnr

@@ -1,6 +1,9 @@
 require("ark.bootstrap").setup()
 local t = require("__test__.support.harness").new()
+local diffview = require("__test__.support.diffview")
+local treeview = require("__test__.support.treeview")
 local WorkspaceState = require("era.m.diffview.view.workspace.state").State
+local commits_view = require("era.m.diffview.view.commits.view")
 local pane_changes = require("era.m.diffview.pane.changes")
 local view = require("era.m.diffview.view.workspace.view")
 
@@ -347,6 +350,29 @@ t:test("hide and show recreate both wiped sibling buffers as one panel", functio
 
   view.destroy(lyt)
   t.assert_eq(original_tabnr, vim.api.nvim_get_current_tabpage(), "workspace tab closed")
+end)
+
+t:test("workspace History preserves its single spacer through native publication and reopening", function()
+  local layout = view.create_layout(2)
+  t:defer(function()
+    view.destroy(layout)
+  end)
+  local state = require("era.m.diffview.view.commits.state").State.new(layout.tabnr, false)
+  t:defer(function()
+    state:dispose()
+  end)
+  state:set_commits({ { hash = "history", abbrev_hash = "history", author = "A", date = 0, message = "history" } })
+  local ctx = diffview.commits_context({ layout = layout.history, state = state })
+  treeview.await(commits_view.render_commits(ctx))
+  local winnr = layout.history.commits_winnr
+  t.assert_eq("no", vim.api.nvim_get_option_value("signcolumn", { win = winnr }))
+  t.assert_eq(" ", vim.api.nvim_get_option_value("statuscolumn", { win = winnr }))
+  view.hide_history(layout)
+  view.show_history(layout)
+  treeview.await(commits_view.render_commits(ctx))
+  winnr = layout.history.commits_winnr
+  t.assert_eq("no", vim.api.nvim_get_option_value("signcolumn", { win = winnr }))
+  t.assert_eq(" ", vim.api.nvim_get_option_value("statuscolumn", { win = winnr }))
 end)
 
 t:run()

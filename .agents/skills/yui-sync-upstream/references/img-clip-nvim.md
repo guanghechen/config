@@ -23,7 +23,8 @@
 ## 验证
 
 ```sh
-nvim -l __test__/run.lua __test__/specs/era/m/clipboard_spec.lua
+nvim -l __test__/run.lua __test__/specs/era/m/clipboard/
+nvim -l __test__/run.lua __test__/specs/era/fn/paste-image-as-base64_spec.lua
 nvim -l __test__/run.lua __test__/specs/era/fn/paste-image_spec.lua
 ```
 

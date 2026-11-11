@@ -41,43 +41,6 @@ local function setup()
   return cmdline, states, configs
 end
 
----@param concealable                   boolean
----@param pos                           integer
----@return integer
-local function resolve_native_offset(concealable, pos)
-  local cmdline, states, configs = setup()
-  local strdisplaywidth = vim.fn.strdisplaywidth
-  t:patch_table(vim.api, "nvim_win_is_valid", function()
-    return true
-  end)
-  t:patch_table(vim, "fn", {
-    screenpos = function(_, _, col)
-      if concealable then
-        t.assert_eq(3, col, "concealed buffer cursor column")
-        return { row = 4, col = 8 }
-      end
-      t.assert_eq(7, col, "visible buffer cursor column")
-      return { row = 4, col = 12 }
-    end,
-    strdisplaywidth = strdisplaywidth,
-  })
-
-  local state = {
-    level = 1,
-    pos = pos,
-    first = "edit ",
-    second = "foo",
-    indent = 0,
-    icon = "> ",
-    concealable = concealable,
-    winnr = 1,
-  }
-  states.cmdline[1] = state
-  cmdline._update_cmdline_position(state, state.winnr)
-
-  return configs[state.winnr]._cmdline_offset
-end
-
 t:test("top-level hide clears pending confirmation", function()
   local cmdline, states = setup()
 
@@ -107,57 +70,48 @@ t:test("nested hide restores the highest active native command-line anchor", fun
   t.assert_nil(states.message.confirming_task, "pending confirmation")
 end)
 
-t:test("native anchor compensates for the concealed command prefix", function()
-  local cmdline, _, configs = setup()
-  t:patch_table(vim.api, "nvim_win_is_valid", function()
-    return true
+for _, case in ipairs({
+  {
+    name = "native anchor follows a horizontally scrolled cursor",
+    state = { pos = 79, first = string.rep("a", 120), second = "", indent = 0, icon = "> ", concealable = false },
+    buffer_col = 82,
+    screenpos = { row = 5, col = 16 },
+    offset = -69,
+  },
+  {
+    name = "native anchor includes the visible command-line icon",
+    state = { pos = 4, first = "edit ", second = "foo", indent = 0, icon = "> ", concealable = false },
+    buffer_col = 7,
+    screenpos = { row = 4, col = 12 },
+    offset = 2,
+  },
+  {
+    name = "native anchor omits the concealed command prefix",
+    state = { pos = 5, first = "edit ", second = "foo", indent = 0, icon = "> ", concealable = true },
+    buffer_col = 3,
+    screenpos = { row = 4, col = 8 },
+    offset = -3,
+  },
+}) do
+  t:test(case.name, function()
+    local cmdline, _, configs = setup()
+    t:patch_table(vim.api, "nvim_win_is_valid", function()
+      return true
+    end)
+    t:patch_table(vim, "fn", {
+      screenpos = function(_, _, col)
+        t.assert_eq(case.buffer_col, col, "buffer cursor column")
+        return case.screenpos
+      end,
+      strdisplaywidth = vim.fn.strdisplaywidth,
+    })
+
+    ---@diagnostic disable-next-line: missing-fields
+    cmdline._update_cmdline_position(case.state, 1)
+
+    t.assert_eq(case.offset, configs[1]._cmdline_offset, "content origin relative to the native anchor window")
   end)
-  t:patch_table(vim, "fn", {
-    screenpos = function(_, _, col)
-      t.assert_eq(3, col, "buffer cursor column")
-      return { row = 4, col = 8 }
-    end,
-    strdisplaywidth = vim.fn.strdisplaywidth,
-  })
-
-  ---@diagnostic disable-next-line: missing-fields
-  cmdline._update_cmdline_position({
-    pos = 5,
-    first = "edit ",
-    second = "",
-    indent = 0,
-    icon = "> ",
-    concealable = true,
-  }, 1)
-
-  t.assert_eq(-3, configs[1]._cmdline_offset, "content origin relative to the native anchor window")
-end)
-
-t:test("native anchor follows a horizontally scrolled cursor", function()
-  local cmdline, _, configs = setup()
-  t:patch_table(vim.api, "nvim_win_is_valid", function()
-    return true
-  end)
-  t:patch_table(vim, "fn", {
-    screenpos = function(_, _, col)
-      t.assert_eq(82, col, "buffer cursor column")
-      return { row = 5, col = 16 }
-    end,
-    strdisplaywidth = vim.fn.strdisplaywidth,
-  })
-
-  ---@diagnostic disable-next-line: missing-fields
-  cmdline._update_cmdline_position({
-    pos = 79,
-    first = string.rep("a", 120),
-    second = "",
-    indent = 0,
-    icon = "> ",
-    concealable = false,
-  }, 1)
-
-  t.assert_eq(-69, configs[1]._cmdline_offset, "scrolled content origin relative to the native anchor window")
-end)
+end
 
 t:test("cmdline position updates only the cursor when layout is unchanged", function()
   local cmdline, states = setup()
@@ -568,18 +522,6 @@ t:test("latest Neovim emits block events with one-line append payloads", functio
   t.assert_eq("  echo 'x'", events.append[1][1][1][2], "block append content")
 end)
 
-t:test("native anchor includes the visible command-line icon", function()
-  local col = resolve_native_offset(false, 4)
-
-  t.assert_eq(2, col, "icon width added to native command completion")
-end)
-
-t:test("native anchor omits the concealed command prefix", function()
-  local col = resolve_native_offset(true, 5)
-
-  t.assert_eq(-3, col, "icon width minus hidden command prefix")
-end)
-
 t:test("confirm prompts keep their renderer while the user types", function()
   local cmdline, states = setup()
   local rendered = {} ---@type string[]
@@ -619,72 +561,50 @@ t:test("real command lines clear pending confirmations", function()
   t.assert_nil(states.message.confirming_task, "pending confirmation")
 end)
 
-t:test("cursor movement inside a confirm prompt keeps the confirm renderer", function()
-  local cmdline, states = setup()
-  local rendered
-  cmdline._show = function()
-    rendered = "command"
-  end
-  cmdline._show_confirm = function()
-    rendered = "confirm"
-  end
-  ---@diagnostic disable-next-line: missing-fields
-  states.cmdline[1] = {
-    level = 1,
+for _, case in ipairs({
+  {
+    name = "cursor movement inside a confirm prompt keeps the confirm renderer",
     pos = 0,
-    type = "confirm",
-    confirming_task = states.message.confirming_task,
-  }
-  states.message.confirming_task = nil
+    handler = "pos",
+    task = { event = "cmdline_pos", args = { 3, 1 } },
+    renderer = "confirm",
+  },
+  {
+    name = "special chars inside a confirm prompt keep the confirm renderer",
+    handler = "special_char",
+    task = { event = "cmdline_special_char", args = { "x", false, 1 } },
+    renderer = "confirm",
+  },
+  {
+    name = "nested expression cmdlines do not inherit an outer confirmation",
+    handler = "show",
+    task = { event = "cmdline_show", args = { { { 0, "1+1", 0 } }, 3, "=", "", 0, 2, 0 } },
+    renderer = "command",
+  },
+}) do
+  t:test(case.name, function()
+    local cmdline, states = setup()
+    local rendered
+    ---@diagnostic disable-next-line: missing-fields
+    states.cmdline[1] = {
+      level = 1,
+      pos = case.pos,
+      type = "confirm",
+      confirming_task = states.message.confirming_task,
+    }
+    states.message.confirming_task = nil
+    cmdline._show = function()
+      rendered = "command"
+    end
+    cmdline._show_confirm = function()
+      rendered = "confirm"
+    end
 
-  cmdline.pos({ event = "cmdline_pos", args = { 3, 1 } })
+    cmdline[case.handler](case.task)
 
-  t.assert_eq("confirm", rendered, "confirm renderer")
-end)
-
-t:test("special chars inside a confirm prompt keep the confirm renderer", function()
-  local cmdline, states = setup()
-  local rendered
-  ---@diagnostic disable-next-line: missing-fields
-  states.cmdline[1] = {
-    level = 1,
-    type = "confirm",
-    confirming_task = states.message.confirming_task,
-  }
-  states.message.confirming_task = nil
-  cmdline._show = function()
-    rendered = "command"
-  end
-  cmdline._show_confirm = function()
-    rendered = "confirm"
-  end
-
-  cmdline.special_char({ event = "cmdline_special_char", args = { "x", false, 1 } })
-
-  t.assert_eq("confirm", rendered, "special char renderer")
-end)
-
-t:test("nested expression cmdlines do not inherit an outer confirmation", function()
-  local cmdline, states = setup()
-  local rendered
-  ---@diagnostic disable-next-line: missing-fields
-  states.cmdline[1] = {
-    level = 1,
-    type = "confirm",
-    confirming_task = states.message.confirming_task,
-  }
-  states.message.confirming_task = nil
-  cmdline._show = function()
-    rendered = "command"
-  end
-  cmdline._show_confirm = function()
-    rendered = "confirm"
-  end
-
-  cmdline.show({ event = "cmdline_show", args = { { { 0, "1+1", 0 } }, 3, "=", "", 0, 2, 0 } })
-
-  t.assert_eq("command", rendered, "nested renderer")
-  t.assert_true(states.cmdline[1].confirming_task ~= nil, "outer confirmation")
-end)
+    t.assert_eq(case.renderer, rendered, "renderer")
+    t.assert_true(states.cmdline[1].confirming_task ~= nil, "outer confirmation")
+  end)
+end
 
 t:run()

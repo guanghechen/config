@@ -1,4 +1,5 @@
 local harness = require("__test__.support.harness")
+local runtime = require("__test__.support.cmp.runtime")
 local t = harness.new()
 local Snippet = require("era.keystroke.cmp.snippet")
 
@@ -38,6 +39,18 @@ t:test("preview words stop before variables without reading dynamic input", func
   }) do
     t.assert_eq(example[3], Snippet.preview_word(example[1], example[2]), example[1])
   end
+end)
+
+t:test("snippet variables preserve escaped literals and nested placeholders", function()
+  local context = runtime.context("fn")
+  local filename = vim.fn.tempname() .. "/sample.lua"
+  local old_name = vim.api.nvim_buf_get_name(0)
+  vim.api.nvim_buf_set_name(0, filename)
+  t:defer(function()
+    vim.api.nvim_buf_set_name(0, old_name)
+  end)
+  local expanded = Snippet.expand_variables("${1:${TM_FILENAME_BASE}} \\$TM_FILENAME_BASE $TM_FILENAME", context)
+  t.assert_eq("${1:sample} \\$TM_FILENAME_BASE sample.lua", expanded, "escaped variable remains literal")
 end)
 
 t:run()

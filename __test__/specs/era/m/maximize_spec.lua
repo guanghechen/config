@@ -282,26 +282,6 @@ t:test("float maximize reconfigures and restores the original window", function(
   t.assert_eq(original.height, restored.height, "restored height")
 end)
 
-t:test("a maximized float covers the tabline and leaves the status line and the command line in sight", function()
-  t:patch_table(stl.nvim.fn, "is_statusline_visible", function()
-    return true
-  end)
-  local cfg = maximized.compute_float_maximized_wincfg({
-    relative = "editor",
-    row = 2,
-    col = 3,
-    width = 20,
-    height = 5,
-    border = "single",
-    zindex = 50,
-  })
-
-  t.assert_eq(0, cfg.row, "top row, over the tabline")
-  -- The rounded frame takes a row above and below.
-  t.assert_eq(vim.o.lines - vim.o.cmdheight - 1, cfg.row + cfg.height + 2, "status line row stays free")
-  t.assert_eq(51, cfg.zindex, "above the float it maximizes")
-end)
-
 t:test("laying out a maximized float again keeps the border and zindex it restores to", function()
   local float_winnr = open_float("single")
   local single = vim.api.nvim_win_get_config(float_winnr).border

@@ -2,6 +2,7 @@ local t = require("__test__.support.harness").new()
 local fixture = require("__test__.support.explorer").new(t)
 local await = fixture.await
 local Future = require("stl.c.future")
+local jobs = require("era.m.explorer.jobs")
 
 ---@param widget                        era.m.explorer.Widget
 ---@param target                        string
@@ -435,6 +436,53 @@ t:test("pending annotation and queued parent navigation outrank a late transfer 
   t.assert_eq("NoChange", followed_result.kind)
   t.assert_eq("Applied", parent_result.kind)
   t.assert_eq(parent, widget:get_root_filepath())
+end)
+
+t:test("direct transfers keep their captured source after unrelated browse materialization", function()
+  for _, kind in ipairs({ "copy", "cut" }) do
+    local widget, path = fixture.file_and_branch()
+    local session, view = widget:context()
+    local frame = view:frame()
+    fixture.write(path .. "/branch/new")
+    await(session.data:resolve(path .. "/branch/new"))
+    t.assert_true(frame:header().selection_revision ~= session.state:status().revisions.selection)
+    t:patch_table(vim.ui, "input", function(options, done)
+      t.assert_true(options.prompt == "Copy to: " or options.prompt == "Move to: ")
+      done(path .. "/transferred")
+    end)
+    local restore = t:patch_table(view, "frame", function()
+      return frame
+    end)
+    local future = widget:action():transfer(kind)
+    restore()
+    await(future)
+    fixture.idle(widget)
+    t.assert_true(vim.uv.fs_stat(path .. "/transferred") ~= nil)
+    t.assert_eq(kind == "copy", vim.uv.fs_stat(path .. "/a") ~= nil)
+    t.assert_eq(1, session._counts.success)
+  end
+end)
+
+t:test("direct transfers reject selection changes even after the selection becomes empty again", function()
+  local widget, path = fixture.file_and_branch()
+  local session, view = widget:context()
+  local frame = view:frame()
+  await(widget:action():mark("copy"))
+  await(session.state:clear_selection())
+  local prompted = false
+  t:patch_table(vim.ui, "input", function()
+    prompted = true
+  end)
+  local restore = t:patch_table(view, "frame", function()
+    return frame
+  end)
+  local future = widget:action():transfer("cut")
+  restore()
+  local ok, err = t.settle(future)
+  t.assert_false(ok)
+  t.assert_true(err:find("selection intent changed", 1, true) ~= nil)
+  t.assert_false(prompted or session:busy() or jobs.pending())
+  t.assert_true(vim.uv.fs_stat(path .. "/a") ~= nil)
 end)
 
 t:run()

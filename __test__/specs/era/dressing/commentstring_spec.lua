@@ -50,62 +50,71 @@ t:test("dressing does not overwrite a later option wrapper", function()
   end)
 end)
 
-t:test("language map supplies just comments", function()
-  local default_comments = "s1:/*,mb:*,ex:*/" ---@type string
-  patch_option_info(default_comments)
-  with_module(function(_, option)
-    return option == "comments" and default_comments or ""
-  end, function(Commentstring)
-    t:buffer({ "recipe" }, { filetype = "just", current = true })
-    Commentstring.dressing()
-    t.assert_eq("# %s", vim.filetype.get_option("just", "commentstring"), "just commentstring")
-  end)
-end)
+local block_comments = "s1:/*,mb:*,ex:*/" ---@type string
 
-t:test("tsx uses the nearest node-specific commentstring", function()
-  local default_comments = "s1:/*,mb:*,ex:*/" ---@type string
-  patch_option_info(default_comments)
-  local node = {} ---@type table
-  function node:type()
-    return "jsx_element"
-  end
-  function node:parent()
-    return nil
-  end
-  t:patch_table(vim.treesitter, "get_node", function()
-    return node
-  end)
+-- The commentstring a buffer of `filetype` showing `lines` gets for `language`, from a native `comments` option.
+for _, case in ipairs({
+  {
+    name = "language map supplies just comments",
+    default_comments = block_comments,
+    comments = block_comments,
+    lines = { "recipe" },
+    filetype = "just",
+    language = "just",
+    expected = "# %s",
+  },
+  {
+    name = "tsx uses the nearest node-specific commentstring",
+    default_comments = block_comments,
+    comments = block_comments,
+    node_type = "jsx_element",
+    lines = { "  <Component />" },
+    filetype = "typescriptreact",
+    language = "tsx",
+    expected = "{/* %s */}",
+  },
+  {
+    name = "uncomment preserves the existing block spacing",
+    default_comments = block_comments,
+    comments = block_comments,
+    lines = { "/*  value   */" },
+    filetype = "rust",
+    language = "rust",
+    expected = "/*  %s   */",
+  },
+  {
+    name = "comments option supplies an additional line pattern",
+    default_comments = "",
+    comments = ":##",
+    lines = { "value" },
+    filetype = "unknown",
+    language = "unknown",
+    expected = "## %s",
+  },
+}) do
+  t:test(case.name, function()
+    patch_option_info(case.default_comments)
+    if case.node_type ~= nil then
+      local node = {} ---@type table
+      function node:type()
+        return case.node_type
+      end
+      function node:parent()
+        return nil
+      end
+      t:patch_table(vim.treesitter, "get_node", function()
+        return node
+      end)
+    end
 
-  with_module(function(_, option)
-    return option == "comments" and default_comments or ""
-  end, function(Commentstring)
-    t:buffer({ "  <Component />" }, { filetype = "typescriptreact", current = true })
-    Commentstring.dressing()
-    t.assert_eq("{/* %s */}", vim.filetype.get_option("tsx", "commentstring"), "tsx commentstring")
+    with_module(function(_, option)
+      return option == "comments" and case.comments or ""
+    end, function(Commentstring)
+      t:buffer(case.lines, { filetype = case.filetype, current = true })
+      Commentstring.dressing()
+      t.assert_eq(case.expected, vim.filetype.get_option(case.language, "commentstring"), "commentstring")
+    end)
   end)
-end)
-
-t:test("uncomment preserves the existing block spacing", function()
-  local default_comments = "s1:/*,mb:*,ex:*/" ---@type string
-  patch_option_info(default_comments)
-  with_module(function(_, option)
-    return option == "comments" and default_comments or ""
-  end, function(Commentstring)
-    t:buffer({ "/*  value   */" }, { filetype = "rust", current = true })
-    Commentstring.dressing()
-    t.assert_eq("/*  %s   */", vim.filetype.get_option("rust", "commentstring"), "block spacing")
-  end)
-end)
-
-t:test("comments option supplies an additional line pattern", function()
-  patch_option_info("")
-  with_module(function(_, option)
-    return option == "comments" and ":##" or ""
-  end, function(Commentstring)
-    t:buffer({ "value" }, { filetype = "unknown", current = true })
-    Commentstring.dressing()
-    t.assert_eq("## %s", vim.filetype.get_option("unknown", "commentstring"), "comments fallback")
-  end)
-end)
+end
 
 t:run()

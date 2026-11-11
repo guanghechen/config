@@ -4,9 +4,70 @@ local __module_name__ = "__test__.support.git_files" ---@type string
 local bootstrap = require("__test__.support.bootstrap")
 local fs = require("__test__.support.fs")
 local git = require("__test__.support.git")
+local Grid = require("__test__.support.ui_grid")
 local harness = require("__test__.support.harness")
+local UI = require("__test__.support.ui")
 
 local M = {}
+
+---A child of `t` with the full runtime and `root` as its Git workspace, which records reported errors in `errors`. In
+---the child, `open(fields)` opens the Git Files widget as `widget` after setting `fields` on it, and
+---`stub_status(data, staged, unstaged)` makes Git status report `data` with those changed files.
+---@param t                             __test__.support.Harness
+---@param width                         integer
+---@param height                        integer
+---@param root                          string
+---@return __test__.support.UI
+---@return table grid
+function M.surface(t, width, height, root)
+  local ui = UI.open(t)
+  local grid = Grid.new(ui)
+  ui:start({ width = width, height = height, runtime = "ark" })
+  ui:lua(
+    [[
+    local root = ...
+    support = require("__test__.support.git_files")
+    errors = {}
+    stl.reporter.error = function(value) errors[#errors + 1] = value end
+    era.m.git.state.refresh_index = function() return stl.c.Future.resolve() end
+    dot.path.workspace = function() return root end
+    dot.path.is_git_repo = function() return true end
+    function open(fields)
+      widget = require("era.m.git_files").new()
+      for key, value in pairs(fields or {}) do widget[key] = value end
+      widget:toggle()
+      support.ready(widget)
+    end
+    function stub_status(data, staged, unstaged)
+      era.m.git.status.collect = function()
+        return stl.c.Future.resolve({ export = function() return data end, changed_files = function() return staged, unstaged end })
+      end
+    end
+  ]],
+    root
+  )
+  return ui, grid
+end
+
+---The screen row of the pane border titled `label`, or "" while the screen shows no such title.
+---@param grid                          table
+---@param label                         string
+---@return string
+function M.border_text(grid, label)
+  local title = grid:find(" " .. label)
+  return title and grid:row_text(title) or ""
+end
+
+---The Git metadata and column widths of `path` in the current frame of `tree`.
+---@param tree                          era.view.GitFiles
+---@param path                          string
+---@return era.view.git_files.IMetadata
+---@return era.view.git_files.IColumnWidths
+function M.metadata(tree, path)
+  local frame = tree:frame()
+  local fields = frame:node(frame:source():id(require("era.view.result_paths").key(path))).fields
+  return fields.git, fields.git_columns
+end
 
 ---A repository with a committed file in a directory, a second file beside it and one outside it.
 ---@param t                             __test__.support.Harness

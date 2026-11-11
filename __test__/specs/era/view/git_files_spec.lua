@@ -4,6 +4,7 @@ local treeview = require("__test__.support.treeview")
 local GitFiles = require("era.view.git_files")
 local Paths = require("era.view.result_paths")
 local support = require("__test__.support.git_files")
+local metadata = support.metadata
 
 ---@param tcase                         table
 ---@return era.view.GitFiles
@@ -37,16 +38,6 @@ local function fixture(tcase)
   treeview.await(staged:render("", false))
   treeview.await(unstaged:render("", false))
   return staged, unstaged, snapshot
-end
-
----@param tree                          era.view.GitFiles
----@param path                          string
----@return era.view.git_files.IMetadata
----@return era.view.git_files.IColumnWidths
-local function metadata(tree, path)
-  local frame = tree:frame()
-  local fields = frame:node(frame:source():id(Paths.key(path))).fields
-  return fields.git, fields.git_columns
 end
 
 ---@param chunks                        [string, string][]
@@ -143,20 +134,6 @@ t:test("cancelled private preparation leaves the published tree intact", functio
   t.assert_eq(frame:header().data_revision, staged:frame():header().data_revision)
   t.assert_eq(frame:header().row_count, staged:frame():header().row_count)
   t.assert_true(records == staged.source.records)
-end)
-
-t:test("native Git supplies different staged and unstaged counts for a partially staged file", function()
-  local root = support.changes(t, { ["dir/mixed.lua"] = { "one", "two", "three", "staged one", "staged two" } }, {
-    ["dir/mixed.lua"] = { "one", "two", "three", "staged one", "staged two", "unstaged" },
-  })
-  local state = support.widget(t, root)
-  state.widget:toggle()
-  support.ready(state.widget)
-  local staged, unstaged = state.widget.panes.staged.tree, state.widget.panes.unstaged.tree
-  t.assert_true(state.widget:isvisible())
-  t.assert_eq(2, metadata(staged, root .. "/dir/mixed.lua").insertions)
-  t.assert_eq(1, metadata(unstaged, root .. "/dir/mixed.lua").insertions)
-  t.assert_eq(0, #state.warnings, vim.inspect(state.warnings))
 end)
 
 t:run()

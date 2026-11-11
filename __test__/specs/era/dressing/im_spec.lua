@@ -288,27 +288,22 @@ t:test("UI entry: refocus supersedes deferred reconciliation", function()
   t.assert_eq(1, ctx.get_capture_and_select_count(), "superseded UI reconciliation")
 end)
 
-t:test("focus entry: fused capture failure reports once", function()
-  local ctx = setup_lifecycle({
-    initial_snapshot = "source.non_english.entry",
-    capture_and_select_error = "capture timed out",
-    capture_failed = true,
-  })
+for _, case in ipairs({
+  { name = "focus entry: fused capture failure reports once", error = "capture timed out", capture_failed = true },
+  { name = "focus entry: selection failure reports once", error = "selection failed" },
+}) do
+  t:test(case.name, function()
+    local ctx = setup_lifecycle({
+      initial_snapshot = "source.non_english.entry",
+      capture_and_select_error = case.error,
+      capture_failed = case.capture_failed,
+    })
 
-  t.assert_eq(1, ctx.get_capture_and_select_count(), "single fused attempt")
-  t.assert_eq(1, #ctx.reports, "single failure report")
-end)
-
-t:test("focus entry: selection failure reports once", function()
-  local ctx = setup_lifecycle({
-    initial_snapshot = "source.non_english.entry",
-    capture_and_select_error = "selection failed",
-  })
-
-  t.assert_eq(1, ctx.get_capture_and_select_count(), "single fused attempt")
-  t.assert_eq(1, #ctx.reports, "single failure report")
-  t.assert_eq("source.non_english.entry", ctx.get_current_snapshot(), "unchanged source")
-end)
+    t.assert_eq(1, ctx.get_capture_and_select_count(), "single fused attempt")
+    t.assert_eq(1, #ctx.reports, "single failure report")
+    t.assert_eq("source.non_english.entry", ctx.get_current_snapshot(), "unchanged source")
+  end)
+end
 
 t:test("insert lifecycle: captures and synchronously restores its source", function()
   local ctx = setup_lifecycle()
@@ -487,12 +482,6 @@ t:test("focus lifecycle: duplicate boundary events are idempotent", function()
   ctx.callbacks.FocusGained()
   ctx.callbacks.VimResume()
   t.assert_eq(2, ctx.get_capture_and_select_count(), "next focus entry")
-end)
-
-t:test("focus lifecycle: headless setup does not touch the source", function()
-  local ctx = setup_lifecycle({ initial_snapshot = "source.non_english.entry", with_ui = false })
-
-  t.assert_eq(0, ctx.get_backend_call_count(), "headless backend calls")
 end)
 
 t:test("mode lifecycle: headless Insert events work without acquiring focus", function()

@@ -5,58 +5,112 @@ local diff = require("era.m.git.diff")
 local t = harness.new()
 git_buffer.with_futures(t)
 
-t:test("run_diff: empty files", function()
-  local hunks = diff.run_diff({}, {})
-  t.assert_eq(0, #hunks, "hunk count")
-end)
-
-t:test("run_diff: identical files", function()
-  local hunks = diff.run_diff({ "line1", "line2", "" }, { "line1", "line2", "" })
-  t.assert_eq(0, #hunks, "hunk count")
-end)
-
-t:test("run_diff: new file (all additions)", function()
-  local hunks = diff.run_diff({}, { "line1", "line2", "" })
-  t.assert_eq(1, #hunks, "hunk count")
-  t.assert_eq("add", hunks[1].type, "hunk type")
-  t.assert_eq(2, hunks[1].added.count, "added count")
-end)
-
-t:test("run_diff: deleted file (all deletions)", function()
-  local hunks = diff.run_diff({ "line1", "line2", "" }, {})
-  t.assert_eq(1, #hunks, "hunk count")
-  t.assert_eq("delete", hunks[1].type, "hunk type")
-  t.assert_eq(2, hunks[1].removed.count, "removed count")
-end)
-
-t:test("run_diff: single line change", function()
-  local hunks = diff.run_diff({ "old", "" }, { "new", "" })
-  t.assert_eq(1, #hunks, "hunk count")
-  t.assert_eq("change", hunks[1].type, "hunk type")
-  t.assert_eq(1, hunks[1].added.start, "added start")
-end)
-
-t:test("run_diff: content with pipe character", function()
-  local hunks = diff.run_diff({ "a|b|c", "" }, { "a|b|c|d", "" })
-  t.assert_eq(1, #hunks, "hunk count")
-  t.assert_eq("a|b|c|d", hunks[1].added.lines[1], "content preserved")
-end)
-
-t:test("run_diff: nearby changes remain independent authoritative hunks", function()
-  local old = { "line1", "line2", "line3", "line4", "" }
-  local new = { "modified1", "line2", "line3", "modified4", "" }
-  local hunks = diff.run_diff(old, new)
-
-  t.assert_eq(2, #hunks, "hunk count")
-  t.assert_eq(1, hunks[1].added.start, "first start")
-  t.assert_eq(4, hunks[2].added.start, "second start")
-end)
-
-t:test("run_diff: top insertion preserves the zero original anchor", function()
-  local hunks = diff.run_diff({ "b", "c", "" }, { "a", "b", "c", "" })
-  t.assert_eq(0, hunks[1].removed.start, "original anchor")
-  t.assert_eq("@@ -0,0 +1,1 @@", hunks[1].head, "header")
-end)
+-- Each input runs through run_diff and, under its own case name where it has one, through run_diff_future, which
+-- must produce the same hunks.
+for _, case in ipairs({
+  {
+    sync = "empty files",
+    future = "empty files",
+    old = {},
+    new = {},
+    check = function(hunks)
+      t.assert_eq(0, #hunks, "hunk count")
+    end,
+  },
+  {
+    sync = "identical files",
+    old = { "line1", "line2", "" },
+    new = { "line1", "line2", "" },
+    check = function(hunks)
+      t.assert_eq(0, #hunks, "hunk count")
+    end,
+  },
+  {
+    sync = "new file (all additions)",
+    old = {},
+    new = { "line1", "line2", "" },
+    check = function(hunks)
+      t.assert_eq(1, #hunks, "hunk count")
+      t.assert_eq("add", hunks[1].type, "hunk type")
+      t.assert_eq(2, hunks[1].added.count, "added count")
+    end,
+  },
+  {
+    sync = "deleted file (all deletions)",
+    old = { "line1", "line2", "" },
+    new = {},
+    check = function(hunks)
+      t.assert_eq(1, #hunks, "hunk count")
+      t.assert_eq("delete", hunks[1].type, "hunk type")
+      t.assert_eq(2, hunks[1].removed.count, "removed count")
+    end,
+  },
+  {
+    sync = "single line change",
+    future = "basic functionality",
+    old = { "old", "" },
+    new = { "new", "" },
+    check = function(hunks)
+      t.assert_eq(1, #hunks, "hunk count")
+      t.assert_eq("change", hunks[1].type, "hunk type")
+      t.assert_eq(1, hunks[1].added.start, "added start")
+    end,
+  },
+  {
+    sync = "content with pipe character",
+    old = { "a|b|c", "" },
+    new = { "a|b|c|d", "" },
+    check = function(hunks)
+      t.assert_eq(1, #hunks, "hunk count")
+      t.assert_eq("a|b|c|d", hunks[1].added.lines[1], "content preserved")
+    end,
+  },
+  {
+    future = "content with special characters",
+    old = { "a|b;c\td", "" },
+    new = { "x|y;z\tw", "" },
+    check = function(hunks)
+      t.assert_eq(1, #hunks, "hunk count")
+      t.assert_eq("x|y;z\tw", hunks[1].added.lines[1], "content preserved")
+    end,
+  },
+  {
+    -- Changes two unchanged lines apart stay separate hunks.
+    sync = "nearby changes remain independent authoritative hunks",
+    future = "preserves independent nearby changes",
+    old = { "line1", "line2", "line3", "line4", "" },
+    new = { "modified1", "line2", "line3", "modified4", "" },
+    check = function(hunks)
+      t.assert_eq(2, #hunks, "hunk count")
+      t.assert_eq(1, hunks[1].added.start, "first start")
+      t.assert_eq(4, hunks[2].added.start, "second start")
+    end,
+  },
+  {
+    sync = "top insertion preserves the zero original anchor",
+    old = { "b", "c", "" },
+    new = { "a", "b", "c", "" },
+    check = function(hunks)
+      t.assert_eq(0, hunks[1].removed.start, "original anchor")
+      t.assert_eq("@@ -0,0 +1,1 @@", hunks[1].head, "header")
+    end,
+  },
+}) do
+  if case.sync then
+    t:test("run_diff: " .. case.sync, function()
+      case.check(diff.run_diff(case.old, case.new))
+    end)
+  end
+  if case.future then
+    t:test("run_diff_future: " .. case.future, function()
+      local hunks = t.await(diff.run_diff_future(case.old, case.new)) ---@type era.m.git.Hunk[]|nil
+      t.assert_true(hunks ~= nil, "result should not be nil")
+      ---@cast hunks era.m.git.Hunk[]
+      case.check(hunks)
+      t.assert_same(diff.run_diff(case.old, case.new), hunks, "run_diff parity")
+    end)
+  end
+end
 
 t:test("run_diff: final-newline-only changes are represented", function()
   local removed = diff.run_diff({ "a", "b", "" }, { "a", "b" })
@@ -66,36 +120,6 @@ t:test("run_diff: final-newline-only changes are represented", function()
   t.assert_true(removed[1].added.no_nl_at_eof == true, "missing newline marker")
   t.assert_eq(1, #added, "added final newline")
   t.assert_true(added[1].removed.no_nl_at_eof == true, "original missing newline marker")
-end)
-
-t:test("run_diff_future: basic functionality", function()
-  local hunks = t.await(diff.run_diff_future({ "old", "" }, { "new", "" })) ---@type era.m.git.Hunk[]|nil
-  t.assert_true(hunks ~= nil, "result should not be nil")
-  ---@cast hunks era.m.git.Hunk[]
-  t.assert_eq(1, #hunks, "hunk count")
-  t.assert_eq("change", hunks[1].type, "hunk type")
-end)
-
-t:test("run_diff_future: empty files", function()
-  local hunks = t.await(diff.run_diff_future({}, {})) ---@type era.m.git.Hunk[]
-  t.assert_eq(0, #hunks, "hunk count")
-end)
-
-t:test("run_diff_future: preserves independent nearby changes", function()
-  -- Changes two unchanged lines apart stay separate hunks.
-  local old = { "line1", "line2", "line3", "line4", "" }
-  local new = { "modified1", "line2", "line3", "modified4", "" }
-
-  local hunks = t.await(diff.run_diff_future(old, new)) ---@type era.m.git.Hunk[]
-  t.assert_eq(2, #hunks, "hunk count")
-end)
-
-t:test("run_diff_future: content with special characters", function()
-  local hunks = t.await(diff.run_diff_future({ "a|b;c\td", "" }, { "x|y;z\tw", "" })) ---@type era.m.git.Hunk[]|nil
-  t.assert_true(hunks ~= nil, "result should not be nil")
-  ---@cast hunks era.m.git.Hunk[]
-  t.assert_eq(1, #hunks, "hunk count")
-  t.assert_eq("x|y;z\tw", hunks[1].added.lines[1], "content preserved")
 end)
 
 t:test("filter_secondary: nil inputs", function()
@@ -132,29 +156,6 @@ t:test("filter_secondary: searches every primary hunk sharing an added start", f
   local result = diff.filter_secondary({ first, matching }, secondary)
 
   t.assert_eq(nil, result, "later matching hunk filtered")
-end)
-
-t:test("compute_word_diff: native byte diff preserves byte-column ranges", function()
-  local changes = diff.compute_word_diff("fooBar", "fooBaz")
-  t.assert_eq(1, #changes, "change count")
-  t.assert_eq(4, changes[1].old_start, "old start")
-  t.assert_eq(6, changes[1].old_end, "old end")
-  t.assert_eq(4, changes[1].new_start, "new start")
-  t.assert_eq(6, changes[1].new_end, "new end")
-end)
-
-t:test("compute_hunk_word_diff: large hunks produce one change per line", function()
-  local old_line = string.rep("a", 500) ---@type string
-  local new_line = string.rep("b", 500) ---@type string
-  ---@diagnostic disable-next-line: missing-fields
-  local hunk = { type = "change", removed = { lines = {} }, added = { lines = {} } } ---@type era.m.git.Hunk
-  for index = 1, 200 do
-    hunk.removed.lines[index] = old_line
-    hunk.added.lines[index] = new_line
-  end
-
-  local changes = diff.compute_hunk_word_diff(hunk)
-  t.assert_eq(200, #changes, "line changes")
 end)
 
 t:run()

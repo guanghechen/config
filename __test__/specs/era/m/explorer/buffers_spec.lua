@@ -283,53 +283,37 @@ t:test("loaded rename round trips discard only empty placeholders and preserve u
   t.assert_eq(nil, vim.uv.fs_stat(path .. "/b.txt"))
 end)
 
-for _, directory in ipairs({ false, true }) do
-  t:test((directory and "directory" or "file") .. " moves reject a live target buffer before filesystem IO", function()
-    local path = t:tempdir()
-    local source, target = path .. "/a.txt", path .. "/b.txt"
-    if directory then
-      assert(vim.uv.fs_mkdir(path .. "/old", 448))
-      source, target = path .. "/old/a.txt", path .. "/new/a.txt"
-    end
-    fixture.write(source)
-    local from = fixture.load_buffer(source)
-    local to = t:buffer({ "destination edits" }, { name = target, listed = true })
-    local widget = fixture.widget(path)
-    fixture.cursor(widget, directory and path .. "/old" or source)
-    await(widget:action():operate({ kind = "rename", name = directory and "new" or "b.txt" }))
-    fixture.idle(widget)
-    t.assert_true(vim.uv.fs_stat(source) ~= nil)
-    t.assert_eq(nil, vim.uv.fs_stat(target))
-    t.assert_eq(source, vim.api.nvim_buf_get_name(from))
-    t.assert_eq("destination edits", vim.api.nvim_buf_get_lines(to, 0, -1, false)[1])
-    t.assert_true(vim.api.nvim_get_option_value("modified", { buf = to }))
-    t.assert_eq(0, widget:context()._counts.success)
-    t.assert_eq(1, widget:context()._counts.skipped)
-  end)
-end
-
-for _, directory in ipairs({ false, true }) do
-  t:test(
-    (directory and "directory" or "file") .. " move protects destination buffers when the source is unopened",
-    function()
+-- A live destination buffer refuses the move whether or not the source has a buffer of its own.
+for _, case in ipairs({
+  { loaded = true, name = " moves reject a live target buffer before filesystem IO" },
+  { loaded = false, name = " move protects destination buffers when the source is unopened" },
+}) do
+  for _, directory in ipairs({ false, true }) do
+    t:test((directory and "directory" or "file") .. case.name, function()
       local path = t:tempdir()
-      local source, destination = path .. "/a.txt", path .. "/b.txt"
+      local source, target = path .. "/a.txt", path .. "/b.txt"
       if directory then
         assert(vim.uv.fs_mkdir(path .. "/old", 448))
-        source, destination = path .. "/old/a.txt", path .. "/new/a.txt"
+        source, target = path .. "/old/a.txt", path .. "/new/a.txt"
       end
       fixture.write(source)
-      local target = t:buffer({ "destination edits" }, { name = destination, listed = true })
+      local from = case.loaded and fixture.load_buffer(source) or nil
+      local to = t:buffer({ "destination edits" }, { name = target, listed = true })
       local widget = fixture.widget(path)
       fixture.cursor(widget, directory and path .. "/old" or source)
       await(widget:action():operate({ kind = "rename", name = directory and "new" or "b.txt" }))
       fixture.idle(widget)
       t.assert_true(vim.uv.fs_stat(source) ~= nil)
-      t.assert_eq(nil, vim.uv.fs_stat(destination))
-      t.assert_eq("destination edits", vim.api.nvim_buf_get_lines(target, 0, -1, false)[1])
+      t.assert_eq(nil, vim.uv.fs_stat(target))
+      if from then
+        t.assert_eq(source, vim.api.nvim_buf_get_name(from))
+      end
+      t.assert_eq("destination edits", vim.api.nvim_buf_get_lines(to, 0, -1, false)[1])
+      t.assert_true(vim.api.nvim_get_option_value("modified", { buf = to }))
       t.assert_eq(0, widget:context()._counts.success)
-    end
-  )
+      t.assert_eq(1, widget:context()._counts.skipped)
+    end)
+  end
 end
 
 t:test("a destination buffer introduced by an LSP reply is checked again before IO", function()

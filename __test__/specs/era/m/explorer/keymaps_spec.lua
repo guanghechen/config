@@ -1,7 +1,7 @@
 local explorer = require("__test__.support.explorer")
 local t = require("__test__.support.harness").new()
 local fixture = explorer.new(t)
-local await = fixture.await
+local await, selected = fixture.await, fixture.selected
 
 ---@param widget                        era.m.explorer.Widget
 ---@param keys                          string
@@ -10,20 +10,6 @@ local function press(widget, keys)
   local _, view = widget:context()
   vim.api.nvim_set_current_win(view.winnr)
   vim.api.nvim_feedkeys(vim.keycode(keys), "xt", false)
-end
-
----@param widget                        era.m.explorer.Widget
----@param mode                          ?string
----@param count                         integer
----@return nil
-local function selected(widget, mode, count)
-  local session, view = widget:context()
-  t.wait_until(function()
-    local frame = view:frame()
-    return session.state:native():applicable(frame)
-      and session:mode(frame) == mode
-      and frame:header().summary.known_roots == count
-  end, 10000, "unexpected selection after a keypress")
 end
 
 t:test("copy and cut prompt for a path without selection and mark an existing selection", function()
@@ -242,30 +228,6 @@ t:test("double Escape preserves a locked transfer instead of cancelling its task
   end, 10000)
   t.assert_true(session.state:status().locked)
   selected(widget, "copy", 1)
-end)
-
-t:test("accepting the copy default duplicates the cursor file and cut uses the supplied path", function()
-  local path = t:tempdir()
-  fixture.write(path .. "/a.lua")
-  local widget = fixture.widget(path)
-  t:patch_table(vim.ui, "input", function(options, done)
-    done(options.default)
-  end)
-  fixture.cursor(widget, path .. "/a.lua")
-  selected(widget, nil, 0)
-  await(widget:action():transfer("copy"))
-  fixture.idle(widget)
-  t.assert_true(vim.uv.fs_stat(path .. "/a-copy.lua") ~= nil)
-  t.assert_true(vim.uv.fs_stat(path .. "/a.lua") ~= nil)
-  t:patch_table(vim.ui, "input", function(_, done)
-    done(path .. "/moved.lua")
-  end)
-  fixture.cursor(widget, path .. "/a.lua")
-  selected(widget, nil, 0)
-  await(widget:action():transfer("cut"))
-  fixture.idle(widget)
-  t.assert_nil(vim.uv.fs_stat(path .. "/a.lua"))
-  t.assert_true(vim.uv.fs_stat(path .. "/moved.lua") ~= nil)
 end)
 
 t:test("a queued selection change cannot turn a cursor path operation into a selected operation", function()

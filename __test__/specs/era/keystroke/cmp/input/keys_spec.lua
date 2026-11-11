@@ -46,6 +46,8 @@ t:test("disabled completion preserves native keys and existing mappings", functi
       ui:wait_until(function()
         return vim.deep_equal(expected, ui:lua("return vim.api.nvim_buf_get_lines(0, 0, -1, false)"))
       end, 5000, example.key .. " preserves queued input")
+      -- A menu that must not open gets the time it would take.
+      vim.wait(100)
       t.assert_false(ui:lua("return require('era.keystroke.cmp').is_menu_visible()"))
     end
   end

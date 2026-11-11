@@ -25,7 +25,7 @@
 
 ```sh
 nvim -l __test__/run.lua __test__/specs/stl/fileicon_spec.lua
-nvim -l __test__/run.lua __test__/specs/dot/theme_spec.lua
+nvim -l __test__/run.lua __test__/specs/dot/theme/
 ```
 
 检查未知扩展名、大小写、绝对路径、空 filetype、测试文件后缀，以及 `MiniIcons*` highlight 在主题中的可用性。

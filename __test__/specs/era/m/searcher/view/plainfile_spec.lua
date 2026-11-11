@@ -144,4 +144,31 @@ t:test("rendering a CRLF replace preview writes clean lines and marks each row o
   t.assert_same({ "0:2", "1:0", "1:1" }, starts, "highlight starts")
 end)
 
+t:test("preview keeps canonical identity across filesystem boundaries", function()
+  local filepath = "C:/workspace/project/src/main.lua"
+  t:patch_table(yoz.canonical_path, "to_os_path", function(value)
+    return "OS<" .. value .. ">"
+  end)
+
+  local preview_filepath = nil ---@type string|nil
+  t:patch_table(yoz.replace, "replace_file_preview_by_matches_advance", function(params)
+    preview_filepath = params.filepath
+    return { text = "needle", matches = {} }, nil
+  end)
+  local current = context(filepath, "", {}, true)
+  local data = view:calc_preview_data(current)
+  t.assert_eq("OS<" .. filepath .. ">", preview_filepath, "native preview filepath")
+  t.assert_eq(filepath, data.filepath, "canonical preview identity")
+
+  local read_filepath = nil ---@type string|nil
+  t:patch_table(stl.fs, "read_file_as_lines", function(params)
+    read_filepath = params.filepath
+    return {}
+  end)
+  current.flag_replace:next(false, { silent = true })
+  data = view:calc_preview_data(current)
+  t.assert_eq("OS<" .. filepath .. ">", read_filepath, "filesystem preview filepath")
+  t.assert_eq(filepath, data.filepath, "canonical read identity")
+end)
+
 t:run()

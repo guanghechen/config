@@ -87,6 +87,26 @@ function M.filetree(t, props)
   return composer
 end
 
+---Creates a FiletreeComposer named `name` as `filetree` does, not permanent, without a preview and titled "filetree
+---test", that calls the callbacks given.
+---@param t                             __test__.support.Harness
+---@param name                          string
+---@param on_attached                   ?fun(_: era.m.picker.FiletreeComposer, rootpath: string)
+---@param on_confirm                    ?era.m.picker.composer.filetree.IOnConfirm
+---@param on_preview_rendered           ?era.m.picker.composer.filetree.IOnPreviewRendered
+---@return era.m.picker.FiletreeComposer
+function M.filetree_composer(t, name, on_attached, on_confirm, on_preview_rendered)
+  return M.filetree(t, {
+    name = name,
+    permanent = false,
+    preview = false,
+    title = "filetree test",
+    on_attached = on_attached,
+    on_confirm = on_confirm,
+    on_preview_rendered = on_preview_rendered,
+  })
+end
+
 ---Creates a Searcher FiletreeComposer, disposed when the case ends, from `props`, whose controls may be plain values,
 ---over an empty case-sensitive query for up to 500 matches in `*.txt` files.
 ---@param t                             __test__.support.Harness
@@ -181,6 +201,94 @@ function M.result_tree(t, name, source, present)
   return tree
 end
 
+---Creates a ResultTree, disposed when the case ends, whose container `root` holds the container `dir`, which holds the
+---leaves `one` and `two`, and the leaf `three`. Each node is labelled with its key, as each leaf's text is.
+---@param t                             __test__.support.Harness
+---@return era.view.ResultTree
+function M.branch_tree(t)
+  local source = require("era.view.result_source").new("root", { label = "root" })
+  source:insert("root", "dir", { label = "dir" })
+  source:insert("dir", "one", { label = "one" })
+  source:insert("dir", "two", { label = "two" })
+  source:insert("root", "three", { label = "three" })
+  local tree = M.result_tree(t, "native results", source)
+  tree:insert("root", { nodetype = "container" })
+  tree:insert("dir", { nodetype = "container" })
+  for _, key in ipairs({ "one", "two", "three" }) do
+    tree:insert(key, { nodetype = "leaf", text = key })
+  end
+  return tree
+end
+
+---Creates a ResultTree, disposed when the case ends, whose container `root` holds the container `dir`, labelled
+---"directory", which holds the leaf `file`, labelled "file.lua".
+---@param t                             __test__.support.Harness
+---@return era.view.ResultTree
+function M.file_tree(t)
+  local source = require("era.view.result_source").new("root", { label = "root" })
+  source:insert("root", "dir", { label = "directory" })
+  source:insert("dir", "file", { label = "file.lua" })
+  local tree = M.result_tree(t, "native picker", source)
+  tree:insert("root", { nodetype = "container" })
+  tree:insert("dir", { nodetype = "container" })
+  tree:insert("file", { nodetype = "leaf" })
+  return tree
+end
+
+---Starts a child UI, closed when the case ends, whose global `picker` is a permanent ListComposer focused on `items`:
+---"needle first", whose payload is `original`, "needle second" and "other", each label prefixed with "中:". Its filter
+---`controls` start as an empty plain case-insensitive query. `errors` collects the reported errors, `writes` counts the
+---writes to the result buffer and `matches` holds the columns of the match highlight drawn on each result row.
+---@param t                             __test__.support.Harness
+---@return __test__.support.UI
+function M.list_ui(t)
+  local ui = require("__test__.support.ui").open(t, { width = 100, height = 32, runtime = "ark" })
+  ui:lua([[
+    errors = {}
+    stl.reporter.error = function(value) errors[#errors + 1] = value end
+    controls = {
+      search_pattern = stl.c.Observable.from_value(""),
+      flag_fuzzy = stl.c.Observable.from_value(false),
+      flag_regex = stl.c.Observable.from_value(false),
+      flag_case_sensitive = stl.c.Observable.from_value(false),
+    }
+    original = {opaque = newproxy(false)}
+    items = {
+      {uuid="one", text="needle first", text_lower="needle first", data=original},
+      {uuid="two", text="needle second", text_lower="needle second", data={}},
+      {uuid="three", text="other", text_lower="other", data={}},
+    }
+    picker = era.m.picker.ListComposer.new(vim.tbl_extend("force", controls, {
+      name="native list", title="native list", permanent=true,
+      present=function(_, item)
+        local prefix="中:"
+        return {label=prefix..item.text, match_regions={{0, #item.text, #prefix}}}
+      end,
+    }))
+    writes, matches = 0, {}
+    local set_lines = vim.api.nvim_buf_set_lines
+    vim.api.nvim_buf_set_lines = function(bufnr, ...)
+      if bufnr == picker.result:get_bufnr() then writes = writes + 1 end
+      return set_lines(bufnr, ...)
+    end
+    local set_extmark = vim.api.nvim_buf_set_extmark
+    vim.api.nvim_buf_set_extmark = function(bufnr, nsnr, row, col, options)
+      if bufnr == picker.result:get_bufnr() and options.ephemeral and options.hl_group == "TreeviewMatch" then
+        matches[row] = {col, options.end_col}
+      end
+      return set_extmark(bufnr, nsnr, row, col, options)
+    end
+    picker:reset_data({items=items, uuid_current="one", uuid_present="two"})
+    picker:focus()
+  ]])
+  ui:wait_lua(
+    "return picker._treeview.view and picker._treeview.view:frame() and picker._treeview:linecount() == 3",
+    5000,
+    "three rows"
+  )
+  return ui
+end
+
 ---Attaches a buffer Searcher, closed when the case ends, to a new window above that shows `lines` in a listed scratch
 ---buffer, and waits until it finds a match. `props` gives Observables or plain values for the controls, over a
 ---case-sensitive plain search that does not replace.
@@ -208,6 +316,93 @@ function M.buffer_searcher(t, lines, props)
     return searcher.o_match_total:snapshot() > 0
   end, 5000, "the search found no match")
   return searcher, bufnr
+end
+
+-- Case-insensitive "needle" matches five times in the files of `replace_fixture`: once in the first line of alpha,
+-- twice in its second and twice in beta.
+M.REPLACE_FILES = {
+  ["alpha.txt"] = { "needle one", "a needle and a Needle", "nothing here" },
+  ["beta.txt"] = { "NEEDLE upper", "needle" },
+} ---@type table<string, string[]>
+
+---@class __test__.support.picker.IReplaceControls
+---@field public search_pattern         stl.c.Observable
+---@field public replace_pattern        stl.c.Observable
+---@field public flag_regex             stl.c.Observable
+---@field public flag_replace           stl.c.Observable
+
+local replace_count = 0 ---@type integer
+
+---Writes `REPLACE_FILES` to a directory of the case, removed when it ends, so a case that writes files leaves the
+---others alone.
+---@param t                             __test__.support.Harness
+---@return string
+function M.replace_fixture(t)
+  local dir = t:tempdir()
+  for name, lines in pairs(M.REPLACE_FILES) do
+    vim.fn.writefile(lines, vim.fs.joinpath(dir, name))
+  end
+  return dir
+end
+
+---Creates a Searcher FiletreeComposer over `dir` as `searcher` does, case-insensitive and in replace mode, that searches
+---again on a refresh as Search Files does, and shows its result. The query and the replacement start empty.
+---@param t                             __test__.support.Harness
+---@param dir                           string
+---@return era.m.searcher.FiletreeComposer
+---@return __test__.support.picker.IReplaceControls
+function M.replace_composer(t, dir)
+  replace_count = replace_count + 1
+  local controls = {
+    search_pattern = M.observable(""),
+    replace_pattern = M.observable(""),
+    flag_regex = M.observable(false),
+    flag_replace = M.observable(true),
+  } ---@type __test__.support.picker.IReplaceControls
+  local composer = M.searcher(t, {
+    name = "replacement-" .. replace_count,
+    permanent = false,
+    preview = false,
+    title = "replacement test",
+    flag_regex = controls.flag_regex,
+    flag_replace = controls.flag_replace,
+    flag_case_sensitive = false,
+    replace_pattern = controls.replace_pattern,
+    rootpath = dir,
+    search_pattern = controls.search_pattern,
+    -- As Search Files does.
+    on_refresh = function(composer)
+      composer:schedule_search()
+    end,
+  })
+  M.show_result(composer, 80, 10)
+  require("__test__.support.treeview").await(composer._treeview:ready())
+  return composer, controls
+end
+
+---Waits until no search of `composer` runs and its published projection reflects the current inputs, and until
+---`predicate` holds when given.
+---@param composer                      era.m.searcher.FiletreeComposer
+---@param msg                           string
+---@param predicate                     ?fun(): boolean
+---@return nil
+function M.settle_search(composer, msg, predicate)
+  require("__test__.support.harness").wait_until(function()
+    return composer._file_search._active == nil
+      and composer:__is_search_projection_current__()
+      and (predicate == nil or predicate())
+  end, 5000, msg)
+end
+
+---Searches "needle" with `replacement` through the controls of `replace_composer` and waits until it publishes.
+---@param composer                      era.m.searcher.FiletreeComposer
+---@param controls                      __test__.support.picker.IReplaceControls
+---@param replacement                   string
+---@return nil
+function M.search_needle(composer, controls, replacement)
+  controls.replace_pattern:next(replacement)
+  controls.search_pattern:next("needle")
+  M.settle_search(composer, "the first search did not publish")
 end
 
 return M

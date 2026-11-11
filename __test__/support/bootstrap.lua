@@ -115,4 +115,13 @@ function M.with_reporter(harness)
   return reports
 end
 
+---The message of each of `reports`, such as the reports of one level that `with_reporter` records, in order.
+---@param reports                       { message: string }[]
+---@return string[]
+function M.messages(reports)
+  return vim.tbl_map(function(report)
+    return report.message
+  end, reports)
+end
+
 return M

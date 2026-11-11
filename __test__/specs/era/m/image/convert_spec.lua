@@ -1,51 +1,14 @@
-local bootstrap = require("__test__.support.bootstrap")
 local fs = require("__test__.support.fs")
 local harness = require("__test__.support.harness")
+local support = require("__test__.support.image")
 
 local t = harness.new()
 
-bootstrap.with_native(t)
-bootstrap.with_runtime(t, {
-  dot = {
-    path = {
-      join = function(left, right)
-        return yoz.path.join(left, right, true, "/")
-      end,
-      normalize = function(path)
-        return yoz.path.normalize(path, true, "/")
-      end,
-    },
-  },
-  stl = {
-    c = { Proc = require("stl.c.proc") },
-    env = {
-      IS_GHOSTTY = false,
-      IS_KITTY = false,
-      IS_TMUX = false,
-      IS_WIN = false,
-      mkdirs = function(path)
-        vim.fn.mkdir(path, "p")
-      end,
-    },
-    table = require("stl.table"),
-  },
-})
-
----Writes the shell script `lines` as the executable `name` in `dir`.
----@param dir                           string
----@param name                          string
----@param lines                         string[]
----@return nil
-local function executable(dir, name, lines)
-  fs.write(dir .. "/" .. name, lines)
-  vim.fn.setfperm(dir .. "/" .. name, "rwxr-xr-x")
-end
-
+local bin, path_env = support.with_conversion(t)
 -- Conversions run this `magick`, which hangs on any file whose name says so. Like the real one, a conversion
 -- writes the image after `-write` (unless to memory) and its identification to the last argument, in the format a
 -- prefix may name. Each run logs its arguments.
-local bin = t:tempdir() ---@type string
-executable(bin, "magick", {
+support.executable(bin, "magick", {
   "#!/bin/sh",
   "printf '%s\\n' \"$*\" >> '" .. bin .. "/runs.log'",
   'case "$*" in',
@@ -64,7 +27,7 @@ executable(bin, "magick", {
   "printf 'PNG 4x2 96x96' > \"$prev\"",
 })
 -- Formulas are typeset by this `tectonic`, which logs each run, and rasterized by this `pdftocairo`.
-executable(bin, "tectonic", {
+support.executable(bin, "tectonic", {
   "#!/bin/sh",
   "printf '%s\\n' \"$*\" >> '" .. bin .. "/typeset.log'",
   'prev=""',
@@ -74,9 +37,13 @@ executable(bin, "tectonic", {
   "done",
   'printf pdf > "$outdir/$(basename "$prev" .tex).pdf"',
 })
-executable(bin, "pdftocairo", { "#!/bin/sh", 'for arg in "$@"; do last="$arg"; done', 'printf png > "$last.png"' })
+support.executable(
+  bin,
+  "pdftocairo",
+  { "#!/bin/sh", 'for arg in "$@"; do last="$arg"; done', 'printf png > "$last.png"' }
+)
 -- Charts are drawn by this `mmdc`, which logs each run.
-executable(bin, "mmdc", {
+support.executable(bin, "mmdc", {
   "#!/bin/sh",
   "printf '%s\\n' \"$*\" >> '" .. bin .. "/charts.log'",
   'prev=""',
@@ -86,36 +53,14 @@ executable(bin, "mmdc", {
   "done",
   'printf png > "$out"',
 })
-local path_env = vim.env.PATH ---@type string
-vim.env.PATH = bin .. ":" .. path_env
-t:defer(function()
-  vim.env.PATH = path_env
-end)
-
-t:patch_table(package.loaded, "era.m.image.terminal", {
-  request = function() end,
-  size = function()
-    return { width = 1000, height = 1000, columns = 100, rows = 50, cell_width = 10, cell_height = 20, scale = 1 }
-  end,
-})
 
 local state = require("era.m.image.state")
 local convert = require("era.m.image.convert")
-t:patch_table(state.data, "tmpdir", t:tempdir())
 
 ---@param uri                           string
 ---@return era.m.image.Convert
 local function conversion_of(uri)
   return convert.convert({ source = convert.source(uri) })
-end
-
----@param conversion                    era.m.image.Convert
----@return nil
-local function finish(conversion)
-  conversion:run()
-  t.wait_until(function()
-    return conversion:done()
-  end, 5000, "conversion")
 end
 
 t:test("data URIs are decoded the way browsers read them", function()
@@ -132,7 +77,7 @@ t:test("an undecodable data URI fails its own conversion instead of raising", fu
   t.assert_true(ok, "conversion created")
   ---@cast conversion era.m.image.Convert
 
-  finish(conversion)
+  support.finish(conversion)
   t.assert_true(conversion:error() ~= nil, "conversion failed")
 end)
 
@@ -148,7 +93,7 @@ t:test("a step whose output an earlier step of the same run wrote does not run a
     "steps"
   )
 
-  finish(conversion)
+  support.finish(conversion)
 
   t.assert_nil(conversion:error(), "conversion error")
   t.assert_true(conversion.steps[1].proc ~= nil, "conversion ran")
@@ -205,7 +150,7 @@ t:test("ImageMagick reads a source only as the format its extension names", func
     vim.fn.writefile(POSTSCRIPT, dir .. "/" .. name)
     local skip = #magick_runs(0) ---@type integer
 
-    finish(conversion_of(dir .. "/" .. name))
+    support.finish(conversion_of(dir .. "/" .. name))
 
     local run = magick_runs(skip)[1] or "" ---@type string
     local input = run:match("(%S*/" .. vim.pesc(name) .. "%[0%])") ---@type string|nil
@@ -220,7 +165,7 @@ t:test("a source in a format ImageMagick is not named for fails before it runs",
     vim.fn.writefile(POSTSCRIPT, dir .. "/" .. name)
     local conversion = conversion_of(dir .. "/" .. name)
 
-    finish(conversion)
+    support.finish(conversion)
 
     local err = conversion:error() or "" ---@type string
     t.assert_true(err:find("Unsupported image format", 1, true) ~= nil, name .. ": " .. err)
@@ -253,7 +198,7 @@ t:test("the cache is the account's own and keeps what a conversion used within a
 
   -- A session converts an image, and after a month of leaving its files alone uses them again.
   local first = assert(loadfile("lua/era/m/image/convert.lua"))()
-  finish(first.convert({ source = first.source(sources .. "/photo.png") }))
+  support.finish(first.convert({ source = first.source(sources .. "/photo.png") }))
   for name in vim.fs.dir(dir) do
     vim.uv.fs_utime(dir .. "/" .. name, month_ago, month_ago)
   end
@@ -280,10 +225,10 @@ t:test("a formula is typeset once, and each color only recolors it", function()
   local typeset, skip = #logged("typeset.log"), #magick_runs(0)
 
   local blue = convert.convert({ source = source, color = "0078D4" })
-  finish(blue)
+  support.finish(blue)
   local pink = convert.convert({ source = source, color = "EB6F92" })
-  finish(pink)
-  finish(convert.convert({ source = source, color = "0078D4" }))
+  support.finish(pink)
+  support.finish(convert.convert({ source = source, color = "0078D4" }))
 
   t.assert_nil(pink:error(), "conversion error")
   t.assert_eq(typeset + 1, #logged("typeset.log"), "typeset once")
@@ -417,7 +362,7 @@ t:test("a formula in black ink alone takes the color", function()
   t.assert_eq(0, drawn.code, drawn.stderr)
   vim.uv.fs_copyfile(bin .. "/tectonic", tex_bin .. "/tectonic")
   vim.fn.setfperm(tex_bin .. "/tectonic", "rwxr-xr-x")
-  executable(
+  support.executable(
     tex_bin,
     "pdftocairo",
     { "#!/bin/sh", 'for arg in "$@"; do last="$arg"; done', "cp '" .. ink .. '\' "$last.png"' }
@@ -427,7 +372,7 @@ t:test("a formula in black ink alone takes the color", function()
   vim.fn.writefile({ "ink" }, file)
 
   local conversion = convert.convert({ source = convert.source(file), color = "005FB8" })
-  finish(conversion)
+  support.finish(conversion)
 
   t.assert_nil(conversion:error(), "conversion error")
   local histogram = vim
@@ -454,13 +399,13 @@ t:test("a chart is drawn once for each background, in the style of the one it wa
 
   vim.o.background = "dark"
   local dark = convert.convert({ source = source })
-  finish(dark)
+  support.finish(dark)
   vim.o.background = "light"
   local light = convert.convert({ source = source })
   -- The background changes again before the chart is drawn.
   vim.o.background = "dark"
-  finish(light)
-  finish(convert.convert({ source = source }))
+  support.finish(light)
+  support.finish(convert.convert({ source = source }))
 
   t.assert_nil(light:error(), "conversion error")
   local runs = vim.list_slice(logged("charts.log"), drawn + 1) ---@type string[]

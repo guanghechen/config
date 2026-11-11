@@ -1,0 +1,16 @@
+local harness = require("__test__.support.harness")
+local runtime = require("__test__.support.cmp.runtime")
+runtime.setup()
+local t = harness.new()
+local Policy = require("era.keystroke.cmp.policy")
+
+t:test("source policy distinguishes workspace paths before starting requests", function()
+  local workspace = Policy.sources_for(runtime.context("@a"), false)
+  local ordinary = Policy.sources_for(runtime.context("./a"), false)
+  t.assert_true(vim.list_contains(workspace, "path_at"), "workspace path owner")
+  t.assert_false(vim.list_contains(workspace, "path"), "one path source is requested")
+  t.assert_true(vim.list_contains(ordinary, "path"), "ordinary paths retain buffer dependency")
+  t.assert_false(vim.list_contains(ordinary, "path_at"), "policy does not mutate shared source lists")
+end)
+
+t:run()

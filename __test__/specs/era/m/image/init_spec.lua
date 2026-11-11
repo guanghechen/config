@@ -1,40 +1,8 @@
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
+local support = require("__test__.support.image")
 
 local t = harness.new()
-
----Declares the globals `dressing` reads, with `observe` as `stl.fn.observe`, and an image state that supports every
----file and the terminal, with documents enabled when `doc` is.
----@param doc                           boolean
----@param observe                       ?fun(observable: any, callback: fun()): nil
----@return table
-local function dressing_runtime(doc, observe)
-  local state = {
-    data = {
-      doc = { enabled = doc },
-      extnames = { ".png" },
-    },
-    did_setup = false,
-    is_support_file = function()
-      return true
-    end,
-    is_support_terminal = function()
-      return true
-    end,
-  }
-  t:patch_global("stl", {
-    env = { IS_OSX = true },
-    fn = { observe = observe or function() end },
-    nvim = { fn = {
-      augroup = function()
-        return 1
-      end,
-    } },
-  })
-  t:patch_global("dot", { context = { theme = {} } })
-  t:patch_table(package.loaded, "era.m.image.state", state)
-  return state
-end
 
 t:test("dressing attaches existing and future supported buffers", function()
   t.assert_nil(package.loaded["vim.treesitter"], "cold treesitter")
@@ -50,7 +18,7 @@ t:test("dressing attaches existing and future supported buffers", function()
   local filetype_callback = nil ---@type fun(event: { buf: integer })|nil
   local cleanup_buffer = nil ---@type fun(event: { buf: integer })|nil
   local cleanup_exit = nil ---@type fun()|nil
-  local state = dressing_runtime(true)
+  local state = support.with_dressing(t, true)
   t:patch_table(package.loaded, "era.m.image.doc", {
     attach = function(bufnr)
       attached[bufnr] = (attached[bufnr] or 0) + 1
@@ -145,7 +113,7 @@ t:test("dressing reads the unchanged image buffers that startup read as text", f
     [24] = { name = "/workspace/notes.md", loaded = true, buftype = "", modified = false },
     [25] = { name = "/workspace/SHOT.PNG", loaded = true, buftype = "", modified = false },
   }
-  dressing_runtime(false)
+  support.with_dressing(t, false)
   t:patch_table(vim.api, "nvim_create_autocmd", function()
     return 1
   end)
@@ -181,7 +149,7 @@ end)
 t:test("reading an image buffer again replaces its placements", function()
   local calls = {} ---@type string[]
   local read = nil ---@type fun(event: { buf: integer })|nil
-  dressing_runtime(false)
+  support.with_dressing(t, false)
   t:patch_table(package.loaded, "era.m.image.placement", {
     clean = function(bufnr)
       calls[#calls + 1] = "clean " .. bufnr
@@ -215,7 +183,7 @@ end)
 t:test("a theme change recolors after the theme applied its colors, though this subscribed first", function()
   local on_theme = nil ---@type fun()|nil
   local recolored, seen = false, nil ---@type boolean, integer|nil
-  dressing_runtime(false, function(_, callback)
+  support.with_dressing(t, false, function(_, callback)
     on_theme = callback
   end)
   t:patch_table(package.loaded, "era.m.image.image", {

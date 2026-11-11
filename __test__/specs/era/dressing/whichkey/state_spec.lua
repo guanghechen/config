@@ -162,4 +162,23 @@ t:test(
   end
 )
 
+t:test("exact native mapping is resolved after the which-key tree was built", function()
+  local state = new_state()
+  local bufnr = t:buffer() ---@type integer
+  state.__load_keymaps__(bufnr, "n")
+  local tree = assert(state.buf_trees[bufnr].n)
+  Whichkey.tree.add(tree, { "gs", group = "surround" })
+  vim.keymap.set("n", "gs", function() end, {
+    buffer = bufnr,
+    desc = "diffview: stage",
+    nowait = true,
+  })
+
+  local node = assert(Whichkey.tree.find(tree, "gs"))
+  local mapping = assert(state.__get_keymap__(bufnr, "n", "gs"))
+  t.assert_true(node.is_group, "static group metadata")
+  t.assert_eq("diffview: stage", mapping.desc, "late buffer-local mapping")
+  t.assert_eq(1, mapping.nowait, "native nowait")
+end)
+
 t:run()

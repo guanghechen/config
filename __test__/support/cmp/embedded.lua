@@ -103,6 +103,45 @@ function M.behavior_editor(t, options, start)
   return ui, grid
 end
 
+---Starts `behavior_editor` from `options` under the vsc-dark-modern theme, without menu blending, once the deprecated
+---label highlight is checked to only decorate. The child must have reported no error when `t` cleans up.
+---@param t                             __test__.support.Harness
+---@param options                       table The options of `__test__.support.cmp.behavior.setup`.
+---@return __test__.support.UI
+---@return table grid
+function M.themed_editor(t, options)
+  local ui, grid = M.behavior_editor(t, options)
+  ui:lua([[
+    local deprecated = vim.api.nvim_get_hl(0,{name='CmpLabelDeprecated',link=false})
+    assert(deprecated.strikethrough and deprecated.fg == nil and deprecated.bg == nil,'decoration-only fallback')
+    local cmp_stl, cmp_dot = stl, dot
+    stl, dot = require('stl'), require('dot')
+    dot.context.theme.apply_theme({theme='vsc-dark-modern',transparency=false})
+    stl, dot = cmp_stl, cmp_dot
+    vim.o.pumblend = 0
+  ]])
+  t:defer(function()
+    t.assert_eq("", ui:lua([[return vim.v.errmsg]]), "no editor errors")
+  end)
+  return ui, grid
+end
+
+---Waits until the Lua chunk `code` holds in the child; a failure shows the buffer and the mode.
+---@param t                             __test__.support.Harness
+---@param ui                            __test__.support.UI
+---@param code                          string
+---@param message                       string
+---@return nil
+function M.wait(t, ui, code, message)
+  local ok = pcall(ui.wait_lua, ui, code, 5000)
+  if not ok then
+    message = message
+      .. ": "
+      .. vim.inspect(ui:lua([[return {lines=vim.api.nvim_buf_get_lines(0,0,-1,false),mode=vim.api.nvim_get_mode()}]]))
+  end
+  t.assert_true(ok, message)
+end
+
 ---Reads the screen around the visible popup menu of `ui`, past its border and scrollbar, with the highlights `grid`
 ---resolves.
 ---@param ui                            __test__.support.UI

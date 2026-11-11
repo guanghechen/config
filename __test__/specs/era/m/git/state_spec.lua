@@ -346,4 +346,28 @@ t:test("refresh: collections are spaced by four times the last one's duration, f
   t.assert_true(spacing(4) >= 230, string.format("a 60 ms query holds the one after it for 240 ms: %.1f", spacing(4)))
 end)
 
+t:test("refresh: the window is four times the last collection's duration, clamped from 100 ms to the limit", function()
+  local state, queries = new_state(800)
+  -- Collections measure their duration with this clock, which advances only when a collection is held.
+  local now = vim.uv.hrtime() ---@type number
+  t:patch_table(vim.uv, "hrtime", function()
+    return now
+  end)
+  t.assert_eq(100, state:__window__(), "before any collection")
+
+  for count, case in ipairs({
+    { duration_ms = 0, window_ms = 100 },
+    { duration_ms = 24, window_ms = 100 },
+    { duration_ms = 60, window_ms = 240 },
+    { duration_ms = 500, window_ms = 800 },
+  }) do
+    local future = state:refresh()
+    await_queries(queries, count, "collection " .. count)
+    now = now + case.duration_ms * 1e6
+    queries[count].resolve(new_snapshot({}))
+    t.settle(future)
+    t.assert_eq(case.window_ms, state:__window__(), string.format("after a %d ms collection", case.duration_ms))
+  end
+end)
+
 t:run()

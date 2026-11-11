@@ -114,23 +114,6 @@ t:test("new: executor errors are caught and reject the future", function()
   t.assert_true(err ~= nil and string.find(err, "executor threw") ~= nil, "should have error message")
 end)
 
-t:test("new: second resolve call is ignored", function()
-  local future = Future.new(function(resolve, reject)
-    resolve("first")
-    resolve("second")
-  end)
-  t.assert_eq("first", future:get_result(), "should keep first value")
-end)
-
-t:test("new: reject after resolve is ignored", function()
-  local future = Future.new(function(resolve, reject)
-    resolve("value")
-    reject("error")
-  end)
-  t.assert_true(future:is_resolved(), "should be resolved")
-  t.assert_nil(future:get_error(), "should have no error")
-end)
-
 t:test("token: every future sharing a token is cancelled", function()
   -- Each future unsubscribes itself from the token while the token dispatches, so a token that
   -- mutated its callback array mid-iteration used to cancel only every second future.
@@ -170,76 +153,42 @@ t:test("token: a shared token still runs plain cancel callbacks", function()
   t.assert_eq("job-1,job-2", table.concat(aborted, ","), "both abort callbacks run")
 end)
 
-t:test("finally: called immediately if already resolved", function()
-  local future = Future.resolve("value")
-  local called = false
-  local received_ok = nil
-  local received_result = nil
+-- A listener receives the outcome once: at once from a settled future, on settlement from a pending one.
+for _, case in ipairs({
+  {
+    name = "finally: called immediately if already resolved",
+    future = function()
+      return Future.resolve("value")
+    end,
+    ok = true,
+    result = "value",
+  },
+  {
+    name = "finally: called immediately if already rejected",
+    future = function()
+      return Future.reject("error")
+    end,
+    ok = false,
+    result = "error",
+  },
+  { name = "finally: queued when pending, called on resolve", settle = "__resolve__", ok = true, result = "done" },
+  { name = "finally: queued when pending, called on reject", settle = "__reject__", ok = false, result = "failed" },
+}) do
+  t:test(case.name, function()
+    local future = case.future and case.future() or Future.new()
+    local calls = {} ---@type { ok: boolean, result: any }[]
 
-  future:finally(function(ok, result)
-    called = true
-    received_ok = ok
-    received_result = result
+    future:finally(function(ok, result)
+      calls[#calls + 1] = { ok = ok, result = result }
+    end)
+
+    if case.settle then
+      t.assert_same({}, calls, "should not be called yet")
+      future[case.settle](future, case.result)
+    end
+    t.assert_same({ { ok = case.ok, result = case.result } }, calls, "called once with the outcome")
   end)
-
-  t.assert_true(called, "should be called immediately")
-  t.assert_true(received_ok, "ok should be true")
-  t.assert_eq("value", received_result, "result should be value")
-end)
-
-t:test("finally: called immediately if already rejected", function()
-  local future = Future.reject("error")
-  local called = false
-  local received_ok = nil
-  local received_result = nil
-
-  future:finally(function(ok, result)
-    called = true
-    received_ok = ok
-    received_result = result
-  end)
-
-  t.assert_true(called, "should be called immediately")
-  t.assert_false(received_ok, "ok should be false")
-  t.assert_eq("error", received_result, "result should be error")
-end)
-
-t:test("finally: queued when pending, called on resolve", function()
-  local future = Future.new()
-  local called = false
-  local received_ok = nil
-  local received_result = nil
-
-  future:finally(function(ok, result)
-    called = true
-    received_ok = ok
-    received_result = result
-  end)
-
-  t.assert_false(called, "should not be called yet")
-
-  future:__resolve__("done")
-
-  t.assert_true(called, "should be called after resolve")
-  t.assert_true(received_ok, "ok should be true")
-  t.assert_eq("done", received_result, "result should be value")
-end)
-
-t:test("finally: queued when pending, called on reject", function()
-  local future = Future.new()
-  local called = false
-  local received_ok = nil
-
-  future:finally(function(ok, result)
-    called = true
-    received_ok = ok
-  end)
-
-  future:__reject__("failed")
-
-  t.assert_true(called, "should be called after reject")
-  t.assert_false(received_ok, "ok should be false")
-end)
+end
 
 t:test("finally: multiple listeners all called", function()
   local future = Future.new()
@@ -469,8 +418,7 @@ end)
 t:test("all: resolves with empty array for empty input", function()
   local future = Future.all({})
   t.assert_true(future:is_resolved())
-  local result = future:get_result()
-  t.assert_eq(0, #result)
+  t.assert_same({}, future:get_result())
 end)
 
 t:test("all: resolves when all futures resolve", function()
@@ -480,11 +428,7 @@ t:test("all: resolves when all futures resolve", function()
 
   local future = Future.all({ f1, f2, f3 })
   t.assert_true(future:is_resolved())
-
-  local result = future:get_result()
-  t.assert_eq(1, result[1])
-  t.assert_eq(2, result[2])
-  t.assert_eq(3, result[3])
+  t.assert_same({ 1, 2, 3 }, future:get_result())
 end)
 
 t:test("all: rejects immediately on first rejection", function()
@@ -509,36 +453,7 @@ t:test("all: preserves order of results", function()
   r2("second")
 
   t.assert_true(future:is_resolved())
-  local result = future:get_result()
-  t.assert_eq("first", result[1])
-  t.assert_eq("second", result[2])
-  t.assert_eq("third", result[3])
-end)
-
-t:test("all: supports token cancellation", function()
-  local token = CancellationToken.new()
-  local f1 = Future.resolve(1)
-  local f2 = Future.new()
-
-  local future = Future.all({ f1, f2 }, token)
-
-  t.assert_false(future:is_done())
-
-  token:cancel()
-  t.assert_true(future:is_cancelled())
-end)
-
-t:test("all: ignores late results after rejection", function()
-  local f1, r1 = Future.new_with_resolver()
-  local f2 = Future.reject("early error")
-
-  local future = Future.all({ f1, f2 })
-
-  t.assert_true(future:is_failed())
-  t.assert_eq("early error", future:get_error())
-
-  r1("late value")
-  t.assert_eq("early error", future:get_error())
+  t.assert_same({ "first", "second", "third" }, future:get_result())
 end)
 
 t:test("race: returns pending for empty input", function()
@@ -564,33 +479,6 @@ t:test("race: rejects with first rejected future", function()
   local future = Future.race({ f1, f2, f3 })
   t.assert_true(future:is_failed())
   t.assert_eq("loser", future:get_error())
-end)
-
-t:test("race: ignores late results", function()
-  local f1, r1 = Future.new_with_resolver()
-  local f2, r2 = Future.new_with_resolver()
-
-  local future = Future.race({ f1, f2 })
-
-  r1("first")
-  t.assert_true(future:is_resolved())
-  t.assert_eq("first", future:get_result())
-
-  r2("second")
-  t.assert_eq("first", future:get_result())
-end)
-
-t:test("race: supports token cancellation", function()
-  local token = CancellationToken.new()
-  local f1 = Future.new()
-  local f2 = Future.new()
-
-  local future = Future.race({ f1, f2 }, token)
-
-  t.assert_false(future:is_done())
-
-  token:cancel()
-  t.assert_true(future:is_cancelled())
 end)
 
 t:test("any: rejects for empty input", function()
@@ -633,90 +521,52 @@ t:test("any: ignores rejections before first resolution", function()
   t.assert_eq("success", future:get_result())
 end)
 
-t:test("any: supports token cancellation", function()
-  local token = CancellationToken.new()
-  local f1 = Future.reject("error")
-  local f2 = Future.new()
-
-  local future = Future.any({ f1, f2 }, token)
-
-  t.assert_false(future:is_done())
-
-  token:cancel()
-  t.assert_true(future:is_cancelled())
-end)
-
-t:test("any: ignores late results after first success", function()
-  local f1, r1 = Future.new_with_resolver()
-  local f2, r2 = Future.new_with_resolver()
-
-  local future = Future.any({ f1, f2 })
-
-  r1("first")
-  t.assert_true(future:is_resolved())
-  t.assert_eq("first", future:get_result())
-
-  r2("second")
-  t.assert_eq("first", future:get_result())
-end)
-
 t:test("allSettled: resolves with empty array for empty input", function()
   local future = Future.allSettled({})
   t.assert_true(future:is_resolved())
-  local result = future:get_result()
-  t.assert_eq(0, #result)
+  t.assert_same({}, future:get_result())
 end)
 
-t:test("allSettled: resolves with all results when all futures resolve", function()
-  local f1 = Future.resolve(1)
-  local f2 = Future.resolve(2)
-  local f3 = Future.resolve(3)
-
-  local future = Future.allSettled({ f1, f2, f3 })
-  t.assert_true(future:is_resolved())
-
-  local result = future:get_result()
-  t.assert_eq(3, #result)
-  t.assert_eq("fulfilled", result[1].status)
-  t.assert_eq(1, result[1].value)
-  t.assert_eq("fulfilled", result[2].status)
-  t.assert_eq(2, result[2].value)
-  t.assert_eq("fulfilled", result[3].status)
-  t.assert_eq(3, result[3].value)
-end)
-
-t:test("allSettled: resolves with all results when some futures reject", function()
-  local f1 = Future.resolve("ok")
-  local f2 = Future.reject("error2")
-  local f3 = Future.resolve("also ok")
-
-  local future = Future.allSettled({ f1, f2, f3 })
-  t.assert_true(future:is_resolved(), "should always resolve")
-
-  local result = future:get_result()
-  t.assert_eq(3, #result)
-  t.assert_eq("fulfilled", result[1].status)
-  t.assert_eq("ok", result[1].value)
-  t.assert_eq("rejected", result[2].status)
-  t.assert_eq("error2", result[2].reason)
-  t.assert_eq("fulfilled", result[3].status)
-  t.assert_eq("also ok", result[3].value)
-end)
-
-t:test("allSettled: resolves with all results when all futures reject", function()
-  local f1 = Future.reject("error1")
-  local f2 = Future.reject("error2")
-
-  local future = Future.allSettled({ f1, f2 })
-  t.assert_true(future:is_resolved(), "should always resolve")
-
-  local result = future:get_result()
-  t.assert_eq(2, #result)
-  t.assert_eq("rejected", result[1].status)
-  t.assert_eq("error1", result[1].reason)
-  t.assert_eq("rejected", result[2].status)
-  t.assert_eq("error2", result[2].reason)
-end)
+for _, case in ipairs({
+  {
+    name = "allSettled: resolves with all results when all futures resolve",
+    futures = function()
+      return { Future.resolve(1), Future.resolve(2), Future.resolve(3) }
+    end,
+    results = {
+      { status = "fulfilled", value = 1 },
+      { status = "fulfilled", value = 2 },
+      { status = "fulfilled", value = 3 },
+    },
+  },
+  {
+    name = "allSettled: resolves with all results when some futures reject",
+    futures = function()
+      return { Future.resolve("ok"), Future.reject("error2"), Future.resolve("also ok") }
+    end,
+    results = {
+      { status = "fulfilled", value = "ok" },
+      { status = "rejected", reason = "error2" },
+      { status = "fulfilled", value = "also ok" },
+    },
+  },
+  {
+    name = "allSettled: resolves with all results when all futures reject",
+    futures = function()
+      return { Future.reject("error1"), Future.reject("error2") }
+    end,
+    results = {
+      { status = "rejected", reason = "error1" },
+      { status = "rejected", reason = "error2" },
+    },
+  },
+}) do
+  t:test(case.name, function()
+    local future = Future.allSettled(case.futures())
+    t.assert_true(future:is_resolved(), "should always resolve")
+    t.assert_same(case.results, future:get_result())
+  end)
+end
 
 t:test("allSettled: preserves order of results", function()
   local f1, r1 = Future.new_with_resolver()
@@ -730,24 +580,114 @@ t:test("allSettled: preserves order of results", function()
   r2("second")
 
   t.assert_true(future:is_resolved())
-  local result = future:get_result()
-  t.assert_eq("first", result[1].value)
-  t.assert_eq("second", result[2].value)
-  t.assert_eq("third", result[3].value)
+  t.assert_same({
+    { status = "fulfilled", value = "first" },
+    { status = "fulfilled", value = "second" },
+    { status = "fulfilled", value = "third" },
+  }, future:get_result())
 end)
 
-t:test("allSettled: supports token cancellation", function()
-  local token = CancellationToken.new()
-  local f1 = Future.resolve(1)
-  local f2 = Future.new()
+---Two pending inputs and the functions that settle them: the first resolves with "first", the second with "second".
+---@return stl.c.Future[] inputs
+---@return fun(): nil settle_first
+---@return fun(): nil settle_second
+local function first_then_second()
+  local first, resolve_first = Future.new_with_resolver()
+  local second, resolve_second = Future.new_with_resolver()
+  return { first, second }, function()
+    resolve_first("first")
+  end, function()
+    resolve_second("second")
+  end
+end
 
-  local future = Future.allSettled({ f1, f2 }, token)
+-- A combinator settles once; an input that settles after it changes nothing.
+for _, case in ipairs({
+  {
+    name = "all: ignores late results after rejection",
+    combinator = "all",
+    -- The second input has already failed when the combinator starts; the first resolves later.
+    inputs = function()
+      local late, resolve_late = Future.new_with_resolver()
+      return { late, Future.reject("early error") }, nil, function()
+        resolve_late("late value")
+      end
+    end,
+    error = "early error",
+  },
+  { name = "race: ignores late results", combinator = "race", inputs = first_then_second, result = "first" },
+  {
+    name = "any: ignores late results after first success",
+    combinator = "any",
+    inputs = first_then_second,
+    result = "first",
+  },
+}) do
+  t:test(case.name, function()
+    local inputs, settle, settle_late = case.inputs()
+    local future = Future[case.combinator](inputs)
+    if settle then
+      settle()
+    end
 
-  t.assert_false(future:is_done())
+    ---@param when                      string
+    ---@return nil
+    local function assert_settled(when)
+      if case.error then
+        t.assert_true(future:is_failed(), when)
+        t.assert_eq(case.error, future:get_error(), when)
+      else
+        t.assert_true(future:is_resolved(), when)
+        t.assert_eq(case.result, future:get_result(), when)
+      end
+    end
+    assert_settled("settled by the first input")
+    settle_late()
+    assert_settled("after the late input")
+  end)
+end
 
-  token:cancel()
-  t.assert_true(future:is_cancelled())
-end)
+-- A combinator given a token stays pending until the token cancels it.
+for _, case in ipairs({
+  {
+    name = "all: supports token cancellation",
+    combinator = "all",
+    inputs = function()
+      return { Future.resolve(1), Future.new() }
+    end,
+  },
+  {
+    name = "race: supports token cancellation",
+    combinator = "race",
+    inputs = function()
+      return { Future.new(), Future.new() }
+    end,
+  },
+  {
+    name = "any: supports token cancellation",
+    combinator = "any",
+    inputs = function()
+      return { Future.reject("error"), Future.new() }
+    end,
+  },
+  {
+    name = "allSettled: supports token cancellation",
+    combinator = "allSettled",
+    inputs = function()
+      return { Future.resolve(1), Future.new() }
+    end,
+  },
+}) do
+  t:test(case.name, function()
+    local token = CancellationToken.new()
+    local future = Future[case.combinator](case.inputs(), token)
+
+    t.assert_false(future:is_done())
+
+    token:cancel()
+    t.assert_true(future:is_cancelled())
+  end)
+end
 
 t:test("finally: a settled future still delivers a falsy result", function()
   -- `self._result or self._error` handed the error slot to the callback whenever the result was

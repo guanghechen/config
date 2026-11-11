@@ -87,4 +87,25 @@ t:test("help keeps mappings with the same key in different modes", function()
   t.assert_true(modes.x, "visual mapping")
 end)
 
+t:test("commits panes get mouse mappings each time they are created", function()
+  diffview.repository(t)
+  local session = diffview.open_log(t, { layout = 5 })
+  local view = require("era.m.diffview.view.commits.view")
+  local lyt = session.layout
+
+  local first_commits_bufnr = assert(lyt.commits_bufnr) ---@type integer
+  t.assert_true(diffview.mapping(first_commits_bufnr, "<ScrollWheelDown>") ~= nil, "initial commits mapping")
+  view.hide_commits(lyt)
+  t.assert_false(vim.api.nvim_buf_is_valid(first_commits_bufnr), "hidden commits buffer wiped")
+  view.show_commits(session)
+  t.assert_true(diffview.mapping(assert(lyt.commits_bufnr), "<ScrollWheelDown>") ~= nil, "recreated commits mapping")
+
+  local first_filetree_bufnr = assert(lyt.filetree_bufnr) ---@type integer
+  t.assert_true(diffview.mapping(first_filetree_bufnr, "<ScrollWheelDown>") ~= nil, "initial filetree mapping")
+  view.hide_filetree(lyt)
+  t.assert_false(vim.api.nvim_buf_is_valid(first_filetree_bufnr), "hidden filetree buffer wiped")
+  view.show_filetree(session)
+  t.assert_true(diffview.mapping(assert(lyt.filetree_bufnr), "<ScrollWheelDown>") ~= nil, "recreated filetree mapping")
+end)
+
 t:run()

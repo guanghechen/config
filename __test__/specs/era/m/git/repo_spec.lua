@@ -64,42 +64,40 @@ t:test("concurrent unowned creates share one future", function()
   t.assert_eq("main", first:get_result().abbrev_head, "abbrev head")
 end)
 
-t:test("successful create releases the in-flight entry", function()
-  reset()
+-- However the first create settles, it leaves the in-flight slot, so the next create queries again.
+for _, case in ipairs({
+  {
+    name = "successful create releases the in-flight entry",
+    settle = function()
+      resolve_repo(1)
+    end,
+  },
+  {
+    name = "failed create releases the in-flight entry",
+    settle = function()
+      requests[1].resolve(nil)
+    end,
+  },
+  {
+    name = "a failing repository read fails the create and releases the in-flight entry",
+    settle = function(first)
+      requests[1].future:__reject__("git failed") ---@diagnostic disable-line: invisible
+      t.assert_true(first:is_failed(), "the create fails rather than staying pending")
+    end,
+  },
+}) do
+  t:test(case.name, function()
+    reset()
 
-  local first = Repo.create("/repo")
-  resolve_repo(1)
-  local second = Repo.create("/repo")
+    local first = Repo.create("/repo")
+    case.settle(first)
+    local second = Repo.create("/repo")
 
-  t.assert_true(first ~= second, "new future")
-  t.assert_eq(2, #requests, "new repo query")
-  requests[2].resolve(nil)
-end)
-
-t:test("failed create releases the in-flight entry", function()
-  reset()
-
-  local first = Repo.create("/repo")
-  requests[1].resolve(nil)
-  local second = Repo.create("/repo")
-
-  t.assert_true(first ~= second, "new future after failure")
-  t.assert_eq(2, #requests, "retried repo query")
-  requests[2].resolve(nil)
-end)
-
-t:test("a failing repository read fails the create and releases the in-flight entry", function()
-  reset()
-
-  local first = Repo.create("/repo")
-  requests[1].future:__reject__("git failed") ---@diagnostic disable-line: invisible
-  t.assert_true(first:is_failed(), "the create fails rather than staying pending")
-  local second = Repo.create("/repo")
-
-  t.assert_true(first ~= second, "new future after the failure")
-  t.assert_eq(2, #requests, "retried repo query")
-  requests[2].resolve(nil)
-end)
+    t.assert_true(first ~= second, "new future after the first settles")
+    t.assert_eq(2, #requests, "new repo query")
+    requests[2].resolve(nil)
+  end)
+end
 
 t:test("token-owned creates remain isolated", function()
   reset()

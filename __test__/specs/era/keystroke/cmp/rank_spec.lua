@@ -161,6 +161,45 @@ t:test("wide LSP edits preserve namespace filtering and explicit filterText sema
   end
 end)
 
+t:test("ranking preserves LSP alternatives with distinct edits, commands or resolve payloads", function()
+  local Lsp = require("era.keystroke.cmp.source.lsp")
+  local context = runtime.context("FooTail", 3)
+  local insertion = { start = { line = 0, character = 0 }, ["end"] = { line = 0, character = 0 } }
+  for _, case in ipairs({
+    {
+      name = "imports",
+      left = { additionalTextEdits = { { range = insertion, newText = "import a\n" } } },
+      right = { additionalTextEdits = { { range = insertion, newText = "import b\n" } } },
+    },
+    { name = "resolve data", left = { data = { module = "a" } }, right = { data = { module = "b" } } },
+    {
+      name = "commands",
+      left = { command = { title = "run", command = "fixture.a" } },
+      right = { command = { title = "run", command = "fixture.b" } },
+    },
+    {
+      name = "overload details",
+      left = { labelDetails = { detail = "(): A" } },
+      right = { labelDetails = { detail = "(): B" } },
+    },
+    { name = "kind-dependent brackets", left = { kind = 3 }, right = { kind = 6 } },
+    {
+      name = "snippet semantics",
+      left = { insertText = "Foo($0)", insertTextFormat = 1 },
+      right = { insertText = "Foo($0)", insertTextFormat = 2 },
+    },
+  }) do
+    local response = Lsp.response(context, { id = 10, name = "fixture", offset_encoding = "utf-16" }, {
+      vim.tbl_extend("force", { label = "Foo", insertText = "Foo", kind = 6 }, case.left),
+      vim.tbl_extend("force", { label = "Foo", insertText = "Foo", kind = 6 }, case.right),
+    })
+    local ranked = Rank.filter(context, Rank.prepare(response.items))
+    t.assert_eq(2, #ranked, case.name .. " alternatives remain selectable")
+    t.assert_eq(response.items[1], ranked[1], case.name .. " keeps provider order")
+    t.assert_eq(response.items[2], ranked[2], case.name .. " retains the second payload")
+  end
+end)
+
 t:test("proximity preserves literal byte matching around invalid UTF-8 in nearby buffer lines", function()
   local context = runtime.context("")
   local items = {

@@ -5,6 +5,7 @@ local treeview = require("__test__.support.treeview")
 local fs = require("__test__.support.fs")
 local git = require("__test__.support.git")
 local Paths = require("era.view.result_paths")
+local metadata = support.metadata
 
 ---@return table
 local function fixture()
@@ -71,41 +72,37 @@ t:test("directory staging respects the active filter and leaves other unstaged f
   t.assert_eq(0, #state.warnings, vim.inspect(state.warnings))
 end)
 
-t:test("marked files transfer together and source exhaustion moves focus to the other pane", function()
-  local state = fixture()
-  local widget, pane = state.widget, state.widget.panes.unstaged
-  for _, path in ipairs({ "dir/mixed.lua", "dir/second.lua" }) do
-    pane.tree:toggle_select(Paths.key(state.root .. "/" .. path), true)
-  end
-  t.await(pane.tree:ready())
-  widget:focus("unstaged")
-  t.await(assert(widget:transfer("unstaged")))
-  support.ready(widget)
-  t.assert_eq("", git.run(state.root, { "diff", "--name-only" }))
-  t.assert_eq(0, pane.tree.totals.count)
-  t.assert_eq(2, widget.panes.staged.tree.totals.count)
-  t.assert_true(widget.panes.staged.result:isfocused())
-  t.assert_eq(0, #state.warnings, vim.inspect(state.warnings))
-end)
-
-t:test("source exhaustion moves focus even when a Git refresh event supersedes the write's refresh", function()
-  local state = fixture()
-  local widget, pane = state.widget, state.widget.panes.unstaged
-  -- The index refresh publishes a Git refresh event, whose refresh supersedes the one the write started.
-  t:patch_table(era.m.git.state, "refresh_index", function()
-    state.refreshed:next(state.refreshed:snapshot() + 1)
-    return stl.c.Future.resolve()
+for _, case in ipairs({
+  { name = "marked files transfer together and source exhaustion moves focus to the other pane" },
+  {
+    name = "source exhaustion moves focus even when a Git refresh event supersedes the write's refresh",
+    superseded = true,
+  },
+}) do
+  t:test(case.name, function()
+    local state = fixture()
+    local widget, pane = state.widget, state.widget.panes.unstaged
+    if case.superseded then
+      -- The index refresh publishes a Git refresh event, whose refresh supersedes the one the write started.
+      t:patch_table(era.m.git.state, "refresh_index", function()
+        state.refreshed:next(state.refreshed:snapshot() + 1)
+        return stl.c.Future.resolve()
+      end)
+    end
+    for _, path in ipairs({ "dir/mixed.lua", "dir/second.lua" }) do
+      pane.tree:toggle_select(Paths.key(state.root .. "/" .. path), true)
+    end
+    t.await(pane.tree:ready())
+    widget:focus("unstaged")
+    t.await(assert(widget:transfer("unstaged")))
+    support.ready(widget)
+    t.assert_eq("", git.run(state.root, { "diff", "--name-only" }))
+    t.assert_eq(0, pane.tree.totals.count, "the source pane is empty")
+    t.assert_eq(2, widget.panes.staged.tree.totals.count)
+    t.assert_true(widget.panes.staged.result:isfocused(), "focus moved to Staged")
+    t.assert_eq(0, #state.warnings, vim.inspect(state.warnings))
   end)
-  for _, path in ipairs({ "dir/mixed.lua", "dir/second.lua" }) do
-    pane.tree:toggle_select(Paths.key(state.root .. "/" .. path), true)
-  end
-  t.await(pane.tree:ready())
-  widget:focus("unstaged")
-  t.await(assert(widget:transfer("unstaged")))
-  support.ready(widget)
-  t.assert_eq(0, pane.tree.totals.count, "the source pane is empty")
-  t.assert_true(widget.panes.staged.result:isfocused(), "focus moved to Staged")
-end)
+end
 
 t:test("a Visual range stages all selected rows", function()
   local state = fixture()
@@ -165,6 +162,20 @@ t:test("open returns to the source window and a deleted file never opens an empt
   t.assert_eq(1, #state.warnings)
 end)
 
+t:test("native Git supplies different staged and unstaged counts for a partially staged file", function()
+  local root = support.changes(t, { ["dir/mixed.lua"] = { "one", "two", "three", "staged one", "staged two" } }, {
+    ["dir/mixed.lua"] = { "one", "two", "three", "staged one", "staged two", "unstaged" },
+  })
+  local state = support.widget(t, root)
+  state.widget:toggle()
+  support.ready(state.widget)
+  local staged, unstaged = state.widget.panes.staged.tree, state.widget.panes.unstaged.tree
+  t.assert_true(state.widget:isvisible())
+  t.assert_eq(2, metadata(staged, root .. "/dir/mixed.lua").insertions)
+  t.assert_eq(1, metadata(unstaged, root .. "/dir/mixed.lua").insertions)
+  t.assert_eq(0, #state.warnings, vim.inspect(state.warnings))
+end)
+
 t:test("untracked, empty and binary files get honest stats without changing the real index", function()
   local root = support.repo(t)
   fs.write(root .. "/new.lua", { "one", "two", "three" })
@@ -187,41 +198,43 @@ t:test("untracked, empty and binary files get honest stats without changing the 
   t.assert_eq(0, #state.warnings, vim.inspect(state.warnings))
 end)
 
-t:test("closing either tree window closes the entire widget", function()
-  local state = fixture()
-  local winnr = state.widget.panes.staged.result:get_winnr()
-  vim.api.nvim_win_close(winnr, true)
-  t.assert_false(state.widget:isvisible())
-  state.widget:toggle()
-  support.ready(state.widget)
-  t.assert_true(state.widget.panes.staged.result:isvisible())
-  t.assert_true(state.widget.panes.unstaged.result:isvisible())
-end)
-
-t:test("the single-line input survives reopening and closing it closes every pane", function()
-  local state = fixture()
-  local widget = state.widget
-  local bufnr = assert(widget.input:get_bufnr())
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "mixed", "path" })
-  widget:hide()
-  t.assert_eq("mixed path", widget._query, "closing commits the latest input before TextChanged")
-  t.assert_eq(1, vim.api.nvim_buf_line_count(bufnr))
-  widget:toggle()
-  support.ready(widget)
-  t.assert_eq("mixed path", vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1])
-  t.assert_eq(1, vim.api.nvim_win_get_height(widget.input:get_winnr()))
-  widget.input:set_content("mixed")
-  for _, pane in pairs(widget.panes) do
-    t.await(pane.result.draw())
-  end
-  t.assert_true(widget.panes.staged.tree:linecount() > 0)
-  t.assert_true(widget.panes.unstaged.tree:linecount() > 0)
-  vim.api.nvim_win_close(widget.input:get_winnr(), true)
-  t.assert_false(widget:isvisible())
-  t.assert_false(widget.panes.staged.result:isvisible())
-  t.assert_false(widget.panes.unstaged.result:isvisible())
-  t.assert_false(widget.preview.surface:isvisible())
-end)
+-- Closing any one window of the widget closes all of them, and reopening shows both trees again.
+for _, case in ipairs({
+  { name = "closing either tree window closes the entire widget", window = "staged" },
+  { name = "the single-line input survives reopening and closing it closes every pane", window = "input" },
+}) do
+  t:test(case.name, function()
+    local state = fixture()
+    local widget = state.widget
+    if case.window == "input" then
+      local bufnr = assert(widget.input:get_bufnr())
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "mixed", "path" })
+      widget:hide()
+      t.assert_eq("mixed path", widget._query, "closing commits the latest input before TextChanged")
+      t.assert_eq(1, vim.api.nvim_buf_line_count(bufnr))
+      widget:toggle()
+      support.ready(widget)
+      t.assert_eq("mixed path", vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1])
+      t.assert_eq(1, vim.api.nvim_win_get_height(widget.input:get_winnr()))
+      widget.input:set_content("mixed")
+      for _, pane in pairs(widget.panes) do
+        t.await(pane.result.draw())
+      end
+      t.assert_true(widget.panes.staged.tree:linecount() > 0)
+      t.assert_true(widget.panes.unstaged.tree:linecount() > 0)
+    end
+    local window = case.window == "input" and widget.input or widget.panes[case.window].result
+    vim.api.nvim_win_close(window:get_winnr(), true)
+    t.assert_false(widget:isvisible())
+    t.assert_false(widget.panes.staged.result:isvisible())
+    t.assert_false(widget.panes.unstaged.result:isvisible())
+    t.assert_false(widget.preview.surface:isvisible())
+    widget:toggle()
+    support.ready(widget)
+    t.assert_true(widget.panes.staged.result:isvisible())
+    t.assert_true(widget.panes.unstaged.result:isvisible())
+  end)
+end
 
 t:test("opening keeps the input focused and targets Staged unless only Unstaged has visible rows", function()
   local state = fixture()

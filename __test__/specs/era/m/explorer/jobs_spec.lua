@@ -1,153 +1,91 @@
 local t = require("__test__.support.harness").new()
 local fixture = require("__test__.support.explorer").new(t)
-local await, write = fixture.await, fixture.write
+local await = fixture.await
 
-t:test("a hidden Job drains its complete result backlog before releasing the session", function()
+t:test("completion and confirmation release selection without a recurring progress timer", function()
   local path = t:tempdir()
-  assert(vim.uv.fs_mkdir(path .. "/dst", 448))
-  for index = 1, 260 do
-    write(string.format("%s/file-%03d", path, index))
-  end
   local widget = fixture.widget(path)
   local session, view = widget:context()
-  local nodes = {}
-  for index = 1, 260 do
-    nodes[index] = await(session.data:resolve(string.format("%s/file-%03d", path, index))):node()
-  end
-  await(session.state:select_node(nodes, true))
-  local target = await(session.data:resolve(path .. "/dst"))
-  local completed, delivered = 0, 0
-  local buffers = require("era.m.explorer.buffers")
-  local sync = buffers.sync
-  t:patch_table(buffers, "sync", function(...)
-    delivered = delivered + 1
-    return sync(...)
-  end)
-  local job = await(session:operate(view, {
-    kind = "copy",
-    target = target,
-    on_complete = function(status)
-      t.assert_eq(260, status.results)
-      t.assert_eq(260, delivered)
-      completed = completed + 1
-    end,
-  }))
-  widget:hide()
-  t.wait_until(function()
-    return next(session.views) == nil
-  end, 5000)
-  -- Hold Lua while native IO completes, leaving more than one result page to deliver.
-  local deadline = vim.uv.hrtime() + 10000000000
-  while not job:status().terminal and vim.uv.hrtime() < deadline do
-    vim.uv.sleep(1)
-  end
-  t.assert_true(job:status().terminal)
-  t.wait_until(function()
-    return completed == 1 and session.job == nil
-  end, 5000)
-  t.assert_eq(260, session._counts.success)
-  t.assert_eq(128, #session.results)
-  t.assert_false(session.state:status().locked)
-  t.assert_false(require("era.m.explorer.jobs").pending())
-  t.assert_true(vim.uv.fs_stat(path .. "/dst/file-260") ~= nil)
-end)
-
-t:test("early failures and skips survive the successful tail and remain available from Last results", function()
-  local path = t:tempdir()
-  assert(vim.uv.fs_mkdir(path .. "/dst", 448))
-  assert(vim.uv.fs_mkdir(path .. "/next", 448))
-  assert(vim.uv.fs_mkdir(path .. "/dst/file-001", 448))
-  write(path .. "/dst/file-002")
-  for index = 1, 140 do
-    write(string.format("%s/file-%03d", path, index))
-  end
-  local widget = fixture.widget(path)
-  local session, view = widget:context()
-  local nodes = {}
-  for index = 1, 140 do
-    nodes[index] = await(session.data:resolve(string.format("%s/file-%03d", path, index))):node()
-  end
-  await(session.state:select_node(nodes, true))
-  t:patch_table(vim.ui, "input", function(_, done)
-    done("n")
-  end)
-  await(session:operate(view, { kind = "copy", target = await(session.data:resolve(path .. "/dst")) }))
-  fixture.idle(widget)
-  t.assert_eq(138, session._counts.success)
-  t.assert_eq(1, session._counts.failed)
-  t.assert_eq(1, session._counts.skipped)
-  t.assert_eq(128, #session.results)
-  t.assert_eq(2, #session.issues)
-  t.assert_eq(path .. "/file-001", session.issues[1].source)
-  t.assert_eq("failed", session.issues[1].status)
-  t.assert_eq(path .. "/file-002", session.issues[2].source)
-  t.assert_eq("skipped", session.issues[2].status)
-  t.assert_eq(0, session.issues_omitted)
-  t:patch_table(vim.ui, "select", function(_, _, done)
-    done("Last results")
-  end)
-  widget:action():menu()
-  local message = fixture.infos[#fixture.infos]
-  t.assert_true(message:find("file-001", 1, true) ~= nil)
-  t.assert_true(message:find(session.issues[1].error.message, 1, true) ~= nil)
-  t.assert_nil(session.job)
-
-  await(session.state:clear_selection())
-  await(session.state:select_node({ nodes[140] }, true))
-  await(session:operate(view, { kind = "copy", target = await(session.data:resolve(path .. "/next")) }))
-  fixture.idle(widget)
-  t.assert_eq(0, #session.issues)
-  t.assert_eq(0, session.issues_omitted)
-  t.assert_eq(0, session._issue_bytes)
-end)
-
-for _, deep in ipairs({ false, true }) do
-  t:test("issue history reports omissions at the " .. (deep and "byte" or "item") .. " limit", function()
-    local path = t:tempdir()
-    if deep then
-      for _ = 1, 3 do
-        path = path .. "/" .. string.rep("d", 180)
-        assert(vim.uv.fs_mkdir(path, 448))
+  local timers, completed = 0, 0
+  -- The Pending poll of source preparation is the only timer jobs.lua may arm. Count, without holding them, the
+  -- timers it arms at any other time, of any delay: they would observe a Job.
+  for _, target in ipairs({ { vim, "defer_fn" }, { vim.uv, "new_timer" } }) do
+    local create = target[1][target[2]]
+    t:patch_table(target[1], target[2], function(...)
+      if not session.preparing and debug.getinfo(2, "S").source:find("era/m/explorer/jobs.lua", 1, true) then
+        timers = timers + 1
       end
-    end
-    assert(vim.uv.fs_mkdir(path .. "/dst", 448))
-    for index = 1, 520 do
-      write(string.format("%s/file-%03d", path, index))
-      assert(vim.uv.fs_mkdir(string.format("%s/dst/file-%03d", path, index), 448))
-    end
-    local widget = fixture.widget(path)
-    local session, view = widget:context()
-    local nodes = {}
-    for index = 1, 520 do
-      nodes[index] = await(session.data:resolve(string.format("%s/file-%03d", path, index))):node()
-    end
-    await(session.state:select_node(nodes, true))
-    local target = await(session.data:resolve(path .. "/dst"))
-    -- Keep the history-limit fixture independent of watcher/task invalidation.
-    widget:hide()
-    t.wait_until(function()
-      return session.data:watch_status().roots == 0 and not session.data:native():is_busy()
-    end, 10000)
-    await(session:operate(view, { kind = "copy", target = target }))
-    fixture.settle(session)
-    t.assert_eq(520, session._counts.failed)
-    t.assert_eq(520, #session.issues + session.issues_omitted)
-    t.assert_true(session._issue_bytes <= 1024 * 1024)
-    if deep then
-      t.assert_true(#session.issues < 512)
-    else
-      t.assert_eq(512, #session.issues)
-    end
-    t:patch_table(vim.ui, "select", function(_, _, done)
-      done("Last results")
+      return create(...)
     end)
-    widget:focus()
-    fixture.idle(widget)
-    widget:action():menu()
-    t.assert_true(
-      fixture.infos[#fixture.infos]:find(session.issues_omitted .. " additional issues omitted", 1, true) ~= nil
-    )
+  end
+
+  for _, name in ipairs({ "first", "second" }) do
+    local job = await(session:operate(view, {
+      kind = "create",
+      path = name,
+      on_complete = function(status)
+        t.assert_eq(nil, status.error)
+        t.assert_false(session.state:status().locked)
+        completed = completed + 1
+      end,
+    }))
+    t.wait_until(function()
+      return job:status().terminal
+    end, 10000)
+    t.wait_until(function()
+      return session.job == nil
+    end, 10000, "completed IO must release the Job")
+    t.assert_true(vim.uv.fs_stat(path .. "/" .. name) ~= nil)
+  end
+  fixture.cursor(widget, path .. "/first")
+  local confirmations = 0
+  t:patch_table(vim.ui, "input", function(options, done)
+    t.assert_eq("confirmation", options.inputtype)
+    confirmations = confirmations + 1
+    done("")
   end)
-end
+  local copy = await(session:operate(view, { kind = "copy_to_path", path = path .. "/second" }))
+  t.wait_until(function()
+    return session.job == nil
+  end, 10000, "a new conflict and its terminal result must release the Job")
+  t.assert_eq(1, confirmations)
+  t.assert_eq("skipped", copy:results(1, 1)[1].status)
+  -- A recurring timer would arm again within this window.
+  vim.wait(200)
+  t.assert_eq(0, timers, "Job observation must not create a recurring progress timer")
+  t.assert_eq(2, completed)
+  t.assert_false(require("era.m.explorer.jobs").pending())
+end)
+
+t:test("cancelling preparation settles before a late prompt and permits a new operation", function()
+  local path = t:tempdir()
+  local widget = fixture.widget(path)
+  local session, view = widget:context()
+  local answered
+  t:patch_table(vim.ui, "input", function(_, done)
+    answered = done
+  end)
+  local preparing = session:operate(view, { kind = "create" })
+  t.wait_until(function()
+    return answered ~= nil
+  end, 10000)
+  require("era.m.explorer.jobs").cancel(session)
+  await(preparing)
+  fixture.idle(widget)
+  t.assert_false(require("era.m.explorer.jobs").pending())
+  await(session:operate(view, { kind = "create", path = "accepted" }))
+  answered("late")
+  fixture.idle(widget)
+  t.assert_true(vim.uv.fs_stat(path .. "/accepted") ~= nil)
+  t.assert_eq(nil, vim.uv.fs_stat(path .. "/late"))
+  local again = session:operate(view, { kind = "create" })
+  t.wait_until(function()
+    return session.preparing and session._preparation.resume ~= nil
+  end, 10000)
+  widget:dispose()
+  await(again)
+  t.assert_eq(nil, session.native)
+  t.assert_eq(nil, session.data)
+end)
 
 t:run()

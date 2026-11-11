@@ -254,16 +254,39 @@ t:test("dressing subscribes once across repeated setup and feature toggles", fun
   t.assert_true(runtime.get_states()[1] ~= nil, "re-enabled window state")
 end)
 
-t:test("animates an unaccepted programmatic view change", function()
-  local runtime = setup()
+-- In the scene each `prepare` sets, a view change to line 100 animates.
+for _, case in ipairs({
+  {
+    name = "animates an unaccepted programmatic view change",
+    prepare = function() end,
+  },
+  {
+    name = "animates while a float is visible",
+    prepare = function(runtime)
+      runtime.float = true
+    end,
+  },
+  {
+    name = "a wheel that scrolled nothing leaves the next scroll animated",
+    prepare = function(runtime)
+      local wheel = vim.keycode("<ScrollWheelUp>")
+      assert(runtime.on_key)(wheel, wheel)
+      runtime.autocmds.SafeState.callback()
+    end,
+  },
+}) do
+  t:test(case.name, function()
+    local runtime = setup()
+    case.prepare(runtime)
 
-  runtime.view.lnum = 100
-  runtime.view.topline = 100
-  runtime.check_scroll(1)
+    runtime.view.lnum = 100
+    runtime.view.topline = 100
+    runtime.check_scroll(1)
 
-  t.assert_eq(1, #runtime.timers, "animation timers")
-  t.assert_true(runtime.states[1].timer == runtime.timers[1], "active animation timer")
-end)
+    t.assert_eq(1, #runtime.timers, "animation timers")
+    t.assert_true(runtime.states[1].timer == runtime.timers[1], "active animation timer")
+  end)
+end
 
 t:test("renderer-owned cursors do not start scroll animations", function()
   local runtime = setup()
@@ -351,17 +374,6 @@ t:test("final frame restores the target view when scrolling falls short", functi
   t.assert_eq(100, result.restores[1].topline, "restored topline")
   t.assert_eq(120, result.restores[1].lnum, "restored cursor line")
   t.assert_nil(result.cursor, "cursor-only restore")
-end)
-
-t:test("animates while a float is visible", function()
-  local runtime = setup()
-  runtime.float = true
-
-  runtime.view.lnum = 100
-  runtime.view.topline = 100
-  runtime.check_scroll(1)
-
-  t.assert_eq(1, #runtime.timers, "animation timers")
 end)
 
 t:test("a scroll inside a key sequence animates once the whole sequence has run", function()
@@ -603,37 +615,47 @@ t:test("a click off the text, such as the release of a winbar button, leaves ani
   end
 end)
 
-t:test("Select mode scrolls directly without touching the view", function()
-  local runtime = setup()
-  t:patch_table(vim.api, "nvim_get_mode", function()
-    return { mode = "s", blocking = false }
+-- In the scene each `prepare` sets, a view change to line 100 scrolls directly and leaves the view alone.
+for _, case in ipairs({
+  {
+    name = "Select mode scrolls directly without touching the view",
+    prepare = function()
+      t:patch_table(vim.api, "nvim_get_mode", function()
+        return { mode = "s", blocking = false }
+      end)
+    end,
+  },
+  {
+    name = "scrollbind windows scroll directly",
+    prepare = function(runtime)
+      runtime.options.scrollbind = true
+    end,
+  },
+  {
+    name = "a mapped wheel scrolls directly",
+    prepare = function(runtime)
+      assert(runtime.on_key)("\5", vim.keycode("<ScrollWheelDown>"))
+    end,
+  },
+}) do
+  t:test(case.name, function()
+    local runtime = setup()
+    case.prepare(runtime)
+    local restores = 0 ---@type integer
+    t:patch_table(vim.fn, "winrestview", function(view)
+      restores = restores + 1
+      runtime.view = vim.deepcopy(view)
+    end)
+
+    runtime.view.lnum = 100
+    runtime.view.topline = 100
+    runtime.check_scroll(1)
+
+    t.assert_eq(0, #runtime.timers, "animation timers")
+    t.assert_eq(0, restores, "view restores")
+    t.assert_eq(100, runtime.states[1].current.topline, "current topline")
   end)
-  local restores = 0 ---@type integer
-  t:patch_table(vim.fn, "winrestview", function(view)
-    restores = restores + 1
-    runtime.view = vim.deepcopy(view)
-  end)
-
-  runtime.view.lnum = 100
-  runtime.view.topline = 100
-  runtime.check_scroll(1)
-
-  t.assert_eq(0, #runtime.timers, "animation timers")
-  t.assert_eq(0, restores, "view restores")
-  t.assert_eq(100, runtime.states[1].current.topline, "current topline")
-end)
-
-t:test("scrollbind windows scroll directly", function()
-  local runtime = setup()
-  runtime.options.scrollbind = true
-
-  runtime.view.lnum = 100
-  runtime.view.topline = 100
-  runtime.check_scroll(1)
-
-  t.assert_eq(0, #runtime.timers, "animation timers")
-  t.assert_eq(100, runtime.states[1].current.topline, "current topline")
-end)
+end
 
 t:test("Select mode entered during an animation stops it before a frame runs keys", function()
   local runtime = setup()
@@ -676,31 +698,6 @@ t:test("a buffer leaving its window finishes the animation and restores the wind
   t.assert_eq("", runtime.options.virtualedit, "restored virtualedit")
   t.assert_eq(4, runtime.options.scrolloff, "restored scrolloff")
   t.assert_eq(100, assert(restored, "target view restored").topline, "target topline")
-end)
-
-t:test("a wheel that scrolled nothing leaves the next scroll animated", function()
-  local runtime = setup()
-  local wheel = vim.keycode("<ScrollWheelUp>")
-  assert(runtime.on_key)(wheel, wheel)
-  runtime.autocmds.SafeState.callback()
-
-  runtime.view.lnum = 100
-  runtime.view.topline = 100
-  runtime.check_scroll(1)
-
-  t.assert_eq(1, #runtime.timers, "animation timers")
-end)
-
-t:test("a mapped wheel scrolls directly", function()
-  local runtime = setup()
-  assert(runtime.on_key)("\5", vim.keycode("<ScrollWheelDown>"))
-
-  runtime.view.lnum = 100
-  runtime.view.topline = 100
-  runtime.check_scroll(1)
-
-  t.assert_eq(0, #runtime.timers, "animation timers")
-  t.assert_eq(100, runtime.states[1].current.topline, "current topline")
 end)
 
 t:test("closing a window releases its animation state", function()

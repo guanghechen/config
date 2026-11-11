@@ -40,11 +40,12 @@
 nvim -l __test__/run.lua __test__/specs/era/dressing/scroll_spec.lua
 nvim -l __test__/run.lua __test__/specs/era/dressing/dim_spec.lua
 nvim -l __test__/run.lua __test__/specs/era/dressing/statuscolumn_spec.lua
-nvim -l __test__/run.lua __test__/specs/ark/vendor/statuscolumn_spec.lua
+nvim -l __test__/run.lua __test__/specs/ark/vendor/setup_spec.lua
+nvim -l __test__/run.lua __test__/specs/era/m/input_spec.lua
 nvim -l __test__/run.lua __test__/specs/era/m/explorer/prompt_spec.lua
 ```
 
-Explorer prompt 测试只覆盖 input 的一个消费者。当前没有找到 Proc 和 illuminate 的专用 suite；改动它们时补针对性 headless 验证，
+`era/m/input_spec` 直接覆盖 input，Explorer prompt suite 覆盖它的一个消费者。当前没有找到 Proc 和 illuminate 的专用 suite；改动它们时补针对性 headless 验证，
 分别检查进程回调/handle 生命周期或 documentHighlight/跳转，而不是用 scroll suite 代替。
 
 ## 最近检查（2026-10-14）

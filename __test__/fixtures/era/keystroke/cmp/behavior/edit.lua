@@ -8,29 +8,59 @@ local __module_name__ = "__test__.fixtures.era.keystroke.cmp.behavior.edit" ---@
 
 local AUTO_IMPORT = "import { foobar } from './lib';"
 
+-- The menu over the typed "al" with its first candidate selected and nothing inserted yet.
+local MENU = {
+  menu = true,
+  labels = { "alpha", "alpine" },
+  selected = "alpha",
+  lines = { "al" },
+  cursor = { 1, 2 },
+  mode = "i",
+  snippet = false,
+}
+-- The second candidate previewed in place of "al".
+local PREVIEW = {
+  menu = true,
+  labels = { "alpha", "alpine" },
+  selected = "alpine",
+  lines = { "alpine" },
+  cursor = { 1, 6 },
+  mode = "i",
+  snippet = false,
+}
+-- The menu over "de" offering the function "demo".
+local DEMO = {
+  menu = true,
+  labels = { "demo" },
+  selected = "demo",
+  lines = { "de" },
+  cursor = { 1, 2 },
+  mode = "i",
+  snippet = false,
+}
+-- "demo" accepted with its brackets, the cursor between them.
+local DEMO_CALL = { menu = false, lines = { "demo()" }, cursor = { 1, 5 }, mode = "i", snippet = false }
+-- The menu over "ca" offering the snippet "call".
+local CALL = {
+  menu = true,
+  labels = { "call" },
+  selected = "call",
+  lines = { "ca" },
+  cursor = { 1, 2 },
+  mode = "i",
+  snippet = false,
+}
+-- Signature help open after "demo(".
+local SIGNATURE =
+  { menu = false, lines = { "demo(" }, cursor = { 1, 5 }, mode = "i", snippet = false, signature = true }
+
 return {
   {
     name = "hide_preview",
     steps = { "ial", "<Down>", "<C-h>", "<C-h>" },
     expect = {
-      {
-        menu = true,
-        labels = { "alpha", "alpine" },
-        selected = "alpha",
-        lines = { "al" },
-        cursor = { 1, 2 },
-        mode = "i",
-        snippet = false,
-      },
-      {
-        menu = true,
-        labels = { "alpha", "alpine" },
-        selected = "alpine",
-        lines = { "alpine" },
-        cursor = { 1, 6 },
-        mode = "i",
-        snippet = false,
-      },
+      MENU,
+      PREVIEW,
       { menu = false, lines = { "alpine" }, cursor = { 1, 6 }, mode = "i", snippet = false },
       { menu = false, lines = { "alpin" }, cursor = { 1, 5 }, mode = "i", snippet = false },
     },
@@ -39,24 +69,8 @@ return {
     name = "cancel_preview",
     steps = { "ial", "<Down>", { action = "cancel" } },
     expect = {
-      {
-        menu = true,
-        labels = { "alpha", "alpine" },
-        selected = "alpha",
-        lines = { "al" },
-        cursor = { 1, 2 },
-        mode = "i",
-        snippet = false,
-      },
-      {
-        menu = true,
-        labels = { "alpha", "alpine" },
-        selected = "alpine",
-        lines = { "alpine" },
-        cursor = { 1, 6 },
-        mode = "i",
-        snippet = false,
-      },
+      MENU,
+      PREVIEW,
       { menu = false, lines = { "al" }, cursor = { 1, 2 }, mode = "i", snippet = false },
     },
   },
@@ -64,24 +78,8 @@ return {
     name = "type_after_preview",
     steps = { "ial", "<Tab>", "x", "<Esc>" },
     expect = {
-      {
-        menu = true,
-        labels = { "alpha", "alpine" },
-        selected = "alpha",
-        lines = { "al" },
-        cursor = { 1, 2 },
-        mode = "i",
-        snippet = false,
-      },
-      {
-        menu = true,
-        labels = { "alpha", "alpine" },
-        selected = "alpine",
-        lines = { "alpine" },
-        cursor = { 1, 6 },
-        mode = "i",
-        snippet = false,
-      },
+      MENU,
+      PREVIEW,
       { menu = false, lines = { "alpinex" }, cursor = { 1, 7 }, mode = "i", snippet = false },
       { menu = false, lines = { "alpinex" }, cursor = { 1, 6 }, mode = "n", snippet = false },
     },
@@ -90,24 +88,8 @@ return {
     name = "backspace_after_preview",
     steps = { "ial", "<Tab>", "<BS>", "<C-h>" },
     expect = {
-      {
-        menu = true,
-        labels = { "alpha", "alpine" },
-        selected = "alpha",
-        lines = { "al" },
-        cursor = { 1, 2 },
-        mode = "i",
-        snippet = false,
-      },
-      {
-        menu = true,
-        labels = { "alpha", "alpine" },
-        selected = "alpine",
-        lines = { "alpine" },
-        cursor = { 1, 6 },
-        mode = "i",
-        snippet = false,
-      },
+      MENU,
+      PREVIEW,
       { menu = false, lines = { "alpin" }, cursor = { 1, 5 }, mode = "i", snippet = false },
       { menu = false, lines = { "alpi" }, cursor = { 1, 4 }, mode = "i", snippet = false },
     },
@@ -130,10 +112,10 @@ return {
     },
     steps = { "ifo", "<C-y>", "x<Esc>", "u", "<C-r>" },
     expect = {
-      [2] = { lines = { "import { foobar } from './lib';", "foobar" }, cursor = { 2, 6 }, snippet = false },
-      [3] = { lines = { "import { foobar } from './lib';", "foobarx" } },
+      [2] = { lines = { AUTO_IMPORT, "foobar" }, cursor = { 2, 6 }, snippet = false },
+      [3] = { lines = { AUTO_IMPORT, "foobarx" } },
       [4] = { lines = { "fo" } },
-      [5] = { lines = { "import { foobar } from './lib';", "foobarx" } },
+      [5] = { lines = { AUTO_IMPORT, "foobarx" } },
     },
   },
   {
@@ -156,12 +138,12 @@ return {
     },
     steps = { "ifo", "<C-y>", "x<Esc>", "u", "u", "<C-r>", "<C-r>" },
     expect = {
-      [2] = { lines = { "import { foobar } from './lib';", "foobar(value)" }, cursor = { 2, 7 }, snippet = true },
-      [3] = { lines = { "import { foobar } from './lib';", "foobar(x)" }, cursor = { 2, 7 } },
-      [4] = { lines = { "import { foobar } from './lib';", "foobar(value)" }, cursor = { 2, 7 } },
+      [2] = { lines = { AUTO_IMPORT, "foobar(value)" }, cursor = { 2, 7 }, snippet = true },
+      [3] = { lines = { AUTO_IMPORT, "foobar(x)" }, cursor = { 2, 7 } },
+      [4] = { lines = { AUTO_IMPORT, "foobar(value)" }, cursor = { 2, 7 } },
       [5] = { lines = { "" }, snippet = false },
-      [6] = { lines = { "import { foobar } from './lib';", "foobar(value)" }, snippet = false },
-      [7] = { lines = { "import { foobar } from './lib';", "foobar(x)" }, cursor = { 2, 7 }, snippet = false },
+      [6] = { lines = { AUTO_IMPORT, "foobar(value)" }, snippet = false },
+      [7] = { lines = { AUTO_IMPORT, "foobar(x)" }, cursor = { 2, 7 }, snippet = false },
     },
   },
   {
@@ -184,10 +166,10 @@ return {
     },
     steps = { "ifo", "<C-y>", "x<Esc>", "u", "<C-r>" },
     expect = {
-      [2] = { lines = { "import { foobar } from './lib';", "foobar()" }, cursor = { 2, 7 }, snippet = false },
-      [3] = { lines = { "import { foobar } from './lib';", "foobar(x)" } },
+      [2] = { lines = { AUTO_IMPORT, "foobar()" }, cursor = { 2, 7 }, snippet = false },
+      [3] = { lines = { AUTO_IMPORT, "foobar(x)" } },
       [4] = { lines = { "" } },
-      [5] = { lines = { "import { foobar } from './lib';", "foobar(x)" } },
+      [5] = { lines = { AUTO_IMPORT, "foobar(x)" } },
     },
   },
   {
@@ -232,45 +214,10 @@ return {
     options = { documentation = true },
     steps = { "ial", { wait_ms = 300 }, "<C-space>", "<C-space>", "<C-h>" },
     expect = {
-      {
-        menu = true,
-        labels = { "alpha", "alpine" },
-        selected = "alpha",
-        lines = { "al" },
-        cursor = { 1, 2 },
-        mode = "i",
-        snippet = false,
-      },
-      {
-        menu = true,
-        labels = { "alpha", "alpine" },
-        selected = "alpha",
-        lines = { "al" },
-        cursor = { 1, 2 },
-        mode = "i",
-        snippet = false,
-        documentation = true,
-      },
-      {
-        menu = true,
-        labels = { "alpha", "alpine" },
-        selected = "alpha",
-        lines = { "al" },
-        cursor = { 1, 2 },
-        mode = "i",
-        snippet = false,
-        documentation = false,
-      },
-      {
-        menu = true,
-        labels = { "alpha", "alpine" },
-        selected = "alpha",
-        lines = { "al" },
-        cursor = { 1, 2 },
-        mode = "i",
-        snippet = false,
-        documentation = true,
-      },
+      MENU,
+      vim.tbl_extend("force", MENU, { documentation = true }),
+      vim.tbl_extend("force", MENU, { documentation = false }),
+      vim.tbl_extend("force", MENU, { documentation = true }),
       { menu = false, lines = { "al" }, cursor = { 1, 2 }, mode = "i", snippet = false, documentation = false },
     },
   },
@@ -299,9 +246,9 @@ return {
     options = { signature = true },
     steps = { "idemo(", "<C-p>", "<C-p>" },
     expect = {
-      { menu = false, lines = { "demo(" }, cursor = { 1, 5 }, mode = "i", snippet = false, signature = true },
-      { menu = false, lines = { "demo(" }, cursor = { 1, 5 }, mode = "i", snippet = false, signature = false },
-      { menu = false, lines = { "demo(" }, cursor = { 1, 5 }, mode = "i", snippet = false, signature = true },
+      SIGNATURE,
+      vim.tbl_extend("force", SIGNATURE, { signature = false }),
+      SIGNATURE,
     },
   },
   {
@@ -314,18 +261,7 @@ return {
     name = "function_brackets",
     options = { items = { { label = "demo", kind = 3 } } },
     steps = { "ide", "<C-y>" },
-    expect = {
-      {
-        menu = true,
-        labels = { "demo" },
-        selected = "demo",
-        lines = { "de" },
-        cursor = { 1, 2 },
-        mode = "i",
-        snippet = false,
-      },
-      { menu = false, lines = { "demo()" }, cursor = { 1, 5 }, mode = "i", snippet = false },
-    },
+    expect = { DEMO, DEMO_CALL },
   },
   {
     name = "text_snippet_existing_brackets",
@@ -370,15 +306,7 @@ return {
     options = { items = { { label = "demo", kind = 3 } } },
     steps = { "ide", "<Down>", "<Down>", "<CR>" },
     expect = {
-      {
-        menu = true,
-        labels = { "demo" },
-        selected = "demo",
-        lines = { "de" },
-        cursor = { 1, 2 },
-        mode = "i",
-        snippet = false,
-      },
+      DEMO,
       {
         menu = true,
         labels = { "demo" },
@@ -397,7 +325,7 @@ return {
         mode = "i",
         snippet = false,
       },
-      { menu = false, lines = { "demo()" }, cursor = { 1, 5 }, mode = "i", snippet = false },
+      DEMO_CALL,
     },
   },
   {
@@ -485,15 +413,7 @@ return {
     },
     steps = { "ica", "<Down>", "<Down>", { wait_ms = 300 }, { action = "cancel" } },
     expect = {
-      {
-        menu = true,
-        labels = { "call" },
-        selected = "call",
-        lines = { "ca" },
-        cursor = { 1, 2 },
-        mode = "i",
-        snippet = false,
-      },
+      CALL,
       {
         menu = true,
         labels = { "call" },
@@ -532,15 +452,7 @@ return {
     },
     steps = { "ica", "<C-y>", "<Tab>", "<S-Tab>" },
     expect = {
-      {
-        menu = true,
-        labels = { "call" },
-        selected = "call",
-        lines = { "ca" },
-        cursor = { 1, 2 },
-        mode = "i",
-        snippet = false,
-      },
+      CALL,
       { menu = false, lines = { "call(first, second)" }, cursor = { 1, 5 }, mode = "s", snippet = true },
       { menu = false, lines = { "call(first, second)" }, cursor = { 1, 12 }, mode = "s", snippet = true },
       { menu = false, lines = { "call(first, second)" }, cursor = { 1, 5 }, mode = "s", snippet = true },

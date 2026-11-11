@@ -44,6 +44,30 @@ local function diff_pair(left_bufnr, right_bufnr, side, cursorbind)
   return left_winnr, right_winnr
 end
 
+---Diffs a new left buffer with a new right buffer allocated before it, which a split on its right shows, through
+---`diff_pair`, and counts the diffs `vim.text.diff` computes for the rest of the case.
+---@return integer left_bufnr
+---@return integer right_bufnr
+---@return integer left_winnr
+---@return integer right_winnr
+---@return fun(): integer diffs
+local function shared_pair()
+  local right_bufnr = t:buffer()
+  local left_bufnr = t:buffer()
+  t.assert_true(right_bufnr < left_bufnr, "right buffer is allocated first")
+  local left_winnr, right_winnr = diff_pair(left_bufnr, right_bufnr, "right")
+  with_dirty_winline()
+  local text_diff = vim.text.diff
+  local calls = 0 ---@type integer
+  t:patch_table(vim.text, "diff", function(...)
+    calls = calls + 1
+    return text_diff(...)
+  end)
+  return left_bufnr, right_bufnr, left_winnr, right_winnr, function()
+    return calls
+  end
+end
+
 t:test("navigation persists until the source window changes buffer or is cleared", function()
   local winnr = vim.api.nvim_get_current_win()
   local bufnr_previous = vim.api.nvim_win_get_buf(winnr)
@@ -274,19 +298,7 @@ t:test("diff navigation counts a one-line EOF filler in both directions", functi
 end)
 
 t:test("diff navigation shares and caches canonical Git hunks across panes", function()
-  local right_bufnr = t:buffer()
-  local left_bufnr = t:buffer()
-  local text_diff = vim.text.diff
-  local diff_calls = 0 ---@type integer
-  t.assert_true(right_bufnr < left_bufnr, "right buffer is allocated first")
-
-  local left_winnr, right_winnr = diff_pair(left_bufnr, right_bufnr, "right")
-
-  with_dirty_winline()
-  t:patch_table(vim.text, "diff", function(...)
-    diff_calls = diff_calls + 1
-    return text_diff(...)
-  end)
+  local left_bufnr, right_bufnr, left_winnr, right_winnr, diffs = shared_pair()
 
   ---@param left_lines                  string[]
   ---@param right_lines                 string[]
@@ -342,8 +354,11 @@ t:test("diff navigation shares and caches canonical Git hunks across panes", fun
   assert_shared_pair({ "a" }, { "X", "Y" }, "BOF changed", 1)
   assert_shared_pair({ "a", "b", "c" }, { "a", "X", "Y", "c" }, "internal changed", 1)
   assert_shared_pair({ "a", "b" }, { "b", "a", "c", "b" }, "semantic left-to-right order", 1, false)
-  t.assert_eq(5, diff_calls, "one canonical diff per changed pair")
+  t.assert_eq(5, diffs(), "one canonical diff per changed pair")
+end)
 
+t:test("diff navigation maps target gaps in both panes through one canonical diff", function()
+  local left_bufnr, right_bufnr, left_winnr, right_winnr, diffs = shared_pair()
   vim.api.nvim_buf_set_lines(left_bufnr, 0, -1, false, { "b", "a", "d", "b", "c", "c", "a", "b" })
   vim.api.nvim_buf_set_lines(right_bufnr, 0, -1, false, { "d", "b", "a", "b", "d", "d" })
   vim.api.nvim_set_current_win(left_winnr)
@@ -378,9 +393,12 @@ t:test("diff navigation shares and caches canonical Git hunks across panes", fun
   index, total = hunk_nav.get_nav_indicator(right_winnr)
   t.assert_eq(2, index, "right previous target gap")
   t.assert_eq(3, total, "right previous target gap total")
-  t.assert_eq(6, diff_calls, "target-gap mapping reuses one canonical diff")
+  t.assert_eq(1, diffs(), "target-gap mapping reuses one canonical diff")
   hunk_nav.clear_nav()
+end)
 
+t:test("diff navigation gives conflicting targets in both panes the shared previous index", function()
+  local left_bufnr, right_bufnr, left_winnr, right_winnr, diffs = shared_pair()
   vim.api.nvim_buf_set_lines(left_bufnr, 0, -1, false, { "a", "b", "a", "c", "d" })
   vim.api.nvim_buf_set_lines(right_bufnr, 0, -1, false, { "d", "d", "c" })
   vim.api.nvim_set_current_win(left_winnr)
@@ -388,7 +406,7 @@ t:test("diff navigation shares and caches canonical Git hunks across panes", fun
   vim.api.nvim_win_set_cursor(left_winnr, { 4, 0 })
   vim.api.nvim_win_set_cursor(right_winnr, { 3, 0 })
   hunk_nav.nav_diff("prev")
-  index, total = hunk_nav.get_nav_indicator(left_winnr)
+  local index, total = hunk_nav.get_nav_indicator(left_winnr)
   t.assert_eq(1, index, "left conflicting targets use shared previous index")
   t.assert_eq(2, total, "left conflicting target total")
 
@@ -400,9 +418,12 @@ t:test("diff navigation shares and caches canonical Git hunks across panes", fun
   index, total = hunk_nav.get_nav_indicator(right_winnr)
   t.assert_eq(1, index, "right conflicting targets use shared previous index")
   t.assert_eq(2, total, "right conflicting target total")
-  t.assert_eq(7, diff_calls, "conflicting target mapping reuses one canonical diff")
+  t.assert_eq(1, diffs(), "conflicting target mapping reuses one canonical diff")
   hunk_nav.clear_nav()
+end)
 
+t:test("diff navigation from either pane crosses canonical linematch stops with one user jump", function()
+  local left_bufnr, right_bufnr, left_winnr, right_winnr, diffs = shared_pair()
   vim.api.nvim_buf_set_lines(left_bufnr, 0, -1, false, { "a", "a", "a" })
   vim.api.nvim_buf_set_lines(right_bufnr, 0, -1, false, { "b", "a", "b" })
   vim.api.nvim_set_current_win(left_winnr)
@@ -411,7 +432,7 @@ t:test("diff navigation shares and caches canonical Git hunks across panes", fun
   vim.api.nvim_win_set_cursor(right_winnr, { 3, 0 })
   vim.cmd("clearjumps")
   hunk_nav.nav_diff("prev")
-  index, total = hunk_nav.get_nav_indicator(left_winnr)
+  local index, total = hunk_nav.get_nav_indicator(left_winnr)
   t.assert_eq(1, index, "left trigger crosses canonical linematch stops")
   t.assert_eq(2, total, "left trigger canonical transition total")
   t.assert_eq(1, #vim.fn.getjumplist()[1], "canonical continuation keeps one user jump")
@@ -424,9 +445,12 @@ t:test("diff navigation shares and caches canonical Git hunks across panes", fun
   index, total = hunk_nav.get_nav_indicator(right_winnr)
   t.assert_eq(1, index, "right trigger shares the canonical transition")
   t.assert_eq(2, total, "right trigger canonical transition total")
-  t.assert_eq(8, diff_calls, "canonical continuation reuses one diff")
+  t.assert_eq(1, diffs(), "canonical continuation reuses one diff")
   hunk_nav.clear_nav()
+end)
 
+t:test("diff navigation from either pane clamps to the adjacent shared hunk with one user jump", function()
+  local left_bufnr, right_bufnr, left_winnr, right_winnr, diffs = shared_pair()
   vim.api.nvim_buf_set_lines(left_bufnr, 0, -1, false, { "a", "a" })
   vim.api.nvim_buf_set_lines(right_bufnr, 0, -1, false, { "b", "a", "b", "a", "b" })
   vim.api.nvim_set_current_win(left_winnr)
@@ -435,7 +459,7 @@ t:test("diff navigation shares and caches canonical Git hunks across panes", fun
   vim.api.nvim_win_set_cursor(right_winnr, { 5, 0 })
   vim.cmd("clearjumps")
   hunk_nav.nav_diff("prev")
-  index, total = hunk_nav.get_nav_indicator(left_winnr)
+  local index, total = hunk_nav.get_nav_indicator(left_winnr)
   t.assert_eq(2, index, "left trigger clamps to adjacent shared hunk")
   t.assert_eq(3, total, "left adjacent transition total")
   t.assert_eq(1, #vim.fn.getjumplist()[1], "left adjacent transition keeps one user jump")
@@ -450,9 +474,12 @@ t:test("diff navigation shares and caches canonical Git hunks across panes", fun
   t.assert_eq(2, index, "right trigger shares the adjacent transition")
   t.assert_eq(3, total, "right adjacent transition total")
   t.assert_eq(1, #vim.fn.getjumplist()[1], "right adjacent transition keeps one user jump")
-  t.assert_eq(9, diff_calls, "adjacent transition reuses one canonical diff")
+  t.assert_eq(1, diffs(), "adjacent transition reuses one canonical diff")
   hunk_nav.clear_nav()
+end)
 
+t:test("diff navigation caches a large canonical map until a peer edit invalidates it", function()
+  local left_bufnr, right_bufnr, left_winnr, _, diffs = shared_pair()
   local left_lines = {} ---@type string[]
   local right_lines = {} ---@type string[]
   for i = 1, 2000 do
@@ -475,7 +502,7 @@ t:test("diff navigation shares and caches canonical Git hunks across panes", fun
   end)
 
   hunk_nav.nav_diff("next")
-  index, total = hunk_nav.get_nav_indicator(left_winnr)
+  local index, total = hunk_nav.get_nav_indicator(left_winnr)
   t.assert_eq(1, index, "large diff first hunk")
   t.assert_eq(2000, total, "large diff total")
 
@@ -484,64 +511,20 @@ t:test("diff navigation shares and caches canonical Git hunks across panes", fun
   index, total = hunk_nav.get_nav_indicator(left_winnr)
   t.assert_eq(2, index, "large diff second hunk")
   t.assert_eq(2000, total, "large diff cached total")
-  t.assert_eq(10, diff_calls, "large canonical map is cached")
+  t.assert_eq(1, diffs(), "large canonical map is cached")
   t.assert_eq(2, normal_calls, "navigation performs no internal motions")
 
+  -- The peer cursor stays on the second hunk, which makes the source exact: the first native motion reaches the first
+  -- hunk and a second one continues to the next.
   hunk_nav.clear_nav()
   vim.api.nvim_buf_set_lines(right_bufnr, 1, 2, false, { "right updated" })
   vim.cmd("diffupdate")
   vim.api.nvim_win_set_cursor(left_winnr, { 1, 0 })
   hunk_nav.nav_diff("next")
-  t.assert_eq(11, diff_calls, "peer changedtick invalidates the cache")
+  t.assert_eq(2, diffs(), "peer changedtick invalidates the cache")
   t.assert_eq(4, normal_calls, "cache invalidation uses bounded native continuation")
 
   hunk_nav.clear_nav()
-end)
-
-t:test("git winline component renders hunk navigation position", function()
-  t:patch_global("stl", {
-    icon = {
-      git = {
-        Git = "G",
-      },
-    },
-    nvim = {
-      fn = {
-        txt = function(text)
-          return text
-        end,
-      },
-    },
-  })
-  t:patch_global("era", {
-    m = {
-      git = {
-        hunk_nav = {
-          get_nav_indicator = function(winnr)
-            t.assert_eq(42, winnr, "component window")
-            return 2, 10
-          end,
-        },
-      },
-    },
-  })
-
-  local git_component = assert(loadfile("lua/era/m/nvimbar/component/git.lua"))()
-  t:patch_table(package.loaded, "era.m.git.hunk_nav", era.m.git.hunk_nav)
-  local component = git_component.hunk_nav("f_wl")
-
-  local context = {
-    winnr = 42,
-    bufnr = 1,
-    cwd = "",
-    filename = "",
-    filepath = "",
-    filetype = "",
-    mode = "normal",
-    mode_name = "NORMAL",
-  } ---@type era.m.nvimbar.INvimbarContext
-  t.assert_true(component.condition(context), "visible with navigation state")
-  t.assert_eq("G 2/10", component.refresh(context).text, "rendered position")
 end)
 
 t:run()
