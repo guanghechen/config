@@ -70,6 +70,9 @@ LSP symbols 不被解释为磁盘全量目录。接入步骤见 [Treeview 接入
 - 保留上一代 records 的精确序列化签名与 topology 顺序：records 完全相同时跳过 native 写入；topology 不变且只有少量
   records 改变时，以一个基于原 data revision 的原子 batch 更新；其余情况分块 append 完整 import，再一次 commit。
   准备后 native base revision 变化则拒绝旧 batch。签名不代替 native identity，也不推断 selection 或可见行。
+- 完整 import 一次提交全部 records，batch 一次提交全部改变的 records，所以 ResultTree 的 Data 把单次提交上限设为与
+  总容量一致：`batch_nodes` 1,000,000、`batch_bytes` 512 MiB，即默认的 `nodes` 与 `memory_bytes`（见
+  [默认容量](action.md#默认容量)）。结果规模只受 Data 总容量限制，超出时以 `Rejected` 报告所超的上限。
 - 只有 commit 后才发布；失败保留先前 surface，并以 `Rejected` 完成 publication Future。
 - 完全相同的路径输入复用 producer topology，任何 producer mutation 都使这项复用失效。Locations 与业务 metadata
   仍按每次刷新重建，不能因路径集合相同而复用旧搜索结果；路径输入改变时丢弃 viewport icon cache。

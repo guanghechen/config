@@ -111,7 +111,9 @@ function M.new(props)
     fullname = props.name,
     source = props.tree,
     entries = {},
-    _data = treeview.new_data(),
+    -- An import commits every record at once and an update every changed one, so one commit may hold as much as the
+    -- data does.
+    _data = treeview.new_data({ limits = { batch_nodes = 1000000, batch_bytes = 512 * 1024 * 1024 } }),
     _versions = {},
     _revision = 0,
     _disposed = false,

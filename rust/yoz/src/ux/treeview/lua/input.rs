@@ -78,8 +78,12 @@ pub(crate) fn token(value: LuaValue, prefix: char) -> Result<u64> {
 }
 
 pub(super) fn array_len(table: &LuaTable) -> Result<usize> {
+    array_len_within(table, 200_000)
+}
+
+pub(super) fn array_len_within(table: &LuaTable, limit: usize) -> Result<usize> {
     let len = table.raw_len();
-    if len > 200_000 {
+    if len > limit {
         return Err(Error::limit("array input capacity exceeded"));
     }
     let mut count = 0;

@@ -151,7 +151,8 @@ Owner 按 NodeId 去重读取需求，使用读取队列与有界并发：
 
 ## 默认容量
 
-`new_data({ limits = ... })` 可覆盖 `Limits` 字段；Filetree 的覆盖值与自有限额见 [Filetree 容量](../filetree.md#容量与成本边界)。
+`new_data({ limits = ... })` 可覆盖 `Limits` 字段；Filetree 的覆盖值与自有限额见 [Filetree 容量](../filetree.md#容量与成本边界)，
+ResultTree 的覆盖值见 [准备与原子提交](results.md#准备与原子提交)。
 
 | 项目                                            | 默认值                                      | 说明                                                                      | 代码位置                                   |
 | ----------------------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------ |
@@ -169,6 +170,7 @@ Owner 按 NodeId 去重读取需求，使用读取队列与有界并发：
 | `upload:append()`                               | 512 条 / 1 MiB                              | 每个 chunk 的记录数与 Lua 输入计量；整份导入仍受批次上限                  | `lua/upload.rs`                            |
 | Lua 单次输入                                    | 64 MiB / 1,000,000 项                       | 解码字节与字段项；嵌套不超过 32 层                                        | `lua/input.rs`                             |
 | Lua 数组输入                                    | 200,000 项                                  | NodeId 数组、`task:authorize_update()` 的变化数等                         | `lua/input.rs`、`lua/mod.rs`               |
+| `source:ids()`                                  | 1,000,000 个 key                            | 与默认 `nodes` 一致；一次转为 native NodeIds 句柄                         | `lua/mod.rs`                               |
 | 标记 generation                                 | 2^31 − 1                                    | 超出前拒绝写入                                                            | `stamps.rs`                                |
 | `frame:rows()`                                  | 512 行 / 1 MiB / 8192 matches / 8192 guides | 单次 viewport 读取                                                        | `projection.rs`、`lua/output.rs`           |
 | `frame:guide_path()`                            | 512 行                                      | 单次 guide 读取                                                           | `projection.rs`                            |

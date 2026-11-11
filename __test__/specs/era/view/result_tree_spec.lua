@@ -921,4 +921,26 @@ t:test("range actions retain subtree and Visual semantics and release a throwing
   end
 end)
 
+t:test("a result tree imports more records than one native batch holds by default", function()
+  local source = Source.new("root", { label = "root" })
+  local tree = Tree.new({
+    name = "many results",
+    tree = source,
+    present = function(_, data)
+      return { label = data.label }
+    end,
+  })
+  t:defer(function()
+    tree:dispose()
+  end)
+  tree:insert("root", { nodetype = "container" })
+  for index = 1, 200001 do
+    local key = "node-" .. index
+    source:insert("root", key, { label = key })
+    tree:insert(key, { nodetype = "leaf", text = key })
+  end
+  support.applied(tree:publish({ mode = "tree", rootuuid = "root" }))
+  t.assert_eq(200001, tree:frame():header().row_count)
+end)
+
 t:run()

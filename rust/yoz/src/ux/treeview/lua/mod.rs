@@ -113,10 +113,12 @@ impl LuaUserData for LuaSource {
                 .id(&input::string(key).map_err(LuaError::external)?)
                 .map(output::node))
         });
-        // One call resolves a display filter's keys; a call per key stalls large results.
+        // One call resolves a display filter's keys; a call per key stalls large results. A filter may name every
+        // node a data holds at its default capacity.
         methods.add_method("ids", |_, this, keys: LuaValue| {
             let keys = input::table(keys).map_err(LuaError::external)?;
-            let count = input::array_len(&keys).map_err(LuaError::external)?;
+            let count = input::array_len_within(&keys, Limits::default().nodes)
+                .map_err(LuaError::external)?;
             let mut ids = Vec::with_capacity(count);
             for index in 1..=count {
                 let LuaValue::String(key) = keys.raw_get(index)? else {

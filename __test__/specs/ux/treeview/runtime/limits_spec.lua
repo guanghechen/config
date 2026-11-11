@@ -276,6 +276,43 @@ t:test("Source ids resolve keys in order, skip unknown keys, and reject sparse a
   t.assert_false(pcall(source.ids, source, { "a", nil, "b" }))
 end)
 
+t:test("Source ids take as many keys as a data holds nodes", function()
+  local data, _, a = fixture()
+  local source = data:source()
+  local keys = {}
+  for index = 1, 200000 do
+    keys[index] = "missing"
+  end
+  keys[200001] = "a"
+  t.assert_same({ a }, source:ids(keys):slice(1, 1))
+  for index = 200002, 1000001 do
+    keys[index] = "missing"
+  end
+  local ok, error = pcall(source.ids, source, keys)
+  t.assert_false(ok)
+  t.assert_true(tostring(error):find("array input capacity exceeded", 1, true) ~= nil)
+end)
+
+t:test("a rejected private import chunk names the limit it exceeds", function()
+  ---@param first integer
+  ---@param last integer
+  ---@return table
+  local function chunk(first, last)
+    local keys = {}
+    for index = first, last do
+      keys[#keys + 1] = "node-" .. index
+    end
+    return { keys = keys, labels = keys }
+  end
+  local data = treeview.new_data({ limits = { batch_nodes = 600 } })
+  local reply = data:begin_import():append(chunk(1, 513))
+  t.assert_eq("private import accepts at most 512 records per chunk", reply.error.message)
+  local upload = data:begin_import()
+  t.assert_eq("NoChange", upload:append(chunk(1, 512)).kind)
+  reply = upload:append(chunk(513, 601))
+  t.assert_eq("private import accepts at most 600 records", reply.error.message)
+end)
+
 t:test("key pages accept the exact byte limit and reject a single oversized identity without empty progress", function()
   local data = treeview.new_data()
   local exact = string.rep("k", 1024 * 1024)

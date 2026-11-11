@@ -44,11 +44,16 @@ impl Upload {
         let input = input::table(input)?;
         let count = input::get::<Option<LuaTable>>(&input, "keys")?
             .map_or(input.raw_len(), |keys| keys.raw_len());
-        if count > 512 || self.records.len().saturating_add(count) > self.data.limits().batch_nodes
-        {
+        if count > 512 {
             return Err(Error::limit(
                 "private import accepts at most 512 records per chunk",
             ));
+        }
+        let limit = self.data.limits().batch_nodes;
+        if self.records.len().saturating_add(count) > limit {
+            return Err(Error::limit(format!(
+                "private import accepts at most {limit} records"
+            )));
         }
         let records = input::records_bounded(LuaValue::Table(input), 1024 * 1024)?;
         let mut bytes = 0usize;
