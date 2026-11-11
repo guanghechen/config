@@ -63,15 +63,20 @@ t:test("typed annotation navigation preserves repeated steps in both directions"
     vim.diagnostic.set(namespace, bufnr, { { lnum = 0, col = 0, message = "error", severity = 1 } })
   end
   fixture.cursor(widget, path .. "/a")
-  local query
+  -- Rows 2 to 4 hold b, c and d; the typed steps count on every one of their annotations being published.
+  local queries = {} ---@type table<integer, stl.c.Future>
   t.wait_until(function()
-    if query and query:is_done() and not query:is_failed() and query:get_result() == 2 then
-      return true
+    local published = true
+    for row = 1, 3 do
+      local query = queries[row]
+      if not (query and query:is_done() and not query:is_failed() and query:get_result() == row + 1) then
+        published = false
+        if not query or query:is_done() then
+          queries[row] = session.data:next_annotation(view:frame(), row, "error", true)
+        end
+      end
     end
-    if not query or query:is_done() then
-      query = session.data:next_annotation(view:frame(), 1, "error", true)
-    end
-    return false
+    return published
   end, 10000)
   for _, case in ipairs({ { "]e]e", "c" }, { "[e[e", "d" } }) do
     vim.api.nvim_feedkeys(case[1], "xt", false)

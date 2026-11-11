@@ -1,6 +1,7 @@
 require("ark.bootstrap").setup()
 local t = require("__test__.support.harness").new()
 local diffview = require("__test__.support.diffview")
+local treeview = require("__test__.support.treeview")
 local fs = require("__test__.support.fs")
 local git = require("__test__.support.git")
 local action = require("era.m.diffview.view.workspace.action")
@@ -185,6 +186,8 @@ t:test("reveal expands hidden entry ancestors, focuses the entry, then hides Cha
   vim.api.nvim_set_current_win(session.layout.sbs_left_winnr)
 
   action.reveal(session)
+  -- The expansion publishes asynchronously; read the tree once it is ready.
+  treeview.await(session.state:get_tree("unstaged"):ready())
   t.assert_false(session.state:is_collapsed("unstaged", "middle"), "ancestor expanded")
   t.assert_eq(session.layout.changes.unstaged.winnr, vim.api.nvim_get_current_win(), "Changes focused")
   t.assert_eq(tree.key(nil, "middle/hidden.lua", false), focus.key, "entry cursor identity")
