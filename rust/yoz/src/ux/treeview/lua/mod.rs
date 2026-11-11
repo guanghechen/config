@@ -511,6 +511,7 @@ impl LuaUserData for LuaData {
                     .map_err(input::invalid),
             ))
         });
+        methods.add_method("retained_bytes", |_, this, ()| Ok(this.0.retained_bytes()));
         methods.add_method("queue_depth", |_, this, ()| Ok(this.0.queue_depth()));
         methods.add_method("is_disposed", |_, this, ()| Ok(this.0.is_disposed()));
     }

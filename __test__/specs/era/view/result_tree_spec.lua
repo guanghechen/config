@@ -143,6 +143,65 @@ t:test("a query naming a path under the root reads it relative to the root", fun
   t.assert_same({ "b" }, matched(dotted, "/w.x/spec", false, true), "or as is")
 end)
 
+t:test("a publication collects Lua garbage in slices once the data retains past its floor", function()
+  local tree = fixture()
+  local reclaims, reclaim = 0, tree._reclaim
+  t:patch_table(tree, "_reclaim", function(self)
+    reclaims = reclaims + 1
+    return reclaim(self)
+  end)
+  support.applied(tree:publish({ mode = "list", rootuuid = "root" }))
+  t.assert_true(reclaims > 0, "each publication checks")
+  local MiB = 1024 * 1024
+  local used = 0
+  t:patch_table(tree._data, "native", function()
+    return {
+      retained_bytes = function()
+        return used
+      end,
+    }
+  end)
+  -- A step finishes a cycle every third call and takes 2 ms, so a collection spans several 4 ms slices.
+  local steps, collect = 0, collectgarbage
+  t:patch_global("collectgarbage", function(option, ...)
+    if option ~= "step" then
+      return collect(option, ...)
+    end
+    steps = steps + 1
+    vim.uv.sleep(2)
+    return steps % 3 == 0
+  end)
+  ---@param bytes                       integer
+  ---@return integer
+  local function check(bytes)
+    used = bytes
+    tree:_reclaim()
+    return steps
+  end
+  tree._memory_floor = nil
+  t.assert_eq(0, check(100 * MiB))
+  t.assert_eq(0, check(150 * MiB), "50 MiB past the floor is below 64 MiB")
+  local first = check(170 * MiB)
+  t.assert_true(first > 0 and first < 6, "the collection yields between slices")
+  t.assert_eq(first, check(400 * MiB), "one collection at a time")
+  t.wait_until(function()
+    return steps == 6
+  end, 2000)
+  vim.wait(30)
+  t.assert_eq(6, steps, "it ends with its second cycle")
+  t.assert_eq(6, check(480 * MiB), "past a floor of 400 MiB, 80 MiB is below a quarter")
+  check(500 * MiB)
+  t.wait_until(function()
+    return steps == 12
+  end, 2000)
+  t.assert_eq(12, check(105 * MiB))
+  t.assert_eq(12, check(160 * MiB), "the floor follows the collection down")
+  check(170 * MiB)
+  t.wait_until(function()
+    return steps == 18
+  end, 2000)
+end)
+
 t:test("ready waits for every collapse change that is still in flight", function()
   local tree = fixture()
   support.applied(tree:publish({ mode = "tree", rootuuid = "root" }))

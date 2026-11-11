@@ -16,6 +16,30 @@ local RECORD_DEFAULTS = {
   fields = false,
   completeness = "complete",
 }
+local RECLAIM_MIN = 64 * 1024 * 1024 ---@type integer Native bytes past the floor that start a collection at the least.
+local collecting = false ---@type boolean A collection runs in slices.
+
+---Collects Lua garbage in slices of about 4 ms. A cycle under way may have marked what has become garbage since, so
+---the collection ends with the next whole cycle.
+---@return nil
+local function collect()
+  collecting = true
+  local cycles = 0
+  local function slice()
+    local deadline = vim.uv.hrtime() + 4000000
+    repeat
+      if collectgarbage("step", 64) then
+        cycles = cycles + 1
+        if cycles == 2 then
+          collecting = false
+          return
+        end
+      end
+    until vim.uv.hrtime() >= deadline
+    vim.schedule(slice)
+  end
+  slice()
+end
 
 ---@alias era.view.result_tree.Viewtype "tree"|"list"
 
@@ -111,9 +135,11 @@ function M.new(props)
     fullname = props.name,
     source = props.tree,
     entries = {},
-    -- An import commits every record at once and an update every changed one, so one commit may hold as much as the
-    -- data does.
-    _data = treeview.new_data({ limits = { batch_nodes = 1000000, batch_bytes = 512 * 1024 * 1024 } }),
+    -- An import commits every entry at once. 350,000 entries retain about 0.6 GiB, which leaves room in 1 GiB for the
+    -- next frame and for the frames `_reclaim` frees.
+    _data = treeview.new_data({
+      limits = { batch_nodes = 350000, batch_bytes = 512 * 1024 * 1024, memory_bytes = 1024 * 1024 * 1024 },
+    }),
     _versions = {},
     _revision = 0,
     _disposed = false,
@@ -1386,6 +1412,9 @@ function M:_drain()
       end
       -- _published ran while this drain was still busy, and an unchanged Frame prepares nothing that would poll again.
       self:_settle_ready()
+      if not self._disposed then
+        self:_reclaim()
+      end
       if self._request and not self._disposed then
         vim.schedule(function()
           if not self._disposed and not self._busy then
@@ -1394,6 +1423,21 @@ function M:_drain()
         end)
       end
     end)
+end
+
+---Native memory that Lua userdata hold lives until the Lua GC frees them, and a large Lua heap seldom runs a cycle by
+---itself: once the data retains past its floor since the last collection by a quarter, and by 64 MiB at the least,
+---the frames that publications replaced are collected.
+---@return nil
+function M:_reclaim()
+  local used = self._data:native():retained_bytes() ---@type integer
+  local floor = math.min(self._memory_floor or used, used) ---@type integer
+  if not collecting and used - floor >= math.max(RECLAIM_MIN, floor / 4) then
+    self._memory_floor = nil
+    collect()
+  else
+    self._memory_floor = floor
+  end
 end
 
 ---@return boolean

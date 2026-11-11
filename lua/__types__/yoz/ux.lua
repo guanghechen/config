@@ -211,6 +211,9 @@ function Data:query_failed(token, sequence, error) end
 ---@param token                         yoz.ux.treeview.QueryToken
 ---@return yoz.ux.treeview.Ticket
 function Data:query_cancelled(token) end
+---Native bytes the data retains, versions and frames still referenced included; at most its `memory_bytes`.
+---@return integer
+function Data:retained_bytes() end
 ---@return integer
 function Data:queue_depth() end
 ---@return boolean

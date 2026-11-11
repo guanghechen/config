@@ -293,6 +293,13 @@ t:test("Source ids take as many keys as a data holds nodes", function()
   t.assert_true(tostring(error):find("array input capacity exceeded", 1, true) ~= nil)
 end)
 
+t:test("a data reports the native bytes it retains", function()
+  local data = treeview.new_data()
+  local empty = data:native():retained_bytes()
+  support.applied(data:import({ { key = "a", label = string.rep("a", 64 * 1024) } }))
+  t.assert_true(data:native():retained_bytes() >= empty + 64 * 1024)
+end)
+
 t:test("a rejected private import chunk names the limit it exceeds", function()
   ---@param first integer
   ---@param last integer
