@@ -431,7 +431,8 @@ function Harness:run(opts)
   } ---@type __test__.support.harness.IResult
 
   if opts.exit ~= false then
-    os.exit(failed > 0 and 1 or 0)
+    -- Unlike os.exit, quitting runs Neovim's exit cleanup, which removes its server socket directory.
+    vim.cmd(failed > 0 and "cquit 1" or "qall!")
   end
 
   return result

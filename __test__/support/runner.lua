@@ -349,7 +349,8 @@ function M.main(args)
   if not ok then
     io.stderr:write(tostring(failed) .. "\n")
   end
-  os.exit(ok and failed == 0 and 0 or 1)
+  -- Unlike os.exit, quitting runs Neovim's exit cleanup, which removes its server socket directory.
+  vim.cmd(ok and failed == 0 and "qall!" or "cquit 1")
 end
 
 return M
