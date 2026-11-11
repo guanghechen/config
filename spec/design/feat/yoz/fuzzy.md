@@ -116,6 +116,9 @@ local filter = result:ids(source)                                    -- yoz.ux.t
     构建时逐项调用 `checkpoint`，可以让出或取消。
 - 匹配文本依次取 `data.filepath`、`entry.text`、`data.name`。root 下的文件路径匹配 root 相对路径，
   root 外的路径保持绝对路径；regex 同样如此，所以 `^lua/` 匹配 root 下 `lua` 目录中的文件，root 自身的路径不参与匹配。
+- 查询中写成 root 下绝对路径的部分先转为相对路径再匹配：fuzzy/exact 逐词处理（保留词首的 `!`、`'`、`^`），
+  regex 处理开头（可带 `^`），root 原样或完整转义均可；`~/` 视为 home 目录；只剩 root 本身时等同空查询，列出全部条目。
+  root 外的绝对路径保持原样。
 - 返回的 orders 在结果集与顺序不变时保持身份，`_display` 因此不重新提交 display；高亮则始终跟随最新查询，
   并刷新当前 Frame 的装饰。
 - `_display` 收到结果句柄时，用 `orders:ids(source)` 生成 filter。

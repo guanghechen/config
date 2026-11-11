@@ -873,6 +873,51 @@ local function relative_offset(filepath, prefix)
   return 0
 end
 
+---What `text` names below the root when it starts with the root's path, written as is or, in a regex, escaped;
+---`~/` stands for the home directory. Nil when it names nothing under the root.
+---@param text                          string
+---@param prefix                        string The root's path with a trailing `/`.
+---@param regex                         boolean
+---@return string|nil
+local function below_root(text, prefix, regex)
+  if text:sub(1, 2) == "~/" then
+    text = vim.uv.os_homedir() .. text:sub(2)
+  end
+  local roots = { prefix, regex and (prefix:gsub("[%.%+%*%?%(%)%|%[%]%{%}%^%$#&%-~\\]", "\\%0")) or nil }
+  for _, root in ipairs(roots) do
+    if text .. "/" == root then
+      return ""
+    elseif text:sub(1, #root) == root then
+      return text:sub(#root + 1)
+    end
+  end
+  return nil
+end
+
+---`pattern` with what names a path under the root made relative to it, as the corpus holds such paths: each fuzzy
+---term after its `!`, `'` or `^`, or a regex after its `^`. The root alone matches every entry.
+---@param pattern                       string
+---@param prefix                        ?string
+---@param regex                         boolean
+---@return string
+local function relative_pattern(pattern, prefix, regex)
+  if not prefix then
+    return pattern
+  end
+  if regex then
+    local anchor, rest = pattern:match("^(%^?)(.*)$")
+    local relative = below_root(rest, prefix, true)
+    return relative == nil and pattern or relative == "" and "" or anchor .. relative
+  end
+  return (
+    pattern:gsub("%S+", function(term)
+      local marks, rest = term:match("^([!'^]*)(.*)$")
+      local relative = below_root(rest, prefix, false)
+      return relative == nil and term or relative == "" and "" or marks .. relative
+    end)
+  )
+end
+
 ---The corpus of matchable entries under the root, rebuilt when the source, the entries or the match
 ---settings change. File paths match relative to the root.
 ---@param params                        era.view.result_tree.IMatchParams
@@ -947,11 +992,12 @@ end
 ---@return era.view.result_tree.Orders
 function M:match(params, checkpoint)
   local fuzzy = self:_corpus(params, checkpoint)
+  local pattern = relative_pattern(params.pattern, fuzzy.prefix, params.regex)
   local result, error = fuzzy.corpus:query({
-    pattern = params.pattern,
+    pattern = pattern,
     fuzzy = params.fuzzy,
     -- An empty regex lists every entry, as an empty query does.
-    regex = params.regex and params.pattern ~= "",
+    regex = params.regex and pattern ~= "",
     case = params.case_sensitive and "respect" or "smart",
     weight = params.weight,
   })
