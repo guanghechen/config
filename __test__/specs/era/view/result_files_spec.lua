@@ -154,15 +154,15 @@ end)
 
 t:test("regex matches list each file once however often it matches", function()
   local view = fixture()
-  -- A pattern with a newline reports each occurrence as its own line match.
-  local keys = view:match({
+  -- Each file is one corpus item, listed once whatever the pattern matches in it.
+  local orders = view:match({
     rootuuid = Paths.key("/workspace"),
     pattern = "o|\n",
     fuzzy = false,
     regex = true,
     case_sensitive = false,
   })
-  t.assert_same({ Paths.key("/workspace/dir/one.lua"), Paths.key("/workspace/two.lua") }, keys)
+  t.assert_same({ Paths.key("/workspace/dir/one.lua"), Paths.key("/workspace/two.lua") }, orders:keys())
 end)
 
 t:test("a plain file is never treated as a collapsed branch", function()

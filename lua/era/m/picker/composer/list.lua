@@ -111,7 +111,6 @@ local PRESENTATION = {}
 ---
 ---@field protected _autosort           boolean
 ---@field protected _scheme             yoz.fuzzy.Scheme
----@field protected _items              era.m.picker.composer.list.IItem[]
 ---@field protected _corpus             yoz.fuzzy.Corpus Item texts, keyed by item node.
 ---@field protected _orders             ?era.view.result_tree.Orders
 ---@field protected _matched_input      string
@@ -410,7 +409,6 @@ function M.new(props)
 
   self._autosort = autosort
   self._scheme = scheme
-  self._items = {}
   self._corpus = yoz.fuzzy.new_corpus({ scheme = scheme })
   self._orders = nil
   self._uuid_current = nil
@@ -517,7 +515,6 @@ function M:dispose()
 
   self._autosort = nil
   self._scheme = nil
-  self._items = nil
   self._corpus = nil
   self._orders = nil
   self._matched_input = nil
@@ -675,7 +672,7 @@ function M:reset_data(data)
     else
       self._preparing = nil
       source:seal()
-      self._items, self._corpus, self._orders = source.items, corpus, nil
+      self._corpus, self._orders = corpus, nil
       self._treeview.source, self._treeview.entries = source, source.entries
       self._treeview:invalidate()
       self:__match__(self._search_pattern:snapshot())
@@ -705,28 +702,30 @@ end
 function M:__match__(input)
   local treeview = self._treeview
   local orders ---@type era.view.result_tree.Orders|nil
-  if #input > 0 and self.flag_regex:snapshot() then
-    local keys, lines = {}, {}
-    for index, item in ipairs(self._items) do
-      keys[index], lines[index] = "item:" .. item.uuid, item.text
-    end
-    orders = treeview:match_lines(keys, lines, input, self.flag_case_sensitive:snapshot())
-  elseif #input > 0 then
-    local result = self._corpus:query({
+  if #input > 0 then
+    local result, error = self._corpus:query({
       pattern = input,
       fuzzy = self.flag_fuzzy:snapshot(),
+      regex = self.flag_regex:snapshot(),
       case = self.flag_case_sensitive:snapshot() and "respect" or "smart",
       rank = self._autosort,
     })
-    -- Unchanged matches keep the published orders; highlights follow the latest query.
-    local previous = self._orders
-    orders = result
-    if
-      type(previous) == "userdata" and result:same(previous --[[@as yoz.fuzzy.Result]])
-    then
-      orders = previous --[[@as yoz.fuzzy.Result]]
+    if result then
+      -- Unchanged matches keep the published orders; highlights follow the latest query.
+      local previous = self._orders
+      orders = result
+      if
+        type(previous) == "userdata" and result:same(previous --[[@as yoz.fuzzy.Result]])
+      then
+        orders = previous --[[@as yoz.fuzzy.Result]]
+      end
+      treeview:show_matches(result)
+    else
+      -- An invalid regex matches nothing; the report says why.
+      stl.reporter.error({ from = __module_name__, subject = "regex", message = error })
+      orders = {}
+      treeview:clear_match()
     end
-    treeview:show_matches(result)
   else
     treeview:clear_match()
   end

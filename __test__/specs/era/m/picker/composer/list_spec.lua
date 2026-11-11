@@ -188,6 +188,17 @@ t:test("fuzzy queries rank with smart case and regex queries keep their escapes"
   t.assert_eq(0, ui:lua("return #errors"))
 end)
 
+t:test("an invalid regex lists nothing and says why", function()
+  local ui = session()
+  ui:lua("controls.flag_regex:next(true)")
+  ui:lua("picker.finder:set_content(...)", "(")
+  ui:wait_until(function()
+    return ui:lua("return picker._matched_input == '(' and picker._treeview:linecount() == 0")
+  end, 5000)
+  t.assert_eq(1, ui:lua("return #errors"))
+  t.assert_true(ui:lua("return errors[1].message:find('Invalid regex pattern', 1, true) ~= nil"))
+end)
+
 t:test("a newer reset supersedes partially prepared producer records", function()
   local ui = session()
   ui:lua([[

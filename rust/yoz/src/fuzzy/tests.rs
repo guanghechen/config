@@ -1117,3 +1117,85 @@ fn t_corpus_empty_pattern_lists_every_item() {
         vec![1, 0, 2]
     );
 }
+
+fn regex(pattern: &str, case_sensitive: bool) -> regex::Regex {
+    crate::search::matcher(pattern, true, case_sensitive).unwrap()
+}
+
+#[test]
+fn t_corpus_regex_matches_a_reference_filter_in_item_order() {
+    let items = sample_corpus(40_000, 5);
+    let mut corpus = Corpus::new(Scheme::Path);
+    corpus.append(&items).unwrap();
+    // Weights and an earlier fuzzy query change neither the members nor their order.
+    let weights: Vec<u8> = (0..items.len()).map(|index| (index % 101) as u8).collect();
+    corpus.set_weights(&weights).unwrap();
+    corpus.query(&query("src", true));
+    for (pattern, case_sensitive) in [
+        ("src", false),
+        (r"^src/.*\.rs$", false),
+        ("Server", true),
+        ("server", true),
+        ("server", false),
+        ("列表|café", false),
+        ("x*", false),
+        ("zz", false),
+    ] {
+        let regex = regex(pattern, case_sensitive);
+        let expected: Vec<u32> = (0..items.len() as u32)
+            .filter(|&index| {
+                regex
+                    .find_iter(&items[index as usize])
+                    .any(|found| !found.is_empty())
+            })
+            .collect();
+        for threads in [1, 6] {
+            let ranked = corpus.query_regex(&regex, threads);
+            assert_eq!(
+                ranked.indices, expected,
+                "{pattern} {case_sensitive} {threads}"
+            );
+            assert!(ranked.scores.is_empty());
+            assert_eq!(ranked.examined, items.len());
+        }
+    }
+    assert!(
+        corpus
+            .query_regex(&regex("server", true), 1)
+            .indices
+            .is_empty()
+    );
+    assert!(
+        !corpus
+            .query_regex(&regex("server", false), 1)
+            .indices
+            .is_empty()
+    );
+}
+
+#[test]
+fn t_corpus_regex_counts_and_marks_every_nonempty_match() {
+    let mut corpus = Corpus::new(Scheme::Path);
+    corpus
+        .append(&["文档/café_core.rs", "src/core.rs", "abc", "xax"])
+        .unwrap();
+    let words = |index: usize, ranked| -> Vec<String> {
+        let text = corpus.text(index);
+        corpus
+            .positions(index, ranked)
+            .iter()
+            .map(|&(start, end)| text[start..end].to_owned())
+            .collect()
+    };
+    let ranked = corpus.query_regex(&regex("C[OA]|é", false), 1);
+    assert_eq!(ranked.indices, vec![0, 1]);
+    assert_eq!(words(0, &ranked), ["ca", "é", "co"]);
+    // Adjacent matches merge into one run.
+    let ranked = corpus.query_regex(&regex("c|o|r", true), 1);
+    assert_eq!(words(1, &ranked), ["rc", "cor", "r"]);
+    // A match of nothing marks nothing, so only items with an x match `x*`.
+    let ranked = corpus.query_regex(&regex("x*", false), 1);
+    assert_eq!(ranked.indices, vec![3]);
+    assert_eq!(words(3, &ranked), ["x", "x"]);
+    assert!(corpus.query_regex(&regex("^", false), 1).indices.is_empty());
+}

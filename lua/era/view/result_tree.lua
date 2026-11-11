@@ -43,7 +43,7 @@ local RECORD_DEFAULTS = {
 ---@field public weight                 ?integer Points added for an item weight of 100.
 ---@field public weigh                  ?fun(key: string): number Item weight 0..100, read when the corpus is built.
 
----Match order for publication: fuzzy results rank natively; regex matches are keys.
+---Match order for publication: a native result, or keys; an invalid regex matches no key.
 ---@alias era.view.result_tree.Orders string[]|yoz.fuzzy.Result
 
 ---@class era.view.result_tree.IRead
@@ -194,7 +194,7 @@ function M:dispose()
   self.view, self.state, self._data, self._request, self._mount = nil, nil, nil, nil, nil
   self.source:dispose()
   self.source, self._present, self._frame, self._configured = nil, nil, nil, nil
-  self._matches, self._result, self._orders, self._fuzzy = nil, nil, nil, nil
+  self._result, self._orders, self._fuzzy = nil, nil, nil
   self._icons, self._directory_icons = nil, nil
   self._hidden = {}
   self._read_cache, self._record_cache = nil, nil
@@ -852,14 +852,14 @@ end
 
 ---@return nil
 function M:clear_match()
-  self._matches, self._result, self._orders = nil, nil, nil
+  self._result, self._orders = nil, nil
 end
 
----Highlight a fuzzy result computed outside `match`, over this tree's item keys.
+---Highlight a corpus result computed outside `match`, over this tree's item keys.
 ---@param result                        yoz.fuzzy.Result
 ---@return nil
 function M:show_matches(result)
-  self._result, self._matches = result, nil
+  self._result = result
 end
 
 ---Bytes of `filepath` before the root-relative path an item matches as, or 0.
@@ -940,63 +940,27 @@ function M:_corpus(params, checkpoint)
   return self._fuzzy
 end
 
----Regex matches of `lines`: each key once, in line order, with its ranges for highlighting.
----@param keys                          string[] Key of each line.
----@param lines                         string[]
----@param pattern                       string
----@param case_sensitive                boolean
----@return string[]
-function M:match_lines(keys, lines, pattern, case_sensitive)
-  -- Where each match is is all the filter needs; previews of every match would take most of the call.
-  local result, error = yoz.search.locate_in_lines({
-    pattern = pattern,
-    lines = lines,
-    flag_fuzzy = false,
-    flag_regex = true,
-    flag_case_sensitive = case_sensitive,
-  })
-  if not result then
-    self:_error(error)
-  end
-  local matched, matches = {}, {}
-  for _, range in ipairs(result and result.matches or {}) do
-    local key = keys[range.lx]
-    local match = matches[key]
-    if match == nil then
-      match = { matches = {} }
-      matched[#matched + 1] = key
-      matches[key] = match
-    end
-    match.matches[#match.matches + 1] = { l = range.cx, r = range.cy + 1 }
-  end
-  self._matches, self._result, self._orders = matches, nil, nil
-  return matched
-end
-
 ---Match the entries under the root. The returned orders keep their identity while the matches and their
 ---order stay the same, so an unchanged result republishes nothing; highlights follow the latest query.
 ---@param params                        era.view.result_tree.IMatchParams
 ---@param checkpoint                    ?fun(): nil Called while building the corpus; may yield or raise.
 ---@return era.view.result_tree.Orders
 function M:match(params, checkpoint)
-  if params.regex and params.pattern ~= "" then
-    local keys, lines = {}, {}
-    self.source:walk(params.rootuuid, function(key, data)
-      local entry = self.entries[key]
-      if entry and (entry.text ~= nil or entry.nodetype == "leaf") then
-        keys[#keys + 1] = key
-        lines[#lines + 1] = data.filepath or entry.text or data.name or ""
-      end
-    end)
-    return self:match_lines(keys, lines, params.pattern, params.case_sensitive)
-  end
   local fuzzy = self:_corpus(params, checkpoint)
-  local result = fuzzy.corpus:query({
+  local result, error = fuzzy.corpus:query({
     pattern = params.pattern,
     fuzzy = params.fuzzy,
+    -- An empty regex lists every entry, as an empty query does.
+    regex = params.regex and params.pattern ~= "",
     case = params.case_sensitive and "respect" or "smart",
     weight = params.weight,
   })
+  if not result then
+    -- An invalid regex matches nothing; the report says why.
+    self:_error(error)
+    self._result, self._orders = nil, nil
+    return {}
+  end
   local orders = self._orders
   if not (orders and result:same(orders)) then
     orders = result
@@ -1004,7 +968,7 @@ function M:match(params, checkpoint)
     -- The Frame stays; only its highlights change.
     self.view:refresh_decorations()
   end
-  self._matches, self._result, self._orders = nil, result, orders
+  self._result, self._orders = result, orders
   return orders
 end
 
@@ -1459,9 +1423,6 @@ function M:decorate_row(view, frame, row, id, col, label, expanded)
   local points, shift
   if node and self._result then
     points = self._result:highlight(node.key)
-  elseif node and self._matches then
-    local match = self._matches[node.key]
-    points = match and match.matches
   end
   if node and points then
     local version = self._versions[frame:header().data_revision]

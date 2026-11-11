@@ -25,6 +25,8 @@ local M = {}
 ---@field public case                   ?yoz.fuzzy.CaseMode Defaults to "smart".
 ---@field public rank                   ?boolean False only decides membership and keeps item order. Defaults to true.
 ---@field public weight                 ?integer Points added for an item weight of 100. Defaults to 0.
+---@field public regex                  ?boolean Read `pattern` as a regex, as `yoz.search` does: case-sensitive only for
+---"respect"; items with a nonempty match, in item order, without scores or weights. Defaults to false.
 
 ---@param options                       ?yoz.fuzzy.ICorpusOptions
 ---@return yoz.fuzzy.Corpus
@@ -46,7 +48,8 @@ function Corpus:append(texts, keys) end
 function Corpus:set_weights(weights) end
 
 ---@param query                         yoz.fuzzy.IQuery
----@return yoz.fuzzy.Result
+---@return yoz.fuzzy.Result|nil result Nil for an invalid regex.
+---@return string|nil error Why the regex is invalid.
 function Corpus:query(query) end
 
 ---@class yoz.fuzzy.Result
@@ -71,8 +74,8 @@ function Result:same(other) end
 ---@return boolean
 function Result:has(key) end
 
----Matched byte ranges of the item whose first key is `key`, 0-based and end-exclusive, merged into runs;
----nil when it did not match.
+---Matched byte ranges of the item whose first key is `key`, 0-based and end-exclusive, merged into runs: one
+---alignment of a fuzzy query, every nonempty match of a regex; nil when it did not match.
 ---@param key                           string
 ---@return yoz.search.ISearchInLinesMatchPoint[]|nil
 function Result:highlight(key) end

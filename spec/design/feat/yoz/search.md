@@ -94,7 +94,8 @@ export interface ITextRangesResult {
 }
 ```
 
-`locate_in_lines` 与 `search_in_lines` 搜索相同，只返回每个 match 的位置，供 buffer 搜索与 picker 的 regex 过滤使用。32k 个匹配时，
+`locate_in_lines` 与 `search_in_lines` 搜索相同，只返回每个 match 的位置，供 buffer 搜索使用（picker 的 regex 过滤由
+[Yoz Fuzzy](fuzzy.md) corpus 完成）。32k 个匹配时，
 `search_in_lines` 一次调用约 132 ms，原生搜索与行文本传入约 6 ms，其余是预览与逐行匹配转成 Lua table；
 只转换位置约 22 ms。
 

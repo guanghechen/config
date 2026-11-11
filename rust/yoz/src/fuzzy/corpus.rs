@@ -5,6 +5,7 @@ use super::class::{Scheme, classes};
 use super::matcher::{self, Options};
 use super::pattern::{self, CaseMode, Pattern};
 use super::text;
+use regex::Regex;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
@@ -61,6 +62,8 @@ pub struct Ranked {
     pub examined: usize,
     /** The parsed query, for highlighting results. */
     pattern: Option<Pattern>,
+    /** The regex of a regex query, for highlighting results. */
+    regex: Option<Regex>,
 }
 
 /** Bits of the item index in a packed match. */
@@ -123,6 +126,92 @@ fn radix_sort(hits: &mut Vec<u64>, counts: &Counts) {
         }
         std::mem::swap(hits, &mut buffer);
     }
+}
+
+/// Runs `scan` over the items `0..examined` in chunks of `CHUNK` and returns its hits in chunk order with their
+/// byte counts. The calling thread starts alone; workers join only when the scan outlasts `SPAWN_AFTER`, so
+/// cheap queries never pay for threads.
+fn scan_chunks<F>(examined: usize, threads: usize, started: Instant, scan: &F) -> (Vec<u64>, Counts)
+where
+    F: Fn(usize, usize, &mut Scratch, &mut Vec<u64>, &mut Counts) + Sync,
+{
+    let mut hits: Vec<u64> = Vec::new();
+    let mut counts: Counts = [[0; 256]; KEY_BYTES];
+    let mut scratch = Scratch::default();
+    let cursor = AtomicUsize::new(0);
+    let chunks = examined.div_ceil(CHUNK);
+    let deadline = (threads > 1).then(|| started + SPAWN_AFTER);
+    let mut finished = true;
+    loop {
+        if deadline.is_some_and(|deadline| Instant::now() >= deadline) {
+            finished = false;
+            break;
+        }
+        let chunk = cursor.fetch_add(1, Ordering::Relaxed);
+        if chunk >= chunks {
+            break;
+        }
+        let from = chunk * CHUNK;
+        scan(
+            from,
+            (from + CHUNK).min(examined),
+            &mut scratch,
+            &mut hits,
+            &mut counts,
+        );
+    }
+    if !finished {
+        let worker = |scratch: &mut Scratch, counts: &mut Counts| {
+            let mut parts = Vec::new();
+            loop {
+                let chunk = cursor.fetch_add(1, Ordering::Relaxed);
+                if chunk >= chunks {
+                    break parts;
+                }
+                let from = chunk * CHUNK;
+                let mut part = Vec::new();
+                scan(
+                    from,
+                    (from + CHUNK).min(examined),
+                    scratch,
+                    &mut part,
+                    counts,
+                );
+                parts.push((chunk, part));
+            }
+        };
+        let remaining = chunks.saturating_sub(cursor.load(Ordering::Relaxed));
+        let mut parts = std::thread::scope(|scope| {
+            let workers: Vec<_> = (1..threads.min(remaining))
+                .map(|_| {
+                    scope.spawn(|| {
+                        prefer_performance_cores();
+                        let mut counts: Counts = [[0; 256]; KEY_BYTES];
+                        (worker(&mut Scratch::default(), &mut counts), counts)
+                    })
+                })
+                .collect();
+            let mut parts = worker(&mut scratch, &mut counts);
+            for handle in workers {
+                let (part, worker_counts) = handle.join().expect("fuzzy worker");
+                parts.extend(part);
+                for (total, add) in counts
+                    .iter_mut()
+                    .flatten()
+                    .zip(worker_counts.iter().flatten())
+                {
+                    *total += add;
+                }
+            }
+            parts
+        });
+        parts.sort_unstable_by_key(|&(chunk, _)| chunk);
+        hits.reserve(parts.iter().map(|(_, part)| part.len()).sum());
+        for (_, part) in parts {
+            hits.extend(part);
+        }
+    }
+    (hits, counts)
 }
 
 pub struct Corpus {
@@ -379,84 +468,7 @@ impl Corpus {
             }
         };
 
-        // The calling thread starts alone; workers join only when the query outlasts `SPAWN_AFTER`, so
-        // cheap queries never pay for threads.
-        let mut hits: Vec<u64> = Vec::new();
-        let mut counts: Counts = [[0; 256]; KEY_BYTES];
-        let mut scratch = Scratch::default();
-        let cursor = AtomicUsize::new(0);
-        let chunks = examined.div_ceil(CHUNK);
-        let deadline = (threads > 1).then(|| started + SPAWN_AFTER);
-        let mut finished = true;
-        loop {
-            if deadline.is_some_and(|deadline| Instant::now() >= deadline) {
-                finished = false;
-                break;
-            }
-            let chunk = cursor.fetch_add(1, Ordering::Relaxed);
-            if chunk >= chunks {
-                break;
-            }
-            let from = chunk * CHUNK;
-            scan(
-                from,
-                (from + CHUNK).min(examined),
-                &mut scratch,
-                &mut hits,
-                &mut counts,
-            );
-        }
-        if !finished {
-            let worker = |scratch: &mut Scratch, counts: &mut Counts| {
-                let mut parts = Vec::new();
-                loop {
-                    let chunk = cursor.fetch_add(1, Ordering::Relaxed);
-                    if chunk >= chunks {
-                        break parts;
-                    }
-                    let from = chunk * CHUNK;
-                    let mut part = Vec::new();
-                    scan(
-                        from,
-                        (from + CHUNK).min(examined),
-                        scratch,
-                        &mut part,
-                        counts,
-                    );
-                    parts.push((chunk, part));
-                }
-            };
-            let remaining = chunks.saturating_sub(cursor.load(Ordering::Relaxed));
-            let mut parts = std::thread::scope(|scope| {
-                let workers: Vec<_> = (1..threads.min(remaining))
-                    .map(|_| {
-                        scope.spawn(|| {
-                            prefer_performance_cores();
-                            let mut counts: Counts = [[0; 256]; KEY_BYTES];
-                            (worker(&mut Scratch::default(), &mut counts), counts)
-                        })
-                    })
-                    .collect();
-                let mut parts = worker(&mut scratch, &mut counts);
-                for handle in workers {
-                    let (part, worker_counts) = handle.join().expect("fuzzy worker");
-                    parts.extend(part);
-                    for (total, add) in counts
-                        .iter_mut()
-                        .flatten()
-                        .zip(worker_counts.iter().flatten())
-                    {
-                        *total += add;
-                    }
-                }
-                parts
-            });
-            parts.sort_unstable_by_key(|&(chunk, _)| chunk);
-            hits.reserve(parts.iter().map(|(_, part)| part.len()).sum());
-            for (_, part) in parts {
-                hits.extend(part);
-            }
-        }
+        let (mut hits, counts) = scan_chunks(examined, threads, started, &scan);
 
         // Before sorting, matches are in index order, as the cache keeps them.
         let matched: Option<Vec<u32>> = pattern
@@ -503,11 +515,53 @@ impl Corpus {
             scores,
             examined,
             pattern: Some(pattern),
+            regex: None,
         }
     }
 
-    /// Byte ranges of item `index` that `ranked`'s query matches, merged into runs, for highlighting one row.
+    /// Items where `regex` matches some text, in item order: a match of nothing marks nothing, so it does not count.
+    /// A regex has no score, so weights and the narrowing cache take no part; `threads` of zero picks a default.
+    pub fn query_regex(&self, regex: &Regex, threads: usize) -> Ranked {
+        let started = Instant::now();
+        let threads = match threads {
+            0 => default_threads(),
+            count => count,
+        };
+        let examined = self.spans.len();
+        let scan =
+            |from: usize, to: usize, _: &mut Scratch, hits: &mut Vec<u64>, _: &mut Counts| {
+                for index in from..to {
+                    let text = self.text(index);
+                    if regex.is_match(text) && regex.find_iter(text).any(|found| !found.is_empty())
+                    {
+                        hits.push(index as u64);
+                    }
+                }
+            };
+        let (hits, _) = scan_chunks(examined, threads, started, &scan);
+        Ranked {
+            indices: hits.into_iter().map(|hit| hit as u32).collect(),
+            scores: Vec::new(),
+            examined,
+            pattern: None,
+            regex: Some(regex.clone()),
+        }
+    }
+
+    /// Byte ranges of item `index` that `ranked`'s query matches, merged into runs, for highlighting one row: every
+    /// nonempty match of a regex, one alignment of a fuzzy pattern.
     pub fn positions(&self, index: usize, ranked: &Ranked) -> Vec<(usize, usize)> {
+        if let Some(regex) = &ranked.regex {
+            let mut ranges: Vec<(usize, usize)> = Vec::new();
+            for found in regex.find_iter(self.text(index)) {
+                match ranges.last_mut() {
+                    _ if found.is_empty() => {}
+                    Some(last) if last.1 == found.start() => last.1 = found.end(),
+                    _ => ranges.push((found.start(), found.end())),
+                }
+            }
+            return ranges;
+        }
         let Some(pattern) = ranked.pattern.as_ref() else {
             return Vec::new();
         };

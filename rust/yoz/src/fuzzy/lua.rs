@@ -160,28 +160,41 @@ impl LuaUserData for LuaCorpus {
                 .set_weights(&weights.as_bytes())
                 .map_err(LuaError::runtime)
         });
+        // A regex reads as `yoz.search` reads it, case-sensitive only for "respect"; an invalid one returns nil
+        // and the reason.
         methods.add_method("query", |_, this, options: LuaTable| {
             let pattern: String = options
                 .get::<Option<String>>("pattern")?
                 .unwrap_or_default();
-            let query = Query {
-                pattern: &pattern,
-                fuzzy: options.get::<Option<bool>>("fuzzy")?.unwrap_or(true),
-                case: case(options.get("case")?)?,
-                rank: options.get::<Option<bool>>("rank")?.unwrap_or(true),
-                weight: options
-                    .get::<Option<i32>>("weight")?
-                    .unwrap_or(0)
-                    .clamp(0, 10_000),
-                threads: 0,
+            let case = case(options.get("case")?)?;
+            let ranked = if options.get::<Option<bool>>("regex")?.unwrap_or(false) {
+                match crate::search::matcher(&pattern, true, case == CaseMode::Respect) {
+                    Ok(regex) => this.0.borrow().corpus.query_regex(&regex, 0),
+                    Err(error) => return Ok((None, Some(error))),
+                }
+            } else {
+                let query = Query {
+                    pattern: &pattern,
+                    fuzzy: options.get::<Option<bool>>("fuzzy")?.unwrap_or(true),
+                    case,
+                    rank: options.get::<Option<bool>>("rank")?.unwrap_or(true),
+                    weight: options
+                        .get::<Option<i32>>("weight")?
+                        .unwrap_or(0)
+                        .clamp(0, 10_000),
+                    threads: 0,
+                };
+                this.0.borrow_mut().corpus.query(&query)
             };
-            let ranked = this.0.borrow_mut().corpus.query(&query);
-            Ok(LuaRanked {
-                shared: this.0.clone(),
-                ranked,
-                members: RefCell::new(None),
-                ids: RefCell::new(None),
-            })
+            Ok((
+                Some(LuaRanked {
+                    shared: this.0.clone(),
+                    ranked,
+                    members: RefCell::new(None),
+                    ids: RefCell::new(None),
+                }),
+                None,
+            ))
         });
     }
 }

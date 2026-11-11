@@ -15,7 +15,8 @@ Treeview DisplayOptions.pattern -> ux/treeview/matching.rs -> fuzzy::TextMatcher
 
 - `yoz.fuzzy` 负责：算法、语法解析、corpus、排序、收窄缓存、并行，以及结果到 Treeview NodeId 的解析。
 - 使用方负责：何时构建 corpus、匹配文本的选取（例如 root 相对路径）、权重来源（frecency）与发布节奏。
-- Regex 查询不经过 `yoz.fuzzy`：picker 继续使用 `yoz.search` 行搜索的 regex 路径（`locate_in_lines`），Treeview 使用 `regex` crate。
+- Picker 的 regex 查询同样在 corpus 上执行（`query({ regex = true })`），方言与大小写规则同 `yoz.search`；Treeview label 过滤的
+  regex 路径直接使用 `regex` crate。
 
 ## 匹配语义
 
@@ -61,6 +62,7 @@ local corpus = yoz.fuzzy.new_corpus({ scheme = "path" })            -- "default"
 corpus:append(texts, keys)                                           -- 每项一个 key，或 {node, shown...}
 corpus:set_weights(weights)                                          -- 每项一个字节，0..100
 local result = corpus:query({ pattern = "src cfg", fuzzy = true, case = "smart", rank = true, weight = 16 })
+local matched, error = corpus:query({ pattern = [[^src/.*\.rs$]], regex = true, case = "respect" })
 result:count(); result:keys(first, last); result:same(other)
 result:has(key); result:highlight(key)
 local filter = result:ids(source)                                    -- yoz.ux.treeview.NodeIds
@@ -81,6 +83,8 @@ local filter = result:ids(source)                                    -- yoz.ux.t
     `default` scheme 依次比较长度、条目序号。
 - `rank=false`：只判定成员，保持条目顺序，fuzzy 词用 `asciiFuzzyIndex` 判定，跳过 DP。
 - 空查询或只有排除词时，没有可比的分数：`weight > 0` 时按原始权重降序、同权重保持条目顺序，否则保持条目顺序。
+- `regex=true`：按 `yoz.search` 的方言编译（`case="respect"` 时区分大小写，否则不区分），至少有一个非空匹配的条目算命中，
+  按条目顺序返回，不计分、不用权重；`highlight` 标出全部非空匹配。非法表达式不抛错，`query` 返回 `nil, error`。
 - 实现：命中打包为 64 位键，用稳定的 LSD radix sort 排序，跳过所有命中都相同的字节。
   命中按条目顺序进入，所以序号决胜由稳定性保证。
 
@@ -91,6 +95,7 @@ local filter = result:ids(source)                                    -- yoz.ux.t
 - **写入**：只有 cacheable 的查询会写入缓存，即不含 OR、不含排除词、每个词都保持基础类型。
 - **查找**：查询前在最多 16 条缓存中找键为当前键前缀或后缀的结果，取最小的一条作为候选集。缓存按 `fuzzy` 与大小写模式区分。
 - **失效**：`append` 清空缓存。
+- regex 查询不读也不写缓存：正则加长不意味着命中集缩小。
 - **正确性**：靠 `t_corpus_narrowing_matches_a_full_scan` 等测试和 fzf 对齐保证。一个反例是 `core |`：以 `|` 结尾时
   `|` 不构成 OR，所以它的键是 `core` 而不是原文。
 
@@ -99,18 +104,18 @@ local filter = result:ids(source)                                    -- yoz.ux.t
 - 查询先在调用线程上处理，按每块 256 个候选领取；
 - 超过 100µs 仍未完成时，启动最多 `min(可用核数, 16)` 个 worker 一起领取剩余的块；
 - worker 在 macOS 上设为 `USER_INTERACTIVE` QoS，避免停留在能效核；
-- 各块的命中按块序拼接，所以结果与单线程完全一致。
+- 各块的命中按块序拼接，所以结果与单线程完全一致；regex 查询走同一套分块与 worker。
 
 ## 接入
 
 ### ResultTree
 
 - `ResultTree:match(params, checkpoint)`：
-  - 非空的 regex 查询走 `locate_in_lines`，返回 key 数组，同一条目只出现一次；
-  - 其余查询走 corpus。corpus 在 Lua source revision、ResultTree revision、root、scheme 与 `weigh` 不变时复用，
+  - 查询都走 corpus，非空的 regex 查询以 `regex = true` 提交；非法表达式经 reporter 报告，返回空 key 数组；
+  - corpus 在 Lua source revision、ResultTree revision、root、scheme 与 `weigh` 不变时复用，
     构建时逐项调用 `checkpoint`，可以让出或取消。
 - 匹配文本依次取 `data.filepath`、`entry.text`、`data.name`。root 下的文件路径匹配 root 相对路径，
-  root 外的路径保持绝对路径。
+  root 外的路径保持绝对路径；regex 同样如此，所以 `^lua/` 匹配 root 下 `lua` 目录中的文件，root 自身的路径不参与匹配。
 - 返回的 orders 在结果集与顺序不变时保持身份，`_display` 因此不重新提交 display；高亮则始终跟随最新查询，
   并刷新当前 Frame 的装饰。
 - `_display` 收到结果句柄时，用 `orders:ids(source)` 生成 filter。
@@ -140,7 +145,7 @@ local filter = result:ids(source)                                    -- yoz.ux.t
   - 在 2 ms 一片的准备循环中分批 `append`，与 Source 同步替换；
   - `scheme` 默认 `default`，窗口历史等路径列表使用 `path`；
   - `autosort=false` 时以 `rank=false` 保持条目顺序；
-  - regex 查询不再转小写，`\S` 等转义保持原义。
+  - regex 查询同样走 corpus，不再转小写，`\S` 等转义保持原义；非法表达式由 composer 报告，列表为空。
 - **FiletreeComposer**：
   - `path` scheme；
   - frecency 作为权重，`weight = 16`；

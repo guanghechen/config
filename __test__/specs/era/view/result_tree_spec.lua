@@ -57,15 +57,63 @@ t:test("ordered List filtering retains Tree ancestors and native selection acros
   t.assert_same({}, reports.error)
 end)
 
-t:test("regex matching gives each key once, in line order, with the byte ranges of its matches", function()
+t:test("regex matching lists entries with a nonempty match in source order and marks each match", function()
   local tree = fixture()
-  local matched = tree:match_lines({ "one", "two", "one" }, { "a1b22", "none", "é3" }, "[0-9]+", true)
-  t.assert_same({ "one" }, matched, "each key once")
-  t.assert_same(
-    { { l = 1, r = 2 }, { l = 3, r = 5 }, { l = 2, r = 3 } },
-    tree._matches.one.matches,
-    "the ranges of every line of the key, in bytes"
-  )
+  ---@param pattern                     string
+  ---@param case_sensitive              boolean
+  ---@return string[]
+  local function keys(pattern, case_sensitive)
+    local orders = tree:match({
+      rootuuid = "root",
+      pattern = pattern,
+      fuzzy = false,
+      regex = true,
+      case_sensitive = case_sensitive,
+    })
+    return type(orders) == "userdata" and orders:keys() or orders
+  end
+  t.assert_same({ "two", "three" }, keys("[tw]", true))
+  t.assert_same({ { l = 0, r = 2 } }, tree._result:highlight("two"), "adjacent matches mark one run")
+  t.assert_same({ { l = 0, r = 1 } }, tree._result:highlight("three"))
+  t.assert_same({}, keys("T", true))
+  t.assert_same({ "two", "three" }, keys("T", false), "case-insensitive unless asked")
+  t.assert_same({}, keys("x*", true), "a match of nothing does not count")
+  t.assert_same({ "one", "two", "three" }, keys("", true), "an empty regex lists every entry")
+  t.assert_same({}, reports.error)
+  t.assert_same({}, keys("(", true), "an invalid regex matches nothing")
+  t.assert_eq(1, #reports.error)
+  t.assert_true(reports.error[1].message:find("Invalid regex pattern", 1, true) ~= nil, "and says why")
+  table.remove(reports.error)
+end)
+
+t:test("regex matching reads file paths relative to the root", function()
+  local source = Source.new("root", { label = "w", filepath = "/w" })
+  source:insert("root", "a", { label = "a.lua", filepath = "/w/lua/a.lua" })
+  source:insert("root", "b", { label = "b.md", filepath = "/w/spec/b.md" })
+  local tree = Tree.new({
+    name = "paths",
+    tree = source,
+    present = function(_, data)
+      return { label = data.label }
+    end,
+  })
+  t:defer(function()
+    tree:dispose()
+  end)
+  tree:insert("root", { nodetype = "container" })
+  tree:insert("a", { nodetype = "leaf" })
+  tree:insert("b", { nodetype = "leaf" })
+  ---@param pattern                     string
+  ---@return string[]
+  local function keys(pattern)
+    local orders =
+      tree:match({ rootuuid = "root", pattern = pattern, fuzzy = false, regex = true, case_sensitive = true })
+    return orders:keys()
+  end
+  t.assert_same({ "a" }, keys("^lua/"))
+  t.assert_same({ { l = 0, r = 4 } }, tree._result:highlight("a"), "ranges of the relative path")
+  t.assert_same({}, keys("^/w/"), "the root's own path is not matched")
+  t.assert_same({ "a", "b" }, keys("/"))
 end)
 
 t:test("ready waits for every collapse change that is still in flight", function()
