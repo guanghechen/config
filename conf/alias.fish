@@ -19,6 +19,7 @@ abbr -a tf 'touch (date +%Y%m%d_%H%M%S).log'
 abbr -a tls 'tree --dirsfirst -aCF'
 abbr -a clock 'tty-clock -DSbcnrs -C5'
 abbr -a today 'cal -C3'
+abbr -a ghc-fix-esc 'killall ControlCenter'
 abbr -a ghc-update 'git -C ~/.config/kit pull origin kit && kit-repo sync'
 
 alias chown='chown --preserve-root'
