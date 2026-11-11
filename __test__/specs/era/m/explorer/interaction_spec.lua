@@ -288,7 +288,15 @@ for _, published in ipairs({ false, true }) do
     assert(vim.uv.fs_rename(path .. "/b", path .. "/saved"))
     write(path .. "/b")
     if published then
-      await(session.data:resolve(path .. "/b"))
+      -- A resolve that the watch's publication of the replacement overtakes is Stale; resolve again, as callers do.
+      local reply ---@type table
+      for _ = 1, 3 do
+        reply = t.await(session.data:resolve(path .. "/b"))
+        if not (reply.kind == "Rejected" and reply.error.code == "Stale") then
+          break
+        end
+      end
+      t.assert_true(reply.kind ~= "Rejected", vim.inspect(reply))
     end
     confirm()
     fixture.idle(widget)
