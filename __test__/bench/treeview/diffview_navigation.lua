@@ -1,9 +1,10 @@
--- Usage, from the repository root: nvim -l __test__/bench/diffview_navigation.lua [count=5000] [baseline-dir] [files|directories]
+-- Usage, from the repository root: nvim -l __test__/bench/treeview/diffview_navigation.lua [count=5000] [baseline-dir] [files|directories]
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.bench.diffview_navigation" ---@type string
+local __module_name__ = "__test__.bench.treeview.diffview_navigation" ---@type string
 
-local root =
+local root = vim.fs.dirname(
   vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(assert(vim.uv.fs_realpath(debug.getinfo(1, "S").source:sub(2))))))
+)
 vim.opt.runtimepath:prepend(root)
 package.path = root .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
 local count, baseline = tonumber(arg[1]) or 5000, arg[2]
@@ -17,7 +18,7 @@ if baseline then
 end
 require("ark.bootstrap").setup()
 local treeview = require("__test__.support.treeview")
-local Record = require("__test__.bench.record")
+local Record = require("__test__.bench.lib.record")
 local tree = require("era.m.diffview.pane.tree")
 local changes = require("era.m.diffview.pane.changes")
 local action = require("era.m.diffview.view.workspace.action")

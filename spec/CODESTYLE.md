@@ -76,17 +76,11 @@ Use `stl.reporter.{debug|info|warn|error}` for structured diagnostics.
 
 ## Lua Tests
 
-- Lua/Node tests and shared fixtures live under `__test__/`. Production `lua/` has no test-directory references or test-only hooks.
-- Lua specs live under `__test__/specs/`, grouped by module and named `*_spec.lua`.
-- Run all specs with `nvim -l __test__/run.lua`; append a literal path filter to run a directory or one spec.
-- Use `__test__.support.harness` for cases, assertions, and cleanup. Each spec ends with `t:run()`.
-- Specs are not modules: they declare no `__module_name__`, and `harness.new()` names the suite after its path.
-  Start a spec with its requires, without `Run with` lines, banners, or file-wide `---@diagnostic` comments.
-- Use `__test__.support.bootstrap` for declared runtime globals. Composed runtime tests may explicitly load the application bootstrap.
-- Register resource cleanup with `t:defer()` immediately after acquisition. Use `patch_global` / `patch_table` for mocks.
-- Helpers stay beside the relevant cases until multiple specs need them; shared support lives under `__test__/support/`.
-- Test behavior and failure paths; keep pure calculations, buffer state, and native rendering in focused specs.
-- See `__test__/README.md` for commands and `spec/design/test-harness/` for the execution contract.
+- Specs follow the [test architecture](design/test-harness.md): layout, harness, resource lifecycle and timing.
+  Commands and an example spec are in `__test__/README.md`.
+- Specs are not modules: they declare no `__module_name__`, start with their requires, without `Run with` lines,
+  banners, or file-wide `---@diagnostic` comments, and end with `t:run()`.
+- Support modules under `__test__/support/` follow the module pattern and annotation rules above.
 
 ## Keymap Style
 
@@ -111,10 +105,9 @@ stl.nvim.fn.bindkeys(keymaps, {
 })
 ```
 
-## Rust (`rust/yoz`) Notes
+## Rust Notes
 
-- Follow existing `mlua` serialization/deserialization patterns.
-- Keep Lua-facing APIs synchronized with Lua call sites.
-- Prefix Rust unit tests with `t_` (for example `fn t_parses_config()`).
-- Keep Rust unit tests in the corresponding `rust/<crate>/src/` modules under `#[cfg(test)]`, preserving private access and platform gates; move long ones to `<module>/tests.rs`. Shared Rust test support lives in `#[cfg(test)]` `test_support.rs` modules, never in test files or production code. Release-mode measurements are `#[ignore]` tests in `perf_tests.rs`.
-- Put Node specs in `__test__/node/*.test.mjs` and run them with `node --test`.
+- In `rust/yoz`, follow the existing `mlua` serialization/deserialization patterns and keep Lua-facing APIs
+  synchronized with Lua call sites.
+- Unit tests are named `t_*` and placed as the [test architecture](design/test-harness.md#rust-与-node-测试)
+  describes.

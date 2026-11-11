@@ -1,14 +1,14 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.bench.record" ---@type string
+local __module_name__ = "__test__.bench.lib.record" ---@type string
 
 -- Writes a benchmark run to __test__/bench/results/<bench>/<UTC>-<pid>.json (git-ignored): the environment it ran
 -- in, the conditions the benchmark states and its results. Results report durations in milliseconds and memory in
 -- bytes, and summarize distributions with `stats.summary`.
 
-local Metrics = require("__test__.bench.metrics")
+local Metrics = require("__test__.bench.lib.metrics")
 
 local source = assert(vim.uv.fs_realpath(debug.getinfo(1, "S").source:sub(2))) ---@type string
-local ROOT = vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(source))) ---@type string
+local ROOT = vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(source)))) ---@type string
 
 local M = {}
 

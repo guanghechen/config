@@ -1,7 +1,7 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "__test__.bench.cmp.data" ---@type string
 
-local Stats = require("__test__.bench.stats")
+local Stats = require("__test__.bench.lib.stats")
 
 local M = {}
 

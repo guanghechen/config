@@ -1,9 +1,10 @@
--- Usage, from the repository root: nvim -l __test__/bench/treeview_guides.lua [native-library] [baseline-dir] [count=50000] [iterations=300] [height=50]
+-- Usage, from the repository root: nvim -l __test__/bench/treeview/guides.lua [native-library] [baseline-dir] [count=50000] [iterations=300] [height=50]
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.bench.treeview_guides" ---@type string
+local __module_name__ = "__test__.bench.treeview.guides" ---@type string
 
-local root =
+local root = vim.fs.dirname(
   vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(assert(vim.uv.fs_realpath(debug.getinfo(1, "S").source:sub(2))))))
+)
 vim.api.nvim_set_current_dir(root)
 vim.opt.runtimepath:prepend(root)
 package.path = root .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
@@ -14,8 +15,8 @@ local iterations = tonumber(arg[4]) or 300
 local height = tonumber(arg[5]) or 50
 assert(count >= 50 and iterations >= 1 and height >= 20 and height <= 500, "invalid benchmark dimensions")
 local ui = require("__test__.support.ui").new({ timeout_ms = 30000 })
-local Record = require("__test__.bench.record")
-local Stats = require("__test__.bench.stats")
+local Record = require("__test__.bench.lib.record")
+local Stats = require("__test__.bench.lib.stats")
 
 local ok, result = xpcall(function()
   ui:rpc("nvim_ui_attach", 80, height, { rgb = true, ext_linegrid = true })
@@ -25,6 +26,7 @@ local ok, result = xpcall(function()
     local root, library, baseline, count = ...
     vim.opt.runtimepath:prepend(root)
     yoz = assert(package.loadlib(library, "luaopen_yoz"))()
+    metrics = assert(loadfile(root .. "/__test__/bench/lib/metrics.lua"))()
     errors, writes, decoration_ms, path_update_ms = {}, 0, 0, 0
     counts = { prepare = 0, full_redraw = 0, range_redraw = 0, guide_marks = 0, row_queries = 0, exported_rows = 0 }
     local set_extmark = vim.api.nvim_buf_set_extmark
@@ -188,7 +190,7 @@ local ok, result = xpcall(function()
           row = 1 + index % (count - 1)
         end
         if row == vim.api.nvim_win_get_cursor(view.winnr)[1] then row = row + 1 end
-        if index == 31 then process_cpu_before = vim.uv.getrusage() end
+        if index == 31 then process_cpu_before = metrics.usage() end
         decoration_ms, path_update_ms = 0, 0
         for key in pairs(counts) do counts[key] = 0 end
         pending = {row=row, frame=view:frame():id(), started=vim.uv.hrtime()}
@@ -241,15 +243,8 @@ local ok, result = xpcall(function()
         end
       end
     end
-    local cpu_ms = ui:rpc(
-      "nvim_exec_lua",
-      [=[
-      local after, before = vim.uv.getrusage(), process_cpu_before
-      return (after.utime.sec+after.stime.sec-before.utime.sec-before.stime.sec)*1000
-        + (after.utime.usec+after.stime.usec-before.utime.usec-before.stime.usec)/1000
-    ]=],
-      {}
-    ) / iterations
+    local cpu_ms = ui:rpc("nvim_exec_lua", "return (metrics.usage().cpu_us - process_cpu_before.cpu_us) / 1000", {})
+      / iterations
     output.paths[kind] = {
       cpu_ms_per_move = cpu_ms,
       flush = Stats.summary(flush),

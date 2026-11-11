@@ -1,4 +1,8 @@
 -- Usage, from the repository root: nvim -l __test__/bench/nvimbar.lua
+-- Measures Nvimbar from a refresh to the publication of the latest component data, for 8, 32 and 64 components whose
+-- results arrive together (batch) or one per 1 ms timer tick (staggered): CPU (os.clock) and wall time, layouts,
+-- publications, and the time from the last result to its publication. Each scenario reports seven measured rounds after
+-- one warm-up round.
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "__test__.bench.nvimbar" ---@type string
 
@@ -7,8 +11,8 @@ local t = require("__test__.support.harness").new()
 local bootstrap = require("__test__.support.bootstrap")
 local Nvimbar = require("era.m.nvimbar.nvimbar")
 local Future = require("stl.c.future")
-local Record = require("__test__.bench.record")
-local Stats = require("__test__.bench.stats")
+local Record = require("__test__.bench.lib.record")
+local Stats = require("__test__.bench.lib.stats")
 local results = {}
 
 bootstrap.with_runtime(t, {

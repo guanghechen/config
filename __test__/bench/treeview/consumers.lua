@@ -1,22 +1,23 @@
--- Usage, from the repository root: nvim -l __test__/bench/treeview_consumers.lua [filetree|searcher|git|lsp] [iterations=100]
+-- Usage, from the repository root: nvim -l __test__/bench/treeview/consumers.lua [filetree|searcher|git|lsp] [iterations=100]
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.bench.treeview_consumers"
-local root =
+local __module_name__ = "__test__.bench.treeview.consumers"
+local root = vim.fs.dirname(
   vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(assert(vim.uv.fs_realpath(debug.getinfo(1, "S").source:sub(2))))))
+)
 vim.api.nvim_set_current_dir(root)
 package.path = root .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
 local mode, iterations = arg[1] or "searcher", tonumber(arg[2]) or 100
 assert(vim.tbl_contains({ "filetree", "searcher", "git", "lsp" }, mode), "expected filetree, searcher, git, or lsp")
 local ui = require("__test__.support.ui").new()
-local Record = require("__test__.bench.record")
-local Stats = require("__test__.bench.stats")
+local Record = require("__test__.bench.lib.record")
+local Stats = require("__test__.bench.lib.stats")
 local ok, result = xpcall(function()
   ui:rpc("nvim_ui_attach", 80, 48, { rgb = true, ext_linegrid = true })
   ui:rpc(
     "nvim_exec_lua",
     [[
     local root, mode = ...
-    consumer_bench = assert(loadfile(root .. "/__test__/bench/treeview_consumers_child.lua"))()
+    consumer_bench = assert(loadfile(root .. "/__test__/bench/treeview/consumers_child.lua"))()
     consumer_bench.setup(root, mode)
   ]],
     { root, mode }
@@ -55,8 +56,11 @@ local ok, result = xpcall(function()
       }
     end
   end
-  local retained = ui:rpc("nvim_exec_lua", 'collectgarbage("collect"); return collectgarbage("count") * 1024', {})
-  local process_memory = ui:rpc("nvim_exec_lua", "return vim.uv.resident_set_memory()", {})
+  local memory = ui:rpc(
+    "nvim_exec_lua",
+    'local Metrics = assert(loadfile(...))(); collectgarbage("collect"); return Metrics.memory()',
+    { root .. "/__test__/bench/lib/metrics.lua" }
+  )
   local closed = ui:rpc("nvim_exec_lua", "return consumer_bench.finish()", {})
   local collected = ui:rpc("nvim_exec_lua", "return consumer_bench.collect()", {})
   closed.lua_heap_bytes = collected.lua_heap_bytes
@@ -76,8 +80,8 @@ local ok, result = xpcall(function()
   return {
     summary = summary,
     iterations = rows,
-    lua_retained_bytes = retained,
-    process_memory_bytes = process_memory,
+    lua_retained_bytes = memory.lua_heap_bytes,
+    process_memory_bytes = memory.process_memory_bytes,
     closed = closed,
   }
 end, debug.traceback)

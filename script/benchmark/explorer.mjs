@@ -115,7 +115,7 @@ function harnessHashes() {
   const names = [
     ...readdirSync(here).filter((name) => name.endsWith(".mjs")).map((name) => join("script/benchmark", name)),
     ...readdirSync(drivers).filter((name) => name.endsWith(".lua")).map((name) => join("__test__/bench/explorer", name)),
-    "__test__/support/ui.lua", "__test__/support/ui_grid.lua",
+    "__test__/bench/lib/metrics.lua", "__test__/support/ui.lua", "__test__/support/ui_grid.lua",
     "script/build.mjs",
   ]
   return Object.fromEntries(names.map((name) => name.split(sep).join("/")).sort().map((name) => [name, fileHash(join(checkout, name))]))

@@ -46,5 +46,5 @@ Lua 负责输入、窗口、buffer、业务 metadata 和 viewport decorations，
 - Consumer 业务各在 feat 文档定义，通过链接引用这里的契约：
   [Explorer](../../feat/explorer/README.md) 定义键位、用途与 UI 文案；[Filetree](../filetree/README.md) 定义资源、文件 Job 与自有限额；
   [Git Files](../../feat/git-files.md) 定义 Git 文件列表与操作。文件操作名称、资源 identity 与用途不进入通用标记算法。
-- 性能目标保留在 Design，具体版本的实验数据保留在[测量记录](../../../../__test__/bench/treeview.md)。
+- 性能目标保留在 Design，具体版本的实验数据保留在[测量记录](../../../../__test__/bench/treeview/README.md)。
   VFS、跨重启恢复等未确认范围保留在 [UX Draft](../../../draft/ux.md)。

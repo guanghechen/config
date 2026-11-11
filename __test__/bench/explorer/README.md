@@ -1,9 +1,9 @@
 # Explorer benchmarks
 
-Benchmarks and acceptance probes for the Explorer and Filetree. The unified runner and its provenance live in
-`script/benchmark/`; Lua probes, support and fixtures live under `__test__/`. This file keeps each scenario's method
-and latest baseline; earlier measurements remain in its Git history
-(`git log -p -- __test__/bench/explorer/README.md`).
+Benchmarks and acceptance probes for the Explorer and Filetree; the rules shared by all benchmarks are in
+[Benchmarks](../README.md). The unified runner and its provenance live in `script/benchmark/`; Lua probes, support and
+fixtures live under `__test__/`. This file keeps each scenario's method and latest baseline; earlier measurements remain
+in its Git history (`git log -p -- __test__/bench/explorer/README.md`).
 
 ## Unified runner
 
@@ -222,8 +222,8 @@ another Lua checkout or library.
 ### Filetree probes
 
 ```sh
-nvim -l __test__/bench/filetree.lua 20 tree annotations   # 50k files, 80×48 UI; tree or list
-nvim -l __test__/bench/filetree_watch.lua 20              # isolated external renames through UI flush, 80×24 UI
+nvim -l __test__/bench/explorer/filetree.lua 20 tree annotations   # 50k files, 80×48 UI; tree or list
+nvim -l __test__/bench/explorer/filetree_watch.lua 20              # isolated external renames through UI flush, 80×24 UI
 ```
 
 `filetree.lua` reports the first page and the complete load through UI flush; `annotations` adds a 48-row annotation

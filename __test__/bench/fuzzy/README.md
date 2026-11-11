@@ -1,7 +1,7 @@
 # Yoz Fuzzy 测量记录
 
 本文记录 [Yoz Fuzzy](../../../spec/design/yoz/fuzzy.md) 的评测方法、fzf 对齐、排序质量与最新结果，不定义契约；
-预算见 [Yoz Fuzzy 性能](../../../spec/design/yoz/fuzzy.md#性能)，benchmark 通用约定见[测试指南](../../README.md#benchmarks)。
+预算见 [Yoz Fuzzy 性能](../../../spec/design/yoz/fuzzy.md#性能)，benchmark 通用约定见 [Benchmarks](../README.md)。
 
 ## 运行
 

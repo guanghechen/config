@@ -1,5 +1,5 @@
 local harness = require("__test__.support.harness")
-local Stats = require("__test__.bench.stats")
+local Stats = require("__test__.bench.lib.stats")
 local t = harness.new()
 
 local root = assert(vim.uv.cwd()) ---@type string

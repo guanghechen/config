@@ -45,7 +45,7 @@ package.preload['__test__.bench.cmp.ranking'] = function()
   return { run = function() return {} end }
 end
 arg = { output, baseline, '5', 'ranking' }
-dofile(root .. '/__test__/bench/cmp.lua')
+dofile(root .. '/__test__/bench/cmp/run.lua')
 `
   const metadata = (name) => {
     const output = join(root, name)
@@ -70,7 +70,7 @@ test("load CLI rejects a filter that matches no scenario", (t) => {
   const output = join(root, "load")
   const result = lua(root, `local root, output, baseline = unpack(arg)
 arg = { output, baseline, '5', 'load', '__no_such_load_case__' }
-dofile(root .. '/__test__/bench/cmp.lua')
+dofile(root .. '/__test__/bench/cmp/run.lua')
 `, [output, baseline])
   assert.equal(result.status, 1, result.stderr)
   assert.match(result.stderr, /no load scenarios matched filter/)

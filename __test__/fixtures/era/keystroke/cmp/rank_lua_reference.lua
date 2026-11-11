@@ -1,5 +1,5 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.fixtures.era.keystroke.cmp.rank_reference" ---@type string
+local __module_name__ = "__test__.fixtures.era.keystroke.cmp.rank_lua_reference" ---@type string
 
 local Context = require("era.keystroke.cmp.context")
 local M = {}

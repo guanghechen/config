@@ -212,7 +212,7 @@ end
 
 ---@return table
 function M.finish()
-  local metrics = require("__test__.bench.metrics")
+  local metrics = require("__test__.bench.lib.metrics")
   collectgarbage("collect")
   local result = metrics.memory()
   result.errors = _G.fuzzy_bench.errors

@@ -11,7 +11,7 @@
 - 原始项目（仅归属说明）：`saghen/blink.cmp`，从 `lua/blink/cmp/` 内按实际机制查找实现与测试。
 - 本地：[lua/era/keystroke/cmp/](../../../../lua/era/keystroke/cmp/)；明确借用来源的是 `repeat.lua` 的 scratch-completion 技术，许可位于 `LICENSE.blink`。
 - 参考基线：未记录该技术对应的固定 upstream commit。仓库比较工具中的 baseline 与源码来源 revision 是不同概念。
-- 本地契约：[Completion](../../../../spec/design/feat/cmp.md)；行为验证见 [cmp-behavior](../../../../spec/debug/cmp-behavior.md)。
+- 本地契约：[Completion](../../../../spec/design/feat/cmp.md)；行为验证见 [cmp-behavior](../../../../__test__/specs/era/keystroke/cmp/README.md)。
 - 关系：本地补全是独立实现。Lua 管 editor/session，Rust 管 ranking；原生 Neovim 管 PUM 和 preview。
 
 ## 如何更新

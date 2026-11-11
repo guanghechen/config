@@ -26,8 +26,8 @@ local fixture = require("__test__.support.explorer").new(t)
 package.loadlib = loadlib
 local await = fixture.await
 local buffers = require("era.m.explorer.buffers")
-local Metrics = require("__test__.bench.metrics")
-local Record = require("__test__.bench.record")
+local Metrics = require("__test__.bench.lib.metrics")
+local Record = require("__test__.bench.lib.record")
 local record
 
 t:test("bulk Move preserves every file and unsaved buffer", function()

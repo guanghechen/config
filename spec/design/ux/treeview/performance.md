@@ -1,7 +1,7 @@
 # Treeview 性能契约
 
 发布协议见 [render.md](render.md)，容量上限见 [默认容量](action.md#默认容量)。
-测量方法与数据只记录在 [Treeview 测量记录](../../../../__test__/bench/treeview.md)。
+测量方法与数据只记录在 [Treeview 测量记录](../../../../__test__/bench/treeview/README.md)。
 
 ## 工作量口径
 

@@ -15,6 +15,16 @@ const checkout = resolve(here, "../..")
 const resultsRoot = join(checkout, "__test__/bench/results/fuzzy")
 const nativeName = process.platform === "win32" ? "yoz.dll" : "yoz.so"
 
+/** The runner's modules and the harness files its drivers load, recorded so that a change to one shows as drift. */
+const harnessInputs = [
+  "script/benchmark/fuzzy.mjs", "script/benchmark/fuzzy-corpus.mjs", "script/benchmark/fuzzy-report.mjs",
+  "script/benchmark/provenance.mjs", "script/benchmark/stats.mjs",
+  "__test__/bench/fuzzy/cpu.lua", "__test__/bench/fuzzy/e2e.lua", "__test__/bench/fuzzy/ffi.lua",
+  "__test__/bench/fuzzy/init.lua", "__test__/bench/fuzzy/probes.lua",
+  "__test__/bench/lib/metrics.lua", "__test__/bench/lib/stats.lua",
+  "__test__/support/ui.lua", "__test__/support/ui_grid.lua",
+]
+
 export const LEVELS = ["rust", "ffi", "e2e"]
 
 /** L1 invocations; larger corpora keep every n-th typing sequence and fewer passes, as the old matchers are slow there. */
@@ -214,7 +224,7 @@ L3 cases: ${cases.map((item) => item.name).join(", ")}`)
     nvim: capture(values.nvim, ["--version"]).split("\n").slice(0, 3), levels, cases: e2eCases, iterations, processes, sequences,
     corpora: Object.fromEntries(names.map((name) => [name, manifest.corpora[name]])),
     implementations: Object.fromEntries(Object.entries(implementations).map(([name, item]) => [name, { path: item.path, library: item.library, source: item.source, runtime_sha256: item.runtime, native_source_sha256: item.provenance.source.sha256, native_artifact_sha256: item.provenance.artifact_sha256 }])),
-    harness_sha256: Object.fromEntries(["fuzzy.mjs", "fuzzy-corpus.mjs", "fuzzy-report.mjs", "stats.mjs"].map((name) => [`script/benchmark/${name}`, fileHash(join(here, name))]).concat(["ffi.lua", "e2e.lua", "probes.lua", "init.lua"].map((name) => [`__test__/bench/fuzzy/${name}`, fileHash(join(checkout, "__test__/bench/fuzzy", name))]))),
+    harness_sha256: Object.fromEntries(harnessInputs.map((name) => [name, fileHash(join(checkout, name))])),
     conditions: {
       order: "fresh processes; one benchmark at a time; L3 implementations alternate A/B and B/A by run",
       rust: "L1 compares matchers inside one release test process: one untimed warm pass, then iterations with the probe order rotated per iteration; per-query medians",

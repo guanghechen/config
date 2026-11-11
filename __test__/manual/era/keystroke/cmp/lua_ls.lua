@@ -1,35 +1,34 @@
 -- Run from the repository root: nvim -l __test__/manual/era/keystroke/cmp/lua_ls.lua [server]
+-- Requires an existing lua-language-server: the argument, else Mason's. The cases share one child Neovim that runs this
+-- checkout's completion against the real server and run in order: completion and acceptance, documentation, function
+-- snippets, signature help and the buffer-word fallback.
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "__test__.manual.era.keystroke.cmp.lua_ls" ---@type string
 
 local root = assert(vim.uv.cwd())
 package.path = root .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
 local UI = require("__test__.support.ui")
+local t = require("__test__.support.harness").new()
 local executable = arg[1] or vim.fn.stdpath("data") .. "/mason/bin/lua-language-server"
 assert(vim.fn.executable(executable) == 1, "Use an existing lua-language-server executable")
-local directory = vim.fn.tempname()
-vim.fn.mkdir(directory, "p")
+local directory = t:tempdir()
 local path = directory .. "/sample.lua"
 vim.fn.writefile({ "local obj = { alpha = 1, alpine = 2 }", "obj." }, path)
-local ui = UI.new()
+local ui = UI.open(t, { width = 120, height = 40 })
+t:defer(function()
+  pcall(ui.lua, ui, [[vim.lsp.stop_client(cmp_smoke_client, true)]])
+end)
+local started = false ---@type boolean
 
----@param code                          string
----@param ...                           any
----@return any
-local function run(code, ...)
-  return ui:lua(code, ...)
-end
-
+---Waits until the Lua chunk `code` returns a truthy value in the child; on timeout, prints the editor state first.
 ---@param code                          string
 ---@param message                       string
 ---@return nil
 local function wait(code, message)
-  if not pcall(ui.wait_until, ui, function()
-    return run(code)
-  end, 15000) then
+  if not pcall(ui.wait_lua, ui, code, 15000) then
     print(
       vim.json.encode(
-        run(
+        ui:lua(
           [[return { mode = vim.api.nvim_get_mode().mode, line = vim.api.nvim_get_current_line(), error = vim.v.errmsg, responses = cmp_smoke_responses }]]
         )
       )
@@ -38,9 +37,19 @@ local function wait(code, message)
   end
 end
 
-local ok, err = xpcall(function()
-  ui:start({ width = 120, height = 40 })
-  run(
+---Registers a case that continues the session the first case starts.
+---@param name                          string
+---@param callback                      fun(): nil
+---@return nil
+local function scenario(name, callback)
+  t:test(name, function()
+    assert(started, "the real server did not start")
+    callback()
+  end)
+end
+
+t:test("the real server starts with completion support", function()
+  ui:lua(
     [[
     local root, directory, path, executable = ...
     require('__test__.support.cmp.runtime').setup()
@@ -85,7 +94,7 @@ local ok, err = xpcall(function()
     [[local c = vim.lsp.get_client_by_id(cmp_smoke_client); return c and c.initialized and c:supports_method('textDocument/completion', 0)]],
     "completion capability"
   )
-  run([[
+  ui:lua([[
     _G.cmp_smoke_responses = {}
     local client = vim.lsp.get_client_by_id(cmp_smoke_client)
     local request = client.request
@@ -98,28 +107,31 @@ local ok, err = xpcall(function()
       end, bufnr)
     end
   ]])
+  started = true
+end)
+
+scenario("completion shows the server's candidates and accepts one", function()
   ui:rpc("nvim_input", "A")
   wait([[return vim.api.nvim_get_mode().mode:sub(1, 1) == 'i']], "insert mode")
   -- LuaLS can return null while its first document is still being indexed. A manual retry
   -- must query it again even if the editor already has local buffer candidates.
   local ready = false
   for _ = 1, 20 do
-    run([[require('era.keystroke.cmp').show()]])
-    ready = pcall(ui.wait_until, ui, function()
-      return run([[return cmp_smoke_menu('[lsp]')]])
-    end, 500)
+    ui:lua([[require('era.keystroke.cmp').show()]])
+    ready = pcall(ui.wait_lua, ui, [[return cmp_smoke_menu('[lsp]')]], 500)
     if ready then
       break
     end
   end
   assert(ready, "real LSP candidates after indexing")
-  run([[require('era.keystroke.cmp').accept(1)]])
+  ui:lua([[require('era.keystroke.cmp').accept(1)]])
   wait([[return vim.api.nvim_get_current_line() == 'obj.alpha']], "real LSP acceptance")
-  print("PASS real Lua language server completion and acceptance")
+end)
 
+scenario("documentation holds one full signature without a repeated header or rule", function()
   ui:rpc("nvim_input", "<Esc>")
   wait([[return vim.api.nvim_get_mode().mode == 'n']], "normal mode")
-  run([[
+  ui:lua([[
     local lines = {
       '---@param a number First operand.', '---@param b number', '---@return number',
       'local function add(a, b) return a + b end', '',
@@ -142,7 +154,9 @@ local ok, err = xpcall(function()
   ]],
     "real documentation contains one full signature and no repeated header or rule"
   )
-  print("PASS real Lua language server documentation signature")
+end)
+
+scenario("an accepted function snippet reaches its second parameter and final tabstop", function()
   ui:rpc("nvim_input", "<CR>")
   wait(
     [[return vim.api.nvim_get_current_line() == 'add(a, b)' and vim.snippet.active() and vim.api.nvim_get_mode().mode == 's']],
@@ -158,21 +172,23 @@ local ok, err = xpcall(function()
     [[return not vim.snippet.active() and vim.api.nvim_get_mode().mode == 'i' and vim.api.nvim_win_get_cursor(0)[2] == #'add(a, b)']],
     "real function final tabstop"
   )
-  print("PASS real Lua language server function snippet and final tabstop")
+end)
 
+scenario("signature help opens on a call", function()
   ui:rpc("nvim_input", "<Esc>")
   wait([[return vim.api.nvim_get_mode().mode == 'n']], "normal mode")
-  run([[
+  ui:lua([[
     vim.api.nvim_buf_set_lines(0, 0, -1, false, { 'local function add(a, b) return a + b end', '' })
     vim.api.nvim_win_set_cursor(0, { 2, 0 })
   ]])
   ui:rpc("nvim_input", "iadd(")
   wait([[return cmp_smoke_window('cmp-signature', 'add')]], "real signature help")
-  print("PASS real Lua language server signature help")
+end)
 
+scenario("automatic and manual completion keep the buffer-word fallback", function()
   ui:rpc("nvim_input", "<Esc>")
   wait([[return vim.api.nvim_get_mode().mode == 'n']], "normal mode")
-  run([[
+  ui:lua([[
     local bufnr = vim.api.nvim_create_buf(true, false)
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { 'qzxOtherWord' })
     vim.api.nvim_buf_set_lines(0, 0, -1, false, { '-- qzxCurrentWord', 'local value = ' })
@@ -184,17 +200,10 @@ local ok, err = xpcall(function()
   -- Wait for its response so an early local fallback cannot hide a later Text result.
   wait([[return #cmp_smoke_responses > 0]], "real word completion response")
   wait([[return cmp_smoke_menu('qzxOtherWord')]], "cross-buffer word fallback")
-  run([[require('era.keystroke.cmp').show()]])
+  ui:lua([[require('era.keystroke.cmp').show()]])
   wait([[return #cmp_smoke_responses > 1]], "manual word completion response")
   wait([[return cmp_smoke_menu('qzxOtherWord')]], "manual cross-buffer word fallback")
-  print("PASS real Lua language server preserves automatic and manual buffer fallback")
-  local message = run([[return vim.v.errmsg]])
-  assert(message == "", message)
-end, debug.traceback)
+  t.assert_eq("", ui:lua([[return vim.v.errmsg]]), "no editor errors")
+end)
 
-pcall(run, [[vim.lsp.stop_client(cmp_smoke_client, true)]])
-ui:close()
-vim.fn.delete(directory, "rf")
-if not ok then
-  error(err)
-end
+t:run()

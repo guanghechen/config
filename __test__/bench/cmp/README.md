@@ -1,8 +1,10 @@
 # Completion 性能测量
 
-实现契约见 [Completion design](../design/feat/cmp.md)，行为验证见[行为指南](cmp-behavior.md)。
-本页维护可复现方法和解释边界；结果写入本地 `__test__/bench/results/cmp/`（git 忽略），
-不随 checkout 提供，也不作为当前性能结论。
+实现契约见 [Completion design](../../../spec/design/feat/cmp.md)，行为验证见[行为指南](../../specs/era/keystroke/cmp/README.md)，
+benchmark 通用约定见 [Benchmarks](../README.md)。本页维护可复现方法和解释边界，不记录性能结论。
+
+结果不经 `__test__/bench/lib/record.lua`：`run.lua` 向第一个参数给出的目录写入 `metadata.json` 与所跑每个 phase
+的 `<phase>.json`，结束时打印该目录。省略或传入空字符串时写入 git 忽略的 `__test__/bench/results/cmp/<UTC>-<pid>/`。
 
 ## 入口
 
@@ -11,14 +13,14 @@
 
 ```sh
 # CLI: output, Era baseline or -, iterations, phase (ranking|load|ui|all), load case filter
-nvim -l __test__/bench/cmp.lua /tmp/cmp - 21 all
-nvim -l __test__/bench/cmp.lua /tmp/cmp-load - 11 load incomplete
-nvim -l __test__/bench/cmp.lua /tmp/cmp-baseline /path/to/era-baseline 21 ranking
+nvim -l __test__/bench/cmp/run.lua /tmp/cmp - 21 all
+nvim -l __test__/bench/cmp/run.lua /tmp/cmp-load - 11 load incomplete
+nvim -l __test__/bench/cmp/run.lua /tmp/cmp-baseline /path/to/era-baseline 21 ranking
 
 # 报告与校验；目录可读取 JSON 或 gzip
 node script/benchmark/cmp-report.mjs /tmp/cmp
 node script/benchmark/cmp-report.mjs --before /tmp/cmp-before --after /tmp/cmp-after
-node --test __test__/node/cmp-*.test.mjs
+node --test __test__/node/benchmark-cmp-*.test.mjs
 ```
 
 Iterations 至少 5，每个 workload 另有 5 次预热。末尾的 case filter 只作用于 load，按字面子串匹配场景名，

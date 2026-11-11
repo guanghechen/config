@@ -4,7 +4,7 @@ local __module_name__ = "__test__.bench.explorer.activity" ---@type string
 local here = vim.fs.dirname(assert(vim.uv.fs_realpath(debug.getinfo(1, "S").source:sub(2))))
 local harness = vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(here)))
 local root = vim.env.NVIM_EXPLORER_BENCH_CHECKOUT or harness
-local Metrics = assert(loadfile(vim.fs.dirname(here) .. "/metrics.lua"))()
+local Metrics = assert(loadfile(vim.fs.dirname(here) .. "/lib/metrics.lua"))()
 local kind, processes = arg[1] or "jobs", tonumber(arg[2]) or 3
 assert(
   (kind == "jobs" or kind == "jobs-many" or kind == "watch")
@@ -39,25 +39,12 @@ local setup = [=[
   bench.timer:stop()
   bench.timer:close()
   bench.timer = nil
-  local ffi
-  if vim.uv.os_uname().sysname == "Darwin" then
-    ffi = require("ffi")
-    ffi.cdef[[
-      void *pthread_self(void);
-      unsigned int pthread_mach_thread_np(void *thread);
-      int thread_info(unsigned int thread, int flavor, int *info, unsigned int *count);
-    ]]
-  end
+  -- runtime.lua's process and main-thread CPU reading, with the time it was taken.
+  local usage = bench.usage
   ---@return table
   function bench.usage()
-    local usage = vim.uv.getrusage()
-    local value = { at = vim.uv.hrtime(), cpu_us = (usage.utime.sec + usage.stime.sec) * 1000000
-      + usage.utime.usec + usage.stime.usec }
-    if ffi then
-      local info, count = ffi.new("int[10]"), ffi.new("unsigned int[1]", 10)
-      assert(ffi.C.thread_info(ffi.C.pthread_mach_thread_np(ffi.C.pthread_self()), 3, info, count) == 0)
-      value.main_us = (tonumber(info[0]) + tonumber(info[2])) * 1000000 + tonumber(info[1]) + tonumber(info[3])
-    end
+    local value = usage()
+    value.at = vim.uv.hrtime()
     return value
   end
   ---@param future                      stl.c.Future

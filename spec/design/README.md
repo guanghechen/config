@@ -63,8 +63,7 @@ feature。多文档主题使用独立子目录与 `README.md`，例如 [Treeview
 
 ## 测试
 
-- [测试架构](test-harness/arch.md)：目录、依赖、harness 与资源归属。
-- [测试执行流程](test-harness/flow.md)：CLI、suite 进程、cleanup 与失败契约。
+- [测试架构与执行](test-harness.md)：目录与布局、依赖、执行与失败契约、harness、资源生命周期与时序。
 - [测试指南](../../__test__/README.md)：可执行命令与示例。
 
 ## 文档约定

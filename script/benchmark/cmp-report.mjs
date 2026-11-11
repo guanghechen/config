@@ -1,4 +1,4 @@
-// Reports completion benchmark runs of __test__/bench/cmp.lua: node script/benchmark/cmp-report.mjs <run-dir...>
+// Reports completion benchmark runs of __test__/bench/cmp/run.lua: node script/benchmark/cmp-report.mjs <run-dir...>
 import assert from "node:assert/strict"
 import { existsSync, readFileSync, realpathSync } from "node:fs"
 import { join } from "node:path"

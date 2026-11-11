@@ -1,24 +1,24 @@
 # Treeview 测量记录
 
 本文记录 Treeview 及其 consumer 的测量方法与最新基线，不定义契约。目标与口径见
-[性能契约](../../spec/design/ux/treeview/performance.md)，运行入口见[测试指南](../README.md#benchmarks)；
-旧数字留在 git 历史（`git log -p -- __test__/bench/treeview.md`）。
+[性能契约](../../../spec/design/ux/treeview/performance.md)，benchmark 通用约定见 [Benchmarks](../README.md)；
+旧数字留在 git 历史（`git log -p --follow -- __test__/bench/treeview/README.md`）。
 
 除另注外，基线于 2026-10-22 测得：Apple M5 Pro（6P + 12E）、外接电源、Neovim 0.12.6、release library、附着 UI、
-自然 GC，计时任务串行。统计采用[统一结果格式](../README.md#benchmarks)：偶数个值的 median 取中点，少于 20 个值不报告 p95。
+自然 GC，计时任务串行。统计采用[统一结果格式](../README.md#result-format)：偶数个值的 median 取中点，少于 20 个值不报告 p95。
 数字只对所注明的条件成立，少量进程不支持生产 p95 结论。
 
-## 合成投影：`treeview.lua`
+## 合成投影：`projection.lua`
 
 ```sh
-nvim -l __test__/bench/treeview.lua [tree|ancestry] [processes]
+nvim -l __test__/bench/treeview/projection.lua [tree|ancestry] [processes]
 ```
 
 每个进程是新的子 Neovim，统计合并全部进程的样本。数据为 50,001 个 source 节点、50,000 行投影、96-byte label，
 80×48 UI，每行一个高亮组和右对齐文本。
 
 - 单行更新分无过滤与过滤态（pattern `node-` 匹配全部行）。两次更新之间留出
-  [8 ms 发布节奏](../../spec/design/ux/treeview/render.md#发布节奏)，测孤立的一次变化。
+  [8 ms 发布节奏](../../../spec/design/ux/treeview/render.md#发布节奏)，测孤立的一次变化。
 - Filter 以 `set_display` 在 `node-000`（100 行）与 `node-`（50,000 行）之间交替收窄与放宽。
 - 名次 filter 是 Picker 的做法：Yoz Fuzzy corpus 的 `Result:ids` 直接交给 SetDisplay。匹配集同上，名次由 frecency
   式权重与 source 顺序交错；Ancestry 的 List 按名次排列，Tree 保持 source 顺序。
@@ -36,7 +36,7 @@ nvim -l __test__/bench/treeview.lua [tree|ancestry] [processes]
 | 名次 filter 收窄到 100 行    |       6.81 / 8.24 |  3.18 / 4.56 |           8.59 / 9.00 |     2.97 / 3.29 |
 | 名次 filter 放宽到 50,000 行 |     15.56 / 20.26 | 9.26 / 13.95 |         26.39 / 32.22 |   12.25 / 18.02 |
 
-- 对应[性能契约](../../spec/design/ux/treeview/performance.md#延迟口径与目标)：发布段即"常见局部发布及当前窗口 redraw"
+- 对应[性能契约](../../../spec/design/ux/treeview/performance.md#延迟口径与目标)：发布段即"常见局部发布及当前窗口 redraw"
   （p95 ≤ 8 ms）；单行更新与 Selection 的输入到 flush 即"已加载数据上的局部交互到 Frame flush"（p95 ≤ 16 ms）；
   filter 的输入到 flush 即 50,000 驻留候选的 filter/sort（p95 ≤ 50 ms）。
 - 最慢的是 Ancestry 的名次 filter 放宽，即 Picker 的 List：投影 14.0 ms、staging 7.6 ms（median），按名次随机访问节点
@@ -76,10 +76,10 @@ release 测量默认 ignored，打印样本统计并只断言正确性；逐个�
   覆盖 leaf/目录 rename、reparent、插删与 metadata 变化；mutations 65.6 ms，保留约 251.4 MiB，释放全部句柄后记账归零。
   深度安全另由常规测试覆盖 10k 层构建、文本存储与迭代释放。
 
-## 真实数据链路：`treeview_consumers.lua`
+## 真实数据链路：`consumers.lua`
 
 ```sh
-nvim -l __test__/bench/treeview_consumers.lua <filetree|searcher|git|lsp> [iterations]
+nvim -l __test__/bench/treeview/consumers.lua <filetree|searcher|git|lsp> [iterations]
 ```
 
 默认 100 个正式样本，另有 5 次预热；`lsp` 使用 Mason 安装的 Lua language server。Adapter 只验收到 Treeview surface，
@@ -100,10 +100,26 @@ nvim -l __test__/bench/treeview_consumers.lua <filetree|searcher|git|lsp> [itera
   query/provider/view 与专用 buffer 必须被回收：Git 模式约 5% 的运行在这一检查失败，原因是 bench 自身经
   `vim.defer_fn` 轮询的闭包偶被 LuaJIT trace 留住，与被测代码无关，重跑即可。
 
-## Cursor 路径 guide：`treeview_guides.lua`
+## Cursor 路径 guide：`guides.lua`
 
-用法与口径见[测试指南](../README.md#benchmarks)。50k 行、每动作 300 样本（30 次预热）、80×50 UI，单进程，
-所有样本零正文写入：
+```sh
+nvim -l __test__/bench/treeview/guides.lua [native-library] [baseline-dir] [count=50000] [iterations=300] [height=50]
+```
+
+默认使用 `lua/yoz.so`、不替换 baseline，每个操作 30 次预热后计时；指定更大的行数时 baseline 目录传 `''`。Fixture 以
+512 条记录为一块导入、展开八叉树，默认附着 80×50 UI。测量 API/Normal 相邻移动、视口内跨分支跳转、一个 callback 内 8 次
+API cursor 请求、原生光标移动后 CursorMoved 之前的 redraw、冷跳转、滚动与 Visual 移动，各自经 native 发布到 UI flush；
+自然 GC，并断言零正文写入。连发的 8 次请求在两个可见行之间交替：第一次重复现有位置，其余 7 次移动光标。可选的
+baseline 目录放旧版 `decorations.lua`、`surface.lua` 与 `view.lua`，两个变体使用同一个 release native module。
+
+- 结果按操作汇总，另附 surface 工作、路径更新、prepare/redraw/guide extmark 计数与保留的 Lua heap。`flush` 测可见输出，
+  `publication` 测 native frame 确认，`settled` 等两者完成且延迟的路径失效清空。
+- 视口准备调用与 native 行查询次数、导出行总数（含有界 overscan）分开统计。每个操作的进程 CPU 在预热后经 getrusage
+  取得，包含 native 线程与测量用的 RPC。
+- 仅移动光标的发布可能确认已经 flush 过的像素，无需再次 redraw。路径更新时间包含它请求的即时 redraw，不是孤立的
+  祖先查询测量。不含外部 terminal/compositor 的呈现。
+
+50k 行、每动作 300 样本（30 次预热）、80×50 UI，单进程，所有样本零正文写入：
 
 | 操作                           | settled median ms | settled p95 ms |
 | ------------------------------ | ----------------: | -------------: |
@@ -120,18 +136,29 @@ nvim -l __test__/bench/treeview_consumers.lua <filetree|searcher|git|lsp> [itera
   并整窗 redraw，滚动每次导出约 6.91 个 native 行。
 - 10,000 层 source 只显示 50 段路径的情形有 native 回归覆盖；不声称渲染 10,000 列缩进也满足同一延迟目标。
 
-## 结果消费者：`treeview_results.lua`
+## 结果消费者：`results.lua`
 
-`nvim -l __test__/bench/treeview_results.lua 50000` 驱动生产 ResultPaths/ResultFiles adapter：虚拟文件记录，
+`nvim -l __test__/bench/treeview/results.lua 50000` 驱动生产 ResultPaths/ResultFiles adapter：虚拟文件记录，
 无文件系统扫描，100×40 UI。
 
 3 个进程的中位数：50,000 文件生成 50,500 行，producer 124 ms，首次完整 UI flush 681 ms；30 次 cursor 移动
 median 0.16 / p95 0.20 ms，native 确认 median 0.39 / p95 1.04 ms，cursor 零正文写入；保留 Lua heap 70.1 MiB；
 收集 101 个选中身份 2.9 ms。不是延迟保证。
 
-## 视口装饰：`treeview_decorations.lua`
+## 视口装饰：`decorations.lua`
 
-用法与口径见[测试指南](../README.md#benchmarks)。2026-11-04 于 Apple M5 Pro、Neovim 0.12.6、release library、附着 UI 测得。
+```sh
+nvim -l __test__/bench/treeview/decorations.lua [scenario=all] [processes=5] [iterations=300] [baseline-root] [gc=natural|stopped]
+```
+
+比较 baseline checkout 与工作树的整窗重绘：本 checkout 上宽 30 的 Explorer 与 50,000 行合成树（各分无选择、有选择），
+`git ls-files` 的 ResultFiles 树，以及由本 checkout 文件建成的 fixture 仓库上的 Git Files Unstaged pane。每个进程附着一个
+UI 子进程，从一个 root 加载 Lua、使用本 checkout 的 native library，各轮交替变体顺序。Baseline 用
+`git archive <rev> lua | tar -x -C <dir>` 导出；不传时两个变体都是工作树，测得噪声下限。结果汇总 30 次预热后的强制重绘
+时间（带 flush 的 `nvim__redraw`）与 Treeview、Filetree、Explorer decoration provider 时间，并统计每次重绘的 ephemeral
+marks。默认自然 GC；`gc` 为 `stopped` 时在计时的重绘期间停止 Lua 回收器，把工作与回收分开。
+
+2026-11-04 于 Apple M5 Pro、Neovim 0.12.6、release library、附着 UI 测得。
 “前”为 `80f0c61e6`：各 consumer 各自绘制右对齐 mark，选择列常驻；“后”为合成的右对齐区、截断标记与仅在有选择时保留的
 选择列。每个变体 10 个进程 × 300 次强制整窗重绘（另有 30 次预热），进程轮流先后，自然 GC。表中为三轮 A/B 各自
 median / p95 的中位数（ms）；最后一列为停掉 Lua GC 时“后”减“前”的重绘 median：
@@ -148,20 +175,20 @@ median / p95 的中位数（ms）；最后一列为停掉 Lua GC 时“后”减
 - 两侧同为一份代码（A/A）时 median 相差 ≤ 0.011 ms、p95 相差 ≤ 0.053 ms，小于此范围的差异视为噪声。
 - 成本随可见截断行数增长：合成有选择时整窗重绘多 0.012 ms，停掉 GC 后相同，约为每个截断行 0.6 µs，主要是测量
   label 与右侧内容宽度的 `nvim_strwidth`。Explorer 有选择时 provider p95 高约 0.09 ms，停掉 GC 后消失，来自 GC 落点。
-- 光标路径 `treeview_guides.lua`：两侧都经 baseline 目录载入三份文件，各 20 轮；8 个操作的 settled median 差
+- 光标路径 `guides.lua`：两侧都经 baseline 目录载入三份文件，各 20 轮；8 个操作的 settled median 差
   −0.017～+0.014 ms，均在单轮 median 的波动范围内。
-- 发布路径 `treeview.lua tree`：各 3 轮 × 5 进程，该数据每个可见行都被截断。Selection 输入到 flush 2.307 → 2.420 ms
+- 发布路径 `projection.lua tree`：各 3 轮 × 5 进程，该数据每个可见行都被截断。Selection 输入到 flush 2.307 → 2.420 ms
   （+0.113，三轮区间不重叠），单行更新 1.905 → 1.976 ms（+0.071），filter 与名次 filter 在噪声内。
 
 ## Diffview
 
-`nvim -l __test__/bench/treeview_diffview.lua 10000 10` 驱动真实 Diffview 展开 action，100×40 UI。
+`nvim -l __test__/bench/treeview/diffview.lua 10000 10` 驱动真实 Diffview 展开 action，100×40 UI。
 
 三次独立运行的中位数（展开、折叠各 10 次，不足 20 个样本不报告 p95）：折叠首屏 2.42 ms，首次展开 155 ms，
 展开 median 3.66 ms（单次最大 4.18 ms），折叠 median 2.02 ms；热循环零 plan 重建、导入与 icon 查找。
 
-`nvim -l __test__/bench/diffview_navigation.lua <count> [baseline] [directories]` 测量真实 action 的路径解析，
-不含 preview I/O、逻辑 cursor 确认与 UI flush。
+`nvim -l __test__/bench/treeview/diffview_navigation.lua <count> [baseline] [directories]` 测量真实 action 的路径解析，
+不含 preview I/O、逻辑 cursor 确认与 UI flush。第二个参数是保留的 baseline 目录；传 `"" directories` 测量跳过折叠目录后定位文件。
 
 5 个独立进程的中位数：
 

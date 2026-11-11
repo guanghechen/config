@@ -1,21 +1,19 @@
---- Full-config E2E: open a tracked file with an unstaged change hunk, then execute this fixture.
---- Disables context saving and exits the disposable Neovim process without saving buffers.
+-- Run from the repository root in a disposable headless Neovim with the full configuration, on a tracked file with an
+-- unstaged change hunk, with this checkout's runtime, Lua path and native module ahead of the default configuration's:
+--   nvim --headless \
+--     --cmd 'lua local root = vim.uv.cwd(); vim.opt.runtimepath:prepend(root); package.path = root .. "/?.lua;" .. package.path; package.cpath = root .. "/lua/?.so;" .. package.cpath' \
+--     -u init.lua -i NONE -n <changed tracked file> \
+--     -c 'luafile __test__/manual/era/m/git/word_diff_runtime.lua'
+-- Requires the installed plugins and native library. Opens the hunk popup with the Lua oracle's word diff and with the
+-- native one, and compares their lines and highlight extmarks; context saving is disabled, and the process exits
+-- without writing source buffers.
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "__test__.manual.era.m.git.word_diff_runtime" ---@type string
 
-dot.context.save_on_exit = function() end
+local t = require("__test__.support.harness").new()
 
----@param future                        stl.c.Future
----@return nil
-local function await(future)
-  assert(
-    vim.wait(10000, function()
-      return future:is_done()
-    end, 1),
-    "Future timed out"
-  )
-  assert(not future:is_failed(), future:get_error())
-end
+-- The run ends the process, which must not save the context of this disposable session.
+dot.context.save_on_exit = function() end
 
 ---@param bufnr                         integer
 ---@return table
@@ -31,19 +29,15 @@ local function capture(bufnr)
   return { lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false), ranges = ranges }
 end
 
----@return nil
-local function run()
+t:test("full-config word-diff popup matches the Lua oracle", function()
   local git = era.m.git
   local bufnr, winnr = vim.api.nvim_get_current_buf(), vim.api.nvim_get_current_win()
   local source = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-  await(git.state.refresh())
-  assert(
-    vim.wait(10000, function()
-      return git.buffer.is_attached(bufnr)
-    end, 1),
-    "source did not attach"
-  )
-  await(git.buffer.refresh(bufnr))
+  t.await(git.state.refresh())
+  t.wait_until(function()
+    return git.buffer.is_attached(bufnr)
+  end, 10000, "source did not attach")
+  t.await(git.buffer.refresh(bufnr))
   local selected
   for _, hunk in ipairs(git.buffer.get_unstaged_hunks(bufnr) or {}) do
     if hunk.type == "change" and #git.diff.compute_hunk_word_diff(hunk) > 0 then
@@ -84,10 +78,6 @@ local function run()
       #results[2].ranges
     )
   )
-end
+end)
 
-local ok, err = xpcall(run, debug.traceback)
-if not ok then
-  io.stderr:write(err .. "\n")
-end
-vim.cmd(ok and "qa!" or "cquit 1")
+t:run()

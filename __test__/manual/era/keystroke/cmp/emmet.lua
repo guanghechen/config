@@ -1,4 +1,7 @@
 -- Run from the repository root: nvim -l __test__/manual/era/keystroke/cmp/emmet.lua [server]
+-- Requires an existing emmet-language-server: the argument, else Mason's. Each case types an Emmet abbreviation into
+-- an HTML buffer of a child Neovim that runs this checkout's completion against the real server, and checks the
+-- accepted expansion.
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "__test__.manual.era.keystroke.cmp.emmet" ---@type string
 
@@ -13,16 +16,8 @@ local t = require("__test__.support.harness").new()
 ---@param prefix                        string
 ---@return table
 local function editor(prefix)
-  local directory = vim.fn.tempname()
-  vim.fn.mkdir(directory, "p")
-  t:defer(function()
-    vim.fn.delete(directory, "rf")
-  end)
-  local ui = UI.new()
-  t:defer(function()
-    ui:close()
-  end)
-  ui:start({ width = 120, height = 40, ui = { ext_multigrid = true } })
+  local directory = t:tempdir()
+  local ui = UI.open(t, { width = 120, height = 40, ui = { ext_multigrid = true } })
   ui:lua(
     [[
     local root, directory, executable, prefix = ...
@@ -61,9 +56,11 @@ local function editor(prefix)
   t:defer(function()
     ui:lua([[vim.lsp.stop_client(cmp_emmet_client, true)]])
   end)
-  ui:wait_until(function()
-    return ui:lua([[local client = vim.lsp.get_client_by_id(cmp_emmet_client); return client and client.initialized]])
-  end, 10000, "real Emmet initialized")
+  ui:wait_lua(
+    [[local client = vim.lsp.get_client_by_id(cmp_emmet_client); return client and client.initialized]],
+    10000,
+    "real Emmet initialized"
+  )
   return ui
 end
 
@@ -97,18 +94,18 @@ for _, case in ipairs({
   t:test(case.name, function()
     local ui = editor(case.prefix)
     ui:rpc("nvim_input", "A" .. case.input)
-    ui:wait_until(function()
-      return ui:lua(
-        [[
-        local abbreviation = ...
-        for _, item in ipairs(cmp_emmet_session and cmp_emmet_session.items or {}) do
-          if item.source == 'lsp' and item.raw.label == abbreviation then return true end
-        end
-        return false
-      ]],
-        case.input
-      )
-    end, 10000, "real Emmet candidate")
+    ui:wait_lua(
+      [[
+      local abbreviation = ...
+      for _, item in ipairs(cmp_emmet_session and cmp_emmet_session.items or {}) do
+        if item.source == 'lsp' and item.raw.label == abbreviation then return true end
+      end
+      return false
+    ]],
+      10000,
+      "real Emmet candidate",
+      case.input
+    )
     t.assert_true(
       ui:lua([[
       for _, item in ipairs(cmp_emmet_session.items) do

@@ -1,9 +1,10 @@
--- Usage, from the repository root: nvim -l __test__/bench/filetree.lua [iterations=10] [tree|list] [annotations]
+-- Usage, from the repository root: nvim -l __test__/bench/explorer/filetree.lua [iterations=10] [tree|list] [annotations]
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.bench.filetree" ---@type string
+local __module_name__ = "__test__.bench.explorer.filetree" ---@type string
 
-local root =
+local root = vim.fs.dirname(
   vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(assert(vim.uv.fs_realpath(debug.getinfo(1, "S").source:sub(2))))))
+)
 vim.api.nvim_set_current_dir(root)
 vim.opt.runtimepath:prepend(root)
 package.path = root .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
@@ -26,8 +27,8 @@ for i in range(50000): (p / f"file-{i:05}").touch()
   :wait()
 assert(prepared.code == 0, prepared.stderr)
 local ui = require("__test__.support.ui").new()
-local Record = require("__test__.bench.record")
-local Stats = require("__test__.bench.stats")
+local Record = require("__test__.bench.lib.record")
+local Stats = require("__test__.bench.lib.stats")
 
 local ok, result = xpcall(function()
   ui:rpc("nvim_ui_attach", 80, 48, { rgb = true, ext_linegrid = true })
@@ -182,10 +183,13 @@ local ok, result = xpcall(function()
     memory = ui:rpc(
       "nvim_exec_lua",
       [[
+      local Metrics = assert(loadfile(...))()
       collectgarbage("collect")
-      return { rust = bench_data:native():stats(), lua_heap_bytes = collectgarbage("count") * 1024, buffer_lines = vim.api.nvim_buf_line_count(bench_view.bufnr), process_memory_bytes = vim.uv.resident_set_memory() }
+      local memory = Metrics.memory()
+      memory.rust, memory.buffer_lines = bench_data:native():stats(), vim.api.nvim_buf_line_count(bench_view.bufnr)
+      return memory
     ]],
-      {}
+      { root .. "/__test__/bench/lib/metrics.lua" }
     ),
   }
   return output

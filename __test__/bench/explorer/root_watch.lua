@@ -4,7 +4,7 @@ local __module_name__ = "__test__.bench.explorer.root_watch" ---@type string
 local here = vim.fs.dirname(assert(vim.uv.fs_realpath(debug.getinfo(1, "S").source:sub(2))))
 local harness = vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(here)))
 local root = vim.env.NVIM_EXPLORER_BENCH_CHECKOUT or harness
-local Metrics = assert(loadfile(vim.fs.dirname(here) .. "/metrics.lua"))()
+local Metrics = assert(loadfile(vim.fs.dirname(here) .. "/lib/metrics.lua"))()
 package.path = harness .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
 local processes = tonumber(arg[1]) or 3
 local library = arg[2] and assert(vim.uv.fs_realpath(arg[2]))
@@ -125,11 +125,13 @@ local ok, failure = xpcall(function()
         assert(type(result) ~= "table" or result.kind ~= "Rejected", vim.inspect(result))
         return result
       end
+      -- runtime.lua's process and main-thread CPU reading, with the time and the process memory.
+      local usage = bench.usage
       ---@return table
       function bench.usage()
-        local value = vim.uv.getrusage()
-        return { at = vim.uv.hrtime(), cpu_us = (value.utime.sec + value.stime.sec) * 1000000
-          + value.utime.usec + value.stime.usec, process_memory_bytes = vim.uv.resident_set_memory() }
+        local value = usage()
+        value.at, value.process_memory_bytes = vim.uv.hrtime(), vim.uv.resident_set_memory()
+        return value
       end
       local session = bench.widget._session
       local nodes = {}

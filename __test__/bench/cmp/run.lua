@@ -1,11 +1,14 @@
--- Usage, from the repository root: nvim -l __test__/bench/cmp.lua [output-dir] [baseline-dir|-] [iterations=15] [ranking|load|ui|all] [load-case-filter]
+-- Usage, from the repository root: nvim -l __test__/bench/cmp/run.lua [output-dir|''] [baseline-dir|-] [iterations=15] [ranking|load|ui|all] [load-case-filter]
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.bench.cmp" ---@type string
+local __module_name__ = "__test__.bench.cmp.run" ---@type string
 
 local root = assert(vim.uv.cwd())
 vim.opt.runtimepath:prepend(root)
 package.path = root .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
-local output = arg[1] or vim.fn.tempname() .. "-cmp-native"
+-- By default the run keeps its results beside the other benchmarks; a tempname would vanish with Neovim's
+-- private temporary directory when the process exits.
+local output = arg[1] ~= "" and arg[1]
+  or string.format("%s/__test__/bench/results/cmp/%s-%d", root, os.date("!%Y%m%dT%H%M%SZ"), vim.uv.os_getpid())
 local baseline = arg[2] ~= "-" and arg[2] or nil
 local iterations = tonumber(arg[3]) or 15
 local phase = arg[4] or "all"
@@ -17,7 +20,7 @@ local Metadata = require("__test__.bench.cmp.metadata")
 local source_root = baseline or root
 local rust_paths = vim.fn.glob(source_root .. "/rust/yoz/src/completion/**/*.rs", false, true)
 rust_paths[#rust_paths + 1] = source_root .. "/rust/yoz/src/completion.rs"
-local metadata = vim.tbl_extend("force", Metadata.collect(root, baseline, "__test__/bench/cmp.lua"), {
+local metadata = vim.tbl_extend("force", Metadata.collect(root, baseline), {
   completion_rust_sha256 = Metadata.digest(source_root, rust_paths),
   runtime_sha256 = Metadata.file_hash(root .. "/__test__/support/cmp/runtime.lua"),
   native_artifact_sha256 = Metadata.file_hash(Metadata.native_library(source_root)),

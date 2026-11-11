@@ -1,19 +1,20 @@
--- Usage, from the repository root: nvim -l __test__/bench/treeview.lua [tree|ancestry] [processes=1]
+-- Usage, from the repository root: nvim -l __test__/bench/treeview/projection.lua [tree|ancestry] [processes=1]
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.bench.treeview" ---@type string
+local __module_name__ = "__test__.bench.treeview.projection" ---@type string
 
-local root =
+local root = vim.fs.dirname(
   vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(assert(vim.uv.fs_realpath(debug.getinfo(1, "S").source:sub(2))))))
+)
 vim.api.nvim_set_current_dir(root)
 vim.opt.runtimepath:prepend(root)
 package.path = root .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
-local Record = require("__test__.bench.record")
-local Stats = require("__test__.bench.stats")
+local Record = require("__test__.bench.lib.record")
+local Stats = require("__test__.bench.lib.stats")
 local mode = arg[1] or "tree" ---@type string
 local processes = tonumber(arg[2]) or 1
 assert(
   (mode == "tree" or mode == "ancestry") and processes >= 1 and processes % 1 == 0,
-  "usage: nvim -l __test__/bench/treeview.lua [tree|ancestry] [processes]"
+  "usage: nvim -l __test__/bench/treeview/projection.lua [tree|ancestry] [processes]"
 )
 local ITERATIONS = 100
 local KINDS = { "text", "text_filtered", "selection", "filter", "ranked" }
@@ -187,10 +188,11 @@ local function measure(ui)
       record(metrics, "publish_flush", times[5], flushed)
     end
   end
-  local memory = {
-    lua_heap_bytes = ui:rpc("nvim_exec_lua", 'collectgarbage("collect"); return collectgarbage("count") * 1024', {}),
-    process_memory_bytes = ui:rpc("nvim_exec_lua", "return vim.uv.resident_set_memory()", {}),
-  }
+  local memory = ui:rpc(
+    "nvim_exec_lua",
+    'local Metrics = assert(loadfile(...))(); collectgarbage("collect"); return Metrics.memory()',
+    { root .. "/__test__/bench/lib/metrics.lua" }
+  )
   return samples, memory
 end
 

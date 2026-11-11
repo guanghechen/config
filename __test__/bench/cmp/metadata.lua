@@ -39,12 +39,10 @@ end
 
 ---@param root                          string
 ---@param baseline                      ?string
----@param entry                         string Repository-relative CLI path.
 ---@return table
-function M.collect(root, baseline, entry)
+function M.collect(root, baseline)
   local source_root = baseline or root
   local paths = vim.fn.glob(root .. "/__test__/bench/cmp/*.lua", false, true)
-  paths[#paths + 1] = root .. "/" .. entry
   paths[#paths + 1] = root .. "/__test__/support/cmp/runtime.lua"
   paths[#paths + 1] = root .. "/__test__/support/ui.lua"
   return {

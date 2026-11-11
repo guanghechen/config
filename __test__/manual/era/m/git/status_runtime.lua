@@ -1,32 +1,29 @@
---- Manual full-config E2E; open a changed tracked file, then execute this fixture with :luafile.
---- Run in a disposable headless Neovim: this fixture disables context saving and exits the process.
+-- Run from the repository root in a disposable headless Neovim with the full configuration, on a tracked file with
+-- unstaged changes (such as `lua/era/m/git/ignore.lua` after editing it), with this checkout's runtime, Lua path and
+-- native module ahead of the default configuration's:
+--   nvim --headless \
+--     --cmd 'lua local root = vim.uv.cwd(); vim.opt.runtimepath:prepend(root); package.path = root .. "/?.lua;" .. package.path; package.cpath = root .. "/lua/?.so;" .. package.cpath' \
+--     -u init.lua -i NONE -n lua/era/m/git/ignore.lua \
+--     -c 'luafile __test__/manual/era/m/git/status_runtime.lua'
+-- Requires the installed plugins and native library. Compares the native Git status, signs, ignore cache and buffer
+-- blame with the Lua oracles, and checks the default Explorer's native ignore decoration; context saving is disabled,
+-- and the process exits without writing source buffers.
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "__test__.manual.era.m.git.status_runtime" ---@type string
 
+local t = require("__test__.support.harness").new()
+
+-- The run ends the process, which must not save the context of this disposable session.
 dot.context.save_on_exit = function() end
 
----@param future                        stl.c.Future
----@return any
-local function await(future)
-  assert(
-    vim.wait(10000, function()
-      return future:is_done()
-    end, 1),
-    "Future timed out"
-  )
-  assert(not future:is_failed(), future:get_error())
-  return future:get_result()
-end
-
----@return nil
-local function run()
+t:test("full-config status, signs, ignore and blame match the Lua oracles", function()
   local git = era.m.git
-  await(git.state.refresh())
+  t.await(git.state.refresh())
   local snapshot = git.state.snapshot()
   assert(type(snapshot) == "userdata", "state must own a native handle")
 
   local reference = assert(loadfile("__test__/fixtures/era/m/git/status_lua_reference.lua"))()
-  local data = await(reference.collect({ include_numstat = true }))
+  local data = t.await(reference.collect({ include_numstat = true }))
   local entries = snapshot:entries()
   local own = entries[vim.api.nvim_buf_get_name(vim.api.nvim_get_current_buf())]
   assert(own and own.stage, "open a changed tracked file to verify native Git signs")
@@ -36,13 +33,10 @@ local function run()
   assert(snapshot:lookup(directory, true).display == expected.display, "directory status differs")
 
   local bufnr = vim.api.nvim_get_current_buf()
-  assert(
-    vim.wait(10000, function()
-      return git.buffer.is_attached(bufnr)
-    end, 1),
-    "source buffer did not attach"
-  )
-  await(git.buffer.refresh(bufnr))
+  t.wait_until(function()
+    return git.buffer.is_attached(bufnr)
+  end, 10000, "source buffer did not attach")
+  t.await(git.buffer.refresh(bufnr))
   vim.cmd("redraw")
   local signs = 0
   for _, name in ipairs({ "dot_module_git_sign", "dot_module_git_sign_staged" }) do
@@ -54,45 +48,39 @@ local function run()
   local ignored = directory .. "/lua/yoz.so"
   local visible = directory .. "/lua/era/m/git/status.lua"
   local ignore_reference = assert(loadfile("__test__/fixtures/era/m/git/ignore_lua_reference.lua"))()
-  await(git.ignore.preload({ ignored, visible }))
-  await(ignore_reference.preload_ignored({ ignored, visible }))
+  t.await(git.ignore.preload({ ignored, visible }))
+  t.await(ignore_reference.preload_ignored({ ignored, visible }))
   for _, path in ipairs({ ignored, visible }) do
     assert(git.ignore.is_ignored(path) == ignore_reference.is_ignored(path), "ignore cache differs from Lua oracle")
   end
   local source_winnr = vim.api.nvim_get_current_win()
   local widget = era.widget.explorer.get_widget()
   widget:focus()
-  await(widget._ready)
-  await(widget:reveal(ignored))
+  t.await(widget._ready)
+  t.await(widget:reveal(ignored))
   local session = widget:context()
-  local resource = await(session.data:resolve(ignored))
-  assert(
-    vim.wait(10000, function()
-      local _, _, view = pcall(widget.context, widget)
-      if not view or not view:frame() then
-        return false
-      end
-      local at = view:frame():position(resource:node())
-      local annotations = view._filetree_annotations
-      local value = at and annotations and annotations.rows[at - annotations.first + 1]
-      return value and bit.band(value.git, 256) ~= 0
-    end, 1),
-    "Explorer did not consume native ignore state"
-  )
+  local resource = t.await(session.data:resolve(ignored))
+  t.wait_until(function()
+    local _, _, view = pcall(widget.context, widget)
+    if not view or not view:frame() then
+      return false
+    end
+    local at = view:frame():position(resource:node())
+    local annotations = view._filetree_annotations
+    local value = at and annotations and annotations.rows[at - annotations.first + 1]
+    return value and bit.band(value.git, 256) ~= 0
+  end, 10000, "Explorer did not consume native ignore state")
   widget:hide()
   vim.api.nvim_set_current_win(source_winnr)
 
   local blame_reference = assert(loadfile("__test__/fixtures/era/m/git/blame_lua_reference.lua"))()
   local owner = assert(git.buffer.get_cache(bufnr))
-  local blame_data = await(blame_reference.collect(bufnr, owner.relpath, owner.repo.toplevel))
+  local blame_data = t.await(blame_reference.collect(bufnr, owner.relpath, owner.repo.toplevel))
   local blame_ns = assert(vim.api.nvim_get_namespaces().dot_module_git_buffer_blame)
   git.blame.buffer_show(bufnr)
-  assert(
-    vim.wait(10000, function()
-      return #vim.api.nvim_buf_get_extmarks(bufnr, blame_ns, 0, -1, {}) == #blame_data - 1
-    end, 5),
-    "buffer blame overlay missing"
-  )
+  t.wait_until(function()
+    return #vim.api.nvim_buf_get_extmarks(bufnr, blame_ns, 0, -1, {}) == #blame_data - 1
+  end, 10000, "buffer blame overlay missing")
   for _, mark in ipairs(vim.api.nvim_buf_get_extmarks(bufnr, blame_ns, 0, -1, { details = true })) do
     local info = assert(blame_data[mark[2] + 1])
     local text = "    Not committed yet"
@@ -109,7 +97,7 @@ local function run()
   end
   git.blame.buffer_hide(bufnr)
 
-  await(git.state.refresh())
+  t.await(git.state.refresh())
   assert(git.state.snapshot() == snapshot, "unchanged refresh replaced the native handle")
   io.stdout:write(
     string.format(
@@ -119,10 +107,6 @@ local function run()
       signs
     )
   )
-end
+end)
 
-local ok, err = xpcall(run, debug.traceback)
-if not ok then
-  io.stderr:write(err .. "\n")
-end
-vim.cmd(ok and "qa!" or "cquit 1")
+t:run()

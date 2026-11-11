@@ -4,7 +4,7 @@ runtime.setup()
 local t = harness.new()
 local Rank = require("era.keystroke.cmp.rank")
 local Item = require("era.keystroke.cmp.item")
-local Reference = require("__test__.fixtures.era.keystroke.cmp.rank_reference")
+local Reference = require("__test__.fixtures.era.keystroke.cmp.rank_lua_reference")
 
 t:test("native snapshots reject inconsistent metadata and eligibility without damaging later queries", function()
   local data = {

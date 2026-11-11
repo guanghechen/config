@@ -1,5 +1,5 @@
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.bench.stats" ---@type string
+local __module_name__ = "__test__.bench.lib.stats" ---@type string
 
 -- Statistics shared by the Lua benchmarks; they match script/benchmark/stats.mjs and leave their input unchanged.
 -- Plain LuaJIT runs some benchmarks, so this module does not use `vim`.
@@ -43,7 +43,7 @@ end
 -- Fewer values than this leave p95 unreported: it would only restate the largest values.
 M.P95_MIN_COUNT = 20 ---@type integer
 
----@class __test__.bench.stats.ISummary
+---@class __test__.bench.lib.stats.ISummary
 ---@field n                             integer
 ---@field median                        number
 ---@field p95                           number|nil Nil below `P95_MIN_COUNT` values.
@@ -52,7 +52,7 @@ M.P95_MIN_COUNT = 20 ---@type integer
 
 ---Count, median, nearest-rank p95, min and max of `values`; nil when empty.
 ---@param values                        number[]
----@return __test__.bench.stats.ISummary|nil
+---@return __test__.bench.lib.stats.ISummary|nil
 function M.summary(values)
   if #values == 0 then
     return nil

@@ -11,7 +11,7 @@ local harness = vim.fs.dirname(
 )
 package.path = harness .. "/?.lua;" .. package.path
 local cpu = require("__test__.bench.fuzzy.cpu")
-local Stats = require("__test__.bench.stats")
+local Stats = require("__test__.bench.lib.stats")
 local qos = cpu.prefer_performance_cores()
 local calibration_ms = cpu.calibrate()
 

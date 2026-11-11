@@ -1,12 +1,16 @@
 -- Usage, from the repository root: nvim -l __test__/bench/signal_hub.lua [iterations=50000]
--- Batches are timed with os.clock, the process CPU time.
+-- Measures the CPU cost of SignalHub: delivery (validation, message construction, index matching and callbacks) per
+-- emit, directed or broadcast, among 0, 1,000 or 10,000 unrelated subscriptions and with 1 or 32 callbacks; and cleanup
+-- (unregister_role, unregister_signal, dispose) of 1,000 or 10,000 subscriptions over one or many roles and scopes.
+-- Batches are timed with os.clock, the process CPU time; a delivery sample is the batch average per emit. Results give
+-- the median and maximum of seven measured rounds after one warm-up round, not per-message tail latency.
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "__test__.bench.signal_hub" ---@type string
 
 package.path = "./lua/?.lua;./lua/?/init.lua;./?.lua;" .. package.path
 local SignalHub = require("stl.c.signal_hub")
-local Record = require("__test__.bench.record")
-local Stats = require("__test__.bench.stats")
+local Record = require("__test__.bench.lib.record")
+local Stats = require("__test__.bench.lib.stats")
 local iterations = tonumber(arg[1]) or 50000
 local rounds = 7
 assert(iterations > 0 and iterations % 1 == 0, "Expected a positive iteration count")

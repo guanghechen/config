@@ -7,8 +7,8 @@ assert(vim.uv.os_uname().sysname == "Darwin", "This benchmark requires the macOS
 local source = assert(vim.uv.fs_realpath(debug.getinfo(1, "S").source:sub(2)))
 local root = vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(source)))
 package.path = root .. "/?.lua;" .. package.path
-local Record = require("__test__.bench.record")
-local Stats = require("__test__.bench.stats")
+local Record = require("__test__.bench.lib.record")
+local Stats = require("__test__.bench.lib.stats")
 local library = arg[1] and vim.fs.abspath(arg[1]) or (root .. "/lua/yoz.so")
 local native = assert(package.loadlib(library, "luaopen_yoz"))()
 local im = assert(native.im)

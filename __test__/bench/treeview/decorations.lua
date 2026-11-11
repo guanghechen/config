@@ -1,10 +1,11 @@
 -- Usage, from the repository root:
--- nvim -l __test__/bench/treeview_decorations.lua [scenario=all] [processes=5] [iterations=300] [baseline-root] [gc=natural|stopped]
+-- nvim -l __test__/bench/treeview/decorations.lua [scenario=all] [processes=5] [iterations=300] [baseline-root] [gc=natural|stopped]
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.bench.treeview_decorations" ---@type string
+local __module_name__ = "__test__.bench.treeview.decorations" ---@type string
 
-local root =
+local root = vim.fs.dirname(
   vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(assert(vim.uv.fs_realpath(debug.getinfo(1, "S").source:sub(2))))))
+)
 vim.api.nvim_set_current_dir(root)
 package.path = root .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
 local only = arg[1] or "all"
@@ -18,8 +19,8 @@ assert(processes >= 1 and iterations >= 1, "invalid benchmark dimensions")
 assert(gc == "natural" or gc == "stopped", "gc is natural or stopped")
 local UI = require("__test__.support.ui")
 local Git = require("__test__.support.git")
-local Record = require("__test__.bench.record")
-local Stats = require("__test__.bench.stats")
+local Record = require("__test__.bench.lib.record")
+local Stats = require("__test__.bench.lib.stats")
 
 -- Runs before any module loads so that providers registered at load time are timed, and both variants share the
 -- native library of this checkout.
@@ -118,18 +119,18 @@ local PRELUDE = [=[
   end
 ]=]
 
----@class __test__.bench.treeview_decorations.IState
+---@class __test__.bench.treeview.decorations.IState
 ---@field name                          string
 ---@field apply                         ?string Child code switching to this state.
 ---@field ready                         ?string Child code returning true once the state is published.
 
----@class __test__.bench.treeview_decorations.IScenario
+---@class __test__.bench.treeview.decorations.IScenario
 ---@field name                          string
 ---@field ui                            integer[]
 ---@field data                          string
 ---@field setup                         string Child code defining bench.ready() and, once ready, bench.view/winnr/bufnr.
 ---@field args                          fun(): any[]
----@field states                        ?__test__.bench.treeview_decorations.IState[]
+---@field states                        ?__test__.bench.treeview.decorations.IState[]
 
 -- Real file names and contents of this checkout, committed and then edited, so status and numstat come from Git.
 ---@return string
@@ -154,7 +155,7 @@ local function git_files_repo()
   return directory
 end
 
----@type __test__.bench.treeview_decorations.IScenario[]
+---@type __test__.bench.treeview.decorations.IScenario[]
 local scenarios = {
   {
     name = "explorer",

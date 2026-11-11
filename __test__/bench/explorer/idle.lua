@@ -4,7 +4,7 @@ local __module_name__ = "__test__.bench.explorer.idle" ---@type string
 local here = vim.fs.dirname(assert(vim.uv.fs_realpath(debug.getinfo(1, "S").source:sub(2))))
 local harness = vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(here)))
 local root = vim.env.NVIM_EXPLORER_BENCH_CHECKOUT or harness
-local Metrics = assert(loadfile(vim.fs.dirname(here) .. "/metrics.lua"))()
+local Metrics = assert(loadfile(vim.fs.dirname(here) .. "/lib/metrics.lua"))()
 local baseline = arg[1] and arg[1] ~= "-" and assert(vim.uv.fs_realpath(arg[1])) or nil
 local processes = tonumber(arg[2]) or 3
 assert(arg[3] == nil and processes >= 1 and processes <= 100 and processes % 1 == 0)
@@ -71,9 +71,9 @@ local ok, result = xpcall(function()
         local before = ui:rpc(
           "nvim_exec_lua",
           [[
-          local usage = vim.uv.getrusage()
-          return { at = vim.uv.hrtime(), cpu_us = (usage.utime.sec + usage.stime.sec) * 1000000
-            + usage.utime.usec + usage.stime.usec }
+          local value = bench.usage()
+          value.at = vim.uv.hrtime()
+          return value
         ]],
           {}
         )
@@ -84,9 +84,9 @@ local ok, result = xpcall(function()
         local after = ui:rpc(
           "nvim_exec_lua",
           [[
-          local usage = vim.uv.getrusage()
-          return { at = vim.uv.hrtime(), cpu_us = (usage.utime.sec + usage.stime.sec) * 1000000
-            + usage.utime.usec + usage.stime.usec, process_memory_bytes = vim.uv.resident_set_memory(), errors = bench.errors }
+          local value = bench.usage()
+          value.at, value.process_memory_bytes, value.errors = vim.uv.hrtime(), vim.uv.resident_set_memory(), bench.errors
+          return value
         ]],
           {}
         )

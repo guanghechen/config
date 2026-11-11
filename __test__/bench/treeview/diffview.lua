@@ -1,16 +1,17 @@
--- Usage, from the repository root: nvim -l __test__/bench/treeview_diffview.lua [count=10000] [iterations=10]
+-- Usage, from the repository root: nvim -l __test__/bench/treeview/diffview.lua [count=10000] [iterations=10]
 ---@diagnostic disable-next-line: unused-local
-local __module_name__ = "__test__.bench.treeview_diffview" ---@type string
-local root =
+local __module_name__ = "__test__.bench.treeview.diffview" ---@type string
+local root = vim.fs.dirname(
   vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(assert(vim.uv.fs_realpath(debug.getinfo(1, "S").source:sub(2))))))
+)
 vim.api.nvim_set_current_dir(root)
 package.path = root .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
 local count = tonumber(arg[1]) or 10000
 local iterations = tonumber(arg[2]) or 10
 assert(count > 0 and iterations > 0, "expected positive file and iteration counts")
 local ui = require("__test__.support.ui").new({ timeout_ms = 60000 })
-local Record = require("__test__.bench.record")
-local Stats = require("__test__.bench.stats")
+local Record = require("__test__.bench.lib.record")
+local Stats = require("__test__.bench.lib.stats")
 
 ---@param expected                      integer
 ---@param started                       integer
