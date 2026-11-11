@@ -7,7 +7,7 @@ This document provides detailed architecture information for this Neovim configu
 The modules follow a strict dependency hierarchy (lower layers must not depend on higher layers):
 
 ```text
-yoz -> stl -> dot -> era -> ark/vendor
+yoz -> stl -> dot -> era -> ark
 ```
 
 `ux` sits beside `dot`: it depends only on `yoz`/`stl` and is used by `era`.
@@ -19,7 +19,7 @@ yoz -> stl -> dot -> era -> ark/vendor
 | L2    | `dot`    | Core framework: configuration, context, theme, commands; depends on yoz/stl |
 | L2    | `ux`     | Treeview/Filetree Lua facades and Neovim surfaces; depends on yoz/stl       |
 | L3    | `era`    | Business layer: actions, UI modules, plugin configs; depends on yoz/stl/dot |
-| L4    | `vendor` | Environment entry points: neovim/neovide/vscode/yozvim/yuivim               |
+| L4    | `ark`    | Entry layer: bootstrap, global options/keymaps/autocmds, vendor entries     |
 
 ## Global Variables
 
@@ -34,26 +34,22 @@ Four global variables are exposed via `_G` (set in `ark/bootstrap.lua`):
 
 ### `rust/im` (Input Method Domain)
 
-Standalone `yoz-im` crate owning macOS, Windows, and WSL input-method backends. It also owns the
-repository-built Windows bridge used by WSL; the crate has no dependency on Lua or `rust/yoz`.
+Standalone `yoz-im` crate owning macOS, Windows, and WSL input-method backends; the crate has no dependency on Lua or
+`rust/yoz`. See [the input method design](design/feat/im.md).
 
 ### `rust/yoz/src/git` (Git Domain)
 
-The `yoz::git` module owns cancellable Git status/ignore/blame queries, byte-oriented protocol parsing,
-immutable status/blame snapshots, the ignore cache, and pure staging calculations (EOL normalization,
-Unicode codecs/BOM, selection projection and byte reconstruction), plus word-diff byte preparation and
-highlight-range projection. Core modules have no Lua or Neovim dependency.
-`rust/yoz/src/git/lua/` provides the Lua binding within the same `yoz` crate; `era.m.git` owns editor lifecycle,
-refresh scheduling, and presentation. Staging/word-diff calculations are synchronous; buffer capture, legacy iconv codecs, histogram
-diff and serialized index writes remain in Lua. The binding bounds live Lua references and avoids
-intermediate selected-hunk tables.
+The `yoz::git` module owns cancellable Git status/ignore/blame queries, immutable snapshots, the ignore cache, and pure
+staging calculations; core modules have no Lua or Neovim dependency. `era.m.git` owns editor lifecycle, refresh
+scheduling, and presentation; see [the Git design](design/feat/git.md).
 
-### `lua/yoz` (Rust Native Module)
+### `rust/yoz` (Rust Native Module)
 
-Compiled Rust native module (`.so` on Unix, `.dll` on Windows; no Lua wrapper).
+Compiled Rust native module (`lua/yoz.so` on Unix, `lua/yoz.dll` on Windows; no Lua wrapper).
 
 Submodules:
 
+- `yoz.canonical_path`: slash-only canonical path operations and filepath/os_path conversion
 - `yoz.dict`: dictionary search for English word completion
 - `yoz.completion`: immutable candidate snapshots, Unicode fuzzy/typo matching, global ranking and acceptance history
 - `yoz.find`: file finding (fd-like) on a cancellable parallel worker job
@@ -75,13 +71,7 @@ Type definitions: `lua/__types__/yoz/`
 
 Native implementations live in `rust/yoz/src/ux/`. The Treeview and Filetree Lua facades and Neovim surfaces
 live in `lua/ux/`, using `yoz`, `stl`, and `vim`; this runtime layer does not depend on `dot` or `era`.
-Explorer's Lua side lives in `lua/era/m/explorer/` and drives the native Explorer policy through `yoz.ux`.
-Business consumers in `era` compose those handles, prepare result records, and manage editor interactions.
-
-- [Treeview](design/treeview/README.md): Data/State/Frame, projection, selection, and surface publication.
-- [Filetree](design/filetree.md): filesystem resources, directory reads, watch, annotations, and file Jobs.
-- [Explorer](design/feat/explorer.md): native interaction policy, Lua windows, prompts, and editor synchronization.
-- [Result consumers](design/treeview/results.md): List, Picker, Searcher, and Diffview records and metadata.
+Explorer (`lua/era/m/explorer/`) and the other consumers live in `era`; see [Treeview](design/ux/treeview/README.md).
 
 ### `lua/stl/` (Standard Library Layer)
 
@@ -103,7 +93,7 @@ Key areas:
 
 - Context system (`dot.context.*`) for persistent editor/workspace state
 - Command system (`dot.command`) with definition/implementation separation
-- Core runtime helpers (`dot.buf`, `dot.win`, `dot.tab`, `dot.path`, `dot.var`, `dot.lsp`)
+- Core runtime helpers (`dot.buf`, `dot.win`, `dot.tab`, `dot.path`, `dot.var`)
 - Theme and highlight composition (`dot.theme.*`)
 - Runtime state (`dot.state.*`)
 
@@ -117,7 +107,7 @@ Highlights:
 - Completion in `era/keystroke/cmp/`: input sessions, sources, edit transactions and completion UI;
   see [the completion contract](design/feat/cmp.md).
 - Callable functions in `era/fn/*` (`find-*`, `search-*`, `select-*`, `run-code`, etc.)
-- View components in `era/view/*` (`act`, `result_tree`, `result_files`, `keysheet`, `notifications`, etc.)
+- View components in `era/view/*` (`act`, `result_tree`, `result_files`, `keysheet`, etc.)
 
 ## Entry Layer
 
@@ -125,8 +115,6 @@ Highlights:
 
 Yuivim sets `vim.g.yuivim` before `init.lua`; its entry, options and keymaps live independently under `ark/vendor/yuivim/`.
 Yuivim and Yozvim leave UI, completion, LSP and Python environment management to the host.
-Yuivim synchronously enables IM dressing and schedules splitjoin/surrounds setup; it skips plugin bootstrap,
-commentstring and local plugin/dressing hooks. Yozvim leaves input-method management to the host.
 
 ## Notes
 

@@ -124,7 +124,7 @@ export function summarizeE2e(records) {
   })
 }
 
-/** Budgets from spec/design/feat/yoz/fuzzy.md; `applies` limits each to the candidate it constrains. L3 follows the
+/** Budgets from spec/design/yoz/fuzzy.md; `applies` limits each to the candidate it constrains. L3 follows the
  * Treeview filter contract up to 50k candidates; beyond it Treeview projection dominates and is reported only. */
 export const BUDGETS = [
   { level: "rust", name: "core p95 at 100k", applies: (group) => group.items >= 100000 && group.items < 1000000 && /^fuzzy/.test(group.probe), value: (group) => group.overall.p95, limit: 4 },

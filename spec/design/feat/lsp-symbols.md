@@ -77,7 +77,6 @@ dot.state.status.dirty_winline_nr   (CursorHold、WinEnter、BufWinEnter、保�
 因此超大文档在服务端状态变化时最多过期约 5s 加一次往返。文本、URI 或 client 变化时恢复 128ms 间隔。
 
 依据：2MB、40263 个符号的 LuaLS 响应约 9.3MB，解码约 30ms、分配约 37MB，每次请求都会让主循环卡顿。
-1611 行、1138 个符号的普通文件解码约 0.9ms，不需要特殊处理。
 
 ## 生命周期
 

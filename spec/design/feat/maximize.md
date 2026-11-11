@@ -34,4 +34,4 @@ Neovim 无法锁定 tabpage；`:tabs` 仍可观察该 tab，原生命令/API 仍
 - 普通窗口：source tab/window、maximize tab/window、lifecycle augroup 与 closing guard。
 
 `era.m.maximize` 负责创建和关闭流程；`dot.state.maximized` 负责 projection sync，
-并在最终清理前校验 identity。Tab 类型与命令匹配见 [Tab](../tab.md)。
+并在最终清理前校验 identity。Tab 类型与命令匹配见 [Tab](../dot/tab.md)。

@@ -31,7 +31,7 @@
 1. `filepath`：业务层路径，始终使用 `/`。
 2. `os_path`：系统调用路径，分隔符由 `stl.env.PATH_SEP` 决定。
 3. `URI-like` 名称（例如 `diffview://null`）不参与路径转换。
-4. 本地 adapter（`stl.os.fs` 默认实现）不接受 `URI-like` 输入，统一返回 `bad_scheme`。
+4. 本地 adapter（`stl.os.fs` 默认实现）不接受 `URI-like` 输入：`exists`、`is_dir` 返回 `false`，其余操作返回 `bad_scheme`。
 
 ## 适用前提与非目标
 
@@ -77,6 +77,6 @@
 2. 通用 Lua 文件读写通过 `stl.os.fs`，或在调用前用 `yoz.canonical_path.to_os_path`。
 3. 禁止在业务层散落私有 `to_os_filepath` 实现。
 
-Filetree/Explorer 使用 [Filetree 的路径与资源契约](../filetree.md#资源记录与路径)：Lua 通过
+Filetree/Explorer 使用 [Filetree 的路径与资源契约](../ux/filetree/README.md#资源记录与路径)：Lua 通过
 `ux.filetree.path` 处理路径，文件操作提交 native Jobs，OS 路径转换与 identity 校验在 Rust 边界完成。
 这条资源句柄路径不要求再经 `stl.os.fs` 转发。

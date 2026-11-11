@@ -69,7 +69,6 @@
 支持的 ID，不覆盖表中全部原生或 indentscope 对象。
 
 数字边界跳转另接受 `g[n` / `g]n`，这里的小写 `n` 表示数字，而非 AST 选区。
-Git hunk 边界的连续跳转纳入回归验证，见文末验证范围。
 
 ### 语法结构跳转表
 
@@ -105,33 +104,6 @@ class 跳转在 diff 模式保留原生 fallback。本地不提供 `iz/az` 对�
 当前 `<leader>` 是 `<Space>`。参数交换使用 `@parameter.inner`，限定在同一语法容器内，支持 count。
 Lua 的 parameter captures 也包含 table 字段，因此字段可以跳转和交换，即使 table 本身不是 `o` 对象。
 
-## Lua 示例：选择 table 声明
-
-以 [lua/era/init.lua](../../../lua/era/init.lua) 中的 `__fn__mods` 声明为例，结构如下：
-
-```lua
-local __fn__mods = {
-  -- 模块字段……
-}
-```
-
-将光标放在 table 内：
-
-| 按键   | 选择范围                                               |
-| ------ | ------------------------------------------------------ |
-| `vi{`  | 字段内容，不含花括号和首尾空白                         |
-| `va{`  | `{ ... }`，包含花括号，不含 `local __fn__mods =`       |
-| `va{V` | 从左花括号所在行到右花括号所在行的完整行，包含声明前缀 |
-| `vio`  | 匹配到的语法 block；当前 table 不属于此范围            |
-
-`va{V` 能包含声明前缀，是因为声明与左花括号在同一行；这是按行选择，并非 declaration query。
-
-需要按语法逐级扩大时，将光标放在 `__fn__mods` 上：`van` 先选择名称，再按 `an`
-选择 `__fn__mods = { ... }`，再次 `an` 包含 `local`；`in` 向子节点缩小。
-
-采用 `cover_or_next` 搜索时，table 内的 `vio` 可能选择后面的函数体。
-`o` 的 captures 不定义 table 对象；选择 table 使用括号对象或原生 AST 选区。
-
 ## 行为约束
 
 - 本地分发器接管 Visual / operator-pending 的 `i/a`；未支持的 ID 回退到已有映射或原生对象，保留 `an/in` 和 `ai/ii`。
@@ -144,10 +116,3 @@ local __fn__mods = {
 本地模块位于 `lua/era/keystroke/textobject/`，按输入映射、动作、范围查找、Treesitter、pattern、纯搜索与交换规划分工。
 Neovim / Neovide 在 which-key、indentscope 之后幂等初始化；VSCode / Yozvim / Yuivim 不安装映射。
 本地 28 个 query 文件来自 [nvim-treesitter-textobjects](https://github.com/nvim-treesitter/nvim-treesitter-textobjects/tree/898ee307df58f854d11cd7edd06472574d48014e/queries)，revision 为 `898ee307df58f854d11cd7edd06472574d48014e`，使用 Apache 2.0 license；具体语言见 `queries/*/textobjects.scm`。
-
-## 验证
-
-运行 `nvim -l __test__/run.lua era/keystroke/textobject/`，验证范围、搜索、编辑、映射、buffer 准入、
-parser 集成及交换的 undo / repeat。回归覆盖跨行引号状态、显式函数 / class 模式、
-hunk 连续跳转与选择、函数结束行的行选区、同一函数的多个 inner captures、空对象的 register 保留、
-UTF-8 / EOF 边界，以及深嵌套括号、超出查询窗口的目标和全量查询次数。

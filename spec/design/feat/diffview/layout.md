@@ -39,6 +39,7 @@ Workspace 与 standalone commits 分别管理布局；快捷键适用范围见[�
 
 Staged、Unstaged 各自持有 window-owned Nvimbar，左侧显示 `󰊢 Staged (N)` / `󰊢 Unstaged (N)`，
 右侧复用 `search_count`。文件树 buffer 只包含 domain rows，不重复渲染 section header。
+History 同样持有 window-owned Nvimbar，左侧显示 commit 总数和当前 `page/page_count`，右侧复用 `search_count`。
 
 History commit row 从 buffer 第一列显示 abbreviated hash，不显示 active-commit sign，pane 仅留
 一个 screen column 的视觉边距。未过滤 log 按 `hash -> short author -> graph -> message -> date` 渲染：
@@ -75,4 +76,4 @@ History commit row 从 buffer 第一列显示 abbreviated hash，不显示 activ
 ```
 
 布局 2 将 Commit List 放在左列，SBS 仍左右并排。布局 5 的 Filetree 显示当前选中 commit 的变更文件。
-状态归属与资源清理见 [Diffview 设计](main.md)。
+状态归属与资源清理见 [Diffview 设计](README.md)。

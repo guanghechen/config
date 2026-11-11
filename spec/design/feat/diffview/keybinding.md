@@ -81,16 +81,8 @@ History 显式定义以下 bindings，不继承 standalone commits 的 layout co
 
 ### 视图布局控制
 
-- `P`：上一个布局。
-- `pp`、`t0`：循环切换布局。
-- `p1`：Commits 在上、SBS 在下。
-- `p2`：Commits 在左、SBS 在右。
-- `p3`：仅 SBS。
-- `p4`：仅 Commits。
-- `p5`：Commits 与 Filetree 并排。
-
+`P`、`pp` / `t0` 与 `p1`…`p5` 切换布局，按键与布局的对应见[布局设计](layout.md#独立-commitsdiffview_commits)。
 这些 bindings 与通用 refresh、commit navigation、fold actions 一起应用于 standalone view 的各个 pane。
-布局示意见[布局设计](layout.md)。
 
 ### Commits pane
 

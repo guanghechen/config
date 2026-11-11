@@ -15,14 +15,17 @@
 
 ## Attach 与多 source
 
-Attach 打开 `Select CLI tool` picker，分组顺序固定：
+Attach 打开 `Select CLI tool` picker，分组顺序固定，各组使用独立的 highlight group（颜色由 theme 定义）：
 
-1. 已 attach 的 sources，使用 brightGreen + bold。
-2. 正在运行的 agent panes，使用 brightBlue。
-3. 可新建的 agents，使用 fg2，按 agent name 字母序排列。
+1. 已 attach 的 sources（`m_ai_attached`）。
+2. 当前 tmux window 中运行的 agent panes（`m_ai_running_same_window`）。
+3. 当前 session 以外、符合 [agent session 命名](#tmux-session-命名)的 sessions 中运行的 panes（`m_ai_running_agent_session`）。
+4. 可新建的 agents，按 agent name 字母序排列（`m_ai_new`）。
+5. 当前 tmux session 其他 window 中运行的 panes（`m_ai_running_same_session`）。
+6. 其他 tmux sessions 中运行的 panes（`m_ai_running_other_session`）。
 
-运行中的 panes 优先显示当前 tmux session，再优先当前 window；其余按
-session name → window name → pane id 排序。当前 cwd 已有该 agent session 时，不再显示新建项。
+当前 window 内的 panes 按 pane id 排序，其余按 session name → window name → pane id 排序。
+当前 cwd 已有该 agent session 时，不显示新建项。
 
 选择行为：
 
@@ -33,11 +36,11 @@ session name → window name → pane id 排序。当前 cwd 已有该 agent ses
 - 已有 agent session pane：打开 Neovim terminal 并 attach。
 - 新建 agent：先按 `(agent, cwd)` 查找 session；存在则复用，否则创建后 attach。
 
-可同时 attach 多个 sources。发送时通过 picker 选择目标，`Tab` 切换多选；
-存在多个 sources 时，顶部提供 `Send to all`。
+可同时 attach 多个 sources。发送时只有一个 source 则直接发送，没有则先打开 attach picker；
+存在多个 sources 时通过 picker 选择目标，`Tab` 切换多选，顶部提供 `send to all`（`m_ai_send_to_all`）。
 
 Detach 只有一个 agent 时直接执行，否则打开 picker。Detach tmux source 时关闭其关联的 Neovim terminal。
-Attach、detach 及每次发送的成功或失败均提供通知。
+Detach 及每次发送均提供通知；发送结果区分成功、已发送但无法确认 submit，以及失败。
 
 Terminal 的窗口显示与 job 启动分离：隐藏后重新打开、切换到已有 session 均复用原 job。
 关闭只释放该 session 的资源及其正在占用的窗口；重复或旧 session 的退出回调不影响新 session。
@@ -45,22 +48,22 @@ Terminal 的窗口显示与 job 启动分离：隐藏后重新打开、切换到
 
 ## Prompt 契约
 
-每个 prompt 的 `render(ctx)` 在上下文齐全时返回 `{ text, header_end }`，缺少必要上下文时返回 `nil`。
-目标优先使用 Visual selection，例如 `@filepath :L1:C1-L10:C20`；否则使用当前文件 `@filepath`。
-预览中截至 `header_end` 的 header lines 使用 `f_us_ai_prompt_header`。
+每个 prompt 的 `render(ctx)` 在上下文齐全时返回 `{ text, lines }`，缺少必要上下文时返回 `nil`。
+目标优先使用 Visual selection，例如 `@filepath L1:C1-L10:C20`；否则使用当前文件 `@filepath`。
 
-| Prompt            | 用途             | 必要上下文                   |
-| ----------------- | ---------------- | ---------------------------- |
-| `diagnostics`     | 修复当前文件诊断 | 文件与 diagnostics           |
-| `diagnostics_all` | 修复全部诊断     | 任一 buffer 中的 diagnostics |
-| `ask`             | 针对目标提问     | selection 或文件             |
-| `explain`         | 解释代码         | selection 或文件             |
-| `fix`             | 修复代码         | selection 或文件             |
-| `optimize`        | 优化代码         | selection 或文件             |
-| `refactor`        | 重构代码         | selection 或文件             |
-| `review`          | 审查代码         | selection 或文件             |
-| `review_changes`  | 审查 Git 变更    | Git changes                  |
-| `test`            | 编写测试         | selection 或文件             |
+| Prompt                      | 用途                                    | 必要上下文                      |
+| --------------------------- | --------------------------------------- | ------------------------------- |
+| `diagnostics`               | 修复当前文件诊断                        | 文件与 diagnostics              |
+| `diagnostics_all`           | 修复全部诊断                            | 任一 buffer 中的 diagnostics    |
+| `review-design`             | 与指定 tmux pane 中的 agent 讨论设计    | tmux                            |
+| `review-changes`            | 与指定 tmux pane 中的 agent review 改动 | tmux                            |
+| `review-diagnostics-neovim` | 借助指定 tmux pane 修复全部 LSP 诊断    | tmux，且 cwd 为 Neovim 配置目录 |
+| `fix`                       | 修复代码                                | 文件                            |
+| `optimize`                  | 优化代码                                | 文件                            |
+| `refactor`                  | 重构代码                                | 文件                            |
+| `review`                    | 审查代码                                | 文件                            |
+
+指定 pane 来自 prompt 的 `args`，可在 prompt picker 中用 `oe` 修改，修改在本次会话内保留。
 
 ### 变量替换
 
@@ -81,7 +84,7 @@ __SELECTION_TEXT__="function hello() end"
 
 ### Slash command 转换
 
-发送 prompt 时，按目标 agent 转换 slash command：
+每次发送（包括 buffer、selection 与 prompt）先执行上述变量替换，再按目标 agent 转换 slash command：
 
 | Agent      | 格式               | 示例                          |
 | ---------- | ------------------ | ----------------------------- |
@@ -95,35 +98,23 @@ Slash command 必须位于字符串开头或空白之后；命令名后不能紧
 
 ## 模块与命令
 
-核心模块位于 `lua/era/m/ai/`：`init.lua` 提供入口，`config.lua` 定义 agent 配置，
-`prompt.lua` 定义 prompts 与上下文 helper，`types.lua` 定义类型。
-AI statusline 组件位于 `lua/era/m/nvimbar/component/`。
+Prompt 模板、变量替换与 slash command 转换由 `stl.prompt` 定义；`era.m.ai` 负责上下文收集、picker、
+发送以及 tmux / terminal 管理。AI statusline 组件显示已 attach 的 sources，点击打开 detach picker。
 
-| 命令                  | 行为                           |
-| --------------------- | ------------------------------ |
-| `ai.attach_agent`     | 打开 attach picker             |
-| `ai.detach_agent`     | Detach agent                   |
-| `ai.submit_buffer`    | 发送当前 split block 并 submit |
-| `ai.submit_selection` | 发送 selection 并 submit       |
-| `ai.send_buffer`      | 发送整个 buffer，不 submit     |
-| `ai.send_selection`   | 发送 selection，不 submit      |
-| `ai.send_this`        | 发送当前文件路径               |
-| `ai.send_file`        | 发送当前文件内容并 submit      |
-| `ai.select_prompt`    | 打开 prompt picker             |
-| `ai.edit`             | 使用 AI context 编辑           |
-
-## 高亮
-
-| Highlight group         | 样式与用途                          |
-| ----------------------- | ----------------------------------- |
-| `f_us_ai_attached`      | brightGreen、bold；已 attach 项     |
-| `f_us_ai_new`           | fg2；新建项                         |
-| `f_us_ai_prompt_header` | purple、bold；prompt preview header |
-| `f_us_ai_running`       | brightBlue；运行中但未 attach       |
-| `f_us_ai_send_to_all`   | pink、bold；发送至全部 sources      |
+| 命令                  | 行为                                                               |
+| --------------------- | ------------------------------------------------------------------ |
+| `ai.attach_agent`     | 打开 attach picker                                                 |
+| `ai.detach_agent`     | Detach agent                                                       |
+| `ai.submit_buffer`    | 发送当前 split block 并 submit                                     |
+| `ai.submit_selection` | 发送 selection 并 submit                                           |
+| `ai.submit_to`        | 多选运行中的 agents（无需 attach），发送当前 split block 并 submit |
+| `ai.send_buffer`      | 发送整个 buffer，不 submit                                         |
+| `ai.send_selection`   | 发送 selection，不 submit                                          |
+| `ai.send_file`        | 发送当前文件路径，不 submit                                        |
+| `ai.select_prompt`    | 打开 prompt picker                                                 |
+| `ai.edit`             | 在 notepad 追加当前文件或 selection 的位置引用                     |
 
 ## Tmux session 命名
 
 每个 `(agent, cwd)` 对应一个 session，名称为 `<agent>-<cwd_hash>`。
-Hash 取 cwd 的 MD5 十六进制前缀，长度为 `16 - len(agent)`；
-校验 pattern 为 `^<agent>-[0-9a-f]{hash_len}$`。
+Hash 为 cwd 的完整 MD5 十六进制串（32 位）；校验 pattern 为 `^<agent>-[0-9a-f]{32}$`。

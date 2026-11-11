@@ -21,16 +21,7 @@ CRUD、`focus`、`put`、`iterator` 与 `pick_next_term` 供 widget/action 使�
 
 浮窗相对 editor 居中，使用 rounded border。初始挂载 `stl.filetype.TERM_MASK` buffer，
 再切换为实际 terminal buffer，避免窗口结构在 job 启动期间变化。
-
-默认窗口选项：
-
-| 选项                                                      | 值                                              |
-| --------------------------------------------------------- | ----------------------------------------------- |
-| `cursorline`、`list`、`number`、`relativenumber`、`spell` | `false`                                         |
-| `signcolumn`                                              | `"no"`                                          |
-| `winfixbuf`、`wrap`                                       | `true`                                          |
-| `winblend`                                                | `0`                                             |
-| `winhighlight`                                            | `widget.lua` 中的 `TERMINAL_WIN_HIGHLIGHT` 映射 |
+窗口关闭行号、signcolumn 等装饰并设置 `winfixbuf`；具体选项与 `winhighlight` 映射见 `widget.lua`。
 
 每个 terminal 使用独立 buffer，其 metadata 由 `era.m.term.state.create` 创建。
 Buffer 初始化时设为 unlisted、`filetype = stl.filetype.TERM`，关闭 `modifiable`、`readonly` 与 `swapfile`。

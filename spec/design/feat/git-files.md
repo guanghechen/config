@@ -3,7 +3,7 @@
 Status: Design。入口代码位于 `lua/era/m/git_files/`，树视图为 `era.view.GitFiles`（`lua/era/view/git_files.lua`）。
 `era.fn.find_git`（命令 `Ffindgitnotcommitted`，默认 `<leader>3` 与 `<leader>fg`）创建并切换唯一的
 `era.m.git_files.Widget`。共享 Result / Preview surface 见 [Picker / Searcher Surface](picker-surface.md)，
-结果集通用约束见 [Treeview 结果集](../treeview/results.md)，Git 查询与 index 队列见 [Git](git.md)。
+结果集通用约束见 [Treeview 结果集](results.md)，Git 查询与 index 队列见 [Git](git.md)。
 
 ## 布局
 
@@ -41,7 +41,7 @@ Status: Design。入口代码位于 `lua/era/m/git_files/`，树视图为 `era.v
 
 ## 输入与过滤
 
-- Inputbox 的内容实时作为 [fzf 语法](yoz/fuzzy.md#查询语法)、smart-case 的路径 query 同时过滤两棵树；
+- Inputbox 的内容实时作为 [fzf 语法](../yoz/fuzzy.md#查询语法)、smart-case 的路径 query 同时过滤两棵树；
   输入中的 CR / LF 归一化为空格。
   隐藏后重开保留 query。过滤后的树保留连接祖先。
 - 打开后焦点在 inputbox（Normal）。Inputbox 驱动一棵目标树，在打开时以及 inputbox 的移动键与 `<CR>` 触发时解析：

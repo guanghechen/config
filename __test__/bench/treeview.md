@@ -1,7 +1,7 @@
 # Treeview 测量记录
 
 本文记录 Treeview 及其 consumer 的测量方法与最新基线，不定义契约。目标与口径见
-[性能契约](../../spec/design/treeview/performance.md)，运行入口见[测试指南](../README.md#benchmarks)；
+[性能契约](../../spec/design/ux/treeview/performance.md)，运行入口见[测试指南](../README.md#benchmarks)；
 旧数字留在 git 历史（`git log -p -- __test__/bench/treeview.md`）。
 
 除另注外，基线于 2026-10-22 测得：Apple M5 Pro（6P + 12E）、外接电源、Neovim 0.12.6、release library、附着 UI、
@@ -18,7 +18,7 @@ nvim -l __test__/bench/treeview.lua [tree|ancestry] [processes]
 80×48 UI，每行一个高亮组和右对齐文本。
 
 - 单行更新分无过滤与过滤态（pattern `node-` 匹配全部行）。两次更新之间留出
-  [8 ms 发布节奏](../../spec/design/treeview/render.md#发布节奏)，测孤立的一次变化。
+  [8 ms 发布节奏](../../spec/design/ux/treeview/render.md#发布节奏)，测孤立的一次变化。
 - Filter 以 `set_display` 在 `node-000`（100 行）与 `node-`（50,000 行）之间交替收窄与放宽。
 - 名次 filter 是 Picker 的做法：Yoz Fuzzy corpus 的 `Result:ids` 直接交给 SetDisplay。匹配集同上，名次由 frecency
   式权重与 source 顺序交错；Ancestry 的 List 按名次排列，Tree 保持 source 顺序。
@@ -36,7 +36,7 @@ nvim -l __test__/bench/treeview.lua [tree|ancestry] [processes]
 | 名次 filter 收窄到 100 行    |       6.81 / 8.24 |  3.18 / 4.56 |           8.59 / 9.00 |     2.97 / 3.29 |
 | 名次 filter 放宽到 50,000 行 |     15.56 / 20.26 | 9.26 / 13.95 |         26.39 / 32.22 |   12.25 / 18.02 |
 
-- 对应[性能契约](../../spec/design/treeview/performance.md#延迟口径与目标)：发布段即"常见局部发布及当前窗口 redraw"
+- 对应[性能契约](../../spec/design/ux/treeview/performance.md#延迟口径与目标)：发布段即"常见局部发布及当前窗口 redraw"
   （p95 ≤ 8 ms）；单行更新与 Selection 的输入到 flush 即"已加载数据上的局部交互到 Frame flush"（p95 ≤ 16 ms）；
   filter 的输入到 flush 即 50,000 驻留候选的 filter/sort（p95 ≤ 50 ms）。
 - 最慢的是 Ancestry 的名次 filter 放宽，即 Picker 的 List：投影 14.0 ms、staging 7.6 ms（median），按名次随机访问节点

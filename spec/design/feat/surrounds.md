@@ -52,5 +52,4 @@ Attachment 记录已安装 mapping 的 callback 或 normalized RHS identity。De
 
 - 不提供 runtime/buffer-local 配置、自定义 surrounding 或 Tree-sitter generator。
 - 不提供 search-method 选择、previous/next suffix mapping 或运行期 `n_lines` 更新。
-- 不兼容旧版 Neovim。
 - Blockwise 操作保留上游对混合 multibyte/single-byte 文本的限制。

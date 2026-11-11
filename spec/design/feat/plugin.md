@@ -23,54 +23,7 @@ types -> state -> loader -> action -> widget -> view -> init
 
 ## 配置与 Plugin spec
 
-以下列出主要字段，完整类型见 [types.lua](../../../lua/era/m/plugin/types.lua)。
-
-```lua
----@class era.m.plugin.IConfig
----@field public lockfile               string       -- Lock file path
----@field public root                   string       -- Plugin install directory
----@field public ui                     era.m.plugin.IUIConfig
-
----@class era.m.plugin.IUIConfig
----@field public size                   { width: number, height: number }
----@field public border                 string       -- Border style
----@field public title                  string       -- Window title
----@field public icons                  era.m.plugin.IIcons
-```
-
-```lua
----@class era.m.plugin.IPluginSpec
----@field public name                   string           -- Plugin name (directory name)
----@field public url                    string|nil       -- Git repository URL
----@field public branch                 string|nil       -- Git branch
----@field public main                   string|nil       -- Main module name
----@field public build                  string|(fun(): nil)|nil  -- Build command or callback
----@field public cond                   (fun(): boolean)|nil  -- Condition function
----@field public enabled                boolean|nil      -- Enable/disable plugin
----@field public lazy                   boolean|nil      -- Lazy load flag
----@field public event                  string|string[]|nil   -- Event triggers
----@field public cmd                    string|string[]|nil   -- Command triggers
----@field public ft                     string|string[]|nil   -- Filetype triggers
----@field public keys                   era.m.plugin.IKeySpec[]|nil  -- Keymap triggers
----@field public dependencies           string[]|nil     -- Dependency plugin names
----@field public opts                   table|(fun(): table)|nil  -- Plugin options
----@field public config                 (fun(spec: era.m.plugin.IPluginSpec, opts: table): nil)|nil  -- Config function
-```
-
-初始化示例：
-
-```lua
-local specs = {
-  {
-    name = "flash.nvim",
-    main = "flash",
-    event = { "VeryLazy" },
-    opts = {},
-  },
-}
-
-require("era.m.plugin").setup(specs)
-```
+Config 与 plugin spec 的类型见 [types.lua](../../../lua/era/m/plugin/types.lua)。
 
 `lua/era/plugin.lua` 从 raw specs 组装最终配置：确定 URL、branch、name、main 与 cond，
 在 cond 满足时加载 `era.plugin.*` 的详细配置，再调用 `era.m.plugin.setup(specs)`。
@@ -143,19 +96,3 @@ Sync 只读 lock file，规则如下：
 - 已配置但无 lock entry 的 plugin 标为 `Unpinned`。
 - 已安装 plugin 存在 worktree 改动时标为 `Dirty worktree`，不执行 checkout。
 - Checkout 后验证完整 commit 精确匹配。新安装或 checkout 发生变化时执行 plugin build。
-
-## 高亮
-
-全部使用 `m_pl_` 前缀：
-
-| Highlight group                                    | 用途                 |
-| -------------------------------------------------- | -------------------- |
-| `m_pl_h2`                                          | Section 标题         |
-| `m_pl_bold`                                        | 加粗文字             |
-| `m_pl_comment`                                     | 弱化文字             |
-| `m_pl_loaded` / `m_pl_not_loaded`                  | 已加载 / 未加载 icon |
-| `m_pl_running` / `m_pl_error`                      | 运行中 / 错误状态    |
-| `m_pl_time`                                        | 加载耗时             |
-| `m_pl_event` / `m_pl_cmd` / `m_pl_ft` / `m_pl_key` | 对应 lazy trigger    |
-| `m_pl_dep`                                         | 依赖                 |
-| `m_pl_commit_from` / `m_pl_commit_to`              | 旧 / 新 commit hash  |

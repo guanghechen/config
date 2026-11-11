@@ -71,19 +71,4 @@ Nvimbar 使用 `dot.G` click callbacks；名称最多显示 12 个字符，附�
 ## 命令与快捷键
 
 命令定义位于 `dot.command.definitions.notepad`，由 `era.m.notepad.action` 执行。
-映射为 buffer-local；下表列出主要交互，完整模式与 aliases 以 `view.lua` 为准。
-
-| 按键                                                 | 行为                                                            |
-| ---------------------------------------------------- | --------------------------------------------------------------- |
-| `<C-s>`、`<C-a>s`；aliases `<D-s>`、`<M-s>`          | 保存                                                            |
-| `<C-n>`                                              | 创建便签                                                        |
-| `<C-/>`                                              | 重命名                                                          |
-| `<C-d>`、`<leader>dd`                                | 删除                                                            |
-| `<C-,>` / `<C-.>`                                    | 上一个 / 下一个 source                                          |
-| `<C-[>` / `<C-]>`、`<leader>[` / `<leader>]`         | 上一个 / 下一个便签                                             |
-| `<C-S-,>` / `<C-S-.>`；aliases `<C-S-[>` / `<C-S-]>` | 左右交换便签顺序                                                |
-| `<C-1>`…`<C-9>`                                      | 按 index 选择便签                                               |
-| `<leader>1` / `<leader>2`                            | 选择 source / 选择便签                                          |
-| `<M-i>` / `<M-o>`                                    | 后退 / 前进                                                     |
-| `<leader><cr>`                                       | Normal 发送当前 split block，Visual 发送 selection，均提交给 AI |
-| `q`                                                  | Normal mode 关闭窗口                                            |
+映射为 buffer-local；按键、模式与 aliases 以 `view.lua` 为准。

@@ -11,7 +11,7 @@
 - 原始项目（仅归属说明）：`jesseduffield/lazygit`，算法入口 `pkg/gui/presentation/graph/`。
 - 本地：[lua/era/m/diffview/commit_graph.lua](../../../../lua/era/m/diffview/commit_graph.lua)。
 - 来源证据：本地声明从 lazygit 的 pipe-set model 移植；旧来源注释指向原项目可变的 `master`，没有固定历史 commit。
-- 关系：Go → Lua 的纯拓扑渲染算法移植。本地 Diffview 集成以 [设计说明](../../../../spec/design/feat/diffview/main.md) 为准。
+- 关系：Go → Lua 的纯拓扑渲染算法移植。本地 Diffview 集成以 [设计说明](../../../../spec/design/feat/diffview/README.md) 为准。
 
 ## 如何更新
 

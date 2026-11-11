@@ -57,7 +57,7 @@ Examples:
 
 - CRITICAL: `spec/design/` is the single source of truth for final design decisions, indexed by
   `spec/design/README.md`. A topic with several documents uses its own subdirectory and `README.md`
-  (for example `spec/design/treeview/`). Each contract is defined in one document; others link to it.
+  (for example `spec/design/ux/treeview/`). Each contract is defined in one document; others link to it.
 - CRITICAL: Phase plans in `spec/plan/` (created when needed) do not carry final design. They describe goals and execution steps only.
 - ALWAYS: Unfinalized, review-pending, or experimental proposals go to `spec/draft/`.
   Move to `spec/design/` only after finalization.

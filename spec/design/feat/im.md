@@ -28,7 +28,7 @@ source 操作遵守下述失败冷却策略，不启动后台重试。
 ## 生命周期
 
 - `dressing()` 由 vendor composition root 同步注册，确保 focus handler 先于 `UIEnter` 就绪；如有 plugin setup，IM 先于其注册：
-  - Neovim/Neovide 调用 `era.dressing.setup({ "notifier", "ui_attach", "im" })`，`im` 在 `ui_attach` 之后注册；
+  - Neovim/Neovide 调用 `era.dressing.setup({ "statuscolumn", "notifier", "ui_attach", "im" })`，`im` 在 `ui_attach` 之后注册；
   - VSCode/Yuivim 调用 `era.dressing.setup({ "im" })`，不启用 `ui_attach` dressing；
   - Yozvim 不启用 `im` 或 `ui_attach` dressing，input source 由宿主管理。
 - `UIEnter` 仅在存在 attached UI 时同步记录 focused 状态，将首次 source reconciliation 延至下一 event-loop tick，避免 backend I/O 阻塞 UI startup。失焦会推进 focus generation，使尚未执行的 reconciliation 失效；重复 focus event 不会产生额外调用。

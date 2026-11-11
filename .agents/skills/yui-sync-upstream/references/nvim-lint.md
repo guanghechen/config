@@ -10,7 +10,7 @@
 
 - 原始项目（仅归属说明）：`mfussenegger/nvim-lint`，主要核对 `lua/lint.lua` 与所用 linter definitions。
 - 本地：[lua/era/plugin/nvim-lint.lua](../../../../lua/era/plugin/nvim-lint.lua)。
-- 本地契约：[Buffer 归属与调度](../../../../spec/design/nvim-lint-buffer-ownership.md)。
+- 本地契约：[Buffer 归属与调度](../../../../spec/design/feat/nvim-lint.md)。
 - 历史接口审计参考：`a219b2c9e5b4765e5c845aba119dad55806fcaf1`；它不是当前安装版本声明，实际 plugin revision 须从当前插件管理状态核实。
 - 关系：上游 API 的本地适配层，依赖 `_resolve_linter_by_ft`、`linters` 与 `try_lint()` 的具体语义。
 

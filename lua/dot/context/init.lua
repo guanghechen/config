@@ -148,7 +148,7 @@ end
 
 ---Writes back the workspace fields this instance changed since it loaded them; every other field keeps its value in
 ---the file, which instances that saved meanwhile may have changed. The lock makes instances quitting at once save one
----after another. See spec/design/context.md.
+---after another. See spec/design/dot/context.md.
 ---@param filepath                      string
 ---@return nil
 local function save_workspace(filepath)

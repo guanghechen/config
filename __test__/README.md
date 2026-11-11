@@ -282,14 +282,14 @@ process and `processes` counts fresh processes.
   opt-in Rust scan, watch and copy-capacity tests.
 - [Treeview](bench/treeview.md): synthetic projection, `ux::treeview::perf_tests`,
   real data consumers, guides, result consumers, viewport decorations, Diffview and List measurements.
-- [Yoz Fuzzy](../spec/design/feat/yoz/fuzzy.md#评测): L1 Rust core, L2 FFI and L3 real UI.
+- [Yoz Fuzzy](bench/fuzzy/README.md): L1 Rust core, L2 FFI and L3 real UI.
 - [Completion](../spec/debug/cmp-benchmark.md): the completion benchmark and reporter.
 
 Fuzzy matcher measurements run through `node script/benchmark/fuzzy.mjs`;
 for example `node script/benchmark/fuzzy.mjs --level e2e --case files_10k_tree --build --baseline-rev 117a4fc88 --processes 3`.
 `--current DIR` times a snapshot so the working tree stays editable during long runs. Corpora, levels, statistics, the
 fzf parity check (`fuzzy::perf_tests::t_fzf_parity`) and the ranking-quality probe (`fuzzy::perf_tests::t_fuzzy_quality`)
-are described in the fuzzy design.
+are described in the [fuzzy benchmark guide](bench/fuzzy/README.md).
 
 Manual macOS IM measurements live in `bench/im.lua`. Run
 `nvim --headless -u NONE -i NONE -n -l __test__/bench/im.lua [native-library]`

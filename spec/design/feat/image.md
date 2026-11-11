@@ -56,8 +56,8 @@ state / terminal → env
 
 ## 标识与解析
 
-- image id 是 24 位随机数（由 placeholder 的前景色承载），本实例内不重复；同一 terminal 中的多个 Neovim
-  实例不再按计数器成片撞号，只剩偶然碰撞的可能。image 释放后其 id 可再用。
+- image id 是 24 位随机数（由 placeholder 的前景色承载），本实例内不重复；同一 terminal 中的所有程序（含各
+  tmux pane）共用一个 image store，多个 Neovim 实例之间只有偶然碰撞的可能。image 释放后其 id 可再用。
 - placement id 在 placement 关闭后再次分配：每个 placement 以 id 命名一个 highlight group，而 Neovim 不释放
   highlight group，总数上限约 2 万（超出后任何新 group 都报 E849）。
 - 相对路径先在文档所在目录查找，再找工作目录，以及两者下的 `img_dirs`；link destination 的转义（如 `%20`）先解码，
