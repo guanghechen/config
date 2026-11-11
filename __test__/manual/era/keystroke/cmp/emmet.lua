@@ -130,7 +130,7 @@ for _, case in ipairs({
         case.alternative
       )
     else
-      ui:rpc("nvim_input", "<CR>")
+      ui:rpc("nvim_input", "<C-y>")
     end
     ui:wait_until(function()
       return vim.deep_equal(case.expected, ui:rpc("nvim_buf_get_lines", 0, 0, -1, false))

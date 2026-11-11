@@ -157,7 +157,7 @@ scenario("documentation holds one full signature without a repeated header or ru
 end)
 
 scenario("an accepted function snippet reaches its second parameter and final tabstop", function()
-  ui:rpc("nvim_input", "<CR>")
+  ui:rpc("nvim_input", "<C-y>")
   wait(
     [[return vim.api.nvim_get_current_line() == 'add(a, b)' and vim.snippet.active() and vim.api.nvim_get_mode().mode == 's']],
     "real function snippet acceptance"
