@@ -2,6 +2,7 @@
 local __module_name__ = "era.fn.find_files" ---@type string
 
 local jobs = require("era.m.job")
+local ResultTree = require("era.view.result_tree")
 
 local name = "era.fn.find_files" ---@type string
 local title = "Find Files" ---@type string
@@ -142,7 +143,22 @@ local function refresh(picker, rootpath)
       return yoz.find.start_find_files(find_files_options)
     end, token)
     :then_(function(result)
-      return result.filepaths
+      local filepaths = result.filepaths ---@type string[]
+      local capacity = ResultTree.CAPACITY ---@type integer
+      -- Its import would refuse them, but only after the files took seconds and memory to prepare.
+      if #filepaths > capacity then
+        stl.reporter.warn({
+          from = name,
+          subject = "find_files",
+          message = string.format(
+            "%d files exceed the %d Find Files lists: turn on gitignore or exclude, or choose a smaller root",
+            #filepaths,
+            capacity
+          ),
+        })
+        return {}
+      end
+      return filepaths
     end, function(failure)
       if stl.async.is_cancellation(failure) then
         error(failure, 0)

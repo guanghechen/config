@@ -77,6 +77,7 @@ end
 ---@field selected                      table<boolean, yoz.ux.treeview.NodeIds>
 
 ---@class era.view.ResultTree
+---@field public CAPACITY               integer Entries a result tree holds at most.
 ---@field public fullname               string
 ---@field public entries                table<string, era.view.result_tree.IEntry> Producer metadata; never stores selection or expansion.
 ---@field public source                 era.view.ResultSource|era.view.ResultList
@@ -85,6 +86,7 @@ end
 ---@field _reserve_selection            ?boolean Keeps the View's selection column while nothing is selected.
 local M = {}
 M.__index = M
+M.CAPACITY = 350000
 
 ---@param result                        any
 ---@return any
@@ -138,7 +140,7 @@ function M.new(props)
     -- An import commits every entry at once. 350,000 entries retain about 0.6 GiB, which leaves room in 1 GiB for the
     -- next frame and for the frames `_reclaim` frees.
     _data = treeview.new_data({
-      limits = { batch_nodes = 350000, batch_bytes = 512 * 1024 * 1024, memory_bytes = 1024 * 1024 * 1024 },
+      limits = { batch_nodes = M.CAPACITY, batch_bytes = 512 * 1024 * 1024, memory_bytes = 1024 * 1024 * 1024 },
     }),
     _versions = {},
     _revision = 0,

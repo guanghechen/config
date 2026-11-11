@@ -132,6 +132,47 @@ t:test("Find Files lists no files when the walk rejects a pattern", function()
   t.assert_true(vim.startswith(warnings[1], "Invalid exclude glob '['"), warnings[1])
 end)
 
+t:test("Find Files lists no files past what a result tree holds, before preparing them", function()
+  local values, picker = controls(), facade()
+  t:patch_table(dot.context.select, "find_file", values)
+  local capacity = require("era.view.result_tree").CAPACITY
+  local paths = {}
+  for index = 1, capacity + 1 do
+    paths[index] = "file-" .. index
+  end
+  t:patch_table(yoz.find, "start_find_files", function()
+    return {
+      poll = function()
+        return "completed", { filepaths = paths }
+      end,
+      cancel = function() end,
+      dispose = function() end,
+    }
+  end)
+  local warnings = {}
+  t:patch_table(stl.reporter, "warn", function(report)
+    warnings[#warnings + 1] = report.message
+  end)
+  local find = assert(loadfile("lua/era/fn/find-files.lua"))()
+  ---@param root                        string
+  ---@return integer
+  local function prepared(root)
+    find(root)
+    local found = picker.preparations[#picker.preparations].paths
+    t.wait_until(function()
+      return found:is_done()
+    end, 1000)
+    return #found:get_result()
+  end
+  t.assert_eq(0, prepared("/requested"), "none of them is prepared")
+  t.assert_eq(1, #warnings)
+  local expected = string.format("%d files exceed the %d Find Files lists", capacity + 1, capacity)
+  t.assert_true(vim.startswith(warnings[1], expected), warnings[1])
+  paths[capacity + 1] = nil
+  t.assert_eq(capacity, prepared("/other"), "as many as it holds are")
+  t.assert_eq(1, #warnings)
+end)
+
 t:test("Find Files hands a path outside its root to Find Buffers", function()
   local values, picker = controls(), facade()
   local root, sibling = t:tempdir(), t:tempdir()

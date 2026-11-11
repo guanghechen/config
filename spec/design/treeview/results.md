@@ -140,7 +140,8 @@ entry 与隐藏集合覆盖。`fields` 中以下键由 ResultTree 的 viewport �
   请求、同步 mutation、切根、hide 或 dispose 使旧准备失效；准备期间旧 Frame 保持可读，首次 render 等待准备完成，
   当前 query 在新 source 发布前应用。时间片限制长循环，不承诺中断单次 Lua/VM/native 调用，也不修改全局 GC 参数。
   Find Files 使用此流程：路径由 `yoz.find.start_find_files` 在 worker 上并行遍历（结果排序），经 `era.m.job` poll，
-  新的请求、关闭或 hide 取消旧遍历；需要立即附加 locations/diagnostics 的 producer 使用同步 reset。
+  新的请求、关闭或 hide 取消旧遍历；遍历到的文件超过 `ResultTree.CAPACITY` 时，在准备之前警告文件数并按空列表处理，
+  不为注定被导入拒绝的路径建树和占用内存。需要立即附加 locations/diagnostics 的 producer 使用同步 reset。
 - 完整 Forest import 若保留所有既有节点的 data、parent、completeness 和 sibling prefix，只生成追加操作；
   操作仍经过相同的原子提交、状态更新及资源检查。其他 import 使用完整 reconciliation。
 
