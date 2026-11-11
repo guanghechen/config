@@ -1,5 +1,6 @@
-local fixture = require("__test__.support.explorer").new()
-local t, await = fixture.t, fixture.await
+local t = require("__test__.support.harness").new()
+local fixture = require("__test__.support.explorer").new(t)
+local await = fixture.await
 local git = require("__test__.support.git")
 local Git = require("era.m.git.state")
 

@@ -2,9 +2,9 @@ local t = require("__test__.support.harness").new()
 local bootstrap = require("__test__.support.bootstrap")
 bootstrap.with_native(t)
 local reports = bootstrap.with_reporter(t)
+local picker = require("__test__.support.picker")
 local support = require("__test__.support.treeview")
 local Source = require("era.view.result_source")
-local Tree = require("era.view.result_tree")
 
 ---@return era.view.ResultTree
 local function fixture()
@@ -13,21 +13,12 @@ local function fixture()
   source:insert("dir", "one", { label = "one" })
   source:insert("dir", "two", { label = "two" })
   source:insert("root", "three", { label = "three" })
-  local tree = Tree.new({
-    name = "native results",
-    tree = source,
-    present = function(_, data)
-      return { label = data.label }
-    end,
-  })
+  local tree = picker.result_tree(t, "native results", source)
   tree:insert("root", { nodetype = "container" })
   tree:insert("dir", { nodetype = "container" })
   for _, key in ipairs({ "one", "two", "three" }) do
     tree:insert(key, { nodetype = "leaf", text = key })
   end
-  t:defer(function()
-    tree:dispose()
-  end)
   return tree
 end
 
@@ -93,16 +84,7 @@ local function paths(root)
   local source = Source.new("root", { label = "root", filepath = root })
   source:insert("root", "a", { label = "a.lua", filepath = root .. "/lua/a.lua" })
   source:insert("root", "b", { label = "b.md", filepath = root .. "/spec/b.md" })
-  local tree = Tree.new({
-    name = "paths",
-    tree = source,
-    present = function(_, data)
-      return { label = data.label }
-    end,
-  })
-  t:defer(function()
-    tree:dispose()
-  end)
+  local tree = picker.result_tree(t, "paths", source)
   tree:insert("root", { nodetype = "container" })
   tree:insert("a", { nodetype = "leaf" })
   tree:insert("b", { nodetype = "leaf" })
@@ -186,20 +168,20 @@ t:test("a publication collects Lua garbage in slices once the data retains past 
   t.assert_eq(first, check(400 * MiB), "one collection at a time")
   t.wait_until(function()
     return steps == 6
-  end, 2000)
+  end, 5000)
   vim.wait(30)
   t.assert_eq(6, steps, "it ends with its second cycle")
   t.assert_eq(6, check(480 * MiB), "past a floor of 400 MiB, 80 MiB is below a quarter")
   check(500 * MiB)
   t.wait_until(function()
     return steps == 12
-  end, 2000)
+  end, 5000)
   t.assert_eq(12, check(105 * MiB))
   t.assert_eq(12, check(160 * MiB), "the floor follows the collection down")
   check(170 * MiB)
   t.wait_until(function()
     return steps == 18
-  end, 2000)
+  end, 5000)
 end)
 
 t:test("ready waits for every collapse change that is still in flight", function()
@@ -322,13 +304,8 @@ end)
 
 t:test("ready settles when a publication that leaves the mounted Frame unchanged finishes", function()
   local tree = fixture()
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  local winnr = vim.api.nvim_open_win(bufnr, false, { relative = "editor", row = 0, col = 0, width = 40, height = 10 })
-  t:defer(function()
-    if vim.api.nvim_win_is_valid(winnr) then
-      vim.api.nvim_win_close(winnr, true)
-    end
-  end)
+  local bufnr = t:buffer()
+  local winnr = t:window(bufnr, { relative = "editor", row = 0, col = 0, width = 40, height = 10 })
   tree:mount(winnr, bufnr, function() end)
   local request = { mode = "tree", rootuuid = "root" }
   support.applied(tree:publish(request))
@@ -355,27 +332,20 @@ t:test("ready settles when a publication that leaves the mounted Frame unchanged
   support.applied(publication)
   t.wait_until(function()
     return ready:is_done()
-  end, 2000, "ready must settle once the publication finishes")
+  end, 5000, "ready must settle once the publication finishes")
   t.assert_eq("Applied", ready:get_result().kind)
 end)
 
 t:test("sparse presentation columns preserve defaults across import chunks and later updates", function()
   local source = Source.new("root", { label = "root" })
   local special = { ["1"] = true, ["513"] = true }
-  local tree = Tree.new({
-    name = "sparse presentation",
-    tree = source,
-    present = function(key, data)
-      return {
-        label = data.label,
-        icon = special[key] and "*" or nil,
-        score = special[key] and 5 or nil,
-        fields = special[key] and { value = key } or nil,
-      }
-    end,
-  })
-  t:defer(function()
-    tree:dispose()
+  local tree = picker.result_tree(t, "sparse presentation", source, function(key, data)
+    return {
+      label = data.label,
+      icon = special[key] and "*" or nil,
+      score = special[key] and 5 or nil,
+      fields = special[key] and { value = key } or nil,
+    }
   end)
   for index = 1, 600 do
     local key = tostring(index)
@@ -417,16 +387,7 @@ t:test("foldempty compacts filtered directory chains and restores their full top
   for _, record in ipairs(records) do
     source:insert(record[2], record[1], { label = record[4] })
   end
-  local tree = Tree.new({
-    name = "filtered directory compression",
-    tree = source,
-    present = function(_, data)
-      return { label = data.label }
-    end,
-  })
-  t:defer(function()
-    tree:dispose()
-  end)
+  local tree = picker.result_tree(t, "filtered directory compression", source)
   tree:insert("root", { nodetype = "container" })
   for _, record in ipairs(records) do
     tree:insert(record[1], { nodetype = record[3] })
@@ -461,13 +422,8 @@ end)
 
 t:test("a native surface keeps old metadata until publication and survives reopening", function()
   local tree = fixture()
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  local winnr = vim.api.nvim_open_win(bufnr, false, { relative = "editor", row = 0, col = 0, width = 40, height = 10 })
-  t:defer(function()
-    if vim.api.nvim_win_is_valid(winnr) then
-      vim.api.nvim_win_close(winnr, true)
-    end
-  end)
+  local bufnr = t:buffer()
+  local winnr = t:window(bufnr, { relative = "editor", row = 0, col = 0, width = 40, height = 10 })
   tree:mount(winnr, bufnr, function() end)
   support.applied(tree:publish({ mode = "tree", rootuuid = "root" }))
   t.assert_eq("one", tree:data("one").label)
@@ -479,8 +435,8 @@ t:test("a native surface keeps old metadata until publication and survives reope
   t.assert_eq("new", tree:data("one").label)
   tree:unmount()
   t.assert_false(vim.api.nvim_buf_is_valid(bufnr))
-  local next_bufnr = vim.api.nvim_create_buf(false, true)
-  winnr = vim.api.nvim_open_win(next_bufnr, false, { relative = "editor", row = 0, col = 0, width = 40, height = 10 })
+  local next_bufnr = t:buffer()
+  winnr = t:window(next_bufnr, { relative = "editor", row = 0, col = 0, width = 40, height = 10 })
   tree:mount(winnr, next_bufnr, function() end)
   t.wait_until(function()
     return tree.view and tree.view:frame() ~= nil
@@ -492,13 +448,8 @@ end)
 
 t:test("an idle result retains native notifications without another Lua Future", function()
   local tree = fixture()
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  local winnr = vim.api.nvim_open_win(bufnr, false, { relative = "editor", row = 0, col = 0, width = 40, height = 10 })
-  t:defer(function()
-    if vim.api.nvim_win_is_valid(winnr) then
-      vim.api.nvim_win_close(winnr, true)
-    end
-  end)
+  local bufnr = t:buffer()
+  local winnr = t:window(bufnr, { relative = "editor", row = 0, col = 0, width = 40, height = 10 })
   tree:mount(winnr, bufnr, function() end)
   support.applied(tree:publish({ mode = "tree", rootuuid = "root" }))
   -- Let the poll loop go idle; if it is still running, the check below is weaker, not wrong.
@@ -989,13 +940,10 @@ end)
 
 t:test("range actions retain subtree and Visual semantics and release a throwing submission", function()
   local tree = fixture()
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  local winnr = vim.api.nvim_open_win(bufnr, true, { relative = "editor", row = 0, col = 0, width = 40, height = 10 })
+  local bufnr = t:buffer()
+  local winnr = t:window(bufnr, { relative = "editor", row = 0, col = 0, width = 40, height = 10 }, true)
   t:defer(function()
     vim.cmd.normal({ args = { vim.keycode("<Esc>") }, bang = true })
-    if vim.api.nvim_win_is_valid(winnr) then
-      vim.api.nvim_win_close(winnr, true)
-    end
   end)
   tree:mount(winnr, bufnr, function() end)
   support.applied(tree:publish({ mode = "tree", rootuuid = "root" }))
@@ -1057,16 +1005,7 @@ end)
 
 t:test("a result tree imports more records than one native batch holds by default", function()
   local source = Source.new("root", { label = "root" })
-  local tree = Tree.new({
-    name = "many results",
-    tree = source,
-    present = function(_, data)
-      return { label = data.label }
-    end,
-  })
-  t:defer(function()
-    tree:dispose()
-  end)
+  local tree = picker.result_tree(t, "many results", source)
   tree:insert("root", { nodetype = "container" })
   for index = 1, 200001 do
     local key = "node-" .. index

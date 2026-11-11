@@ -1,5 +1,6 @@
-local fixture = require("__test__.support.explorer").new()
-local t, await = fixture.t, fixture.await
+local t = require("__test__.support.harness").new()
+local fixture = require("__test__.support.explorer").new(t)
+local await = fixture.await
 local Future = require("stl.c.future")
 local native_async = require("ux.treeview.async")
 
@@ -58,15 +59,7 @@ t:test("typed annotation navigation preserves repeated steps in both directions"
   local widget = fixture.widget(path)
   local session, view = widget:context()
   for _, name in ipairs({ "b", "c", "d" }) do
-    local bufnr = vim.api.nvim_create_buf(false, true)
-    vim.api.nvim_buf_set_name(bufnr, path .. "/" .. name)
-    local namespace = vim.api.nvim_create_namespace("explorer-navigation-" .. bufnr)
-    t:defer(function()
-      vim.diagnostic.reset(namespace)
-      if vim.api.nvim_buf_is_valid(bufnr) then
-        vim.api.nvim_buf_delete(bufnr, { force = true })
-      end
-    end)
+    local bufnr, namespace = fixture.diagnostic_buffer(path .. "/" .. name)
     vim.diagnostic.set(namespace, bufnr, { { lnum = 0, col = 0, message = "error", severity = 1 } })
   end
   fixture.cursor(widget, path .. "/a")
@@ -225,12 +218,9 @@ t:test("navigation bounds stale retries and preserves other resolve failures", f
       attempts = attempts + 1
       return Future.resolve(native_async.rejected(case[1], "path unavailable"))
     end)
-    local future = session:navigate_path(path .. "/a", false)
-    t.wait_until(function()
-      return future:is_done()
-    end, 10000)
-    t.assert_true(future:is_failed())
-    t.assert_true(tostring(future:get_error()):find(case[1] .. ": path unavailable", 1, true) ~= nil)
+    local ok, err = t.settle(session:navigate_path(path .. "/a", false))
+    t.assert_false(ok)
+    t.assert_true(tostring(err):find(case[1] .. ": path unavailable", 1, true) ~= nil)
     t.assert_eq(case[2], attempts)
     t.assert_eq(path, widget:get_root_filepath())
   end

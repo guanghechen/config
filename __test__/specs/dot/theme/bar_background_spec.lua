@@ -21,14 +21,7 @@ t:test("transparent statusline and tabline preserve badges without filling their
   end
 
   local original_winnr = vim.api.nvim_get_current_win()
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  t:defer(function()
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
-  local winnr = vim.api.nvim_open_win(bufnr, true, { split = "right" })
-  t:defer(function()
-    vim.api.nvim_win_close(winnr, true)
-  end)
+  local winnr = t:window(t:buffer(), { split = "right" }, true)
 
   vim.api.nvim__redraw({ valid = false, flush = true })
   vim.api.nvim__inspect_cell(1, 0, 0)

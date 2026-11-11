@@ -50,24 +50,15 @@ end)
 ---@return [string, string][] chunks
 local function fold_chunks(lines, prepare)
   local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local previous_bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local previous_foldmethod = vim.api.nvim_get_option_value("foldmethod", { win = winnr }) ---@type string
   local previous_foldtext = vim.api.nvim_get_option_value("foldtext", { win = winnr }) ---@type string
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local bufnr = t:buffer(lines, { current = true }) ---@type integer
   t:defer(function()
     vim.api.nvim_set_option_value("foldtext", previous_foldtext, { win = winnr })
     vim.api.nvim_set_option_value("foldmethod", previous_foldmethod, { win = winnr })
-    if vim.api.nvim_buf_is_valid(previous_bufnr) then
-      vim.api.nvim_win_set_buf(winnr, previous_bufnr)
-    end
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
   end)
   local chunks = nil ---@type [string, string][]|nil
 
-  vim.api.nvim_win_set_buf(winnr, bufnr)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
   vim.api.nvim_set_option_value("foldmethod", "manual", { win = winnr })
   vim.cmd("1," .. #lines .. "fold")
   prepare(bufnr)

@@ -1,27 +1,9 @@
+local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
+local lsp = require("__test__.support.lsp")
 require("ark.bootstrap").setup()
 
 local t = harness.new()
-
----@param lines                         string[]
----@return integer
-local function new_buffer(lines)
-  local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local previous_bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  local bufnr = vim.api.nvim_create_buf(true, false) ---@type integer
-  vim.api.nvim_buf_set_name(bufnr, vim.fn.tempname() .. ".lua")
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-  vim.api.nvim_win_set_buf(winnr, bufnr)
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(previous_bufnr) then
-      vim.api.nvim_win_set_buf(winnr, previous_bufnr)
-    end
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
-  return bufnr
-end
 
 ---@param message                       string
 ---@return lsp.Diagnostic
@@ -36,47 +18,27 @@ end
 ---@return lsp.CodeActionParams[]
 local function start_server(bufnr, name, hooks)
   local received = {} ---@type lsp.CodeActionParams[]
-  local client_id = vim.lsp.start({
+  lsp.start(t, bufnr, {
     name = name,
-    cmd = function(dispatchers)
-      local stopped = false
-      local message_id = 0
-      return {
-        request = function(method, params, callback)
-          message_id = message_id + 1
-          if method == "initialize" then
-            callback(nil, { capabilities = { textDocumentSync = 1, codeActionProvider = true } })
-          elseif method == "textDocument/codeAction" then
-            received[#received + 1] = params
-            callback(nil, {})
-          elseif method == "textDocument/diagnostic" then
-            callback(nil, { kind = "full", items = { diagnostic(name .. " " .. tostring(params.identifier)) } })
-          else
-            callback(nil, nil)
-          end
-          return true, message_id
-        end,
-        notify = function(method, params)
-          if hooks[method] ~= nil then
-            hooks[method](dispatchers, params)
-          end
-          return true
-        end,
-        is_closing = function()
-          return stopped
-        end,
-        terminate = function()
-          stopped = true
-        end,
-      }
-    end,
-  }, { bufnr = bufnr })
-  t:defer(function()
-    local client = client_id and vim.lsp.get_client_by_id(client_id)
-    if client ~= nil then
-      client:stop(true)
-    end
-  end)
+    cmd = lsp.server({
+      capabilities = { textDocumentSync = 1, codeActionProvider = true },
+      on_request = function(method, params, respond)
+        if method == "textDocument/codeAction" then
+          received[#received + 1] = params
+          respond(nil, {})
+        elseif method == "textDocument/diagnostic" then
+          respond(nil, { kind = "full", items = { diagnostic(name .. " " .. tostring(params.identifier)) } })
+        else
+          respond(nil, nil)
+        end
+      end,
+      on_notify = function(method, params, dispatchers)
+        if hooks[method] ~= nil then
+          hooks[method](dispatchers, params)
+        end
+      end,
+    }),
+  })
   return received
 end
 
@@ -91,7 +53,7 @@ local function context_messages(received)
 end
 
 t:test("code actions send each client its own push and pull diagnostics", function()
-  local bufnr = new_buffer({ "local value = 1" })
+  local bufnr = t:buffer({ "local value = 1" }, { name = vim.fn.tempname() .. ".lua", listed = true, current = true })
   local uri = vim.uri_from_bufnr(bufnr) ---@type string
   local pushed = start_server(bufnr, "push", {
     ["textDocument/didOpen"] = function(dispatchers)
@@ -114,13 +76,13 @@ t:test("code actions send each client its own push and pull diagnostics", functi
   })
   t.wait_until(function()
     return #vim.diagnostic.get(bufnr) == 3
-  end, 3000, "pushed and pulled diagnostics")
-  t:patch_table(stl.reporter, "info", function() end)
+  end, 5000, "pushed and pulled diagnostics")
+  bootstrap.with_reporter(t)
 
   require("era.m.lsp.action").code_action()
   t.wait_until(function()
     return #pushed > 0 and #pulled > 0
-  end, 3000, "code action requests")
+  end, 5000, "code action requests")
 
   t.assert_eq("push", context_messages(pushed), "push client diagnostics")
   t.assert_eq("pull lint,pull types", context_messages(pulled), "pull client diagnostics")

@@ -1,13 +1,12 @@
+local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
+local lsp = require("__test__.support.lsp")
 local t = harness.new()
-local reports = {}
 
 require("ark.bootstrap").setup()
 local Jobs = require("era.m.filetree.jobs")
 local await = require("__test__.support.treeview").await
-t:patch_table(stl.reporter, "error", function(report)
-  reports[#reports + 1] = report
-end)
+bootstrap.with_reporter(t)
 t:patch_table(era.m.git.state, "refresh", function() end)
 
 ---@param from                          string
@@ -19,23 +18,15 @@ local function move(from, to)
   return result.success
 end
 
+-- A Lua buffer whose unsaved content differs from its file on disk, shown in the current window when `current` is true.
+---@param current                       ?boolean
 ---@return integer, string, string
-local function new_buffer()
-  local directory = t:tempdir()
-  local from = directory .. "/source.lua"
+local function new_buffer(current)
+  local from = t:tempdir() .. "/source.lua"
   vim.fn.writefile({ "disk content" }, from)
-  local bufnr = vim.api.nvim_create_buf(true, false)
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
-  vim.api.nvim_buf_set_name(bufnr, from)
-  vim.api.nvim_set_option_value("filetype", "lua", { buf = bufnr })
+  local bufnr = t:buffer({ "unsaved content" }, { name = from, listed = true, filetype = "lua", current = current })
   from = vim.api.nvim_buf_get_name(bufnr)
-  local to = from .. ".renamed.lua"
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "unsaved content" })
-  return bufnr, from, to
+  return bufnr, from, from .. ".renamed.lua"
 end
 
 t:test("rename: preserves hidden modified buffer and undo", function()
@@ -64,13 +55,8 @@ t:test("rename: preserves hidden modified buffer and undo", function()
 end)
 
 t:test("rename: preserves displayed buffer identity", function()
-  local bufnr, from, to = new_buffer()
+  local bufnr, from, to = new_buffer(true)
   local winnr = vim.api.nvim_get_current_win()
-  local previous_bufnr = vim.api.nvim_win_get_buf(winnr)
-  t:defer(function()
-    vim.api.nvim_win_set_buf(winnr, previous_bufnr)
-  end)
-  vim.api.nvim_win_set_buf(winnr, bufnr)
   t.assert_true(move(from, to))
   t.assert_eq(bufnr, vim.api.nvim_win_get_buf(winnr))
   t.assert_eq(to, vim.api.nvim_buf_get_name(bufnr))
@@ -125,47 +111,23 @@ end)
 t:test("rename: LSP closes old URI and tracks edits at the new URI", function()
   local bufnr, from, to = new_buffer()
   local notifications = {}
-  local stopped = false
-  local client_id = vim.lsp.start({
+  local client_id = lsp.start(t, bufnr, {
     name = "rename-test",
     flags = { debounce_text_changes = 0 },
-    cmd = function(dispatchers)
-      return {
-        request = function(method, params, callback)
-          if method == "initialize" then
-            callback(nil, {
-              capabilities = {
-                textDocumentSync = { openClose = true, change = 1, willSave = true, willSaveWaitUntil = true },
-                workspace = { fileOperations = { didRename = { filters = {} } } },
-              },
-            })
-          else
-            notifications[#notifications + 1] = { method = method, params = params }
-            callback(nil, nil)
-          end
-          return true, 1
-        end,
-        notify = function(method, params)
-          notifications[#notifications + 1] = { method = method, params = params }
-          return true
-        end,
-        is_closing = function()
-          return stopped
-        end,
-        terminate = function()
-          stopped = true
-          dispatchers.on_exit(0, 0)
-        end,
-      }
-    end,
-  }, { bufnr = bufnr })
-  t.assert_true(client_id ~= nil, "client started")
-  t:defer(function()
-    local client = vim.lsp.get_client_by_id(client_id)
-    if client ~= nil then
-      client:stop(true)
-    end
-  end)
+    cmd = lsp.server({
+      capabilities = {
+        textDocumentSync = { openClose = true, change = 1, willSave = true, willSaveWaitUntil = true },
+        workspace = { fileOperations = { didRename = { filters = {} } } },
+      },
+      on_request = function(method, params, respond)
+        notifications[#notifications + 1] = { method = method, params = params }
+        respond(nil, nil)
+      end,
+      on_notify = function(method, params)
+        notifications[#notifications + 1] = { method = method, params = params }
+      end,
+    }),
+  })
   t.wait_until(function()
     local client = vim.lsp.get_client_by_id(client_id)
     return client ~= nil and client.initialized and vim.lsp.buf_is_attached(bufnr, client_id)
@@ -246,27 +208,7 @@ t:test("rename: enabled LSP config resolves the new project root", function()
     root_dir = function(buffer, on_dir)
       on_dir(vim.fs.dirname(vim.api.nvim_buf_get_name(buffer)))
     end,
-    cmd = function(dispatchers)
-      local stopped = false
-      return {
-        request = function(method, _, callback)
-          callback(nil, method == "initialize" and {
-            capabilities = { textDocumentSync = { openClose = true, change = 1 } },
-          } or nil)
-          return true, 1
-        end,
-        notify = function()
-          return true
-        end,
-        is_closing = function()
-          return stopped
-        end,
-        terminate = function()
-          stopped = true
-          dispatchers.on_exit(0, 0)
-        end,
-      }
-    end,
+    cmd = lsp.server({ capabilities = { textDocumentSync = { openClose = true, change = 1 } } }),
   })
   t:defer(function()
     vim.lsp.enable(config_name, false)

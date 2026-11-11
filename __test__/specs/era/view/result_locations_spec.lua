@@ -1,11 +1,7 @@
 local t = require("__test__.support.harness").new()
 
 t:test("location spans are prepared for the viewport and metadata-only updates reach both surfaces", function()
-  local ui = require("__test__.support.ui").new()
-  t:defer(function()
-    ui:close()
-  end)
-  ui:start({ width = 120, height = 30, runtime = "ark" })
+  local ui = require("__test__.support.ui").open(t, { width = 120, height = 30, runtime = "ark" })
   ui:lua([[
     treeview = require("__test__.support.treeview")
     local Paths = require("era.view.result_paths")
@@ -53,12 +49,14 @@ t:test("location spans are prepared for the viewport and metadata-only updates r
     preview:create_win({border="none",winhighlight=""},{row=0,col=60,width=50,height=6})
     preview:mark_content_dirty()
   ]])
-  ui:wait_until(function()
-    return ui:lua([[
+  ui:wait_lua(
+    [[
       local other = preview:get_bufnr()
       return spans[main_bufnr] and spans[main_bufnr][1] and spans[other] and spans[other][0] or false
-    ]])
-  end, 5000)
+    ]],
+    5000,
+    "both surfaces drew the spans"
+  )
   local initial = ui:lua("return {formats=formats,main=spans[main_bufnr][1],preview=spans[preview:get_bufnr()][0]}")
   t.assert_true(initial.formats < 500, "only visible locations should be formatted")
   t.assert_eq("LocationOld", initial.main.highlight)
@@ -79,17 +77,17 @@ t:test("location spans are prepared for the viewport and metadata-only updates r
     end
     publication = owner:publish(vim.deepcopy(request))
   ]])
-  ui:wait_until(function()
-    return ui:lua("return release ~= nil")
-  end, 5000)
+  ui:wait_lua("return release ~= nil", 5000, "viewport preparation held")
   t.assert_false(ui:lua("return publication:is_done()"), "publication waits for viewport preparation")
   ui:lua("released=true; release(function() end)")
-  ui:wait_until(function()
-    return ui:lua([[
+  ui:wait_lua(
+    [[
       return publication:is_done() and spans[main_bufnr][1].highlight == "LocationNew"
         and spans[preview:get_bufnr()][0].highlight == "LocationNew"
-    ]])
-  end, 5000)
+    ]],
+    5000,
+    "the new spans reached both surfaces"
+  )
   local result = ui:lua([[
     assert(not publication:is_failed(), publication:get_error())
     return {main=spans[main_bufnr][1],preview=spans[preview:get_bufnr()][0],
@@ -117,9 +115,7 @@ t:test("location spans are prepared for the viewport and metadata-only updates r
     owner:invalidate()
     publication = owner:publish(vim.deepcopy(request))
   ]])
-  ui:wait_until(function()
-    return ui:lua("return publication:is_done() and release_preview ~= nil")
-  end, 5000)
+  ui:wait_lua("return publication:is_done() and release_preview ~= nil", 5000, "the preview publication held")
   t.assert_true(
     ui:lua([[
     local shown = preview._tree_view:frame():header().data_revision
@@ -132,13 +128,13 @@ t:test("location spans are prepared for the viewport and metadata-only updates r
     spans[preview:get_bufnr()] = {}
     vim.api.nvim__redraw({win=preview:get_winnr(),valid=false})
   ]])
-  ui:wait_until(function()
-    return ui:lua("return spans[preview:get_bufnr()][0] ~= nil")
-  end, 5000)
+  ui:wait_lua("return spans[preview:get_bufnr()][0] ~= nil", 5000, "the lagging preview redrew")
   ui:lua("preview_released=true; release_preview()")
-  ui:wait_until(function()
-    return ui:lua("return vim.tbl_count(owner._versions) == 1")
-  end, 5000, "obsolete preview metadata is reclaimed after its replacement publishes")
+  ui:wait_lua(
+    "return vim.tbl_count(owner._versions) == 1",
+    5000,
+    "obsolete preview metadata is reclaimed after its replacement publishes"
+  )
 end)
 
 t:run()

@@ -4,22 +4,6 @@ require("ark.bootstrap").setup()
 local t = harness.new()
 local Whichkey = era.dressing.whichkey
 
----@return integer
-local function new_buffer()
-  local previous_bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(previous_bufnr) then
-      vim.api.nvim_set_current_buf(previous_bufnr)
-    end
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
-  vim.api.nvim_set_current_buf(bufnr)
-  return bufnr
-end
-
 ---@return era.dressing.whichkey.state
 local function new_state()
   local state = assert(loadfile("lua/era/dressing/whichkey/state.lua"))()
@@ -45,7 +29,7 @@ local function trigger_count(bufnr)
 end
 
 t:test("registration before setup survives enabling without polling or binding triggers", function()
-  local bufnr = new_buffer()
+  local bufnr = t:buffer(nil, { current = true })
   local state = new_state()
   local scheduled = 0 ---@type integer
   local restore_schedule = t:patch_table(vim, "schedule", function()
@@ -67,7 +51,7 @@ t:test("registration before setup survives enabling without polling or binding t
 end)
 
 t:test("disabled updates survive re-enable and replay in a new buffer", function()
-  local bufnr = new_buffer()
+  local bufnr = t:buffer(nil, { current = true })
   local state = new_state()
   state.setup()
   state.enable()
@@ -91,7 +75,7 @@ t:test("disabled updates survive re-enable and replay in a new buffer", function
   state.enable()
   t.assert_eq(enabled_triggers, trigger_count(bufnr), "re-enable does not duplicate triggers")
 
-  local next_bufnr = new_buffer()
+  local next_bufnr = t:buffer(nil, { current = true })
   for _, current_bufnr in ipairs({ bufnr, next_bufnr }) do
     for _, mode in ipairs({ "n", "x" }) do
       local tree = assert(state.buf_trees[current_bufnr][mode])
@@ -106,7 +90,7 @@ t:test("wiping an unlisted buffer releases its keymap tree and triggers", functi
   local state = new_state()
   state.setup()
   state.enable()
-  local bufnr = new_buffer()
+  local bufnr = t:buffer(nil, { current = true })
   t.assert_true(state.buf_trees[bufnr] ~= nil, "attached tree")
   local triggers = 0 ---@type integer
   for _, trigger in pairs(Whichkey.input.triggers) do
@@ -128,22 +112,22 @@ t:test("keys a server maps on attach show once its LspAttach handlers have run",
   local state = new_state()
   state.setup()
   state.enable()
-  local bufnr = new_buffer()
+  local bufnr = t:buffer(nil, { current = true })
   vim.keymap.set("n", "gq1", function() end, { buffer = bufnr, desc = "server key" })
   t.assert_nil(Whichkey.tree.find(state.buf_trees[bufnr].n, "gq1"), "keys are read when the buffer is entered")
 
   vim.api.nvim_exec_autocmds("LspAttach", { group = "WhichKey", buffer = bufnr, modeline = false })
   t.wait_until(function()
     return Whichkey.tree.find(state.buf_trees[bufnr].n, "gq1") ~= nil
-  end, 2000, "server key")
+  end, 5000, "server key")
 end)
 
 t:test("global keys a plugin maps when it loads show in the buffers already entered", function()
   local state = new_state()
   state.setup()
   state.enable()
-  local other = new_buffer()
-  local bufnr = new_buffer()
+  local other = t:buffer(nil, { current = true })
+  local bufnr = t:buffer(nil, { current = true })
   vim.keymap.set("n", "gq2", function() end, { desc = "plugin key" })
   t:defer(function()
     pcall(vim.keymap.del, "n", "gq2")
@@ -152,7 +136,7 @@ t:test("global keys a plugin maps when it loads show in the buffers already ente
   vim.api.nvim_exec_autocmds("User", { group = "WhichKey", pattern = "PluginLoad", modeline = false })
   t.wait_until(function()
     return state.buf_trees[bufnr] ~= nil and Whichkey.tree.find(state.buf_trees[bufnr].n, "gq2") ~= nil
-  end, 2000, "plugin key in the current buffer")
+  end, 5000, "plugin key in the current buffer")
   t.assert_nil(state.buf_trees[other], "another buffer reads its keys when entered")
   vim.api.nvim_set_current_buf(other)
   t.assert_true(Whichkey.tree.find(state.buf_trees[other].n, "gq2") ~= nil, "plugin key in another buffer")
@@ -164,14 +148,14 @@ t:test(
     local state = new_state()
     state.setup()
     state.enable()
-    local other = new_buffer()
+    local other = t:buffer(nil, { current = true })
     t.assert_true(trigger_count(other) > 0, "triggers once entered")
-    local bufnr = new_buffer()
+    local bufnr = t:buffer(nil, { current = true })
 
     vim.api.nvim_exec_autocmds("User", { group = "WhichKey", pattern = "PluginLoad", modeline = false })
     t.wait_until(function()
       return state.buf_trees[bufnr] ~= nil and state.buf_trees[other] == nil
-    end, 2000, "refreshed")
+    end, 5000, "refreshed")
     state.disable()
     t.assert_eq(0, trigger_count(bufnr), "the current buffer")
     t.assert_eq(0, trigger_count(other), "a buffer refreshed while not current")

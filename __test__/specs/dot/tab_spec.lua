@@ -1,51 +1,20 @@
+local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
 local t = harness.new()
-
-local Observable = {}
-Observable.__index = Observable
-
----@param value                          any
----@return table
-function Observable.from_value(value)
-  return setmetatable({ value = value, disposed = false }, Observable)
-end
-
----@return any
-function Observable:snapshot()
-  return self.value
-end
-
----@param value                          any
----@return nil
-function Observable:next(value)
-  self.value = value
-end
-
----@return nil
-function Observable:dispose()
-  self.disposed = true
-end
 
 ---@return dot.tab
 ---@return fun(): integer
 local function setup()
   local dirty_count = 0
 
-  t:patch_global("stl", {
-    c = { Observable = Observable },
-    e = { TabTypeEnum = { NORMAL = 0 } },
-    nvim = {
-      win = {
-        is_fixed = function()
-          return false
-        end,
-        is_float = function()
-          return false
-        end,
-      },
-    },
-  })
+  t:patch_global("stl", require("stl"))
+  t:patch_table(stl.nvim.win, "is_fixed", function()
+    return false
+  end)
+  t:patch_table(stl.nvim.win, "is_float", function()
+    return false
+  end)
   t:patch_global("dot", {
     state = {
       status = {
@@ -66,20 +35,6 @@ local function setup()
   return assert(loadfile("lua/dot/tab.lua"))(), function()
     return dirty_count
   end
-end
-
----A buffer deleted when the case ends.
----@param listed                        boolean
----@param scratch                       boolean
----@return integer
-local function create_buf(listed, scratch)
-  local bufnr = vim.api.nvim_create_buf(listed, scratch) ---@type integer
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
-  return bufnr
 end
 
 ---Opens a current tab that is closed when the case ends.
@@ -150,7 +105,7 @@ end)
 t:test("on_bufs_close marks the tabline dirty only when entries are removed", function()
   local Tab, get_dirty_count = setup()
   local tabnr = vim.api.nvim_get_current_tabpage()
-  local bufnr = create_buf(true, false)
+  local bufnr = t:buffer(nil, { listed = true })
 
   Tab.resolve(tabnr, true)
   Tab.add_buf(tabnr, bufnr, false)
@@ -169,7 +124,7 @@ end)
 t:test("on_bufs_close preserves references owned by other tabs", function()
   local Tab = setup()
   local tabnr_first = vim.api.nvim_get_current_tabpage()
-  local bufnr = create_buf(true, false)
+  local bufnr = t:buffer(nil, { listed = true })
 
   Tab.resolve(tabnr_first, true)
   Tab.add_buf(tabnr_first, bufnr, false)
@@ -200,7 +155,7 @@ end)
 t:test("retrieve_unreferenced_bufnrs ignores invalid candidates", function()
   local Tab = setup()
   local tabnr = vim.api.nvim_get_current_tabpage()
-  local bufnr = create_buf(true, false)
+  local bufnr = t:buffer(nil, { listed = true })
 
   Tab.resolve(tabnr, true)
   vim.api.nvim_buf_delete(bufnr, { force = true })
@@ -214,8 +169,8 @@ end)
 t:test("on_buf_delete removes only the target from every tab and marks dirty once", function()
   local Tab, get_dirty_count = setup()
   local tabnr_first = vim.api.nvim_get_current_tabpage()
-  local bufnr = create_buf(true, false)
-  local bufnr_other = create_buf(true, false)
+  local bufnr = t:buffer(nil, { listed = true })
+  local bufnr_other = t:buffer(nil, { listed = true })
 
   Tab.resolve(tabnr_first, true)
   Tab.add_buf(tabnr_first, bufnr, false)
@@ -244,7 +199,7 @@ end)
 t:test("TabClosed disposes metadata synchronously and defers buffer deletion", function()
   local Tab = setup()
   local tabnr = tabnew()
-  local bufnr = create_buf(true, false)
+  local bufnr = t:buffer(nil, { listed = true })
   vim.api.nvim_win_set_buf(0, bufnr)
   local meta = Tab.resolve(tabnr, true)
 
@@ -265,12 +220,12 @@ t:test("TabClosed disposes metadata synchronously and defers buffer deletion", f
     callback = function()
       Tab.on_close()
       buffer_valid_during_event = vim.api.nvim_buf_is_valid(bufnr)
-      ---@diagnostic disable-next-line: need-check-nil, undefined-field
-      metadata_disposed_during_event = meta.winnr_fixed.disposed
-        ---@diagnostic disable-next-line: need-check-nil, undefined-field
-        and meta.winnr_float.disposed
-        ---@diagnostic disable-next-line: need-check-nil, undefined-field
-        and meta.winnr_sourcefile.disposed
+      ---@diagnostic disable-next-line: need-check-nil
+      metadata_disposed_during_event = meta.winnr_fixed:isdisposed()
+        ---@diagnostic disable-next-line: need-check-nil
+        and meta.winnr_float:isdisposed()
+        ---@diagnostic disable-next-line: need-check-nil
+        and meta.winnr_sourcefile:isdisposed()
     end,
   })
   t:defer(function()
@@ -290,18 +245,18 @@ end)
 t:test("TabClosed deletes only buffers owned exclusively by closed tabs", function()
   local Tab = setup()
   local tabnr_first = vim.api.nvim_get_current_tabpage()
-  local bufnr_shared = create_buf(true, false)
+  local bufnr_shared = t:buffer(nil, { listed = true })
 
   Tab.resolve(tabnr_first, true)
   Tab.add_buf(tabnr_first, bufnr_shared, false)
 
   local tabnr_second = tabnew()
-  local bufnr_owned = create_buf(true, false)
+  local bufnr_owned = t:buffer(nil, { listed = true })
   vim.api.nvim_win_set_buf(0, bufnr_owned)
   Tab.resolve(tabnr_second, true)
   Tab.add_buf(tabnr_second, bufnr_shared, false)
 
-  local bufnr_unrelated = create_buf(true, false)
+  local bufnr_unrelated = t:buffer(nil, { listed = true })
   vim.api.nvim_buf_set_lines(bufnr_unrelated, 0, -1, false, { "unsaved" })
 
   local tabclosed_autocmd = vim.api.nvim_create_autocmd("TabClosed", {
@@ -331,15 +286,12 @@ end)
 t:test("TabClosed preserves modified buffers owned exclusively by the closed tab", function()
   local Tab = setup()
   local tabnr = tabnew()
-  local bufnr = create_buf(true, false)
+  local bufnr = t:buffer(nil, { listed = true })
   vim.api.nvim_win_set_buf(0, bufnr)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "unsaved" })
   Tab.resolve(tabnr, true)
 
-  local scheduled = nil ---@type fun()|nil
-  t:patch_table(vim, "schedule", function(callback)
-    scheduled = callback
-  end)
+  local schedule = bootstrap.with_schedule(t)
   local tabclosed_autocmd = vim.api.nvim_create_autocmd("TabClosed", {
     callback = function()
       Tab.on_close()
@@ -350,7 +302,8 @@ t:test("TabClosed preserves modified buffers owned exclusively by the closed tab
   end)
 
   vim.cmd.tabclose()
-  assert(scheduled)()
+  t.assert_true(#schedule.callbacks > 0, "scheduled refresh")
+  schedule.drain()
   local valid = vim.api.nvim_buf_is_valid(bufnr)
   local modified = valid and vim.api.nvim_get_option_value("modified", { buf = bufnr }) or false
   local line = valid and vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1] or nil
@@ -366,19 +319,16 @@ t:test("multiple TabClosed events coalesce into one refresh", function()
   Tab.resolve(tabnr_first, true)
 
   tabnew()
-  local bufnr_second = create_buf(true, false)
+  local bufnr_second = t:buffer(nil, { listed = true })
   vim.api.nvim_win_set_buf(0, bufnr_second)
   Tab.resolve(vim.api.nvim_get_current_tabpage(), true)
 
   tabnew()
-  local bufnr_third = create_buf(true, false)
+  local bufnr_third = t:buffer(nil, { listed = true })
   vim.api.nvim_win_set_buf(0, bufnr_third)
   Tab.resolve(vim.api.nvim_get_current_tabpage(), true)
 
-  local scheduled = {} ---@type fun()[]
-  t:patch_table(vim, "schedule", function(callback)
-    scheduled[#scheduled + 1] = callback
-  end)
+  local schedule = bootstrap.with_schedule(t)
   local tabclosed_autocmd = vim.api.nvim_create_autocmd("TabClosed", {
     callback = function()
       Tab.on_close()
@@ -390,8 +340,8 @@ t:test("multiple TabClosed events coalesce into one refresh", function()
 
   vim.api.nvim_set_current_tabpage(tabnr_first)
   vim.cmd.tabonly()
-  local scheduled_count = #scheduled
-  scheduled[1]()
+  local scheduled_count = #schedule.callbacks
+  schedule.drain()
   local second_valid = vim.api.nvim_buf_is_valid(bufnr_second)
   local third_valid = vim.api.nvim_buf_is_valid(bufnr_third)
 
@@ -405,9 +355,9 @@ end)
 local function source_layout()
   local tabnr = tabnew()
   local left = vim.api.nvim_get_current_win() ---@type integer
-  vim.api.nvim_win_set_buf(left, create_buf(true, false))
-  local right = vim.api.nvim_open_win(create_buf(true, false), false, { split = "right", win = left })
-  local panel = vim.api.nvim_open_win(create_buf(false, true), false, { split = "left", win = left })
+  vim.api.nvim_win_set_buf(left, t:buffer(nil, { listed = true }))
+  local right = vim.api.nvim_open_win(t:buffer(nil, { listed = true }), false, { split = "right", win = left })
+  local panel = vim.api.nvim_open_win(t:buffer(), false, { split = "left", win = left })
   vim.w[left].sourcefile, vim.w[right].sourcefile = true, true
   return tabnr, left, right, panel
 end

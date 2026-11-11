@@ -1,5 +1,7 @@
-local fixture = require("__test__.support.filetree").new()
-local t, filetree, await = fixture.t, fixture.filetree, fixture.await
+local bootstrap = require("__test__.support.bootstrap")
+local t = require("__test__.support.harness").new()
+local fixture = require("__test__.support.filetree").new(t)
+local filetree, await = fixture.filetree, fixture.await
 
 t:test("a reentrant source update cannot deliver an older revision after the newer one", function()
   local path = t:tempdir()
@@ -107,11 +109,10 @@ t:test("a reentrant view close cannot restore superseded watch coverage", functi
     end,
   })
   t:defer(function()
-    view:detach()
     first:unsubscribe()
     second:unsubscribe()
   end)
-  view = filetree.attach(state, { keymaps = false })
+  view = fixture.attach(state, { keymaps = false })
   t.wait_until(function()
     return closed and #received > 0
   end, 5000)
@@ -119,10 +120,7 @@ t:test("a reentrant view close cannot restore superseded watch coverage", functi
 end)
 
 t:test("a failed subscriber cannot suppress later observers or the original handler", function()
-  local reports, delivered = {}, {}
-  t:patch_table(stl.reporter, "error", function(value)
-    reports[#reports + 1] = value.message
-  end)
+  local reports, delivered = bootstrap.with_reporter(t), {}
   local data = await(filetree.open(t:tempdir(), {
     on_effect = function(effect)
       if effect.kind == "TaskFailed" then
@@ -154,7 +152,8 @@ t:test("a failed subscriber cannot suppress later observers or the original hand
     return #delivered == 2
   end, 5000)
   t.assert_same({ "subscriber", "original" }, delivered)
-  t.assert_same({ "subscriber failure" }, reports)
+  t.assert_eq(1, #reports.error)
+  t.assert_eq("subscriber failure", reports.error[1].message)
 end)
 
 t:run()

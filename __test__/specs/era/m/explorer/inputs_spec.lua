@@ -1,20 +1,6 @@
-local fixture = require("__test__.support.explorer").new()
-local t, await = fixture.t, fixture.await
-
----@param path                          string
----@return integer, integer
-local function diagnostic(path)
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_name(bufnr, path)
-  local namespace = vim.api.nvim_create_namespace("explorer-input-" .. bufnr)
-  t:defer(function()
-    vim.diagnostic.reset(namespace)
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
-  return bufnr, namespace
-end
+local t = require("__test__.support.harness").new()
+local fixture = require("__test__.support.explorer").new(t)
+local await = fixture.await
 
 ---@param widget                        era.m.explorer.Widget
 ---@param count                         integer
@@ -29,7 +15,7 @@ end
 t:test("reopening a retained data source withdraws diagnostics cleared while unsubscribed", function()
   local path = t:tempdir()
   fixture.write(path .. "/a")
-  local bufnr, namespace = diagnostic(path .. "/a")
+  local bufnr, namespace = fixture.diagnostic_buffer(path .. "/a")
   local first = fixture.widget(path)
   vim.diagnostic.set(namespace, bufnr, { { lnum = 0, col = 0, message = "error", severity = 1 } })
   displayed(first, 1)
@@ -43,7 +29,7 @@ end)
 t:test("sparse severity counts survive another namespace being reset", function()
   local path = t:tempdir()
   fixture.write(path .. "/a")
-  local bufnr, warnings = diagnostic(path .. "/a")
+  local bufnr, warnings = fixture.diagnostic_buffer(path .. "/a")
   local hints = vim.api.nvim_create_namespace("explorer-hints-" .. bufnr)
   t:defer(function()
     vim.diagnostic.reset(hints)
@@ -106,7 +92,7 @@ end)
 t:test("Busy diagnostic and Git inputs are retried without another editor event", function()
   local path = t:tempdir()
   fixture.write(path .. "/a")
-  local bufnr, namespace = diagnostic(path .. "/a")
+  local bufnr, namespace = fixture.diagnostic_buffer(path .. "/a")
   local widget = fixture.widget(path)
   local session = widget:context()
   t.wait_until(function()
@@ -215,7 +201,7 @@ t:test("filesystem publications refresh Git without selection or annotation feed
   local revision = session.data:source():revision()
   before = refreshes
   await(widget:action():mark("copy"))
-  local bufnr, namespace = diagnostic(path .. "/a")
+  local bufnr, namespace = fixture.diagnostic_buffer(path .. "/a")
   vim.diagnostic.set(namespace, bufnr, { { lnum = 0, col = 0, message = "error", severity = 1 } })
   displayed(widget, 1)
   t.wait_until(function()

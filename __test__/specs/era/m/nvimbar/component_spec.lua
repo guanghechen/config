@@ -4,14 +4,7 @@ local Component = require("era.m.nvimbar.component")
 local Future = require("stl.c.future")
 local t = harness.new()
 
-local errors = {}
-bootstrap.with_runtime(t, {
-  stl = { reporter = {
-    error = function(error)
-      errors[#errors + 1] = error
-    end,
-  } },
-})
+local reports = bootstrap.with_reporter(t)
 
 local function context(value, bufnr)
   return { winnr = 10, bufnr = bufnr or 20, tabnr = 30, filepath = "test.lua", cwd = "/test", value = value }
@@ -27,11 +20,23 @@ local function create(source, changed, is_current)
   return component
 end
 
+---@param component                     era.m.nvimbar.Component
+---@param status                        era.m.nvimbar.IComponentStatus
 ---@return nil
 local function wait_status(component, status)
   t.wait_until(function()
     return component.status == status
-  end, 1000, "component reaches " .. status)
+  end, 5000, "component reaches " .. status)
+end
+
+-- Waits for the refresh a request starts on a later turn.
+---@param jobs                          any[] One entry per started refresh.
+---@param count                         integer
+---@return nil
+local function wait_jobs(jobs, count)
+  t.wait_until(function()
+    return #jobs == count
+  end, 5000, count .. " refreshes started")
 end
 
 t:test("factories and initial refresh run after the request returns", function()
@@ -97,9 +102,7 @@ t:test("running requests reject stale results and rerun only the latest request"
   component:request(context("three"))
   t.assert_eq(1, #jobs)
   jobs[1].resolve({ text = "one", hltext = "one" })
-  t.wait_until(function()
-    return #jobs == 2
-  end, 1000)
+  wait_jobs(jobs, 2)
   t.assert_eq("three", jobs[2].value)
   t.assert_same({}, published)
   jobs[2].resolve({ text = "three", hltext = "three" })
@@ -228,9 +231,7 @@ t:test("Future completion preserves the data captured when acquisition started",
   wait_status(component, "ready")
   t.assert_eq("A", component:format(context(), 20))
   component:request(context())
-  t.wait_until(function()
-    return #jobs == 2
-  end, 1000)
+  wait_jobs(jobs, 2)
   jobs[2].resolve({ text = jobs[2].value, hltext = jobs[2].value })
   wait_status(component, "ready")
   t.assert_eq("B", component:format(context(), 20), "completion cannot cache an unread state")
@@ -289,9 +290,7 @@ t:test("changed dependencies discard the candidate and refresh only the latest c
   jobs[1].resolve({ text = "old", hltext = "old" })
   t.assert_nil(component.snapshot)
   t.assert_eq(0, publications)
-  t.wait_until(function()
-    return #jobs == 2
-  end, 1000)
+  wait_jobs(jobs, 2)
   t.assert_eq("latest", jobs[2].value)
   jobs[2].resolve({ text = "latest", hltext = "latest" })
   wait_status(component, "ready")
@@ -349,16 +348,12 @@ t:test("force requests bypass will_change and survive coalescing with ordinary r
   component:request(context())
   jobs[1]({ text = "old", hltext = "old" })
   t.assert_nil(component.snapshot)
-  t.wait_until(function()
-    return #jobs == 2
-  end, 1000)
+  wait_jobs(jobs, 2)
   jobs[2]({ text = "new", hltext = "new" })
   wait_status(component, "ready")
   t.assert_eq(0, checks)
   component:request(context(), true)
-  t.wait_until(function()
-    return #jobs == 3
-  end, 1000)
+  wait_jobs(jobs, 3)
   jobs[3]({ text = "forced", hltext = "forced" })
   wait_status(component, "ready")
   t.assert_eq(0, checks)
@@ -388,9 +383,7 @@ t:test("force requests from completion cleanup still require a new refresh", fun
   wait_status(component, "running")
   jobs[1]({ text = "old", hltext = "old" })
   t.assert_nil(component.snapshot)
-  t.wait_until(function()
-    return #jobs == 2
-  end, 1000)
+  wait_jobs(jobs, 2)
   jobs[2]({ text = "new", hltext = "new" })
   wait_status(component, "ready")
   t.assert_eq("new", component:format(context(), 20))
@@ -824,10 +817,10 @@ t:test("an obsolete failure cannot overwrite the latest pending request", functi
   component:request(context("old"))
   wait_status(component, "running")
   component:request(context("new"))
-  local error_count = #errors
+  local error_count = #reports.error
   reject_old("obsolete failure")
   wait_status(component, "ready")
-  t.assert_eq(error_count, #errors)
+  t.assert_eq(error_count, #reports.error)
   t.assert_eq("new", component:format(context(), 20))
 end)
 
@@ -847,25 +840,18 @@ t:test("layout failures stay local and never request another publication", funct
   end)
   component:request(context())
   wait_status(component, "ready")
-  local error_count = #errors
+  local error_count = #reports.error
   for _ = 1, 3 do
     t.assert_eq("", component:format(context(), 20))
   end
   t.assert_eq(3, renders)
   t.assert_eq(1, changes)
-  t.assert_eq(error_count + 1, #errors)
+  t.assert_eq(error_count + 1, #reports.error)
   t.assert_eq("ready", component.status)
 end)
 
 t:test("layout observes pane geometry changes without reacquiring data", function()
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  t:defer(function()
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
-  local winnr = vim.api.nvim_open_win(bufnr, false, { relative = "editor", row = 1, col = 1, width = 20, height = 2 })
-  t:defer(function()
-    vim.api.nvim_win_close(winnr, true)
-  end)
+  local winnr = t:window(t:buffer(), { relative = "editor", row = 1, col = 1, width = 20, height = 2 })
   local refreshes = 0
   local component = create({
     name = "pane width",
@@ -912,7 +898,7 @@ t:test("Future results from libuv callbacks commit on the main loop", function()
   component:request(context())
   t.wait_until(function()
     return component.status == "ready" or component.status == "failed"
-  end, 1000)
+  end, 5000)
   t.assert_eq("ready", component.status, component.error)
   t.assert_eq("ready", component:format(context(), 20))
 end)

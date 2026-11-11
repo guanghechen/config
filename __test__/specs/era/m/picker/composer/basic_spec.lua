@@ -4,11 +4,7 @@ local t = require("__test__.support.harness").new()
 ---@param refocus                       ?boolean Whether the confirm callback focuses the source window before closing.
 ---@return __test__.support.UI
 local function session(permanent, refocus)
-  local ui = require("__test__.support.ui").new()
-  t:defer(function()
-    ui:close()
-  end)
-  ui:start({ width = 100, height = 32, runtime = "ark" })
+  local ui = require("__test__.support.ui").open(t, { width = 100, height = 32, runtime = "ark" })
   ui:lua(
     [[
     local permanent, refocus = ...
@@ -49,9 +45,7 @@ end
 ---@return nil
 local function press(ui, keys, condition)
   ui:rpc("nvim_input", keys)
-  ui:wait_until(function()
-    return ui:lua("return " .. condition)
-  end, 5000, keys .. " did not reach: " .. condition)
+  ui:wait_lua("return " .. condition, 5000, keys .. " did not reach: " .. condition)
 end
 
 ---Opens the picker, types a filter in its finder and confirms.

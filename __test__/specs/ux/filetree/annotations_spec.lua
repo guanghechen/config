@@ -1,6 +1,7 @@
-local fixture = require("__test__.support.filetree").new()
-local t, filetree = fixture.t, fixture.filetree
-local await, write = fixture.await, fixture.write
+local t = require("__test__.support.harness").new()
+local fixture = require("__test__.support.filetree").new(t)
+local filetree = fixture.filetree
+local attach, await, write = fixture.attach, fixture.await, fixture.write
 
 t:test("diagnostics decorate a stable frame and clear by namespace without editing buffer lines", function()
   local path = t:tempdir()
@@ -8,10 +9,7 @@ t:test("diagnostics decorate a stable frame and clear by namespace without editi
   write(path .. "/b")
   local data = await(filetree.open(path))
   local state = await(data:create_state(nil, { mode = "list" }))
-  local view = filetree.attach(state, { keymaps = false })
-  t:defer(function()
-    view:detach()
-  end)
+  local view = attach(state, { keymaps = false })
   local stable, stable_frame
   t.wait_until(function()
     local frame = view:frame()
@@ -34,14 +32,10 @@ t:test("diagnostics decorate a stable frame and clear by namespace without editi
   local frame = view:frame()
   local lines = vim.api.nvim_buf_get_lines(view.bufnr, 0, -1, true)
   local tick = vim.api.nvim_buf_get_changedtick(view.bufnr)
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_name(bufnr, path .. "/a")
+  local bufnr = t:buffer(nil, { name = path .. "/a" })
   local namespace = vim.api.nvim_create_namespace("filetree-test-diagnostics")
   t:defer(function()
     vim.diagnostic.reset(namespace)
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
   end)
   vim.diagnostic.set(namespace, bufnr, { { lnum = 0, col = 0, message = "error", severity = 1 } })
   await(data:sync_diagnostics(namespace, bufnr))
@@ -83,12 +77,8 @@ for _, outcome in ipairs({ "success", "Stale" }) do
       rows[index] = { diagnostics = { 1, 0, 0, 0 }, git = 0 }
     end
     local cached = { frame = "frame-1", revision = "1", first = 1, rows = rows }
-    local bufnr = vim.api.nvim_create_buf(false, true)
-    t:defer(function()
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end)
     local view = {
-      bufnr = bufnr,
+      bufnr = t:buffer(),
       _frame = frame,
       _header = header,
       _options = {},

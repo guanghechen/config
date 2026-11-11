@@ -1,6 +1,10 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "__test__.support.bootstrap" ---@type string
 
+---@class __test__.support.bootstrap.ISchedule
+---@field callbacks                     fun()[] Queued callbacks, oldest first.
+---@field drain                         fun(): nil Runs the queue in order, including callbacks queued meanwhile.
+
 local M = {}
 
 ---@param left                          table
@@ -63,6 +67,36 @@ function M.with_native(harness)
     },
   })
   return native
+end
+
+---Queues the callbacks `vim.schedule` receives, instead of running them, until the case or suite ends.
+---@param harness                       __test__.support.Harness
+---@return __test__.support.bootstrap.ISchedule
+function M.with_schedule(harness)
+  local schedule = { callbacks = {} } ---@type __test__.support.bootstrap.ISchedule
+  harness:patch_table(vim, "schedule", function(callback)
+    schedule.callbacks[#schedule.callbacks + 1] = callback
+  end)
+  function schedule.drain()
+    while #schedule.callbacks > 0 do
+      table.remove(schedule.callbacks, 1)()
+    end
+  end
+  return schedule
+end
+
+---Records the callback of each autocommand created until the case or suite ends, by event, instead of creating it.
+---@param harness                       __test__.support.Harness
+---@return table<string, fun(args: table): any>
+function M.with_autocmds(harness)
+  local callbacks = {} ---@type table<string, fun(args: table): any>
+  harness:patch_table(vim.api, "nvim_create_autocmd", function(events, opts)
+    for _, event in ipairs(type(events) == "table" and events or { events }) do
+      callbacks[event] = opts.callback
+    end
+    return 1
+  end)
+  return callbacks
 end
 
 ---Records every `stl.reporter` report by level, in order, until the case or suite ends.

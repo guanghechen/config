@@ -1,39 +1,11 @@
--- cspell:ignore unchanges worktree
-
 require("ark.bootstrap").setup()
 local t = require("__test__.support.harness").new()
 local diffview = require("__test__.support.diffview")
+local fs = require("__test__.support.fs")
 local git = require("__test__.support.git")
-local staging = require("era.m.git.staging")
 local pane_sbs = require("era.m.diffview.pane.sbs")
 local view = require("era.m.diffview.view.workspace.view")
 local Future = stl.c.Future
-
----@param predicate                     fun(): boolean
-local function wait(predicate)
-  t.wait_until(predicate, 5000, "async preview operation")
-end
-
----@return integer left_winnr
----@return integer right_winnr
-local function create_windows()
-  vim.cmd("new")
-  local left_winnr = vim.api.nvim_get_current_win() ---@type integer
-  vim.cmd("new")
-  local right_winnr = vim.api.nvim_get_current_win() ---@type integer
-  return left_winnr, right_winnr
-end
-
----@param left_winnr                    integer
----@param right_winnr                   integer
-local function close_windows(left_winnr, right_winnr)
-  if vim.api.nvim_win_is_valid(right_winnr) then
-    vim.api.nvim_win_close(right_winnr, true)
-  end
-  if vim.api.nvim_win_is_valid(left_winnr) then
-    vim.api.nvim_win_close(left_winnr, true)
-  end
-end
 
 t:test("workspace visibility filters untracked files without mutating the snapshot", function()
   local tracked = { filepath = "tracked.lua", stage_type = "unstaged", status = "M" }
@@ -66,7 +38,7 @@ t:test("workspace preview generation makes the latest request the sole writer", 
     requests[#requests + 1] = opts
   end)
 
-  local left_winnr, right_winnr = create_windows()
+  local left_winnr, right_winnr = diffview.sbs_windows(t)
   local disposed = false
   local ctx = diffview.workspace_context({
     layout = {
@@ -105,16 +77,13 @@ t:test("workspace preview generation makes the latest request the sole writer", 
   view.clear_sbs(ctx)
   t.assert_false(requests[2].is_current(), "clear invalidates open request")
   t.assert_true(assert(clear_is_current)(), "clear owns latest generation")
-  close_windows(left_winnr, right_winnr)
 end)
 
 t:test("matching refresh preserves view without resetting diff folds", function()
   local pane = pane_sbs
-  local left_winnr, right_winnr = create_windows()
-  local left_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  local right_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  local stale_left_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  local stale_right_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local left_bufnr, right_bufnr = t:buffer(), t:buffer()
+  local stale_left_bufnr, stale_right_bufnr = t:buffer(), t:buffer()
+  local left_winnr, right_winnr = diffview.sbs_windows(t)
   vim.api.nvim_win_set_buf(left_winnr, left_bufnr)
   vim.api.nvim_win_set_buf(right_winnr, right_bufnr)
 
@@ -143,25 +112,18 @@ t:test("matching refresh preserves view without resetting diff folds", function(
     left_view = { lnum = 7, topline = 3 },
     right_view = { lnum = 9, topline = 4 },
   })
-  wait(function()
+  t.wait_until(function()
     return #restored == 2
-  end)
+  end, 5000, "restored views")
 
   t.assert_eq(0, fold_resets, "diff folds retained")
   t.assert_eq(7, restored[1].lnum, "left view restored")
   t.assert_eq(9, restored[2].lnum, "right view restored")
-
-  close_windows(left_winnr, right_winnr)
-  for _, bufnr in ipairs({ left_bufnr, right_bufnr, stale_left_bufnr, stale_right_bufnr }) do
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end
 end)
 
 t:test("unchanged staged preview skips view capture and diff refresh", function()
   local pane = pane_sbs
-  local left_winnr, right_winnr = create_windows()
+  local left_winnr, right_winnr = diffview.sbs_windows(t)
   local applied_opts = nil ---@type era.m.diffview.pane.sbs.IApplyBuffersOpts|nil
   local view_captures = 0 ---@type integer
   local loads = 0 ---@type integer
@@ -191,13 +153,12 @@ t:test("unchanged staged preview skips view capture and diff refresh", function(
   t.assert_eq(2, loads, "both immutable sides checked")
   t.assert_eq(0, view_captures, "unchanged content skips view capture")
   t.assert_false(assert(applied_opts).refresh_diff, "unchanged staged content skips diff refresh")
-  close_windows(left_winnr, right_winnr)
 end)
 
 t:test("changed staged or mutable unstaged preview retains diff refresh", function()
   diffview.workspace(t, t:tempdir())
   local pane = pane_sbs
-  local left_winnr, right_winnr = create_windows()
+  local left_winnr, right_winnr = diffview.sbs_windows(t)
   local applied = {} ---@type era.m.diffview.pane.sbs.IApplyBuffersOpts[]
   local view_captures = 0 ---@type integer
   local load_count = 0 ---@type integer
@@ -245,14 +206,13 @@ t:test("changed staged or mutable unstaged preview retains diff refresh", functi
   })
   t.assert_true(applied[2].refresh_diff, "mutable working-tree side refreshes diff")
   t.assert_eq(2, view_captures, "mutable preview captures both views")
-  close_windows(left_winnr, right_winnr)
 end)
 
 t:test("unchanged matching buffers skip scheduled diff work only while identity matches", function()
   local pane = pane_sbs
-  local left_winnr, right_winnr = create_windows()
-  local left_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  local right_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local left_bufnr, right_bufnr = t:buffer(), t:buffer()
+  local replacement_left_bufnr, replacement_right_bufnr = t:buffer(), t:buffer()
+  local left_winnr, right_winnr = diffview.sbs_windows(t)
   local schedules = 0 ---@type integer
   vim.api.nvim_win_set_buf(left_winnr, left_bufnr)
   vim.api.nvim_win_set_buf(right_winnr, right_bufnr)
@@ -269,8 +229,6 @@ t:test("unchanged matching buffers skip scheduled diff work only while identity 
   t.assert_eq(left_bufnr, vim.api.nvim_win_get_buf(left_winnr), "left buffer retained")
   t.assert_eq(right_bufnr, vim.api.nvim_win_get_buf(right_winnr), "right buffer retained")
 
-  local replacement_left_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  local replacement_right_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
   pane.__apply_buffers__(left_winnr, right_winnr, replacement_left_bufnr, replacement_right_bufnr, {
     preserve_view = true,
     refresh_diff = false,
@@ -278,13 +236,6 @@ t:test("unchanged matching buffers skip scheduled diff work only while identity 
   t.assert_eq(1, schedules, "buffer mismatch retains scheduled setup")
   t.assert_eq(replacement_left_bufnr, vim.api.nvim_win_get_buf(left_winnr), "left replacement applied")
   t.assert_eq(replacement_right_bufnr, vim.api.nvim_win_get_buf(right_winnr), "right replacement applied")
-
-  close_windows(left_winnr, right_winnr)
-  for _, bufnr in ipairs({ left_bufnr, right_bufnr, replacement_left_bufnr, replacement_right_bufnr }) do
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end
 end)
 
 t:test("workspace preview routes status snapshot identities for every file shape", function()
@@ -418,9 +369,9 @@ t:test("staged preview starts both immutable loads before publishing", function(
   t.assert_eq(0, applied, "pair is not published while one side is pending")
 
   release_left(true)
-  wait(function()
+  t.wait_until(function()
     return applied == 1
-  end)
+  end, 5000, "the published pair")
 end)
 
 t:test("stale staged pair cannot publish after both loads settle", function()
@@ -428,7 +379,6 @@ t:test("stale staged pair cannot publish after both loads settle", function()
   local left_gate, release_left = Future.new_with_resolver()
   local right_gate, release_right = Future.new_with_resolver()
   local current = true ---@type boolean
-  local done = false ---@type boolean
   local applied = 0 ---@type integer
   local next_bufnr = 0 ---@type integer
   t:patch_table(pane, "create_sbs_buffer", function()
@@ -449,7 +399,7 @@ t:test("stale staged pair cannot publish after both loads settle", function()
     applied = applied + 1
   end)
 
-  stl.async.run(function()
+  local preview = stl.async.run_future(function()
     pane.open_diff_entry({
       left_winnr = -1,
       right_winnr = -1,
@@ -459,22 +409,18 @@ t:test("stale staged pair cannot publish after both loads settle", function()
         return current
       end,
     })
-    done = true
   end)
 
   current = false
   release_left(true)
   release_right(true)
-  wait(function()
-    return done
-  end)
+  t.await(preview)
   t.assert_eq(0, applied, "stale pair rejected at the publish barrier")
 end)
 
 t:test("staged pair drains its sibling before propagating a load exception", function()
   local pane = pane_sbs
   local right_gate, release_right = Future.new_with_resolver()
-  local outcome = nil ---@type { ok: boolean, err: string }|nil
   local applied = 0 ---@type integer
   local next_bufnr = 0 ---@type integer
   t:patch_table(pane, "create_sbs_buffer", function()
@@ -494,34 +440,26 @@ t:test("staged pair drains its sibling before propagating a load exception", fun
     applied = applied + 1
   end)
 
-  stl.async.run(function()
-    local ok, err = xpcall(function()
-      pane.open_diff_entry({
-        left_winnr = -1,
-        right_winnr = -1,
-        entry = { filepath = "f.txt", stage_type = "staged", status = "M" },
-        loader = loader,
-      })
-    end, debug.traceback)
-    outcome = { ok = ok, err = tostring(err) }
+  local preview = stl.async.run_future(function()
+    pane.open_diff_entry({
+      left_winnr = -1,
+      right_winnr = -1,
+      entry = { filepath = "f.txt", stage_type = "staged", status = "M" },
+      loader = loader,
+    })
   end)
 
-  t.assert_nil(outcome, "parent waits for the still-running sibling")
+  t.assert_false(preview:is_done(), "parent waits for the still-running sibling")
   release_right(true)
-  wait(function()
-    return outcome ~= nil
-  end)
-  t.assert_false(assert(outcome).ok, "load exception propagated")
-  t.assert_true(assert(outcome).err:find("left load failed", 1, true) ~= nil, "original exception retained")
+  local ok, err = t.settle(preview)
+  t.assert_false(ok, "load exception propagated")
+  t.assert_true(tostring(err):find("left load failed", 1, true) ~= nil, "original exception retained")
   t.assert_eq(0, applied, "failed pair never published")
 end)
 
 t:test("real staged preview reuses captured identities without resolver processes", function()
-  local repo = git.repo(t)
-  vim.fn.writefile({ "base" }, repo .. "/f.txt")
-  git.run(repo, { "add", "--", "f.txt" })
-  git.run(repo, { "commit", "-qm", "base" })
-  vim.fn.writefile({ "staged" }, repo .. "/f.txt")
+  local repo = diffview.committed(t, { ["f.txt"] = { "base" } })
+  fs.write(repo .. "/f.txt", { "staged" })
   git.run(repo, { "add", "--", "f.txt" })
 
   local head_object = vim.trim(git.run(repo, { "rev-parse", "HEAD:f.txt" })) ---@type string
@@ -553,11 +491,10 @@ t:test("real staged preview reuses captured identities without resolver processe
     return future
   end
 
-  repo = diffview.workspace(t, repo)
   local loader = require("era.m.diffview.content").Loader.new(production_info)
 
   local pane = pane_sbs
-  local left_winnr, right_winnr = create_windows()
+  local left_winnr, right_winnr = diffview.sbs_windows(t)
   ---@type era.m.diffview.IFileEntry
   local entry = {
     filepath = "f.txt",
@@ -567,8 +504,7 @@ t:test("real staged preview reuses captured identities without resolver processe
     new_object_name = index_object,
   }
   local function open_preview()
-    local done = false ---@type boolean
-    stl.async.run(function()
+    t.await(stl.async.run_future(function()
       pane.open_diff_entry({
         left_winnr = left_winnr,
         right_winnr = right_winnr,
@@ -576,11 +512,7 @@ t:test("real staged preview reuses captured identities without resolver processe
         loader = loader,
         preserve_view = true,
       })
-      done = true
-    end)
-    wait(function()
-      return done
-    end)
+    end))
   end
 
   open_preview()
@@ -588,18 +520,18 @@ t:test("real staged preview reuses captured identities without resolver processe
 
   local left_bufnr = vim.api.nvim_win_get_buf(left_winnr) ---@type integer
   local right_bufnr = vim.api.nvim_win_get_buf(right_winnr) ---@type integer
+  t:defer(function()
+    for _, bufnr in ipairs({ left_bufnr, right_bufnr, vim.fn.bufnr(repo .. "/f.txt") }) do
+      if bufnr ~= -1 and vim.api.nvim_buf_is_valid(bufnr) then
+        vim.api.nvim_buf_delete(bufnr, { force = true })
+      end
+    end
+  end)
   t.assert_eq(0, resolution_calls, "captured identities eliminate resolver processes")
   t.assert_eq(2, blob_calls, "second preview reuses both immutable buffers")
   t.assert_eq(2, max_active_blob_calls, "cold staged blobs load concurrently")
   t.assert_eq("base", vim.api.nvim_buf_get_lines(left_bufnr, 0, 1, false)[1], "HEAD snapshot")
   t.assert_eq("staged", vim.api.nvim_buf_get_lines(right_bufnr, 0, 1, false)[1], "index snapshot")
-
-  close_windows(left_winnr, right_winnr)
-  for _, bufnr in ipairs({ left_bufnr, right_bufnr, vim.fn.bufnr(repo .. "/f.txt") }) do
-    if bufnr ~= -1 and vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end
 end)
 
 t:test("parallel preview does not publish buffers after either Git content load fails", function()
@@ -636,15 +568,14 @@ end)
 
 t:test("conflict preview compares ours with the working tree", function()
   local repo = git.repo(t, { "-b", "main" })
-  vim.fn.writefile({ "base" }, repo .. "/f.txt")
-  git.run(repo, { "add", "--", "f.txt" })
-  git.run(repo, { "commit", "-qm", "base" })
+  fs.write(repo .. "/f.txt", { "base" })
+  git.commit(repo, "base")
   git.run(repo, { "branch", "theirs" })
-  vim.fn.writefile({ "ours" }, repo .. "/f.txt")
-  git.run(repo, { "commit", "-am", "ours", "-q" })
+  fs.write(repo .. "/f.txt", { "ours" })
+  git.commit(repo, "ours")
   git.run(repo, { "checkout", "-q", "theirs" })
-  vim.fn.writefile({ "theirs" }, repo .. "/f.txt")
-  git.run(repo, { "commit", "-am", "theirs", "-q" })
+  fs.write(repo .. "/f.txt", { "theirs" })
+  git.commit(repo, "theirs")
   git.run(repo, { "checkout", "-q", "main" })
   t.assert_eq(1, git.system(repo, { "merge", "theirs" }).code, "merge conflict")
 
@@ -657,30 +588,26 @@ t:test("conflict preview compares ours with the working tree", function()
     applied = { left_bufnr, right_bufnr }
   end)
 
-  local done = false
-  stl.async.run(function()
+  t.await(stl.async.run_future(function()
     pane.open_diff_entry({
       left_winnr = -1,
       right_winnr = -1,
       entry = { filepath = "f.txt", stage_type = "unstaged", status = "U" },
       loader = loader,
     })
-    done = true
-  end)
-  wait(function()
-    return done
-  end)
+  end))
 
   local buffers = assert(applied, "conflict preview applied")
+  t:defer(function()
+    for _, bufnr in ipairs(buffers) do
+      if vim.api.nvim_buf_is_valid(bufnr) then
+        vim.api.nvim_buf_delete(bufnr, { force = true })
+      end
+    end
+  end)
   t.assert_eq("ours", vim.api.nvim_buf_get_lines(buffers[1], 0, 1, false)[1], "stage two on left")
   local working = table.concat(vim.api.nvim_buf_get_lines(buffers[2], 0, -1, false), "\n")
   t.assert_true(working:find("<<<<<<< HEAD", 1, true) ~= nil, "working conflict markers on right")
-
-  for _, bufnr in ipairs(buffers) do
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end
 end)
 
 t:run()

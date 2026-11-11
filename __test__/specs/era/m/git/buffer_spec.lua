@@ -1,19 +1,8 @@
 local Future = require("stl.c.future")
+local git_buffer = require("__test__.support.git_buffer")
 local harness = require("__test__.support.harness")
 
 local t = harness.new()
-
----@param callback fun(...)
----@return table
-local function callable(callback)
-  return setmetatable({
-    dispose = function() end,
-  }, {
-    __call = function(_, ...)
-      return callback(...)
-    end,
-  })
-end
 
 ---@param initial_visible table<integer, boolean>
 ---@param get_file_info (fun(bufnr: integer): stl.c.Future|nil)|nil
@@ -45,80 +34,72 @@ local function setup(initial_visible, get_file_info, get_buf_name, create_repo)
     end,
   }
 
-  t:patch_global("stl", {
-    c = {
-      Future = Future,
-      Ticker = {
-        new = function()
-          return { tick = function() end }
-        end,
-      },
-    },
-    git = {
-      info = {
-        get_file_info = function(_, relpath)
-          local bufnr = assert(tonumber(relpath:match("(%d+)")))
-          file_info_calls[bufnr] = (file_info_calls[bufnr] or 0) + 1
-          if get_file_info then
-            local future = get_file_info(bufnr)
-            if future then
-              return future
-            end
-          end
-          return Future.new()
-        end,
-      },
-    },
-    reporter = { warn = function() end },
-    timer = {
-      debounce = function(callback)
-        return callable(function()
-          pending_debounce = callback
-        end)
-      end,
-      throttle = function(callback)
-        return callable(callback)
-      end,
-    },
-  })
-  t:patch_global("dot", {
-    path = {
-      is_git_repo = function()
-        return true
-      end,
-      normalize = function(filepath)
-        return filepath
-      end,
-      workspace = function()
-        return "/repo"
-      end,
-    },
-  })
-  t:patch_global("yoz", {
-    path = {
-      is_descendant = function(from, to)
-        return to == from or vim.startswith(to, from .. "/")
-      end,
-    },
-  })
-  t:patch_global("era", {
-    m = {
+  local Buffer = git_buffer.load(t, {
+    stl = {
       git = {
-        hunk = { remove = function() end },
-        repo = {
-          create = function()
-            return create_repo and create_repo(repo) or Future.resolve(repo)
+        info = {
+          get_file_info = function(_, relpath)
+            local bufnr = assert(tonumber(relpath:match("(%d+)")))
+            file_info_calls[bufnr] = (file_info_calls[bufnr] or 0) + 1
+            if get_file_info then
+              local future = get_file_info(bufnr)
+              if future then
+                return future
+              end
+            end
+            return Future.new()
           end,
         },
-        sign = {
-          clear = function() end,
-          contains_range = function()
-            return true
-          end,
-          on_lines = function() end,
+      },
+      reporter = { warn = function() end },
+      timer = {
+        debounce = function(callback)
+          return git_buffer.callable(function()
+            pending_debounce = callback
+          end)
+        end,
+        throttle = git_buffer.callable,
+      },
+    },
+    dot = {
+      path = {
+        is_git_repo = function()
+          return true
+        end,
+        normalize = function(filepath)
+          return filepath
+        end,
+        workspace = function()
+          return "/repo"
+        end,
+      },
+    },
+    yoz = {
+      path = {
+        is_descendant = function(from, to)
+          return to == from or vim.startswith(to, from .. "/")
+        end,
+      },
+    },
+    era = {
+      m = {
+        git = {
+          hunk = { remove = function() end },
+          repo = {
+            create = function()
+              return create_repo and create_repo(repo) or Future.resolve(repo)
+            end,
+          },
+          sign = {
+            clear = function() end,
+            contains_range = function()
+              return true
+            end,
+            on_lines = function() end,
+          },
+          state = { o_branch = { next = function() end } },
+          watcher = { update = function() end },
         },
-        state = { o_branch = { next = function() end } },
-        watcher = { update = function() end },
       },
     },
   })
@@ -166,7 +147,6 @@ local function setup(initial_visible, get_file_info, get_buf_name, create_repo)
     return {}
   end)
 
-  local Buffer = assert(loadfile("lua/era/m/git/buffer.lua"))()
   Buffer.setup()
 
   return Buffer,
@@ -388,24 +368,10 @@ local function setup_reset_runtime()
   local diff = require("era.m.git.diff")
   local hunk = require("era.m.git.hunk")
   local has_staging, staging = pcall(require, "era.m.git.staging") ---@type boolean, era.m.git.staging|nil
-  t:patch_global("stl", { c = { Future = Future, Ticker = {
-    new = function()
-      return {}
-    end,
-  } } })
-  t:patch_global("era", { m = { git = { diff = diff, hunk = hunk, staging = has_staging and staging or nil } } })
-
-  local Buffer = assert(loadfile("lua/era/m/git/buffer.lua"))()
-  local cache ---@type table<integer, table>
-  for index = 1, 50 do
-    local name, value = debug.getupvalue(Buffer.reset_hunk, index)
-    if name == "cache" then
-      cache = value
-      break
-    end
-  end
-  t.assert_true(cache ~= nil, "cache upvalue")
-  return Buffer, cache, diff, staging
+  local Buffer = git_buffer.load(t, {
+    era = { m = { git = { diff = diff, hunk = hunk, staging = has_staging and staging or nil } } },
+  })
+  return Buffer, git_buffer.cache(Buffer), diff, staging
 end
 
 ---@param cache                         table<integer, table>
@@ -415,8 +381,7 @@ end
 ---@param edited                        string[]
 ---@return integer
 local function seed_reset_buffer(cache, diff, staging, head, edited)
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, vim.list_slice(edited, 1, #edited - 1))
+  local bufnr = t:buffer(vim.list_slice(edited, 1, #edited - 1))
   cache[bufnr] = {
     compare_text = head,
     hunks = diff.run_diff(head, edited),
@@ -437,7 +402,6 @@ t:test("reset_hunk restores pure deletions at their anchors", function()
     local bufnr = seed_reset_buffer(cache, diff, staging, case[1], case[2])
     t.assert_true(Buffer.reset_hunk(bufnr, { 1, 1 }), "reset")
     t.assert_eq(case[3], table.concat(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false), "|"), "buffer order")
-    vim.api.nvim_buf_delete(bufnr, { force = true })
   end
 end)
 
@@ -476,8 +440,6 @@ t:test("reset_hunk preserves unchanged gaps between nearby hunks", function()
     table.concat(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false), "|"),
     "HEAD round-trip"
   )
-  ---@diagnostic disable-next-line: param-type-mismatch
-  vim.api.nvim_buf_delete(bufnr, { force = true })
 end)
 
 t:run()

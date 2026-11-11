@@ -1,5 +1,7 @@
 local t = require("__test__.support.harness").new()
+local fs = require("__test__.support.fs")
 local git = require("__test__.support.git")
+local UI = require("__test__.support.ui")
 
 -- Diffview end to end in a child with an attached UI, driven through era.m.diffview.fn, buffer keymaps, Git state
 -- refreshes and plain window and tab commands. It observes tabs, windows, buffers, keymaps, autocmds, reports and the
@@ -8,14 +10,13 @@ local git = require("__test__.support.git")
 ---One commit, then a staged addition (c.txt) and an unstaged edit (a.txt).
 ---@return string
 local function repository()
-  local root = assert(vim.uv.fs_realpath(git.repo(t)))
-  vim.fn.writefile({ "one", "two", "three" }, root .. "/a.txt")
-  vim.fn.writefile({ "bee" }, root .. "/b.txt")
-  vim.fn.writefile({ "dee" }, root .. "/d.txt")
-  git.run(root, { "add", "." })
-  git.run(root, { "commit", "-q", "-m", "first" })
-  vim.fn.writefile({ "one", "TWO", "three" }, root .. "/a.txt")
-  vim.fn.writefile({ "new" }, root .. "/c.txt")
+  local root = git.repo(t)
+  fs.write(root .. "/a.txt", { "one", "two", "three" })
+  fs.write(root .. "/b.txt", { "bee" })
+  fs.write(root .. "/d.txt", { "dee" })
+  git.commit(root, "first")
+  fs.write(root .. "/a.txt", { "one", "TWO", "three" })
+  fs.write(root .. "/c.txt", { "new" })
   git.run(root, { "add", "c.txt" })
   return root
 end
@@ -23,11 +24,7 @@ end
 ---@param root                          string
 ---@return __test__.support.UI
 local function child(root)
-  local ui = require("__test__.support.ui").new({ cwd = root })
-  t:defer(function()
-    ui:close()
-  end)
-  ui:start({ width = 160, height = 48, runtime = "ark" })
+  local ui = UI.open(t, { width = 160, height = 48, runtime = "ark" }, { cwd = root })
   ui:lua(
     [[
     local root = ...
@@ -121,10 +118,7 @@ end
 ---@param ...                           any
 ---@return any
 local function await(ui, chunk, message, ...)
-  local args = { ... }
-  local ok, result = pcall(ui.wait_until, ui, function()
-    return ui:lua(chunk, unpack(args))
-  end, 10000, message)
+  local ok, result = pcall(ui.wait_lua, ui, chunk, 10000, message, ...)
   if not ok then
     local state = ui:lua(
       "return vim.inspect({ tab = vim.t.tabtype, changes = { changes() }, errors = errors, warnings = warnings })"

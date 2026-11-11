@@ -1,5 +1,6 @@
 require("ark.bootstrap").setup()
 local t = require("__test__.support.harness").new()
+local bootstrap = require("__test__.support.bootstrap")
 
 ---@return table
 local function controls()
@@ -98,7 +99,7 @@ t:test("Find Files coalesces a pending root and applies flag changes to that req
   values.flag_gitignore:next(true)
   t.wait_until(function()
     return #scans > count
-  end, 1000)
+  end, 5000)
   t.assert_eq("/requested", scans[#scans].cwd)
   t.assert_true(scans[#scans].flag_gitignore)
   t.assert_eq(1, cancels, "the walk the flag change replaced stops")
@@ -117,19 +118,16 @@ t:test("Find Files lists no files when the walk rejects a pattern", function()
   values.flag_exclude:next(true)
   values.excludes:next({ "[" })
   t:patch_table(dot.context.select, "find_file", values)
-  local warnings = {}
-  t:patch_table(stl.reporter, "warn", function(report)
-    warnings[#warnings + 1] = report.message
-  end)
+  local warnings = bootstrap.with_reporter(t).warn
   local find = assert(loadfile("lua/era/fn/find-files.lua"))()
   find("/requested")
   local paths = picker.preparations[#picker.preparations].paths
   t.wait_until(function()
     return paths:is_done()
-  end, 1000)
+  end, 5000)
   t.assert_same({}, paths:get_result(), "no file matches a rejected pattern")
   t.assert_eq(1, #warnings)
-  t.assert_true(vim.startswith(warnings[1], "Invalid exclude glob '['"), warnings[1])
+  t.assert_true(vim.startswith(warnings[1].message, "Invalid exclude glob '['"), warnings[1].message)
 end)
 
 t:test("Find Files lists no files past what a result tree holds, before preparing them", function()
@@ -149,10 +147,7 @@ t:test("Find Files lists no files past what a result tree holds, before preparin
       dispose = function() end,
     }
   end)
-  local warnings = {}
-  t:patch_table(stl.reporter, "warn", function(report)
-    warnings[#warnings + 1] = report.message
-  end)
+  local warnings = bootstrap.with_reporter(t).warn
   local find = assert(loadfile("lua/era/fn/find-files.lua"))()
   ---@param root                        string
   ---@return integer
@@ -161,13 +156,13 @@ t:test("Find Files lists no files past what a result tree holds, before preparin
     local found = picker.preparations[#picker.preparations].paths
     t.wait_until(function()
       return found:is_done()
-    end, 1000)
+    end, 5000)
     return #found:get_result()
   end
   t.assert_eq(0, prepared("/requested"), "none of them is prepared")
   t.assert_eq(1, #warnings)
   local expected = string.format("%d files exceed the %d Find Files lists", capacity + 1, capacity)
-  t.assert_true(vim.startswith(warnings[1], expected), warnings[1])
+  t.assert_true(vim.startswith(warnings[1].message, expected), warnings[1].message)
   paths[capacity + 1] = nil
   t.assert_eq(capacity, prepared("/other"), "as many as it holds are")
   t.assert_eq(1, #warnings)

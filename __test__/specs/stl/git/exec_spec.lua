@@ -21,14 +21,25 @@ end)
 
 local exec = require("stl.git.exec")
 
-t:test("exec_async forwards Git stderr on failure", function()
-  local command = {} ---@type string[]
+---Replaces `vim.system` with processes that complete at once with `result`, a success without output by default, after
+---`inspect` sees each command and its options.
+---@param inspect                       fun(cmd: string[], opts: vim.SystemOpts)
+---@param result                        ?vim.SystemCompleted
+---@return nil
+local function complete_system(inspect, result)
   t:patch_table(vim, "system", function(cmd, opts, callback)
-    command = cmd
-    t.assert_true(opts.text, "text output")
-    callback({ code = 128, stdout = "", stderr = "fatal: index is locked\n" })
+    inspect(cmd, opts)
+    callback(result or { code = 0, stdout = "", stderr = "" })
     return {}
   end)
+end
+
+t:test("exec_async forwards Git stderr on failure", function()
+  local command = {} ---@type string[]
+  complete_system(function(cmd, opts)
+    command = cmd
+    t.assert_true(opts.text, "text output")
+  end, { code = 128, stdout = "", stderr = "fatal: index is locked\n" })
 
   local result = nil ---@type table|nil
   exec.exec_async({ "add", "--", "file.txt" }, { cwd = "/repo" }, function(lines, code, stderr)
@@ -43,11 +54,9 @@ t:test("exec_async forwards Git stderr on failure", function()
 end)
 
 t:test("exec_async forwards NUL-delimited stdin", function()
-  t:patch_table(vim, "system", function(_, opts, callback)
+  complete_system(function(_, opts)
     t.assert_true(opts.text, "text output")
     t.assert_eq("old.lua\0new.lua\0", opts.stdin, "stdin")
-    callback({ code = 0, stdout = "", stderr = "" })
-    return {}
   end)
 
   exec.exec_async(
@@ -63,10 +72,8 @@ t:test("exec_async converts only the Git working directory to an OS path", funct
     t.assert_eq("C:/repo", filepath, "canonical cwd")
     return [[C:\repo]]
   end)
-  t:patch_table(vim, "system", function(cmd, _, callback)
+  complete_system(function(cmd)
     command = cmd
-    callback({ code = 0, stdout = "", stderr = "" })
-    return {}
   end)
 
   exec.exec_async({ "add", "--", "lua/era/m/git/status.lua" }, { cwd = "C:/repo" }, function() end)
@@ -80,10 +87,8 @@ t:test("exec_async preserves canonical and native UNC roots", function()
   t:patch_table(yoz.canonical_path, "to_os_path", function(filepath)
     return filepath:gsub("/", "\\")
   end)
-  t:patch_table(vim, "system", function(cmd, _, callback)
+  complete_system(function(cmd)
     commands[#commands + 1] = cmd
-    callback({ code = 0, stdout = "", stderr = "" })
-    return {}
   end)
 
   exec.exec_async({ "status" }, { cwd = "//server/share/repo" }, function() end)
@@ -100,21 +105,15 @@ t:test("exec raw mode preserves CRLF bytes inside NUL-delimited paths", function
   git.run(repo, { "add", "--", filename })
 
   local future = exec.exec({ "diff", "--staged", "--name-status", "-z", "--" }, { cwd = repo, raw = true })
-  t.wait_until(function()
-    return future:is_done()
-  end, 5000, "raw Git command")
-
-  local result = assert(future:get_result(), "raw result")
+  local result = assert(t.await(future), "raw result")
   t.assert_eq(0, result.code, "raw exit code")
   t.assert_eq("A\0" .. filename .. "\0", result.lines[1], "raw stdout")
 end)
 
 t:test("exec preserves stderr for failed status queries", function()
-  t:patch_table(vim, "system", function(_, opts, callback)
+  complete_system(function(_, opts)
     t.assert_false(opts.text, "raw output")
-    callback({ code = 128, stdout = "partial", stderr = "fatal: corrupt index\n" })
-    return {}
-  end)
+  end, { code = 128, stdout = "partial", stderr = "fatal: corrupt index\n" })
 
   local future = exec.exec({ "diff", "--name-status", "-z" }, { cwd = "/repo", raw = true })
   local result = assert(future:get_result(), "Git result")
@@ -125,12 +124,10 @@ t:test("exec preserves stderr for failed status queries", function()
 end)
 
 t:test("exec forwards an isolated environment and NUL-delimited stdin", function()
-  t:patch_table(vim, "system", function(_, opts, callback)
+  complete_system(function(_, opts)
     t.assert_false(opts.text, "raw output")
     t.assert_eq("/tmp/index", opts.env.GIT_INDEX_FILE, "environment")
     t.assert_eq("file.txt\0", opts.stdin, "stdin")
-    callback({ code = 0, stdout = "", stderr = "" })
-    return {}
   end)
 
   local future = exec.exec(

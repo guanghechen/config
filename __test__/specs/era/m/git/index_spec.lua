@@ -1,10 +1,8 @@
-local bootstrap = require("__test__.support.bootstrap")
+local git_buffer = require("__test__.support.git_buffer")
 local harness = require("__test__.support.harness")
 
 local t = harness.new()
-bootstrap.with_global(t, "stl", {
-  c = { CancellationToken = require("stl.c.cancellation_token"), Future = require("stl.c.future") },
-})
+git_buffer.with_futures(t)
 
 local index = require("era.m.git.index")
 

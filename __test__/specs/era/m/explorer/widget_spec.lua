@@ -1,5 +1,6 @@
-local fixture = require("__test__.support.explorer").new()
-local t, await, write = fixture.t, fixture.await, fixture.write
+local t = require("__test__.support.harness").new()
+local fixture = require("__test__.support.explorer").new(t)
+local await, write = fixture.await, fixture.write
 
 t:test("real panes use native Filetree, switch Tree/List, and preserve state across close", function()
   local path = t:tempdir()
@@ -28,10 +29,7 @@ t:test("real panes use native Filetree, switch Tree/List, and preserve state acr
   widget:hide()
   t.assert_false(widget:isvisible())
   widget:focus()
-  t.wait_until(function()
-    local _, current = fixture.context(widget)
-    return current and current:frame() and current:frame():header().row_count == 3
-  end, 10000)
+  fixture.shown(widget, 3)
   local _, reopened = widget:context()
   t.assert_eq(state_id, reopened:frame():header().state_id)
   t.assert_eq("copy", session:mode(reopened:frame()))
@@ -82,15 +80,7 @@ t:test("shared data keeps independent states and subscriptions survive the first
   t.assert_eq(nil, session:mode(view:frame()))
   t.assert_eq(first:context()._subscriptions, session._subscriptions)
   first:dispose()
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_name(bufnr, path .. "/a")
-  local namespace = vim.api.nvim_create_namespace("shared-explorer-input")
-  t:defer(function()
-    vim.diagnostic.reset(namespace)
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
+  local bufnr, namespace = fixture.diagnostic_buffer(path .. "/a")
   vim.diagnostic.set(namespace, bufnr, { { lnum = 0, col = 0, message = "error", severity = 1 } })
   t.wait_until(function()
     return view._filetree_annotations and view._filetree_annotations.rows[1].diagnostics[1] == 1
@@ -252,10 +242,7 @@ t:test("hide and reopen release every Explorer buffer identity", function()
       t.assert_true(before[bufnr], "orphan buffer after hide: " .. vim.api.nvim_buf_get_name(bufnr))
     end
     widget:focus()
-    t.wait_until(function()
-      local _, view = fixture.context(widget)
-      return view and view:frame() and view:frame():header().row_count == 1
-    end, 10000)
+    fixture.shown(widget, 1)
   end
 end)
 
@@ -341,10 +328,7 @@ t:test("the Explorer window refuses commands that would show another buffer in i
   write(path .. "/a")
   local widget = fixture.widget(path)
   local _, view = widget:context()
-  local other = vim.api.nvim_create_buf(true, false)
-  t:defer(function()
-    vim.api.nvim_buf_delete(other, { force = true })
-  end)
+  local other = t:buffer(nil, { listed = true })
 
   vim.api.nvim_set_current_win(view.winnr)
   t.assert_false(pcall(vim.cmd.buffer, other), ":buffer in the Explorer window")

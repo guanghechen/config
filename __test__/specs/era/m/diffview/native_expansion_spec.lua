@@ -10,19 +10,12 @@ local commits_action = require("era.m.diffview.view.commits.action")
 local workspace_view = require("era.m.diffview.view.workspace.view")
 local workspace_action = require("era.m.diffview.view.workspace.action")
 
+---Shows the panel buffer `bufnr`, which is wiped once no window shows it, in a focused floating window for the rest of
+---the case.
 ---@param bufnr                         integer
 ---@return integer
 local function window(bufnr)
-  local winnr = vim.api.nvim_open_win(bufnr, true, { relative = "editor", row = 0, col = 0, width = 60, height = 10 })
-  t:defer(function()
-    if vim.api.nvim_win_is_valid(winnr) then
-      vim.api.nvim_win_close(winnr, true)
-    end
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
-  return winnr
+  return t:window(bufnr, { relative = "editor", row = 0, col = 0, width = 60, height = 10 }, true)
 end
 
 ---@param owner                         era.view.ResultTree
@@ -36,31 +29,13 @@ local function rows(owner, count)
   t.assert_eq(count, vim.api.nvim_buf_line_count(owner.view.bufnr))
 end
 
+---A Commits pane of one current commit with `files`.
 ---@param files                         ?era.m.diffview.IFileEntry[]
 ---@return table
 ---@return era.view.ResultTree
 local function history(files)
-  t:patch_table(dot.context.diffview.flag_panel_viewtype, "snapshot", function()
-    return "tree"
-  end)
-  t:patch_table(dot.context.diffview.flag_foldempty, "snapshot", function()
-    return false
-  end)
-  local bufnr = commits.create_buffer()
-  local winnr = window(bufnr)
-  local state = require("era.m.diffview.view.commits.state").State.new(vim.api.nvim_get_current_tabpage(), false)
-  t:defer(function()
-    state:dispose()
-  end)
   local commit = { hash = "review", abbrev_hash = "review", author = "A", date = 0, message = "review", files = files }
-  state:set_commits({ commit })
-  state:set_current_commit(commit)
-  local ctx = diffview.commits_context({
-    state = state,
-    layout = { tabnr = state.tabnr, layout_type = 2, commits_bufnr = bufnr, commits_winnr = winnr },
-  })
-  treeview.await(commits_view.render_commits(ctx))
-  return ctx, state:get_tree("commits")
+  return diffview.commits_pane(t, { commit }, commit, 10, true)
 end
 
 t:test("commit signs survive native attachment, resume and replacement windows", function()
@@ -74,13 +49,7 @@ t:test("commit signs survive native attachment, resume and replacement windows",
   t.assert_eq("yes:1", vim.api.nvim_get_option_value("signcolumn", { win = winnr }))
   owner:unmount(true)
   ctx.layout.commits_winnr = window(bufnr)
-  local replacement = vim.api.nvim_create_buf(false, true)
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(replacement) then
-      vim.api.nvim_buf_delete(replacement, { force = true })
-    end
-  end)
-  vim.api.nvim_win_set_buf(winnr, replacement)
+  vim.api.nvim_win_set_buf(winnr, t:buffer())
   treeview.await(commits_view.render_commits(ctx))
   t.assert_eq("yes:1", vim.api.nvim_get_option_value("signcolumn", { win = ctx.layout.commits_winnr }))
   t.assert_eq(1, vim.fn.sign_getplaced(bufnr, { group = dot.var.sign.GROUP_DIFFVIEW_COMMITS })[1].signs[1].lnum)
@@ -164,14 +133,9 @@ t:test("standalone file loading defers inline records until the first inline exp
   t:patch_table(require("era.m.diffview.data"), "fetch_commit_files", function()
     return files
   end)
-  local loaded = false
-  stl.async.run(function()
+  t.await(stl.async.run_future(function()
     commits_action.__load_commit_files_and_render_filetree__(ctx, ctx.state:get_current_commit())
-    loaded = true
-  end)
-  t.wait_until(function()
-    return loaded
-  end, 5000)
+  end))
   treeview.await(owner:ready())
   t.assert_eq(1, owner:linecount(), "loading records preserves the collapsed commit")
   t.assert_eq(2, owner._data:source():len(), "the standalone pane does not prepare unused inline files")
@@ -191,14 +155,9 @@ t:test("a failed first inline import stays collapsed and can be retried", functi
     return import(self, ...)
   end)
   t:patch_table(stl.reporter, "error", function() end)
-  local finished, succeeded
-  stl.async.run(function()
-    succeeded = pcall(commits_action.__expand_commit__, ctx, ctx.state:get_current_commit())
-    finished = true
-  end)
-  t.wait_until(function()
-    return finished
-  end, 5000)
+  local succeeded = t.settle(stl.async.run_future(function()
+    commits_action.__expand_commit__(ctx, ctx.state:get_current_commit())
+  end))
   t.assert_false(succeeded)
   t.assert_false(ctx.state:is_commit_expanded("review"))
   t.assert_eq(1, owner:linecount())
@@ -211,14 +170,9 @@ t:test("a hidden Commits pane can materialize and restore its logical expansion"
   local ctx, owner = history({ { filepath = "src/hidden.lua", status = "M" } })
   vim.api.nvim_win_close(ctx.layout.commits_winnr, true)
   ctx.layout.commits_winnr, ctx.layout.commits_bufnr = nil, nil
-  local done = false
-  stl.async.run(function()
+  t.await(stl.async.run_future(function()
     commits_action.__expand_commit__(ctx, ctx.state:get_current_commit())
-    done = true
-  end)
-  t.wait_until(function()
-    return done
-  end, 5000)
+  end))
   t.assert_true(ctx.state:is_commit_expanded("review"))
   t.assert_true(owner:data("commit:review").files_loaded)
   local bufnr = commits.create_buffer()

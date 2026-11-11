@@ -1,16 +1,22 @@
 local harness = require("__test__.support.harness")
 local embedded = require("__test__.support.cmp.embedded")
-local UI = require("__test__.support.ui")
 local t = harness.new()
 
----@param lines                         string[]
----@return __test__.support.UI
-local function editor(lines)
-  return embedded.editor(t, lines)
-end
-
 local lsp_client = embedded.lsp_client
-local wait = embedded.wait
+
+-- A completion handler answering with one item whose additional edit replaces the first line, as long as that line is
+-- when the request arrives, with IMPORT; `reply` is the statement that passes `result` to `callback`.
+---@param reply                         string
+---@return string
+local function import_handler(reply)
+  return [[
+    return function(_, callback)
+      local length = #vim.api.nvim_buf_get_lines(0, 0, 1, false)[1]
+      local result = { items = { { label = 'foobar', kind = 6, additionalTextEdits = {
+        { range = { start = { line = 0, character = 0 }, ['end'] = { line = 0, character = length } }, newText = 'IMPORT' },
+      } } }, isIncomplete = false }
+  ]] .. reply .. "\nend"
+end
 
 ---@param ui                            __test__.support.UI
 ---@return string
@@ -36,22 +42,13 @@ end
 
 for _, command in ipairs({ "checktime", "edit" }) do
   t:test(command .. " cancels a pending acceptance and permits a fresh one", function()
-    local ui = editor({ "" })
+    local ui = embedded.editor(t, { "" })
     local path = reload_target(ui)
-    lsp_client(
-      ui,
-      [[return function(_, callback)
-      local length = #vim.api.nvim_buf_get_lines(0, 0, 1, false)[1]
-      callback(nil, { items = { { label = 'foobar', kind = 6, additionalTextEdits = {
-        { range = { start = { line = 0, character = 0 }, ['end'] = { line = 0, character = length } }, newText = 'IMPORT' },
-      } } }, isIncomplete = false })
-    end]],
-      [[return function(item) return item, 60 end]]
-    )
+    lsp_client(ui, import_handler("callback(nil, result)"), [[return function(item) return item, 60 end]])
     ui:rpc("nvim_input", "A")
-    wait(ui, [[return vim.api.nvim_get_mode().mode:sub(1, 1) == 'i']], "insert mode")
+    ui:wait_lua([[return vim.api.nvim_get_mode().mode:sub(1, 1) == 'i']], 5000, "insert mode")
     ui:lua([[require('era.keystroke.cmp').show()]])
-    wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "original candidate")
+    ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "original candidate")
     ui:lua([[
       _G.cmp_reload_resolve_cancels = 0
       vim.lsp.get_client_by_id(9001).cancel_request = function(_, id)
@@ -60,20 +57,7 @@ for _, command in ipairs({ "checktime", "edit" }) do
         end
       end
     ]])
-    ui:lua([[
-      _G.cmp_before_accept_request = #cmp_requests
-      assert(require('era.keystroke.cmp').accept())
-    ]])
-    wait(
-      ui,
-      [[
-      for index = cmp_before_accept_request + 1, #cmp_requests do
-        if cmp_requests[index].method == 'completionItem/resolve' then return true end
-      end
-      return false
-    ]],
-      "native acceptance reached resolve"
-    )
+    embedded.accept_resolving(ui)
     ui:lua([[_G.cmp_reload_resolve_cancels = 0]])
     vim.fn.writefile({ "new content", "fo" }, path)
     t.assert_eq(
@@ -89,31 +73,23 @@ for _, command in ipairs({ "checktime", "edit" }) do
       "old acceptance request cancelled during reload"
     )
     ui:lua([[require('era.keystroke.cmp').show()]])
-    wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "fresh candidate")
+    ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "fresh candidate")
     ui:rpc("nvim_input", "<C-y>")
-    wait(
-      ui,
+    ui:wait_lua(
       [[return vim.deep_equal({ 'IMPORT', 'foobar' }, vim.api.nvim_buf_get_lines(0, 0, -1, false))]],
+      5000,
       "only the newer resolved edit applies"
     )
   end)
 
   t:test(command .. " invalidates cached edits and preserves buffer tracking and mappings", function()
-    local ui = editor({ "" })
+    local ui = embedded.editor(t, { "" })
     local path = reload_target(ui)
-    lsp_client(
-      ui,
-      [[return function(_, callback)
-      local length = #vim.api.nvim_buf_get_lines(0, 0, 1, false)[1]
-      callback(nil, { items = { { label = 'foobar', kind = 6, additionalTextEdits = {
-        { range = { start = { line = 0, character = 0 }, ['end'] = { line = 0, character = length } }, newText = 'IMPORT' },
-      } } }, isIncomplete = false })
-    end]]
-    )
+    lsp_client(ui, import_handler("callback(nil, result)"))
     ui:rpc("nvim_input", "A")
-    wait(ui, [[return vim.api.nvim_get_mode().mode:sub(1, 1) == 'i']], "insert mode")
+    ui:wait_lua([[return vim.api.nvim_get_mode().mode:sub(1, 1) == 'i']], 5000, "insert mode")
     ui:lua([[require('era.keystroke.cmp').show()]])
-    wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "original completion")
+    ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "original completion")
     local original = ui:lua([[return require('era.keystroke.cmp.context').capture()]])
     vim.fn.writefile({ "new content", "fo" }, path)
     t.assert_eq(
@@ -137,7 +113,7 @@ for _, command in ipairs({ "checktime", "edit" }) do
     t.assert_true(original.buffer_version ~= reloaded.buffer_version, "old version is not reused")
     ui:lua([[vim.api.nvim_win_set_cursor(0, { 2, 2 })]])
     ui:rpc("nvim_input", "o")
-    wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "completion after reload")
+    ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "completion after reload")
     t.assert_eq(
       2,
       ui:lua([[
@@ -162,36 +138,26 @@ for _, command in ipairs({ "checktime", "edit" }) do
       "subsequent external edit invalidates candidates"
     )
     ui:rpc("nvim_input", "<C-j>")
-    wait(ui, [[return cmp_reload_fallbacks == 1]], "buffer-local mapping fallback retained")
+    ui:wait_lua([[return cmp_reload_fallbacks == 1]], 5000, "buffer-local mapping fallback retained")
     ui:lua([[require('era.keystroke.cmp').show()]])
-    wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "fresh candidate")
+    ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "fresh candidate")
     ui:rpc("nvim_input", "<C-y>")
-    wait(
-      ui,
+    ui:wait_lua(
       [[return vim.deep_equal({ 'IMPORT', 'foobar' }, vim.api.nvim_buf_get_lines(0, 0, -1, false))]],
+      5000,
       "fresh edit uses the current coordinates"
     )
   end)
 
   t:test(command .. " rejects a completion response delivered after reloading the same query", function()
-    local ui = editor({ "" })
+    local ui = embedded.editor(t, { "" })
     local path = reload_target(ui)
     ui:lua([[_G.cmp_reload_replies = {}]])
-    lsp_client(
-      ui,
-      [[return function(_, callback)
-      local length = #vim.api.nvim_buf_get_lines(0, 0, 1, false)[1]
-      cmp_reload_replies[#cmp_reload_replies + 1] = function()
-        callback(nil, { items = { { label = 'foobar', kind = 6, additionalTextEdits = {
-          { range = { start = { line = 0, character = 0 }, ['end'] = { line = 0, character = length } }, newText = 'IMPORT' },
-        } } }, isIncomplete = false })
-      end
-    end]]
-    )
+    lsp_client(ui, import_handler("cmp_reload_replies[#cmp_reload_replies + 1] = function() callback(nil, result) end"))
     ui:rpc("nvim_input", "A")
-    wait(ui, [[return vim.api.nvim_get_mode().mode:sub(1, 1) == 'i']], "insert mode")
+    ui:wait_lua([[return vim.api.nvim_get_mode().mode:sub(1, 1) == 'i']], 5000, "insert mode")
     ui:lua([[require('era.keystroke.cmp').show()]])
-    wait(ui, [[return #cmp_reload_replies == 1]], "pending original request")
+    ui:wait_lua([[return #cmp_reload_replies == 1]], 5000, "pending original request")
     vim.fn.writefile({ "new content", "fo" }, path)
     ui:lua(
       [[
@@ -204,13 +170,13 @@ for _, command in ipairs({ "checktime", "edit" }) do
     vim.wait(30)
     t.assert_eq(false, ui:lua([[return require('era.keystroke.cmp').is_menu_visible()]]), "late response stays hidden")
     ui:lua([[require('era.keystroke.cmp').show()]])
-    wait(ui, [[return #cmp_reload_replies == 2]], "new request")
+    ui:wait_lua([[return #cmp_reload_replies == 2]], 5000, "new request")
     ui:lua([[cmp_reload_replies[2]()]])
-    wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "new response")
+    ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "new response")
     ui:rpc("nvim_input", "<C-y>")
-    wait(
-      ui,
+    ui:wait_lua(
       [[return vim.deep_equal({ 'IMPORT', 'foobar' }, vim.api.nvim_buf_get_lines(0, 0, -1, false))]],
+      5000,
       "new response uses reloaded coordinates"
     )
   end)
@@ -221,7 +187,7 @@ for _, independent in ipairs({ false, true }) do
     independent and "late LSP candidates preserve an independent source selection"
       or "late primary results remove an ineligible fallback preview",
     function()
-      local ui = editor({ "alpha alpine", "" })
+      local ui = embedded.editor(t, { "alpha alpine", "" })
       if independent then
         ui:lua([[
       require('era.keystroke.cmp.policy').sources_for = function() return { 'lsp', 'snippets' } end
@@ -243,32 +209,23 @@ for _, independent in ipairs({ false, true }) do
   end]]
       )
       ui:rpc("nvim_input", "ial")
-      wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "buffer candidates")
+      ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "buffer candidates")
       ui:rpc("nvim_input", "<Tab>")
-      wait(ui, [[return vim.api.nvim_get_current_line() == 'alpine']], "explicit selection")
+      ui:wait_lua([[return vim.api.nvim_get_current_line() == 'alpine']], 5000, "explicit selection")
       ui:lua([[_G.release_late_completion()]])
-      wait(
-        ui,
-        [[
-    for _, item in ipairs(vim.fn.complete_info({ 'items' }).items) do
-      if item.abbr:find('albatross', 1, true) then return true end
-    end
-    return false
-  ]],
-        "late LSP response rendered"
-      )
-      wait(
-        ui,
+      embedded.wait_menu_item(ui, "albatross", "late LSP response rendered")
+      ui:wait_lua(
         independent and [[return vim.api.nvim_get_current_line() == 'alpine']]
           or [[return vim.api.nvim_get_current_line() == 'al']],
+        5000,
         "preview follows candidate eligibility"
       )
       ui:rpc("nvim_input", "<C-y>")
       -- This fixture's independent sources also opt into the accept trigger and open a fresh list.
-      wait(
-        ui,
+      ui:wait_lua(
         independent and [[return #vim.fn.complete_info({'items'}).items == 1]]
           or [[return vim.api.nvim_get_current_line() == 'albatross']],
+        5000,
         "acceptance completes and any fresh list uses the accepted input"
       )
       ui:wait_until(function()
@@ -279,7 +236,7 @@ for _, independent in ipairs({ false, true }) do
 end
 
 t:test("incomplete LSP refresh keeps compatible candidates until the new response arrives", function()
-  local ui = editor({ "" })
+  local ui = embedded.editor(t, { "" })
   ui:lua([[require('era.keystroke.cmp.policy').sources_for = function() return { 'lsp' } end]])
   lsp_client(
     ui,
@@ -295,28 +252,19 @@ t:test("incomplete LSP refresh keeps compatible candidates until the new respons
   end]]
   )
   ui:rpc("nvim_input", "ia")
-  wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "initial LSP candidates")
+  ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "initial LSP candidates")
   ui:rpc("nvim_input", "l")
-  wait(ui, [[return _G.release_response ~= nil]], "incomplete refresh requested")
+  ui:wait_lua([[return _G.release_response ~= nil]], 5000, "incomplete refresh requested")
   t.assert_true(
     ui:lua([[return require('era.keystroke.cmp').is_menu_visible()]]),
     "old compatible menu remains visible"
   )
   ui:lua([[_G.release_response()]])
-  wait(
-    ui,
-    [[
-    for _, item in ipairs(vim.fn.complete_info({ 'items' }).items) do
-      if item.abbr:find('albatross', 1, true) then return true end
-    end
-    return false
-  ]],
-    "fresh candidates replace the previous snapshot"
-  )
+  embedded.wait_menu_item(ui, "albatross", "fresh candidates replace the previous snapshot")
 end)
 
 t:test("typing and native backspace share a pending LSP request while Escape still cancels it", function()
-  local ui = editor({ "" })
+  local ui = embedded.editor(t, { "" })
   ui:lua([[
     require('era.keystroke.cmp.policy').sources_for = function() return { 'lsp' } end
     local Session = require('era.keystroke.cmp.session')
@@ -346,13 +294,13 @@ t:test("typing and native backspace share a pending LSP request while Escape sti
     end
   ]])
   ui:rpc("nvim_input", "ia")
-  wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "initial incomplete list")
+  ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "initial incomplete list")
   for _, step in ipairs({ { "l", "al" }, { "p", "alp" }, { "h", "alph" }, { "<BS>", "alp" } }) do
     ui:rpc("nvim_input", step[1])
     ui:lua([[_G.cmp_queue_expected = ...]], step[2])
-    wait(
-      ui,
+    ui:wait_lua(
       [[return cmp_queue_session.context ~= nil and cmp_queue_session.context.line == cmp_queue_expected]],
+      5000,
       "latest input is observed"
     )
     t.assert_eq(2, ui:lua([[return #cmp_queue_requests]]), "one refresh survives typing and native discard")
@@ -366,7 +314,7 @@ t:test("typing and native backspace share a pending LSP request while Escape sti
     cmp_queue_requests[2].settled = true
     cmp_queue_requests[2].callback(nil, { items = { { label = 'alpha', kind = 6 } }, isIncomplete = true })
   ]])
-  wait(ui, [[return #cmp_queue_requests == 3]], "only the latest query follows the pending response")
+  ui:wait_lua([[return #cmp_queue_requests == 3]], 5000, "only the latest query follows the pending response")
   t.assert_eq(3, ui:lua([[return cmp_queue_requests[3].params.position.character]]))
   ui:lua([[
     cmp_queue_requests[3].settled = true
@@ -374,34 +322,29 @@ t:test("typing and native backspace share a pending LSP request while Escape sti
       newText = 'alpine', range = { start = { line = 0, character = 0 }, ['end'] = { line = 0, character = 3 } },
     } } }, isIncomplete = false })
   ]])
-  wait(
-    ui,
-    [[
-    for _, item in ipairs(vim.fn.complete_info({ 'items' }).items) do
-      if item.abbr:find('alpine', 1, true) then return true end
-    end
-    return false
-  ]],
-    "latest candidates replace the partial result"
-  )
+  embedded.wait_menu_item(ui, "alpine", "latest candidates replace the partial result")
   ui:rpc("nvim_input", "<C-y>")
-  wait(ui, [[return vim.api.nvim_get_current_line() == 'alpine']], "acceptance uses the latest edit coordinates")
+  ui:wait_lua(
+    [[return vim.api.nvim_get_current_line() == 'alpine']],
+    5000,
+    "acceptance uses the latest edit coordinates"
+  )
   ui:rpc("nvim_input", "<Esc>")
-  wait(ui, [[return vim.api.nvim_get_mode().mode == 'n']], "normal mode")
+  ui:wait_lua([[return vim.api.nvim_get_mode().mode == 'n']], 5000, "normal mode")
   ui:lua([[
     vim.api.nvim_buf_set_lines(0, 0, -1, false, { '' })
     vim.api.nvim_win_set_cursor(0, { 1, 0 })
   ]])
   ui:rpc("nvim_input", "ia")
-  wait(ui, [[return #cmp_queue_requests == 4]], "new pending completion")
+  ui:wait_lua([[return #cmp_queue_requests == 4]], 5000, "new pending completion")
   ui:rpc("nvim_input", "l<Esc>")
-  wait(ui, [[return vim.api.nvim_get_mode().mode == 'n']], "Escape before the next scheduled refresh")
+  ui:wait_lua([[return vim.api.nvim_get_mode().mode == 'n']], 5000, "Escape before the next scheduled refresh")
   t.assert_eq(1, ui:lua([[return cmp_queue_cancellations]]), "Escape retains access to the real cancellation handle")
   ui:lua([[
     cmp_queue_requests[4].callback(nil, { { label = 'ancient', kind = 6 } })
     vim.schedule(function() _G.cmp_queue_drained = true end)
   ]])
-  wait(ui, [[return cmp_queue_drained]], "late response drained")
+  ui:wait_lua([[return cmp_queue_drained]], 5000, "late response drained")
   t.assert_eq(
     false,
     ui:lua([[return require('era.keystroke.cmp').is_menu_visible()]]),
@@ -411,7 +354,7 @@ t:test("typing and native backspace share a pending LSP request while Escape sti
 end)
 
 t:test("provisional LSP edits remain valid after backspace while a wider query is pending", function()
-  local ui = editor({ "-- imports", "" })
+  local ui = embedded.editor(t, { "-- imports", "" })
   ui:lua([[require('era.keystroke.cmp.policy').sources_for = function() return { 'lsp' } end]])
   lsp_client(
     ui,
@@ -435,12 +378,16 @@ t:test("provisional LSP edits remain valid after backspace while a wider query i
   ]]
   )
   ui:rpc("nvim_input", "ialph")
-  wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "initial narrow result")
+  ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "initial narrow result")
   ui:rpc("nvim_input", "<BS><BS>")
-  wait(ui, [[return vim.api.nvim_get_current_line() == 'al' and cmp_wider_reply ~= nil]], "broader query is pending")
+  ui:wait_lua(
+    [[return vim.api.nvim_get_current_line() == 'al' and cmp_wider_reply ~= nil]],
+    5000,
+    "broader query is pending"
+  )
   t.assert_true(ui:lua([[return require('era.keystroke.cmp').is_menu_visible()]]), "provisional menu remains available")
   ui:rpc("nvim_input", "<C-y>")
-  wait(ui, [[return vim.api.nvim_buf_line_count(0) == 3]], "provisional import and main edit are applied")
+  ui:wait_lua([[return vim.api.nvim_buf_line_count(0) == 3]], 5000, "provisional import and main edit are applied")
   t.assert_eq(
     'local alpha = require("alpha")\n-- imports\nalpha',
     ui:lua([[return table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), '\n')]]),
@@ -450,7 +397,7 @@ end)
 
 for _, action in ipairs({ "foreign menu", "empty menu", "native Ctrl-X" }) do
   t:test(action .. " cancels the discarded completion transport", function()
-    local ui = editor({ "" })
+    local ui = embedded.editor(t, { "" })
     ui:lua([[require('era.keystroke.cmp.policy').sources_for = function() return { 'lsp' } end]])
     lsp_client(
       ui,
@@ -474,21 +421,21 @@ for _, action in ipairs({ "foreign menu", "empty menu", "native Ctrl-X" }) do
       end
     ]])
     ui:rpc("nvim_input", "ia")
-    wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "initial menu")
+    ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "initial menu")
     ui:rpc("nvim_input", "l")
-    wait(ui, [[return cmp_discard_reply ~= nil]], "pending refresh")
+    ui:wait_lua([[return cmp_discard_reply ~= nil]], 5000, "pending refresh")
     if action == "native Ctrl-X" then
       ui:rpc("nvim_input", "<C-x>")
     else
       ui:lua([[vim.fn.complete(1, ...)]], action == "foreign menu" and { { word = "alien" } } or {})
     end
-    wait(ui, [[return not require('era.keystroke.cmp').is_menu_visible()]], "completion is discarded")
+    ui:wait_lua([[return not require('era.keystroke.cmp').is_menu_visible()]], 5000, "completion is discarded")
     t.assert_eq(1, ui:lua([[return cmp_discard_cancellations]]), "discard without typing releases the transport")
     ui:lua([[
       cmp_discard_reply(nil, { { label = 'ancient', kind = 6 } })
       vim.schedule(function() _G.cmp_discard_drained = true end)
     ]])
-    wait(ui, [[return cmp_discard_drained]], "late response drained")
+    ui:wait_lua([[return cmp_discard_drained]], 5000, "late response drained")
     t.assert_eq(false, ui:lua([[return require('era.keystroke.cmp').is_menu_visible()]]))
     if action == "foreign menu" then
       t.assert_eq(
@@ -501,7 +448,7 @@ for _, action in ipairs({ "foreign menu", "empty menu", "native Ctrl-X" }) do
 end
 
 t:test("external edits cancel a pending completion even before a menu is visible", function()
-  local ui = editor({ "-- unchanged", "" })
+  local ui = embedded.editor(t, { "-- unchanged", "" })
   ui:lua([[require('era.keystroke.cmp.policy').sources_for = function() return { 'lsp' } end]])
   lsp_client(ui, [[return function(_, callback) _G.cmp_external_reply = callback end]])
   ui:lua([[
@@ -511,7 +458,7 @@ t:test("external edits cancel a pending completion even before a menu is visible
     end
   ]])
   ui:rpc("nvim_input", "ia")
-  wait(ui, [[return cmp_external_reply ~= nil]], "completion request is pending")
+  ui:wait_lua([[return cmp_external_reply ~= nil]], 5000, "completion request is pending")
   ui:lua([[
     _G.cmp_external_obsolete = cmp_external_reply
     vim.api.nvim_buf_set_text(0, 0, 3, 0, 12, { 'changed' })
@@ -521,7 +468,7 @@ t:test("external edits cancel a pending completion even before a menu is visible
     cmp_external_obsolete(nil, { { label = 'ancient', kind = 6 } })
     vim.schedule(function() _G.cmp_external_drained = true end)
   ]])
-  wait(ui, [[return cmp_external_drained]], "obsolete response drained")
+  ui:wait_lua([[return cmp_external_drained]], 5000, "obsolete response drained")
   t.assert_eq(false, ui:lua([[return require('era.keystroke.cmp').is_menu_visible()]]))
 end)
 
@@ -530,7 +477,7 @@ for _, resolved in ipairs({ false, true }) do
     resolved and "same-label resolved imports retain selection when another client responds"
       or "same-label additional edits retain selection when another client responds",
     function()
-      local ui = editor({ "-- imports", "" })
+      local ui = embedded.editor(t, { "-- imports", "" })
       ui:lua([[_G.cmp_import_on_resolve = ...]], resolved)
       lsp_client(
         ui,
@@ -574,25 +521,25 @@ for _, resolved in ipairs({ false, true }) do
         vim.lsp.get_client_by_id = function(id) return id == client.id and client or late end
       ]])
       ui:rpc("nvim_input", "iFo")
-      wait(
-        ui,
+      ui:wait_lua(
         [[
         return #vim.fn.complete_info({ 'items' }).items == 2
       ]],
+        5000,
         "both import alternatives are visible"
       )
       ui:rpc("nvim_input", "<Tab>")
-      wait(ui, [[return vim.api.nvim_get_current_line() == 'Foo']], "second candidate preview")
+      ui:wait_lua([[return vim.api.nvim_get_current_line() == 'Foo']], 5000, "second candidate preview")
       ui:lua([[cmp_release_other_client()]])
-      wait(
-        ui,
+      ui:wait_lua(
         [[
         return #vim.fn.complete_info({ 'items' }).items == 3
       ]],
+        5000,
         "earlier client inserts its candidate before the selected item"
       )
       ui:rpc("nvim_input", "<CR>")
-      wait(ui, [[return vim.api.nvim_buf_line_count(0) == 3]], "selected import edit settled")
+      ui:wait_lua([[return vim.api.nvim_buf_line_count(0) == 3]], 5000, "selected import edit settled")
       t.assert_eq(
         'local Foo = require("module_b")\n-- imports\nFoo',
         ui:lua([[return table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), '\n')]]),
@@ -603,7 +550,7 @@ for _, resolved in ipairs({ false, true }) do
 end
 
 t:test("a fresh LSP response does not inherit a selected cached alternative", function()
-  local ui = editor({ "-- imports", "" })
+  local ui = embedded.editor(t, { "-- imports", "" })
   ui:lua([[require('era.keystroke.cmp.policy').sources_for = function() return { 'lsp' } end]])
   lsp_client(
     ui,
@@ -625,21 +572,21 @@ t:test("a fresh LSP response does not inherit a selected cached alternative", fu
     end]]
   )
   ui:rpc("nvim_input", "iF")
-  wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "initial incomplete list")
+  ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "initial incomplete list")
   ui:rpc("nvim_input", "o")
-  wait(ui, [[return cmp_replace_alternative ~= nil]], "replacement request pending")
+  ui:wait_lua([[return cmp_replace_alternative ~= nil]], 5000, "replacement request pending")
   ui:rpc("nvim_input", "<Tab><Tab>")
-  wait(ui, [[return vim.api.nvim_get_current_line() == 'Foo']], "cached alternative explicitly previewed")
+  ui:wait_lua([[return vim.api.nvim_get_current_line() == 'Foo']], 5000, "cached alternative explicitly previewed")
   ui:lua([[cmp_replace_alternative()]])
-  wait(ui, [[return vim.api.nvim_get_current_line() == 'Fo']], "replacement restores the stale preview")
+  ui:wait_lua([[return vim.api.nvim_get_current_line() == 'Fo']], 5000, "replacement restores the stale preview")
   t.assert_true(ui:lua([[return require('era.keystroke.cmp').is_menu_visible()]]), "replacement remains available")
   ui:rpc("nvim_input", "<C-y>")
-  wait(ui, [[return vim.api.nvim_buf_line_count(0) == 3]], "new alternative accepted")
+  ui:wait_lua([[return vim.api.nvim_buf_line_count(0) == 3]], 5000, "new alternative accepted")
   t.assert_eq('local Foo = require("module_b")', ui:lua("return vim.api.nvim_buf_get_lines(0, 0, 1, false)[1]"))
 end)
 
 t:test("complete LSP lists retain their snapshot while the prefix grows and shrinks", function()
-  local ui = editor({ "" })
+  local ui = embedded.editor(t, { "" })
   ui:lua([[
     _G.cmp_snapshot_creations = 0
     local new = yoz.completion.new_snapshot
@@ -657,7 +604,7 @@ t:test("complete LSP lists retain their snapshot while the prefix grows and shri
   ]])
   lsp_client(ui, [[return function(_, callback) callback(nil, { { label = 'abcdefgh', kind = 6 } }) end]])
   ui:rpc("nvim_input", "iabc")
-  wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "initial list")
+  ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "initial list")
   local created = ui:lua([[return cmp_snapshot_creations]])
   local updates = ui:lua([[return cmp_menu_updates]])
   for index, step in ipairs({
@@ -695,7 +642,7 @@ t:test("complete LSP lists retain their snapshot while the prefix grows and shri
 end)
 
 t:test("a documentation resolve cannot recreate a dismissed window", function()
-  local ui = editor({ "" })
+  local ui = embedded.editor(t, { "" })
   lsp_client(
     ui,
     [[return function(_, callback) callback(nil, { { label = 'foobar', kind = 6 } }) end]],
@@ -705,7 +652,7 @@ t:test("a documentation resolve cannot recreate a dismissed window", function()
   end]]
   )
   ui:rpc("nvim_input", "ifo")
-  wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "menu")
+  ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "menu")
   ui:rpc("nvim_input", "<C-space>")
   ui:lua([[require('era.keystroke.cmp').cancel()]])
   vim.wait(150)
@@ -744,7 +691,7 @@ for _, example in ipairs({
   },
 }) do
   t:test("external " .. example.name .. " invalidates pending completion without losing dirty state", function()
-    local ui = editor({ "-- imports", "obj.fo TAIL" })
+    local ui = embedded.editor(t, { "-- imports", "obj.fo TAIL" })
     ui:lua([[
       vim.api.nvim_win_set_cursor(0, {2, 6})
       vim.api.nvim_set_option_value('modified', false, {buf=0})
@@ -763,7 +710,7 @@ for _, example in ipairs({
       [[return function(item) return item, 300 end]]
     )
     ui:rpc("nvim_input", "i")
-    wait(ui, [[return vim.fn.complete_info({'selected'}).selected == 0]], "native selection settled")
+    ui:wait_lua([[return vim.fn.complete_info({'selected'}).selected == 0]], 5000, "native selection settled")
     ui:lua(
       [[
       local example = ...
@@ -773,7 +720,7 @@ for _, example in ipairs({
     ]],
       example
     )
-    wait(ui, [[return not require('era.keystroke.cmp').is_menu_visible()]], "stale completion dismissed")
+    ui:wait_lua([[return not require('era.keystroke.cmp').is_menu_visible()]], 5000, "stale completion dismissed")
     -- The window outlasts the 300 ms resolve, so a late import or command would show.
     vim.wait(400)
     t.assert_true(
@@ -793,7 +740,7 @@ for _, preview in ipairs({ false, true }) do
         .. (cancel.before and " before" or cancel.key and " with Ctrl-E after" or " after")
         .. " an external query edit preserves that edit",
       function()
-        local ui = editor({ "obj.fo TAIL" })
+        local ui = embedded.editor(t, { "obj.fo TAIL" })
         ui:lua([[
           vim.api.nvim_win_set_cursor(0,{1,6})
           vim.api.nvim_set_option_value('modified',false,{buf=0})
@@ -805,12 +752,12 @@ for _, preview in ipairs({ false, true }) do
         end]]
         )
         ui:rpc("nvim_input", "i")
-        wait(ui, [[return vim.api.nvim_get_mode().mode:sub(1,1)=='i']], "insert mode")
+        ui:wait_lua([[return vim.api.nvim_get_mode().mode:sub(1,1)=='i']], 5000, "insert mode")
         ui:lua([[require('era.keystroke.cmp').show()]])
-        wait(ui, [[return vim.fn.complete_info({'selected'}).selected==0]], "native selection settled")
+        ui:wait_lua([[return vim.fn.complete_info({'selected'}).selected==0]], 5000, "native selection settled")
         if preview then
           ui:lua([[vim.api.nvim_select_popupmenu_item(0,true,false,{})]])
-          wait(ui, [[return vim.api.nvim_get_current_line()=='obj.foobar TAIL']], "native prefix preview")
+          ui:wait_lua([[return vim.api.nvim_get_current_line()=='obj.foobar TAIL']], 5000, "native prefix preview")
         end
         ui:lua(
           [[
@@ -823,7 +770,7 @@ for _, preview in ipairs({ false, true }) do
         ]],
           cancel
         )
-        wait(ui, [[return not require('era.keystroke.cmp').is_menu_visible()]], "menu cancelled")
+        ui:wait_lua([[return not require('era.keystroke.cmp').is_menu_visible()]], 5000, "menu cancelled")
         t.assert_eq(
           preview and not cancel.before and "obj.xxobar TAIL" or "obj.xx TAIL",
           ui:lua([[return vim.api.nvim_get_current_line()]]),
@@ -840,19 +787,14 @@ for _, preview in ipairs({ false, true }) do
 end
 
 t:test("a terminating signal ends the editor while completion is visible", function()
-  local ui = UI.new()
-  t:defer(function()
-    ui:close()
-  end)
+  local lines = {} ---@type string[]
+  for index = 1, 20 do
+    lines[index] = ""
+  end
   -- On a short screen an error message on exit waits at the more prompt, so the child never exits.
-  ui:start({ width = 80, height = 8 })
-  ui:lua([[
-    local lines = {}
-    for index = 1, 20 do lines[index] = '' end
-    require('__test__.support.cmp.behavior').setup({ lines = lines, cursor = { 10, 0 } })
-  ]])
+  local ui = embedded.behavior_editor(t, { lines = lines, cursor = { 10, 0 } }, { width = 80, height = 8 })
   ui:rpc("nvim_input", "ial")
-  wait(ui, [[return vim.fn.pumvisible() == 1]], "completion menu is visible")
+  ui:wait_lua([[return vim.fn.pumvisible() == 1]], 5000, "completion menu is visible")
   -- The completion session is destroyed on VimLeavePre, after SIGTERM has unloaded the buffer contents.
   local closed, err = pcall(ui.close, ui)
   t.assert_true(closed, tostring(err))

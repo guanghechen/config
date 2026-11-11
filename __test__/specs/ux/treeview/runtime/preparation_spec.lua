@@ -20,15 +20,12 @@ t:test("List loads a hidden unknown root and activation preserves Tree expansion
   support.applied(data:batch({ { kind = "insert", key = "root", label = "root", can_expand = true } }))
   t.assert_eq("unknown", data:source():node(data:source():id("root")).completeness)
   local state = t.await(data:create_state({ kind = "children_of", node = data:source():id("root") }, { mode = "list" }))
-  local view = treeview.attach(state, {
+  local view = support.attach(t, state, {
     keymaps = false,
     on_activate = function(_, node)
       activated = node
     end,
   })
-  t:defer(function()
-    view:detach()
-  end)
   t.wait_until(function()
     return view:frame() and view:status().frame.row_count == 1
   end, 5000)
@@ -257,10 +254,7 @@ t:test("directory import refreshes ancestry text in the published buffer", funct
       { mode = "list", list_text = "ancestry", show_hidden = false }
     )
   )
-  local view = treeview.attach(state, { keymaps = false })
-  t:defer(function()
-    view:detach()
-  end)
+  local view = support.attach(t, state, { keymaps = false })
   t.wait_until(function()
     return view:frame() ~= nil
   end, 5000)
@@ -280,7 +274,7 @@ for _, failure in ipairs({ "throw", "reject", "invalid result" }) do
     function()
       local _, state = fixture()
       local calls, errors, failing = 0, {}, false
-      local view = treeview.attach(state, {
+      local view = support.attach(t, state, {
         keymaps = false,
         prepare_frame = function()
           calls = calls + 1
@@ -298,9 +292,6 @@ for _, failure in ipairs({ "throw", "reject", "invalid result" }) do
           errors[#errors + 1] = error
         end,
       })
-      t:defer(function()
-        view:detach()
-      end)
       t.wait_until(function()
         return view:frame() and not view:status().preparing
       end, 5000)
@@ -337,7 +328,7 @@ end
 t:test("a superseded preparation rejection preserves the newer decoration request", function()
   local _, state = fixture()
   local pending, errors, delayed, commits = {}, {}, false, 0
-  local view = treeview.attach(state, {
+  local view = support.attach(t, state, {
     keymaps = false,
     prepare_frame = function()
       if not delayed then
@@ -351,9 +342,6 @@ t:test("a superseded preparation rejection preserves the newer decoration reques
       errors[#errors + 1] = error
     end,
   })
-  t:defer(function()
-    view:detach()
-  end)
   t.wait_until(function()
     return view:frame() and not view:status().preparing
   end, 5000)
@@ -385,7 +373,7 @@ t:test("a pending cursor publication cannot reuse text after a branch suffix cha
   local Future = require("stl.c.future")
   local hold, complete = false, nil
   local errors = {}
-  local view = treeview.attach(state, {
+  local view = support.attach(t, state, {
     keymaps = false,
     prepare_frame = function()
       if hold then
@@ -401,9 +389,6 @@ t:test("a pending cursor publication cannot reuse text after a branch suffix cha
       errors[#errors + 1] = error
     end,
   })
-  t:defer(function()
-    view:detach()
-  end)
   t.wait_until(function()
     return view:frame() ~= nil and not view:status().preparing
   end, 5000)
@@ -434,7 +419,7 @@ end)
 t:test("retargeting a plan re-prepares row-dependent features after selection changes", function()
   local _, state, a = fixture()
   local pending, committed, delayed = {}, {}, false
-  local view = treeview.attach(state, {
+  local view = support.attach(t, state, {
     keymaps = false,
     prepare_frame = function(_, _, _, _, rows)
       local selected = rows.marked[1]
@@ -450,9 +435,6 @@ t:test("retargeting a plan re-prepares row-dependent features after selection ch
       end)
     end,
   })
-  t:defer(function()
-    view:detach()
-  end)
   t.wait_until(function()
     return view:frame() ~= nil
   end, 5000)
@@ -481,7 +463,7 @@ for _, failure in ipairs({ "throw", "invalid future" }) do
   t:test("retargeted preparation records the current frame after " .. failure, function()
     local _, state, a = fixture()
     local pending, calls, errors, mode = nil, 0, {}, "ready"
-    local view = treeview.attach(state, {
+    local view = support.attach(t, state, {
       keymaps = false,
       prepare_frame = function()
         calls = calls + 1
@@ -501,9 +483,6 @@ for _, failure in ipairs({ "throw", "invalid future" }) do
         errors[#errors + 1] = error
       end,
     })
-    t:defer(function()
-      view:detach()
-    end)
     t.wait_until(function()
       return view:frame() and not view:status().preparing
     end, 5000)

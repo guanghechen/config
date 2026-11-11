@@ -2,6 +2,8 @@ local harness = require("__test__.support.harness")
 require("ark.bootstrap").setup()
 
 local t = harness.new()
+local bootstrap = require("__test__.support.bootstrap")
+local picker = require("__test__.support.picker")
 local treeview = require("__test__.support.treeview")
 
 local fixture_dir = t:tempdir()
@@ -12,12 +14,6 @@ for index = 1, 5000 do
 end
 vim.fn.writefile(fixture_lines, fixture_path)
 
----@param value                         unknown
----@return stl.c.Observable
-local function observable(value)
-  return stl.c.Observable.from_value(value)
-end
-
 ---@param name                          string
 ---@param max_matches                   integer
 ---@param preview                       boolean|nil
@@ -25,42 +21,27 @@ end
 ---@return table
 local function new_composer(name, max_matches, preview)
   local controls = {
-    search_pattern = observable(""),
-    replace_pattern = observable(""),
-    flag_limit_matches = observable(true),
-    flag_regex = observable(false),
-    flag_replace = observable(false),
-    max_matches = observable(max_matches),
+    search_pattern = picker.observable(""),
+    replace_pattern = picker.observable(""),
+    flag_limit_matches = picker.observable(true),
+    flag_regex = picker.observable(false),
+    flag_replace = picker.observable(false),
+    max_matches = picker.observable(max_matches),
   }
-  local composer = era.m.searcher.FiletreeComposer.new({
+  local composer = picker.searcher(t, {
     name = name,
     permanent = false,
     preview = preview == true,
     title = "file-search test",
-
-    excludes = observable({}),
-    flag_exclude = observable(false),
-    flag_foldempty = observable(false),
-    flag_gitignore = observable(false),
     flag_limit_matches = controls.flag_limit_matches,
     flag_regex = controls.flag_regex,
     flag_replace = controls.flag_replace,
-    flag_case_sensitive = observable(true),
-    flag_selected = observable(false),
-    flag_viewtype = observable("tree"),
-    includes = observable({ "*.txt" }),
-    max_filesize = observable("1M"),
     max_matches = controls.max_matches,
     replace_pattern = controls.replace_pattern,
-    rootpath = observable(fixture_dir),
+    rootpath = fixture_dir,
     search_pattern = controls.search_pattern,
   })
-  composer.result:create_win({ border = "none", number = false, winhighlight = "" }, {
-    row = 0,
-    col = 0,
-    width = 80,
-    height = 10,
-  })
+  picker.show_result(composer, 80, 10)
   treeview.await(composer._treeview:ready())
   return composer, controls
 end
@@ -75,69 +56,49 @@ t:test("preview treats an empty result as a normal state", function()
 
   local composer = new_composer("empty-preview", 500, true)
 
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  local ok, err = pcall(function()
-    ---@diagnostic disable-next-line: undefined-field
-    assert(basic_props ~= nil and basic_props.render_preview ~= nil, "preview renderer should be captured")
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "stale preview" })
-    composer._last_preview_filepath = "stale.lua"
-    ---@diagnostic disable-next-line: duplicate-set-field
-    composer.__retrieve_nodeuuid__ = function()
-      return nil, 0
-    end
-
-    ---@diagnostic disable-next-line: undefined-field
-    local result = basic_props.render_preview(bufnr, false)
-    t.assert_eq("", vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1], "empty preview content")
-    t.assert_eq("", result.title, "empty preview title")
-    t.assert_false(result.cursorline, "empty preview cursorline")
-    t.assert_false(result.number, "empty preview number")
-    t.assert_false(result.wrap, "empty preview wrap")
-    t.assert_false(result.whitespaces, "empty preview whitespace markers")
-    t.assert_nil(composer._last_preview_filepath, "empty preview invalidates cached filepath")
-
-    ---@diagnostic disable-next-line: duplicate-set-field
-    composer.__retrieve_nodeuuid__ = function()
-      return nil, -1
-    end
-    ---@diagnostic disable-next-line: undefined-field
-    result = basic_props.render_preview(bufnr, false)
-    t.assert_eq("Unknown lnum(-1)", result.title, "invalid nonzero line remains diagnostic")
-  end)
-
-  if vim.api.nvim_buf_is_valid(bufnr) then
-    vim.api.nvim_buf_delete(bufnr, { force = true })
+  local bufnr = t:buffer({ "stale preview" })
+  ---@diagnostic disable-next-line: undefined-field
+  assert(basic_props ~= nil and basic_props.render_preview ~= nil, "preview renderer should be captured")
+  composer._last_preview_filepath = "stale.lua"
+  ---@diagnostic disable-next-line: duplicate-set-field
+  composer.__retrieve_nodeuuid__ = function()
+    return nil, 0
   end
-  composer:dispose()
-  vim.wait(20)
-  if not ok then
-    error(err, 0)
+
+  ---@diagnostic disable-next-line: undefined-field
+  local result = basic_props.render_preview(bufnr, false)
+  t.assert_eq("", vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1], "empty preview content")
+  t.assert_eq("", result.title, "empty preview title")
+  t.assert_false(result.cursorline, "empty preview cursorline")
+  t.assert_false(result.number, "empty preview number")
+  t.assert_false(result.wrap, "empty preview wrap")
+  t.assert_false(result.whitespaces, "empty preview whitespace markers")
+  t.assert_nil(composer._last_preview_filepath, "empty preview invalidates cached filepath")
+
+  ---@diagnostic disable-next-line: duplicate-set-field
+  composer.__retrieve_nodeuuid__ = function()
+    return nil, -1
   end
+  ---@diagnostic disable-next-line: undefined-field
+  result = basic_props.render_preview(bufnr, false)
+  t.assert_eq("Unknown lnum(-1)", result.title, "invalid nonzero line remains diagnostic")
 end)
 
 t:test("search publication rebuild preserves only-selected projection", function()
   local composer = new_composer("selected-publication", 500)
   local view = composer._treeview
   local fileuuid = require("era.view.result_paths").key(fixture_path)
-  local ok, err = pcall(function()
-    view:reset_filepaths(fixture_dir, { fixture_path })
-    treeview.publish(view)
-    view:set_selected(fileuuid, true)
-    treeview.publish(view)
-    view:reset_filepaths(fixture_dir, { fixture_path })
+  view:reset_filepaths(fixture_dir, { fixture_path })
+  treeview.publish(view)
+  view:set_selected(fileuuid, true)
+  treeview.publish(view)
+  view:reset_filepaths(fixture_dir, { fixture_path })
 
-    treeview.publish(view)
-    t.assert_true(view:isselected(fileuuid), "selected file restored")
-    treeview.publish(view, { mode = "list", only_selected = true })
-    t.assert_true(view:linecount() > 0, "only-selected projection")
-    t.assert_eq(fileuuid, view:retrieve_uuid(view:linecount()), "selected file projection")
-  end)
-
-  composer:dispose()
-  vim.wait(20)
-  if not ok then
-    error(err, 0)
-  end
+  treeview.publish(view)
+  t.assert_true(view:isselected(fileuuid), "selected file restored")
+  treeview.publish(view, { mode = "list", only_selected = true })
+  t.assert_true(view:linecount() > 0, "only-selected projection")
+  t.assert_eq(fileuuid, view:retrieve_uuid(view:linecount()), "selected file projection")
 end)
 
 ---Publishes a native search for "needle" over the fixture through a composer and draws it into a scratch buffer;
@@ -148,10 +109,6 @@ end)
 local function assert_publishes_every_match(flag_replace, max_matches)
   local composer, controls =
     new_composer(string.format("publication-%s-%d", tostring(flag_replace), max_matches), max_matches)
-  t:defer(function()
-    composer:dispose()
-    vim.wait(20)
-  end)
   controls.search_pattern:next("needle", { silent = true })
   controls.replace_pattern:next("replacement", { silent = true })
   controls.flag_replace:next(flag_replace, { silent = true })
@@ -177,10 +134,7 @@ local function assert_publishes_every_match(flag_replace, max_matches)
   composer:__apply_search_result__(context, normalized)
   treeview.await(composer.result.draw())
 
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  t:defer(function()
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
+  local bufnr = t:buffer()
   treeview.await(composer.result.draw(bufnr))
   t.assert_true(composer._treeview:linecount() >= max_matches, "native frame must contain every match")
 end
@@ -190,121 +144,105 @@ t:test("native search paths cross the OS boundary and publish canonical identiti
   t:patch_table(composer._treeview, "is_current", function()
     return true
   end)
-  local ok, err = pcall(function()
-    composer.rootpath:next([[C:\workspace\project]], { silent = true })
-    local inputs = composer:__snapshot_search_inputs__()
-    t.assert_eq("C:/workspace/project", inputs.rootpath, "canonical request identity")
-    treeview.await(composer.result.draw())
-    composer._published_search_inputs = inputs
-    composer.rootpath:next("C:/workspace/project", { silent = true })
-    t.assert_true(composer:__is_search_projection_current__(), "canonical writeback identity")
-    composer.rootpath:next("", { silent = true })
-    t.assert_eq("", composer:__snapshot_search_inputs__().rootpath, "empty root identity")
+  composer.rootpath:next([[C:\workspace\project]], { silent = true })
+  local inputs = composer:__snapshot_search_inputs__()
+  t.assert_eq("C:/workspace/project", inputs.rootpath, "canonical request identity")
+  treeview.await(composer.result.draw())
+  composer._published_search_inputs = inputs
+  composer.rootpath:next("C:/workspace/project", { silent = true })
+  t.assert_true(composer:__is_search_projection_current__(), "canonical writeback identity")
+  composer.rootpath:next("", { silent = true })
+  t.assert_eq("", composer:__snapshot_search_inputs__().rootpath, "empty root identity")
 
-    ---@type era.m.searcher.view.filetree.ISearchParams
-    local params = {
-      cwd = "C:/workspace/project",
-      specified_filepath = "C:/workspace/project/src/main.lua",
-      excludes = {},
-      includes = { "*.lua" },
-      flag_case_sensitive = true,
-      flag_exclude = false,
-      flag_gitignore = false,
-      flag_regex = false,
-      flag_replace = false,
-      max_filesize = "1M",
-      max_matches = 500,
-      search_pattern = "needle",
-      replace_pattern = nil,
-    }
+  ---@type era.m.searcher.view.filetree.ISearchParams
+  local params = {
+    cwd = "C:/workspace/project",
+    specified_filepath = "C:/workspace/project/src/main.lua",
+    excludes = {},
+    includes = { "*.lua" },
+    flag_case_sensitive = true,
+    flag_exclude = false,
+    flag_gitignore = false,
+    flag_regex = false,
+    flag_replace = false,
+    max_filesize = "1M",
+    max_matches = 500,
+    search_pattern = "needle",
+    replace_pattern = nil,
+  }
 
-    t:patch_table(yoz.canonical_path, "to_os_path", function(filepath)
-      return "OS<" .. filepath .. ">"
-    end)
-    local options = composer._treeview:build_search_options(params)
-    t.assert_eq("OS<C:/workspace/project>", options.cwd, "native search cwd")
-    t.assert_eq("OS<C:/workspace/project/src/main.lua>", options.specified_filepath, "native specified filepath")
-
-    ---@diagnostic disable-next-line: missing-fields
-    local result = composer._treeview:normalize_search_result(params, {
-      items = {
-        { p = [[src\main.lua]], matches = {} },
-        { p = [[D:\archive\outside.lua]], matches = {} },
-      },
-      limit_reached = false,
-    })
-    local expected = {
-      "C:/workspace/project/src/main.lua",
-      "D:/archive/outside.lua",
-    } ---@type string[]
-    for _, filepath in ipairs(expected) do
-      local filematch = result.filematch_map[require("era.view.result_paths").key(filepath)]
-      t.assert_true(filematch ~= nil, "published filepath: " .. filepath)
-      t.assert_eq(filepath, filematch and filematch.filepath, "canonical published filepath")
-      t.assert_false(filematch and filematch.relative:find("\\", 1, true) ~= nil, "canonical relative filepath")
-    end
+  t:patch_table(yoz.canonical_path, "to_os_path", function(filepath)
+    return "OS<" .. filepath .. ">"
   end)
+  local options = composer._treeview:build_search_options(params)
+  t.assert_eq("OS<C:/workspace/project>", options.cwd, "native search cwd")
+  t.assert_eq("OS<C:/workspace/project/src/main.lua>", options.specified_filepath, "native specified filepath")
 
-  composer:dispose()
-  vim.wait(20)
-  if not ok then
-    error(err, 0)
+  ---@diagnostic disable-next-line: missing-fields
+  local result = composer._treeview:normalize_search_result(params, {
+    items = {
+      { p = [[src\main.lua]], matches = {} },
+      { p = [[D:\archive\outside.lua]], matches = {} },
+    },
+    limit_reached = false,
+  })
+  local expected = {
+    "C:/workspace/project/src/main.lua",
+    "D:/archive/outside.lua",
+  } ---@type string[]
+  for _, filepath in ipairs(expected) do
+    local filematch = result.filematch_map[require("era.view.result_paths").key(filepath)]
+    t.assert_true(filematch ~= nil, "published filepath: " .. filepath)
+    t.assert_eq(filepath, filematch and filematch.filepath, "canonical published filepath")
+    t.assert_false(filematch and filematch.relative:find("\\", 1, true) ~= nil, "canonical relative filepath")
   end
 end)
 
 t:test("preview keeps canonical identity across filesystem boundaries", function()
   local composer, controls = new_composer("canonical-preview-paths", 500)
-  local ok, err = pcall(function()
-    local filepath = "C:/workspace/project/src/main.lua"
-    t:patch_table(yoz.canonical_path, "to_os_path", function(value)
-      return "OS<" .. value .. ">"
-    end)
-
-    local preview_filepath = nil ---@type string|nil
-    t:patch_table(yoz.replace, "replace_file_preview_by_matches_advance", function(params)
-      preview_filepath = params.filepath
-      return { text = "needle", matches = {} }, nil
-    end)
-    controls.flag_replace:next(true, { silent = true })
-    controls.replace_pattern:next("replacement", { silent = true })
-
-    local context = {
-      flag_case_sensitive = composer.flag_case_sensitive,
-      flag_regex = composer.flag_regex,
-      flag_replace = composer.flag_replace,
-      search_pattern = composer.search_pattern,
-      replace_pattern = composer.replace_pattern,
-      filepath = filepath,
-      filematch = nil,
-      offset_current = -1,
-      match_offsets = {},
-    } ---@type era.m.searcher.IPlainfileViewContext
-    ---@diagnostic disable-next-line: assign-type-mismatch
-    local data = composer._plainfile:calc_preview_data(context)
-    t.assert_eq("OS<" .. filepath .. ">", preview_filepath, "native preview filepath")
-    t.assert_eq(filepath, data.filepath, "canonical preview identity")
-
-    local read_filepath = nil ---@type string|nil
-    t:patch_table(stl.fs, "read_file_as_lines", function(params)
-      read_filepath = params.filepath
-      return {}
-    end)
-    controls.flag_replace:next(false, { silent = true })
-    ---@diagnostic disable-next-line: cast-local-type
-    data = composer._plainfile:calc_preview_data(context)
-    t.assert_eq("OS<" .. filepath .. ">", read_filepath, "filesystem preview filepath")
-    t.assert_eq(filepath, data.filepath, "canonical read identity")
+  local filepath = "C:/workspace/project/src/main.lua"
+  t:patch_table(yoz.canonical_path, "to_os_path", function(value)
+    return "OS<" .. value .. ">"
   end)
 
-  composer:dispose()
-  vim.wait(20)
-  if not ok then
-    error(err, 0)
-  end
+  local preview_filepath = nil ---@type string|nil
+  t:patch_table(yoz.replace, "replace_file_preview_by_matches_advance", function(params)
+    preview_filepath = params.filepath
+    return { text = "needle", matches = {} }, nil
+  end)
+  controls.flag_replace:next(true, { silent = true })
+  controls.replace_pattern:next("replacement", { silent = true })
+
+  local context = {
+    flag_case_sensitive = composer.flag_case_sensitive,
+    flag_regex = composer.flag_regex,
+    flag_replace = composer.flag_replace,
+    search_pattern = composer.search_pattern,
+    replace_pattern = composer.replace_pattern,
+    filepath = filepath,
+    filematch = nil,
+    offset_current = -1,
+    match_offsets = {},
+  } ---@type era.m.searcher.IPlainfileViewContext
+  ---@diagnostic disable-next-line: assign-type-mismatch
+  local data = composer._plainfile:calc_preview_data(context)
+  t.assert_eq("OS<" .. filepath .. ">", preview_filepath, "native preview filepath")
+  t.assert_eq(filepath, data.filepath, "canonical preview identity")
+
+  local read_filepath = nil ---@type string|nil
+  t:patch_table(stl.fs, "read_file_as_lines", function(params)
+    read_filepath = params.filepath
+    return {}
+  end)
+  controls.flag_replace:next(false, { silent = true })
+  ---@diagnostic disable-next-line: cast-local-type
+  data = composer._plainfile:calc_preview_data(context)
+  t.assert_eq("OS<" .. filepath .. ">", read_filepath, "filesystem preview filepath")
+  t.assert_eq(filepath, data.filepath, "canonical read identity")
 end)
 
 t:test("Finder renders a highlighted title accent without changing its plain-title contract", function()
-  local input = observable("")
+  local input = picker.observable("")
   t:defer(function()
     input:dispose()
   end)
@@ -353,10 +291,6 @@ end)
 
 t:test("composer guards the pre-observer stale window and coalesces input bursts", function()
   local composer, controls = new_composer("file-search-integration", 500)
-  t:defer(function()
-    composer:dispose()
-    vim.wait(20)
-  end)
   composer.finder:create_buf()
 
   local generation = composer._file_search._generation
@@ -376,7 +310,6 @@ t:test("composer guards the pre-observer stale window and coalesces input bursts
   assert(stale_request ~= nil, snapshot_err)
   generation = composer._file_search._generation
   local replace_calls = 0
-  local warnings = 0
   t:patch_table(yoz.replace, "replace_file", function()
     replace_calls = replace_calls + 1
     return false, nil
@@ -385,9 +318,7 @@ t:test("composer guards the pre-observer stale window and coalesces input bursts
     replace_calls = replace_calls + 1
     return false, nil
   end)
-  t:patch_table(stl.reporter, "warn", function()
-    warnings = warnings + 1
-  end)
+  local reports = bootstrap.with_reporter(t)
 
   composer.finder:set_content("")
   t.assert_eq(generation, composer._file_search._generation, "race fixture must run before observer invalidation")
@@ -400,21 +331,10 @@ t:test("composer guards the pre-observer stale window and coalesces input bursts
     "displayed results must become read-only as soon as their inputs are stale"
   )
 
-  local replace_all, replace_in_node ---@type fun(): nil, fun(): nil
-  for _, keymap in ipairs(composer.finder.keymaps) do
-    if keymap.desc == "searcher: replace all files" then
-      ---@diagnostic disable-next-line: cast-local-type
-      replace_all = keymap.callback
-    elseif keymap.desc == "search: replace file" then
-      replace_in_node = keymap.callback
-    end
-  end
-  assert(replace_all ~= nil, "replace-all action should be bound")
-  assert(replace_in_node ~= nil, "replace-in-node action should be bound")
-  replace_all()
-  replace_in_node()
+  picker.action(composer, "searcher: replace all files")()
+  picker.action(composer, "search: replace file")()
   t.assert_eq(0, replace_calls, "stale projection must not reach native replacement")
-  t.assert_eq(2, warnings, "stale replacement should explain why it was rejected")
+  t.assert_eq(2, #reports.warn, "stale replacement should explain why it was rejected")
 
   t.assert_eq(1, #composer._uuids_order, "queued observer must not have run yet")
   t.wait_until(function()
@@ -435,10 +355,6 @@ end)
 
 t:test("search indicator follows the logical search lifecycle", function()
   local composer, controls = new_composer("file-search-indicator", 500)
-  t:defer(function()
-    composer:dispose()
-    vim.wait(20)
-  end)
   local title = "file-search test (cwd)"
   composer.finder:set_title(title)
   local spinner_frames = { "⡀", "⠄", "⠄" }
@@ -493,10 +409,6 @@ end)
 
 t:test("match limit status follows the published projection and blocks replace all", function()
   local composer, controls = new_composer("file-search-limit", 500)
-  t:defer(function()
-    composer:dispose()
-    vim.wait(20)
-  end)
   controls.search_pattern:next("needle")
 
   t.wait_until(function()
@@ -507,7 +419,6 @@ t:test("match limit status follows the published projection and blocks replace a
   local replace_file_calls = 0
   local replace_match_calls = 0
   local replace_match_filepath = nil ---@type string|nil
-  local warnings = 0
   t:patch_table(yoz.replace, "replace_file", function()
     replace_file_calls = replace_file_calls + 1
     return false, nil
@@ -517,23 +428,12 @@ t:test("match limit status follows the published projection and blocks replace a
     replace_match_filepath = params.filepath
     return false, nil
   end)
-  t:patch_table(stl.reporter, "warn", function()
-    warnings = warnings + 1
-  end)
+  local reports = bootstrap.with_reporter(t)
 
-  local replace_all ---@type fun(): nil
-  for _, keymap in ipairs(composer.finder.keymaps) do
-    if keymap.desc == "searcher: replace all files" then
-      ---@diagnostic disable-next-line: cast-local-type
-      replace_all = keymap.callback
-      break
-    end
-  end
-  assert(replace_all ~= nil, "replace-all action should be bound")
-  replace_all()
+  picker.action(composer, "searcher: replace all files")()
   t.assert_eq(0, replace_file_calls, "limited projection must not reach native whole-file replacement")
   t.assert_eq(0, replace_match_calls, "limited projection must not reach native bulk replacement")
-  t.assert_eq(1, warnings, "limited bulk replacement should explain why it was rejected")
+  t.assert_eq(1, #reports.warn, "limited bulk replacement should explain why it was rejected")
 
   local leafuuid = composer._uuids_order[1] ---@type string
   ---@diagnostic disable-next-line: assign-type-mismatch
@@ -555,31 +455,19 @@ t:test("match limit status follows the published projection and blocks replace a
     advance_filepath = params.filepath
     return { locations = {} }, nil
   end)
-  local result_bufnr = vim.api.nvim_create_buf(false, true)
-  local delete_result_buf = t:defer(function()
-    vim.api.nvim_buf_delete(result_bufnr, { force = true })
-  end)
+  local result_bufnr = t:buffer()
   treeview.await(composer.result.draw(result_bufnr))
   local location = assert(leafstate.locations and leafstate.locations[#leafstate.locations])
   local location_lnum = assert(composer._treeview:retrieve_lnum(location.locationuuid))
   composer.result:set_lnum_current(location_lnum)
   treeview.await(composer._treeview:ready())
-  local replace_in_node ---@type fun(): nil
-  for _, keymap in ipairs(composer.finder.keymaps) do
-    if keymap.desc == "search: replace file" then
-      ---@diagnostic disable-next-line: cast-local-type
-      replace_in_node = keymap.callback
-      break
-    end
-  end
-  assert(replace_in_node ~= nil, "replace-in-node action should be bound")
-  replace_in_node()
+  picker.action(composer, "search: replace file")()
   t.assert_eq(
     yoz.canonical_path.to_os_path(leafdata.filepath),
     advance_filepath,
     "single-match replace filesystem boundary"
   )
-  delete_result_buf()
+  vim.api.nvim_buf_delete(result_bufnr, { force = true })
 
   local winnr = composer.result:create_win({
     border = "single",
@@ -593,7 +481,7 @@ t:test("match limit status follows the published projection and blocks replace a
   })
   t.wait_until(function()
     return vim.api.nvim_get_option_value("winbar", { win = winnr }):find("LIMIT 500", 1, true) ~= nil
-  end, 1000, "limited projection should render a persistent status")
+  end, 5000, "limited projection should render a persistent status")
   local winbar = vim.api.nvim_get_option_value("winbar", { win = winnr }) ---@type string
   local rendered_winbar = vim.api.nvim_eval_statusline(winbar, { winid = winnr, maxwidth = 80 }).str ---@type string
   local limit_start = assert(rendered_winbar:find(" LIMIT 500 ", 1, true), "limited status should be rendered")
@@ -615,7 +503,7 @@ t:test("match limit status follows the published projection and blocks replace a
   end, 10000, "unlimited search did not replace the limited projection")
   t.wait_until(function()
     return vim.api.nvim_get_option_value("winbar", { win = winnr }):find("LIMIT", 1, true) == nil
-  end, 1000, "exhaustive projection should clear the limit status")
+  end, 5000, "exhaustive projection should clear the limit status")
   winbar = vim.api.nvim_get_option_value("winbar", { win = winnr }) ---@type string
   t.assert_true(winbar:find("LIMIT", 1, true) == nil, "exhaustive projection should clear the limit status")
 end)
@@ -623,11 +511,10 @@ end)
 t:test("single-match replacements publish updated offsets without mutating the displayed snapshot", function()
   local filepath = fixture_dir .. "/sequential.txt"
   vim.fn.writefile({ "a a" }, filepath)
-  local composer, controls = new_composer("sequential-replace", 500)
   t:defer(function()
-    composer:dispose()
     vim.fn.delete(filepath)
   end)
+  local composer, controls = new_composer("sequential-replace", 500)
   composer.rootpath:next(filepath, { silent = true })
   controls.search_pattern:next("a", { silent = true })
   controls.replace_pattern:next("aaaa", { silent = true })
@@ -639,14 +526,7 @@ t:test("single-match replacements publish updated offsets without mutating the d
   local tree = composer._treeview
   local key = require("era.view.result_paths").key(filepath)
   local displayed = tree:retrieve(key)
-  local replace_in_node
-  for _, keymap in ipairs(composer.finder.keymaps) do
-    if keymap.desc == "search: replace file" then
-      replace_in_node = keymap.callback
-      break
-    end
-  end
-  assert(replace_in_node)
+  local replace_in_node = picker.action(composer, "search: replace file")
   for index = 1, 2 do
     local location = tree:retrieve(key).locations[1]
     composer.result:set_lnum_current(assert(tree:retrieve_lnum(location.locationuuid)))

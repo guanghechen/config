@@ -1,6 +1,8 @@
 require("ark.bootstrap").setup()
 local t = require("__test__.support.harness").new()
+local bootstrap = require("__test__.support.bootstrap")
 local diffview = require("__test__.support.diffview")
+local fs = require("__test__.support.fs")
 local git = require("__test__.support.git")
 local staging = require("era.m.git.staging")
 local Loader = require("era.m.diffview.content").Loader
@@ -15,26 +17,7 @@ end
 ---A buffer the case deletes; `listed = false` and `scratch = false` match side-by-side buffers.
 ---@return integer
 local function create_buffer()
-  local bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
-  return bufnr
-end
-
----The open buffer of `path` in the workspace, whose encoding and EOL loaded content follows.
----@param root                          string
----@param path                          string
----@return integer
-local function source_buffer(root, path)
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  vim.api.nvim_buf_set_name(bufnr, root .. "/" .. path)
-  t:defer(function()
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
-  return bufnr
+  return t:buffer(nil, { scratch = false })
 end
 
 ---Loads `object` into `bufnr` and waits for the outcome.
@@ -45,24 +28,19 @@ end
 ---@return boolean ok
 ---@return boolean content_changed
 local function load(loader, object, bufnr, opts)
-  local outcome = nil ---@type { [1]: boolean, [2]: boolean }|nil
-  stl.async.run(function()
-    outcome = { loader:load(object, bufnr, opts) }
-  end)
-  t.wait_until(function()
-    return outcome ~= nil
-  end, 5000, "load")
-  return assert(outcome)[1], assert(outcome)[2]
+  local outcome = t.await(stl.async.run_future(function()
+    return { loader:load(object, bufnr, opts) }
+  end))
+  return outcome[1], outcome[2]
 end
 
----Captures the errors reported for the rest of the case.
+---The messages of `reports`.
+---@param reports                       { message: string }[]
 ---@return string[]
-local function capture_errors()
-  local errors = {} ---@type string[]
-  t:patch_table(stl.reporter, "error", function(report)
-    errors[#errors + 1] = report.message
-  end)
-  return errors
+local function messages(reports)
+  return vim.tbl_map(function(report)
+    return report.message
+  end, reports)
 end
 
 ---Counts buffer rewrites for the rest of the case.
@@ -79,7 +57,7 @@ end
 
 t:test("index content is read by the object hash the index holds", function()
   workspace()
-  local errors = capture_errors()
+  local errors = bootstrap.with_reporter(t).error
   local blob_object, index_path = nil, nil ---@type string|nil, string|nil
   local loader = Loader.new({
     get_file_info = function(_, relpath)
@@ -156,7 +134,7 @@ t:test("a buffer is reused only for an identical index object and source format"
       return Future.resolve({ ok = true, missing = false, bytes = "index" })
     end,
   })
-  local source_bufnr = source_buffer(root, "f.txt")
+  local source_bufnr = t:buffer(nil, { name = root .. "/f.txt" })
   local target_bufnr = create_buffer()
   local writes = count_writes()
   local function load_target()
@@ -218,7 +196,7 @@ t:test("HEAD and explicit commit content is cached by the resolved object", func
       return Future.resolve({ ok = true, missing = false, bytes = object })
     end,
   })
-  local source_bufnr = source_buffer(root, "f.txt")
+  local source_bufnr = t:buffer(nil, { name = root .. "/f.txt" })
   local head_bufnr, commit_bufnr = create_buffer(), create_buffer()
   local writes = count_writes()
 
@@ -266,27 +244,23 @@ t:test("a revision is read by the object it resolved to", function()
     end,
   })
   local bufnr = create_buffer()
-  local outcome = nil ---@type boolean|nil
-  stl.async.run(function()
-    outcome = loader:load("HEAD:f.txt", bufnr)
+  local loading = stl.async.run_future(function()
+    return loader:load("HEAD:f.txt", bufnr)
   end)
   t.wait_until(function()
     return name_requested
   end, 5000, "resolution requested")
 
   resolve_name({ ok = true, missing = false, object_name = "snapshot-a-oid" })
-  t.wait_until(function()
-    return outcome ~= nil
-  end, 5000, "load")
 
-  t.assert_true(outcome, "loaded")
+  t.assert_true(t.await(loading), "loaded")
   t.assert_eq("snapshot-a-oid", blob_object, "blob fetch uses the resolved OID")
   t.assert_eq("snapshot-a-oid", vim.b[bufnr].git_content_object_name, "resolved identity committed")
 end)
 
 t:test("revision caching never bypasses a failed resolution or request ownership", function()
   workspace()
-  local errors = capture_errors()
+  local errors = bootstrap.with_reporter(t).error
   local name_future, resolve_name = Future.new_with_resolver()
   local name_requested = false ---@type boolean
   local blob_calls = 0 ---@type integer
@@ -303,9 +277,8 @@ t:test("revision caching never bypasses a failed resolution or request ownership
   local loader = Loader.new(git)
   local bufnr = create_buffer()
   local current = true ---@type boolean
-  local outcome = nil ---@type boolean|nil
-  stl.async.run(function()
-    outcome = loader:load("HEAD:f.txt", bufnr, {
+  local loading = stl.async.run_future(function()
+    return loader:load("HEAD:f.txt", bufnr, {
       is_current = function()
         return current
       end,
@@ -317,10 +290,7 @@ t:test("revision caching never bypasses a failed resolution or request ownership
 
   current = false
   resolve_name({ ok = true, missing = false, object_name = "head-a" })
-  t.wait_until(function()
-    return outcome ~= nil
-  end, 5000, "load")
-  t.assert_false(outcome, "stale resolution rejected")
+  t.assert_false(t.await(loading), "stale resolution rejected")
   t.assert_eq(0, blob_calls, "stale request does not read blob")
   t.assert_nil(vim.b[bufnr].git_content_object_name, "stale request does not commit identity")
 
@@ -330,7 +300,7 @@ t:test("revision caching never bypasses a failed resolution or request ownership
   t.assert_false(load(loader, "HEAD:f.txt", bufnr), "resolution failure rejected")
   t.assert_eq(0, blob_calls, "failed resolution does not read blob")
   t.assert_nil(vim.b[bufnr].git_content_object_name, "failure does not commit identity")
-  t.assert_same({ "resolution failed" }, errors, "the failure is reported")
+  t.assert_same({ "resolution failed" }, messages(errors), "the failure is reported")
 
   git.get_object_name = function()
     return Future.resolve({ ok = false, missing = true, err = "object missing" })
@@ -354,11 +324,10 @@ t:test("the source format is sampled again after an asynchronous blob read", fun
       return blob_future
     end,
   })
-  local source_bufnr = source_buffer(root, "f.txt")
+  local source_bufnr = t:buffer(nil, { name = root .. "/f.txt" })
   local target_bufnr = create_buffer()
-  local outcome = nil ---@type boolean|nil
-  stl.async.run(function()
-    outcome = loader:load(":./f.txt", target_bufnr)
+  local loading = stl.async.run_future(function()
+    return loader:load(":./f.txt", target_bufnr)
   end)
   t.wait_until(function()
     return blob_requested
@@ -367,11 +336,8 @@ t:test("the source format is sampled again after an asynchronous blob read", fun
   vim.api.nvim_set_option_value("fileencoding", "latin1", { buf = source_bufnr })
   vim.api.nvim_set_option_value("fileformat", "dos", { buf = source_bufnr })
   resolve_blob({ ok = true, missing = false, bytes = "index" })
-  t.wait_until(function()
-    return outcome ~= nil
-  end, 5000, "load")
 
-  t.assert_true(outcome, "loaded")
+  t.assert_true(t.await(loading), "loaded")
   t.assert_eq("latin1", vim.b[target_bufnr].git_source_encoding, "latest encoding identity")
   t.assert_eq("\r\n", vim.b[target_bufnr].git_source_default_eol, "latest EOL identity")
   t.assert_eq("latin1", vim.api.nvim_get_option_value("fileencoding", { buf = target_bufnr }), "decoded encoding")
@@ -402,15 +368,9 @@ t:test("the content identity is cleared before a fallible buffer rewrite", funct
     error("injected write failure")
   end)
   object_name = "object-b"
-  local completed = false ---@type boolean
-  local write_ok = nil ---@type boolean|nil
-  stl.async.run(function()
-    write_ok = pcall(loader.load, loader, ":./f.txt", bufnr)
-    completed = true
-  end)
-  t.wait_until(function()
-    return completed
-  end, 5000, "failed load")
+  local write_ok = t.settle(stl.async.run_future(function()
+    return loader:load(":./f.txt", bufnr)
+  end))
 
   t.assert_false(write_ok, "write failure propagated")
   t.assert_nil(vim.b[bufnr].git_object_name, "failed write invalidates object identity")
@@ -427,7 +387,7 @@ end)
 
 t:test("index caching never bypasses a failure or request ownership", function()
   workspace()
-  local errors = capture_errors()
+  local errors = bootstrap.with_reporter(t).error
   local object_name = "abc123" ---@type string
   local blob_calls = 0 ---@type integer
   local fail_blob = true ---@type boolean
@@ -458,7 +418,7 @@ t:test("index caching never bypasses a failure or request ownership", function()
   info_result = { ok = true, info = { has_conflicts = true, object_name = object_name } }
   t.assert_false(load(loader, ":./f.txt", bufnr), "conflict rejects cached stage-zero object")
   t.assert_eq(2, blob_calls, "conflict does not read blob")
-  t.assert_same({ "read failed", "Unable to inspect index object" }, errors, "failures are reported")
+  t.assert_same({ "read failed", "Unable to inspect index object" }, messages(errors), "failures are reported")
 
   local cancelled_token = {
     is_cancelled = function()
@@ -474,9 +434,8 @@ t:test("index caching never bypasses a failure or request ownership", function()
     return pending_info
   end
   local current = true ---@type boolean
-  local outcome = nil ---@type boolean|nil
-  stl.async.run(function()
-    outcome = loader:load(":./f.txt", bufnr, {
+  local loading = stl.async.run_future(function()
+    return loader:load(":./f.txt", bufnr, {
       is_current = function()
         return current
       end,
@@ -484,10 +443,7 @@ t:test("index caching never bypasses a failure or request ownership", function()
   end)
   current = false
   resolve_info({ ok = true, info = { has_conflicts = false, object_name = object_name } })
-  t.wait_until(function()
-    return outcome ~= nil
-  end, 5000, "load")
-  t.assert_false(outcome, "request made stale while awaiting index info")
+  t.assert_false(t.await(loading), "request made stale while awaiting index info")
   t.assert_eq(2, blob_calls, "stale request does not read blob")
 end)
 
@@ -504,20 +460,16 @@ t:test("a stale load cannot overwrite a shared preview buffer", function()
   local bufnr = create_buffer()
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "OLD" })
   local current = true
-  local outcome = nil ---@type boolean|nil
-  stl.async.run(function()
-    outcome = loader:load("HEAD:f.txt", bufnr, {
+  local loading = stl.async.run_future(function()
+    return loader:load("HEAD:f.txt", bufnr, {
       is_current = function()
         return current
       end,
     })
   end)
   current = false
-  t.wait_until(function()
-    return outcome ~= nil
-  end, 5000, "load")
 
-  t.assert_false(outcome, "stale load aborted")
+  t.assert_false(t.await(loading), "stale load aborted")
   t.assert_eq("OLD", vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1], "buffer unchanged")
 end)
 
@@ -539,10 +491,7 @@ t:test("index content tells a digit-colon filename from an unmerged stage", func
 end)
 
 t:test("revision content caches real blobs and follows HEAD", function()
-  local root = diffview.workspace(t, git.repo(t))
-  vim.fn.writefile({ "base" }, root .. "/f.txt")
-  git.run(root, { "add", "--", "f.txt" })
-  git.run(root, { "commit", "-qm", "base" })
+  local root = diffview.committed(t, { ["f.txt"] = { "base" } })
   local base_hash = vim.trim(git.run(root, { "rev-parse", "HEAD" })) ---@type string
   local info = require("stl.git.info")
   local blob_calls = 0 ---@type integer
@@ -560,8 +509,8 @@ t:test("revision content caches real blobs and follows HEAD", function()
   t.assert_eq(1, blob_calls, "cached HEAD skips blob read")
   t.assert_eq(1, writes.count, "cached HEAD skips buffer write")
 
-  vim.fn.writefile({ "next" }, root .. "/f.txt")
-  git.run(root, { "commit", "-qam", "next" })
+  fs.write(root .. "/f.txt", { "next" })
+  git.commit(root, "next")
   t.assert_true(load(loader, "HEAD:f.txt", head_bufnr), "changed HEAD load")
   t.assert_eq(2, blob_calls, "changed HEAD reads blob")
   t.assert_eq(2, writes.count, "changed HEAD rewrites buffer")

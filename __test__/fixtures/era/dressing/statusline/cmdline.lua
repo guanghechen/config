@@ -4,6 +4,7 @@ package.path = root .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
 
 local harness = require("__test__.support.harness")
 local runtime = require("__test__.fixtures.era.dressing.statusline.runtime")
+local scenario = require("__test__.fixtures.era.dressing.scenario")
 local Future = require("stl.c.future")
 local t = harness.new()
 local errors = runtime.setup(t, {
@@ -34,15 +35,6 @@ vim.o.ruler = false
 vim.o.swapfile = false
 require("era.dressing.statusline").dressing()
 
----@return string
-local function screenline()
-  local chars = {}
-  for col = 1, vim.o.columns do
-    chars[#chars + 1] = vim.fn.screenstring(vim.o.lines - 1, col)
-  end
-  return table.concat(chars)
-end
-
 vim.api.nvim_create_autocmd("VimEnter", {
   once = true,
   callback = function()
@@ -56,7 +48,7 @@ vim.api.nvim_create_autocmd("VimEnter", {
         mode = vim.api.nvim_get_mode().mode,
         option = vim.o.statusline,
         text = vim.api.nvim_eval_statusline(vim.o.statusline, {}).str,
-        screen = screenline(),
+        screen = scenario.screenline(vim.o.lines - 1, vim.o.columns),
       }
       local index = #samples + 1
       if
@@ -71,10 +63,7 @@ vim.api.nvim_create_autocmd("VimEnter", {
       end
       local timed_out = vim.uv.hrtime() / 1e6 >= deadline
       if #samples == #expected or timed_out then
-        vim.fn.writefile({
-          vim.json.encode({ samples = samples, current = current, errors = errors, timed_out = timed_out }),
-        }, assert(vim.env.NVIMBAR_TEST_RESULT))
-        vim.cmd("qa!")
+        scenario.finish({ samples = samples, current = current, errors = errors, timed_out = timed_out })
         return
       end
       vim.defer_fn(poll, 10)

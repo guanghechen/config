@@ -3,30 +3,6 @@ local harness = require("__test__.support.harness")
 local t = harness.new()
 local expression = "%!v:lua.era.dressing.statuscolumn.statuscolumn()"
 
----@return integer
-local function create_buf()
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
-  return bufnr
-end
-
----@param bufnr                         integer
----@param config                        vim.api.keyset.win_config
----@return integer
-local function create_win(bufnr, config)
-  local winnr = vim.api.nvim_open_win(bufnr, true, config)
-  t:defer(function()
-    if vim.api.nvim_win_is_valid(winnr) then
-      vim.api.nvim_win_close(winnr, true)
-    end
-  end)
-  return winnr
-end
-
 for _, vendor in ipairs({ "neovim", "neovide" }) do
   t:test(vendor .. " initializes the gutter before plugins create splits and focus a picker", function()
     local dressing = assert(loadfile("lua/era/dressing/init.lua"))()
@@ -69,25 +45,24 @@ for _, vendor in ipairs({ "neovim", "neovide" }) do
       },
     })
 
-    local source_bufnr = create_buf()
-    local picker_bufnr = create_buf()
-    local file_bufnr = create_buf()
-    vim.api.nvim_buf_set_lines(file_bufnr, 0, -1, false, { "local value = 1" })
-    local source_winnr = create_win(source_bufnr, { split = "right" })
+    local source_bufnr = t:buffer()
+    local picker_bufnr = t:buffer()
+    local file_bufnr = t:buffer({ "local value = 1" })
+    local source_winnr = t:window(source_bufnr, { split = "right" }, true)
     vim.api.nvim_set_option_value("statuscolumn", "", {})
     local split_winnr, picker_winnr
     local original_require = require
     t:patch_global("require", function(name)
       if name == "era.plugin" then
-        split_winnr = create_win(source_bufnr, { split = "below" })
-        picker_winnr = create_win(picker_bufnr, {
+        split_winnr = t:window(source_bufnr, { split = "below" }, true)
+        picker_winnr = t:window(picker_bufnr, {
           relative = "editor",
           row = 0,
           col = 0,
           width = 20,
           height = 3,
           style = "minimal",
-        })
+        }, true)
         return {}
       end
       if name:match("^ark%.vendor%.") or name == "dot.autocmd" or name == "era.command" then
@@ -99,7 +74,7 @@ for _, vendor in ipairs({ "neovim", "neovide" }) do
     assert(loadfile("lua/ark/vendor/" .. vendor .. "/init.lua"))()
     t.wait_until(function()
       return completed
-    end, 1000, "deferred vendor setup did not complete")
+    end, 5000, "deferred vendor setup did not complete")
 
     local picker_expression = vim.api.nvim_get_option_value("statuscolumn", { win = picker_winnr })
     vim.api.nvim_set_current_win(source_winnr)

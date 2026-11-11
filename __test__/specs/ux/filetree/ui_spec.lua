@@ -1,13 +1,10 @@
+local UI = require("__test__.support.ui")
 local t = require("__test__.support.harness").new()
 
 t:test("attached Filetree renders and withdraws ephemeral status decorations", function()
   local path = t:tempdir()
   vim.fn.writefile({ "content" }, path .. "/file")
-  local ui = require("__test__.support.ui").new()
-  t:defer(function()
-    ui:close()
-  end)
-  ui:start({ width = 80, height = 24, runtime = "native" })
+  local ui = UI.open(t, { width = 80, height = 24, runtime = "native" })
   ui:lua(
     [=[
     local path = ...

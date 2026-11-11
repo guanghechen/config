@@ -28,7 +28,7 @@ t:test("variable tabstops repeat the final width", function()
 end)
 
 t:test("buffer options preserve shiftwidth one and parse vartabstop", function()
-  local bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
+  local bufnr = t:buffer(nil, { scratch = false }) ---@type integer
   vim.api.nvim_set_option_value("shiftwidth", 1, { buf = bufnr })
   vim.api.nvim_set_option_value("tabstop", 8, { buf = bufnr })
   vim.api.nvim_set_option_value("vartabstop", "4,2", { buf = bufnr })
@@ -42,8 +42,6 @@ t:test("buffer options preserve shiftwidth one and parse vartabstop", function()
 
   vim.api.nvim_set_option_value("shiftwidth", 0, { buf = bufnr })
   t.assert_eq(4, parser.get_options(bufnr).shiftwidth, "vartabstop-derived shiftwidth")
-
-  vim.api.nvim_buf_delete(bufnr, { force = true })
 end)
 
 t:test("non-dedent scopes preserve the deeper adjacent indent on blank lines", function()

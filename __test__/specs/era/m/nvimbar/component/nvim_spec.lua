@@ -150,12 +150,7 @@ end)
 ---@return integer bufnr
 ---@return integer channel
 local function open_terminal(cmd)
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
+  local bufnr = t:buffer()
   local channel = 0 ---@type integer
   vim.api.nvim_buf_call(bufnr, function()
     channel = vim.fn.jobstart(cmd, { term = true })
@@ -188,10 +183,7 @@ end)
 
 t:test("pid shows nothing for a buffer without a channel", function()
   local component = setup("").pid("right")
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  t:defer(function()
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
+  local bufnr = t:buffer()
 
   ---@diagnostic disable-next-line: missing-fields
   t.assert_eq("", component.refresh({ bufnr = bufnr }).text, "plain buffer")

@@ -33,18 +33,8 @@ local function setup_window()
   t:defer(function()
     vim.api.nvim_set_option_value("statuscolumn", previous_global, { scope = "global" })
   end)
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
-  local winnr = vim.api.nvim_open_win(bufnr, true, { split = "right" })
-  t:defer(function()
-    if vim.api.nvim_win_is_valid(winnr) then
-      vim.api.nvim_win_close(winnr, true)
-    end
-  end)
+  local bufnr = t:buffer()
+  local winnr = t:window(bufnr, { split = "right" }, true)
   return winnr, bufnr
 end
 

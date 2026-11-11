@@ -1,45 +1,18 @@
-local bootstrap = require("__test__.support.bootstrap")
+local git_buffer = require("__test__.support.git_buffer")
 local harness = require("__test__.support.harness")
 
 local t = harness.new()
-bootstrap.with_global(t, "stl", {
-  c = { CancellationToken = require("stl.c.cancellation_token"), Future = require("stl.c.future") },
+local buffer = git_buffer.load(t, {
+  era = { m = { git = { diff = require("era.m.git.diff"), staging = require("era.m.git.staging") } } },
 })
-bootstrap.with_global(t, "stl", { c = { Ticker = {
-  new = function()
-    return {}
-  end,
-} } })
-bootstrap.with_global(t, "era", {
-  m = { git = { diff = require("era.m.git.diff"), staging = require("era.m.git.staging") } },
-})
-
 local staging = era.m.git.staging
-local buffer = assert(loadfile("lua/era/m/git/buffer.lua"))() ---@type era.m.git.buffer
-
----@param fn                            function
----@param name                          string
----@return any
-local function upvalue(fn, name)
-  for index = 1, 50 do
-    local current, value = debug.getupvalue(fn, index)
-    if not current then
-      break
-    end
-    if current == name then
-      return value
-    end
-  end
-  error("missing upvalue: " .. name)
-end
-
-local cache = upvalue(buffer.reset_hunk, "cache") ---@type table<integer, era.m.git.buffer.ICache>
+local cache = git_buffer.cache(buffer)
 
 ---@param index_text                    string
 ---@param buffer_text                   string
 ---@return integer
 local function setup(index_text, buffer_text)
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local bufnr = t:buffer()
   staging.replace_buffer_text(bufnr, buffer_text)
   ---@diagnostic disable-next-line: missing-fields
   cache[bufnr] = {
@@ -60,7 +33,6 @@ t:test("selection reset: unequal hunk is reverted as a whole", function()
   local ok = buffer.reset_hunk(bufnr, { 2, 2 })
   t.assert_true(ok, "reset")
   t.assert_eq("b\nd\n", text(bufnr), "whole touched hunk")
-  vim.api.nvim_buf_delete(bufnr, { force = true })
 end)
 
 t:test("selection reset: equal-length hunk is still reverted as a whole", function()
@@ -68,7 +40,6 @@ t:test("selection reset: equal-length hunk is still reverted as a whole", functi
   local ok = buffer.reset_hunk(bufnr, { 1, 1 })
   t.assert_true(ok, "reset")
   t.assert_eq("a\nb\n", text(bufnr), "whole touched hunk")
-  vim.api.nvim_buf_delete(bufnr, { force = true })
 end)
 
 t:test("selection reset: untouched hunks remain in the working document", function()
@@ -76,7 +47,6 @@ t:test("selection reset: untouched hunks remain in the working document", functi
   local ok = buffer.reset_hunk(bufnr, { 1, 1 })
   t.assert_true(ok, "reset")
   t.assert_eq("a\nb\nc\nD\n", text(bufnr), "second hunk remains")
-  vim.api.nvim_buf_delete(bufnr, { force = true })
 end)
 
 t:test("selection reset: pure deletion returns at the correct anchor", function()
@@ -84,7 +54,6 @@ t:test("selection reset: pure deletion returns at the correct anchor", function(
   local ok = buffer.reset_hunk(bufnr, { 1, 1 })
   t.assert_true(ok, "reset")
   t.assert_eq("a\nb\nc\nd\n", text(bufnr), "order")
-  vim.api.nvim_buf_delete(bufnr, { force = true })
 end)
 
 t:test("selection reset: final newline follows the reverted hunk", function()
@@ -92,7 +61,6 @@ t:test("selection reset: final newline follows the reverted hunk", function()
   local ok = buffer.reset_hunk(bufnr, { 2, 2 })
   t.assert_true(ok, "reset")
   t.assert_eq("a\nb\n", text(bufnr), "newline")
-  vim.api.nvim_buf_delete(bufnr, { force = true })
 end)
 
 t:test("reset_buffer: index document is the baseline without a sentinel line", function()
@@ -100,7 +68,6 @@ t:test("reset_buffer: index document is the baseline without a sentinel line", f
   t.assert_true(buffer.reset_buffer(bufnr), "reset")
   t.assert_eq("one\ntwo\n", text(bufnr), "index text")
   t.assert_eq(2, vim.api.nvim_buf_line_count(bufnr), "no blank sentinel line")
-  vim.api.nvim_buf_delete(bufnr, { force = true })
 end)
 
 t:run()

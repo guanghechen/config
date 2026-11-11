@@ -120,10 +120,7 @@ t:test("fuzzy highlights map root-relative positions onto displayed path columns
     end
     return 0
   end)
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  t:defer(function()
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
+  local bufnr = t:buffer()
   view:decorate_row({ bufnr = bufnr }, frame, 0, frame:source():id(key), 10, "dir/one.lua", false)
   t.assert_same({ { 10, 12 }, { 14, 17 } }, spans)
 end)
@@ -144,10 +141,7 @@ t:test("highlights follow the latest query while unchanged orders keep their ide
     end
     return 0
   end)
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  t:defer(function()
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
+  local bufnr = t:buffer()
   view:decorate_row({ bufnr = bufnr }, frame, 0, frame:source():id(key), 0, "dir/one.lua", false)
   t.assert_same({ { 4, 7 } }, spans)
 end)

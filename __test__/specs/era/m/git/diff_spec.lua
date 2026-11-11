@@ -1,11 +1,9 @@
-local bootstrap = require("__test__.support.bootstrap")
+local git_buffer = require("__test__.support.git_buffer")
 local harness = require("__test__.support.harness")
 local diff = require("era.m.git.diff")
 
 local t = harness.new()
-bootstrap.with_global(t, "stl", {
-  c = { CancellationToken = require("stl.c.cancellation_token"), Future = require("stl.c.future") },
-})
+git_buffer.with_futures(t)
 
 t:test("run_diff: empty files", function()
   local hunks = diff.run_diff({}, {})

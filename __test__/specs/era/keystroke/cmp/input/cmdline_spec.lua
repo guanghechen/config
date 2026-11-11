@@ -3,36 +3,28 @@ local embedded = require("__test__.support.cmp.embedded")
 local UI = require("__test__.support.ui")
 local t = harness.new()
 
----@param lines                         string[]
----@return __test__.support.UI
-local function editor(lines)
-  return embedded.editor(t, lines)
-end
-
-local wait = embedded.wait
-
 t:test("command completion preserves command prefixes and cancel restores the command", function()
-  local ui = editor({ "" })
+  local ui = embedded.editor(t, { "" })
   ui:rpc("nvim_input", ":set nu")
-  wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "command menu")
+  ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "command menu")
   ui:rpc("nvim_input", "<Tab>")
-  wait(ui, [[return vim.fn.getcmdline() ~= 'set nu']], "command preview")
+  ui:wait_lua([[return vim.fn.getcmdline() ~= 'set nu']], 5000, "command preview")
   t.assert_true(ui:lua([[return vim.startswith(vim.fn.getcmdline(), 'set ')]]), "command prefix")
   ui:rpc("nvim_input", "<C-e>")
-  wait(ui, [[return vim.fn.getcmdline() == 'set nu']], "command cancellation")
+  ui:wait_lua([[return vim.fn.getcmdline() == 'set nu']], 5000, "command cancellation")
   ui:rpc("nvim_input", "<Esc>")
 end)
 
 t:test("native search completion remains manual and follows search matches", function()
-  local ui = editor({ "alpha alpine" })
+  local ui = embedded.editor(t, { "alpha alpine" })
   ui:rpc("nvim_input", "/al")
-  wait(ui, [[return vim.fn.getcmdline() == 'al']], "search input")
+  ui:wait_lua([[return vim.fn.getcmdline() == 'al']], 5000, "search input")
   t.assert_eq(false, ui:lua([[return require('era.keystroke.cmp').is_menu_visible()]]), "manual search menu")
   ui:rpc("nvim_input", "<Tab>")
-  wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "search menu")
-  wait(ui, [[return vim.fn.getcmdline() == 'alpine']], "next native search match")
+  ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "search menu")
+  ui:wait_lua([[return vim.fn.getcmdline() == 'alpine']], 5000, "next native search match")
   ui:rpc("nvim_input", "<C-e>")
-  wait(ui, [[return vim.fn.getcmdline() == 'al']], "search cancellation")
+  ui:wait_lua([[return vim.fn.getcmdline() == 'al']], 5000, "search cancellation")
   ui:rpc("nvim_input", "<Esc>")
 end)
 
@@ -40,26 +32,34 @@ t:test("command completion handles escaped spaces and preserves the directory pr
   local directory = t:tempdir()
   vim.fn.mkdir(directory .. "/folder with space", "p")
   vim.fn.writefile({}, directory .. "/folder with space/file.lua")
-  local ui = editor({ "" })
+  local ui = embedded.editor(t, { "" })
   ui:lua([[vim.api.nvim_set_current_dir(...)]], directory)
   ui:rpc("nvim_input", ":edit ./folder\\ with\\ space/fi")
-  wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "path menu")
+  ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "path menu")
   ui:rpc("nvim_input", "<C-y>")
-  wait(ui, [[return vim.fn.getcmdline() == 'edit ./folder\\ with\\ space/file.lua']], "escaped path acceptance")
+  ui:wait_lua(
+    [[return vim.fn.getcmdline() == 'edit ./folder\\ with\\ space/file.lua']],
+    5000,
+    "escaped path acceptance"
+  )
   ui:rpc("nvim_input", "<Esc>")
 end)
 
 t:test("Lua command completion retains the expression namespace", function()
-  local ui = editor({ "" })
+  local ui = embedded.editor(t, { "" })
   ui:rpc("nvim_input", ":lua vim.api.nvim_get_cu")
-  wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "expression candidates")
+  ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "expression candidates")
   ui:rpc("nvim_input", "<C-y>")
-  wait(ui, [[return vim.startswith(vim.fn.getcmdline(), 'lua vim.api.nvim_get_current_')]], "complete expression")
+  ui:wait_lua(
+    [[return vim.startswith(vim.fn.getcmdline(), 'lua vim.api.nvim_get_current_')]],
+    5000,
+    "complete expression"
+  )
   ui:rpc("nvim_input", "<Esc>")
 end)
 
 t:test("custom completion preserves raw prefix bytes pasted from a register", function()
-  local ui = editor({ "" })
+  local ui = embedded.editor(t, { "" })
   ui:lua([[
     vim.api.nvim_create_user_command('CmpBytes', function() end, {
       nargs = '*', complete = function() return { 'alpha', 'alpine' } end,
@@ -67,39 +67,39 @@ t:test("custom completion preserves raw prefix bytes pasted from a register", fu
     vim.fn.setreg('a', string.char(255) .. '.prefix ')
   ]])
   ui:rpc("nvim_input", ":CmpBytes <C-r>aal")
-  wait(ui, [[return vim.fn.getcmdline() == 'CmpBytes ' .. string.char(255) .. '.prefix al']], "register pasted")
+  ui:wait_lua(
+    [[return vim.fn.getcmdline() == 'CmpBytes ' .. string.char(255) .. '.prefix al']],
+    5000,
+    "register pasted"
+  )
   vim.wait(30)
   t.assert_eq("", ui:lua([[return vim.v.errmsg]]), "opaque prefix does not cause native conversion errors")
-  wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "valid custom candidates")
+  ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "valid custom candidates")
   ui:rpc("nvim_input", "<C-y>")
-  wait(
-    ui,
+  ui:wait_lua(
     [[return vim.fn.getcmdline() == 'CmpBytes ' .. string.char(255) .. '.prefix alpha']],
+    5000,
     "raw prefix preserved on accept"
   )
   ui:rpc("nvim_input", "<Esc>")
 end)
 
 t:test("custom command completion replaces its argument exactly once", function()
-  local ui = editor({ "" })
+  local ui = embedded.editor(t, { "" })
   ui:lua([[
     vim.api.nvim_create_user_command('CmpFixture', function() end, {
       nargs = 1, complete = function() return { 'mode=first', 'mode=second' } end,
     })
   ]])
   ui:rpc("nvim_input", ":CmpFixture mode=f")
-  wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "custom candidates")
+  ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "custom candidates")
   ui:rpc("nvim_input", "<C-y>")
-  wait(ui, [[return vim.fn.getcmdline() == 'CmpFixture mode=first']], "custom argument acceptance")
+  ui:wait_lua([[return vim.fn.getcmdline() == 'CmpFixture mode=first']], 5000, "custom argument acceptance")
   ui:rpc("nvim_input", "<Esc>")
 end)
 
 t:test("initializing completion inside command-line mode installs working native mappings", function()
-  local ui = UI.new()
-  t:defer(function()
-    ui:close()
-  end)
-  ui:start({ width = 100, height = 35 })
+  local ui = UI.open(t, { width = 100, height = 35 })
   ui:lua([[
     require('__test__.support.cmp.runtime').setup()
   ]])
@@ -121,48 +121,48 @@ t:test("initializing completion inside command-line mode installs working native
 end)
 
 t:test("nested expression cmdlines leave completion to the native editor", function()
-  local ui = editor({ "" })
+  local ui = embedded.editor(t, { "" })
   ui:rpc("nvim_input", ":set nu")
-  wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "outer menu")
+  ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "outer menu")
   ui:rpc("nvim_input", "<C-r>=")
-  wait(ui, [[return vim.fn.getcmdtype() == '=']], "nested expression")
+  ui:wait_lua([[return vim.fn.getcmdtype() == '=']], 5000, "nested expression")
   t.assert_eq(false, ui:lua([[return require('era.keystroke.cmp').is_menu_visible()]]), "inner menu remains native")
   ui:rpc("nvim_input", "1<CR>")
-  wait(ui, [[return vim.fn.getcmdline() == 'set nu1']], "outer command restored")
+  ui:wait_lua([[return vim.fn.getcmdline() == 'set nu1']], 5000, "outer command restored")
   ui:rpc("nvim_input", "<BS>")
-  wait(
-    ui,
+  ui:wait_lua(
     [[return vim.fn.getcmdline() == 'set nu' and require('era.keystroke.cmp').is_menu_visible()]],
+    5000,
     "outer completion resumes"
   )
   ui:rpc("nvim_input", "<Esc>")
 end)
 
 t:test("nested input restores the outer command's native selection policy", function()
-  local ui = editor({ "" })
+  local ui = embedded.editor(t, { "" })
   ui:rpc("nvim_input", ":set nu")
-  wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "outer completion")
+  ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "outer completion")
   ui:rpc("nvim_input", "<C-e>")
-  wait(ui, [[return not require('era.keystroke.cmp').is_menu_visible()]], "outer menu cancelled")
+  ui:wait_lua([[return not require('era.keystroke.cmp').is_menu_visible()]], 5000, "outer menu cancelled")
   ui:rpc("nvim_input", "<C-r>=input('nested: ')<CR>")
-  wait(ui, [[return vim.fn.getcmdtype() == '@']], "nested input")
+  ui:wait_lua([[return vim.fn.getcmdtype() == '@']], 5000, "nested input")
   ui:rpc("nvim_input", "<CR>")
-  wait(ui, [[return vim.fn.getcmdtype() == ':']], "outer command restored")
+  ui:wait_lua([[return vim.fn.getcmdtype() == ':']], 5000, "outer command restored")
   ui:rpc("nvim_input", "m")
-  wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "outer completion resumed")
+  ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "outer completion resumed")
   t.assert_eq("set num", ui:lua([[return vim.fn.getcmdline()]]), "automatic completion does not insert a candidate")
 end)
 
 t:test("expression registers preserve native digraph and confirmation keys", function()
-  local ui = editor({ "" })
+  local ui = embedded.editor(t, { "" })
   ui:rpc("nvim_input", "i<C-r>=")
-  wait(ui, [[return vim.fn.getcmdtype() == '=']], "expression register")
+  ui:wait_lua([[return vim.fn.getcmdtype() == '=']], 5000, "expression register")
   ui:rpc("nvim_input", "'<C-k>ae'")
-  wait(ui, [[return vim.fn.getcmdline() == "'æ'"]], "native digraph")
+  ui:wait_lua([[return vim.fn.getcmdline() == "'æ'"]], 5000, "native digraph")
   ui:rpc("nvim_input", "<C-j>")
-  wait(
-    ui,
+  ui:wait_lua(
     [[return vim.api.nvim_get_mode().mode:sub(1, 1) == 'i' and vim.api.nvim_get_current_line() == 'æ']],
+    5000,
     "native confirmation"
   )
 end)

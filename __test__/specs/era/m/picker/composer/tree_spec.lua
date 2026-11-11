@@ -1,21 +1,18 @@
 require("ark.bootstrap").setup()
+local bootstrap = require("__test__.support.bootstrap")
+local picker = require("__test__.support.picker")
 local t = require("__test__.support.harness").new()
 local treeview = require("__test__.support.treeview")
 local Source = require("era.view.result_source")
-local View = require("era.view.result_tree")
 local Composer = require("era.m.picker.composer.tree")
 
 ---@return era.m.picker.TreeComposer
 local function fixture()
   local source = Source.new("root", { name = "root" })
-  local view = View.new({
-    name = "symbols",
-    tree = source,
-    present = function(_, data)
-      return { label = data.name }
-    end,
-  })
-  local composer = setmetatable({
+  local view = picker.result_tree(t, "symbols", source, function(_, data)
+    return { label = data.name }
+  end)
+  return setmetatable({
     fullname = "symbols",
     _disposed = false,
     _tree = source,
@@ -26,10 +23,6 @@ local function fixture()
     _scheduler_match = { schedule = function() end },
     _on_attached = function() end,
   }, Composer)
-  t:defer(function()
-    view:dispose()
-  end)
-  return composer
 end
 
 ---@param composer                      era.m.picker.TreeComposer
@@ -71,12 +64,9 @@ end)
 
 t:test("attach rejects unknown roots and publishes known symbol roots", function()
   local composer = fixture()
-  local errors = {}
-  t:patch_table(stl.reporter, "error", function(value)
-    errors[#errors + 1] = value
-  end)
+  local reports = bootstrap.with_reporter(t)
   composer:attach("absent")
-  t.assert_eq(1, #errors)
+  t.assert_eq(1, #reports.error)
   t.assert_nil(composer._uuid_root)
   composer:insert("root", "scope", { name = "scope" })
   composer:insert("scope", "symbol", { name = "symbol" })
@@ -89,25 +79,17 @@ end)
 ---@param name                          string
 ---@return era.m.picker.TreeComposer
 local function action_fixture(name)
-  local observable = stl.c.Observable.from_value
-  local composer = Composer.new({
+  local composer = Composer.new(picker.tree_props({
     name = name,
     permanent = false,
     title = "symbols",
-    search_pattern = observable(""),
-    flag_foldempty = observable(false),
-    flag_fuzzy = observable(false),
-    flag_regex = observable(false),
-    flag_case_sensitive = observable(true),
-    flag_selected = observable(false),
-    flag_viewtype = observable("tree"),
     node_sorter = function(a, b)
       return a.name < b.name
     end,
     present = function(_, data)
       return { label = data and data.name or "root" }
     end,
-  })
+  }))
   t:defer(function()
     vim.cmd.normal({ args = { vim.keycode("<Esc>") }, bang = true })
     composer:dispose()
@@ -119,26 +101,9 @@ end
 ---@param composer                      era.m.picker.TreeComposer
 ---@return nil
 local function mount(composer)
-  composer.result:create_win({ border = "none", number = false, winhighlight = "" }, {
-    row = 0,
-    col = 0,
-    width = 60,
-    height = 8,
-  })
+  picker.show_result(composer, 60, 8)
   treeview.await(composer.result.draw())
   treeview.await(composer._treeview:ready())
-end
-
----@param composer                      era.m.picker.TreeComposer
----@param description                   string
----@return fun(): nil
-local function action(composer, description)
-  for _, keymap in ipairs(composer.result.keymaps) do
-    if keymap.desc == description then
-      return keymap.callback
-    end
-  end
-  error("missing action: " .. description)
 end
 
 t:test("TreeComposer hide captures native Visual rows and rejects a desynced surface", function()
@@ -151,7 +116,7 @@ t:test("TreeComposer hide captures native Visual rows and rejects a desynced sur
   tree:insert("one", { nodetype = "leaf" })
   tree:insert("two", { nodetype = "leaf" })
   mount(composer)
-  local hide = action(composer, "tree: mark the node invisible")
+  local hide = picker.action(composer, "tree: mark the node invisible")
   local winnr = composer.result:get_winnr()
   vim.api.nvim_set_current_win(winnr)
   vim.api.nvim_win_set_cursor(winnr, { tree:retrieve_lnum("scope"), 0 })
@@ -167,12 +132,7 @@ t:test("TreeComposer hide captures native Visual rows and rejects a desynced sur
   t.assert_eq("n", vim.fn.mode())
   composer._tree:remove("two")
   composer.result:set_lnum_current(tree:retrieve_lnum("two"))
-  for _, keymap in ipairs(composer.result.keymaps) do
-    if keymap.desc == "tree: change root" then
-      keymap.callback()
-      break
-    end
-  end
+  picker.action(composer, "tree: change root")()
   t.assert_eq("two", composer._uuid_root, "attachment checks the displayed node's membership")
   t.assert_true(pcall(composer.__toggle_node__, composer, "two", false, false))
 end)
@@ -187,15 +147,12 @@ t:test("expansion actions typed ahead act on the tree their earlier actions prod
   tree:insert("one", { nodetype = "leaf" })
   tree:insert("two", { nodetype = "leaf" })
   mount(composer)
-  local errors = {} ---@type table[]
-  t:patch_table(stl.reporter, "error", function(value)
-    errors[#errors + 1] = value
-  end)
-  local open, collapse = action(composer, "tree: open"), action(composer, "tree: collapse")
+  local reports = bootstrap.with_reporter(t)
+  local open, collapse = picker.action(composer, "tree: open"), picker.action(composer, "tree: collapse")
   composer.result:set_lnum_current(tree:retrieve_lnum("scope"))
   treeview.await(tree:ready())
   treeview.assert_typed_ahead(t, tree, "scope", open, collapse)
-  t.assert_eq(0, #errors, vim.inspect(errors))
+  t.assert_eq(0, #reports.error, vim.inspect(reports.error))
 end)
 
 t:test("a subtree with deep LSP identities hides completely across the native byte boundary", function()
@@ -221,15 +178,13 @@ t:test("a subtree with deep LSP identities hides completely across the native by
   mount(composer)
   t.assert_eq(1025, tree:linecount())
   t.assert_true(#parent > 1024)
-  local dirty, failures = 0, {}
+  local dirty = 0
   t:patch_table(composer._composer, "mark_result_dirty", function()
     dirty = dirty + 1
   end)
-  t:patch_table(stl.reporter, "error", function(value)
-    failures[#failures + 1] = value.message
-  end)
-  action(composer, "tree: mark the subroot invisible")()
-  t.assert_eq(0, #failures, vim.inspect(failures))
+  local reports = bootstrap.with_reporter(t)
+  picker.action(composer, "tree: mark the subroot invisible")()
+  t.assert_eq(0, #reports.error, vim.inspect(reports.error))
   t.assert_eq(1, dirty)
   for _, key in ipairs(expected) do
     t.assert_false(tree:isvisible(key))
@@ -253,7 +208,7 @@ for _, description in ipairs({ "tree: mark the node invisible", "tree: mark the 
     tree:mark_node_invisible("previously-hidden")
     mount(composer)
     local hidden, revision = tree._hidden, tree._revision
-    local pages, dirty, failures = 0, 0, {}
+    local pages, dirty = 0, 0
     local original = tree.iter_rows
     t:patch_table(tree, "iter_rows", function(self, frame, first, last)
       local proxy = setmetatable({}, {
@@ -274,12 +229,15 @@ for _, description in ipairs({ "tree: mark the node invisible", "tree: mark the 
     t:patch_table(composer._composer, "mark_result_dirty", function()
       dirty = dirty + 1
     end)
-    t:patch_table(stl.reporter, "error", function(value)
-      failures[#failures + 1] = value.message
-    end)
-    action(composer, description)()
+    local reports = bootstrap.with_reporter(t)
+    picker.action(composer, description)()
     t.assert_eq(2, pages)
-    t.assert_same({ "injected page failure" }, failures)
+    t.assert_same(
+      { "injected page failure" },
+      vim.tbl_map(function(report)
+        return report.message
+      end, reports.error)
+    )
     t.assert_true(hidden == tree._hidden)
     t.assert_same({ ["previously-hidden"] = true }, tree._hidden)
     t.assert_eq(revision, tree._revision)
@@ -289,24 +247,7 @@ for _, description in ipairs({ "tree: mark the node invisible", "tree: mark the 
 end
 
 t:test("Tab toggles the selection from the finder while a filter is being typed", function()
-  local composer = era.m.picker.TreeComposer.new({
-    name = "finder-tab",
-    title = "tree test",
-    permanent = false,
-    node_sorter = function(a, b)
-      return a.name < b.name
-    end,
-    search_pattern = stl.c.Observable.from_value(""),
-    flag_foldempty = stl.c.Observable.from_value(false),
-    flag_fuzzy = stl.c.Observable.from_value(false),
-    flag_regex = stl.c.Observable.from_value(false),
-    flag_case_sensitive = stl.c.Observable.from_value(true),
-    flag_selected = stl.c.Observable.from_value(false),
-    flag_viewtype = stl.c.Observable.from_value("tree"),
-  })
-  t:defer(function()
-    composer:dispose()
-  end)
+  local composer = action_fixture("finder-tab")
   local tab ---@type stl.t.IKeymap|nil
   for _, keymap in ipairs(composer.finder.keymaps) do
     if keymap.key == "<Tab>" then
@@ -337,31 +278,21 @@ end)
 ---@param nodes                         string[][] Key, parent key ("" for the root) and nodetype of each node.
 ---@return __test__.support.UI
 local function open_typed_ahead(viewtype, nodes)
-  local ui = require("__test__.support.ui").new()
-  t:defer(function()
-    ui:close()
-  end)
-  ui:start({ width = 100, height = 32, runtime = "ark" })
+  local ui = require("__test__.support.ui").open(t, { width = 100, height = 32, runtime = "ark" })
   ui:lua(
     [[
     local viewtype, nodes = ...
     confirmed = nil
-    picker = era.m.picker.TreeComposer.new({
+    picker = era.m.picker.TreeComposer.new(require("__test__.support.picker").tree_props({
       name = "typed ahead", title = "typed ahead", permanent = true,
       present = function(_, data) return { label = data and data.name or "" } end,
       node_sorter = function(a, b) return a.name < b.name end,
-      search_pattern = stl.c.Observable.from_value(""),
-      flag_foldempty = stl.c.Observable.from_value(false),
-      flag_fuzzy = stl.c.Observable.from_value(true),
-      flag_regex = stl.c.Observable.from_value(false),
-      flag_case_sensitive = stl.c.Observable.from_value(false),
-      flag_selected = stl.c.Observable.from_value(false),
-      flag_viewtype = stl.c.Observable.from_value(viewtype),
+      flag_fuzzy = true, flag_case_sensitive = false, flag_viewtype = viewtype,
       on_confirm = function(composer, uuids)
         confirmed = uuids and uuids[1] or false
         composer:close()
       end,
-    })
+    }))
     local root = picker._tree.root
     for _, node in ipairs(nodes) do
       local key, parent, nodetype = unpack(node)
@@ -376,9 +307,7 @@ local function open_typed_ahead(viewtype, nodes)
     viewtype,
     nodes
   )
-  ui:wait_until(function()
-    return ui:lua("return picker._treeview:linecount() == 3 and not picker._scheduler_match:pending()")
-  end, 5000, "three rows")
+  ui:wait_lua("return picker._treeview:linecount() == 3 and not picker._scheduler_match:pending()", 5000, "three rows")
   return ui
 end
 
@@ -386,9 +315,7 @@ t:test("a query typed ahead of <CR> confirms from its own results", function()
   local ui = open_typed_ahead("list", { { "alpha", "", "leaf" }, { "beta", "", "leaf" }, { "gamma", "", "leaf" } })
   -- One burst, as keys typed faster than the match debounce arrive: <CR> runs before the query is matched.
   ui:rpc("nvim_input", "igam<CR>")
-  ui:wait_until(function()
-    return ui:lua("return confirmed ~= nil")
-  end, 5000, "confirmed")
+  ui:wait_lua("return confirmed ~= nil", 5000, "confirmed")
   t.assert_eq("gamma", ui:lua("return confirmed"))
 end)
 
@@ -397,9 +324,11 @@ t:test("keys typed after a deferred <CR> leave its query", function()
     open_typed_ahead("tree", { { "scope", "", "container" }, { "one", "scope", "leaf" }, { "two", "scope", "leaf" } })
   -- <CR> waits for the collapse <C-h> submits, then opens scope again; zz reaches the input before it runs.
   ui:rpc("nvim_input", "i<C-h><CR>zz")
-  ui:wait_until(function()
-    return ui:lua("return picker._matched_input == 'zz' and not picker._treeview:retrieve('scope').collapsed")
-  end, 5000, "scope opened again")
+  ui:wait_lua(
+    "return picker._matched_input == 'zz' and not picker._treeview:retrieve('scope').collapsed",
+    5000,
+    "scope opened again"
+  )
 end)
 
 t:run()

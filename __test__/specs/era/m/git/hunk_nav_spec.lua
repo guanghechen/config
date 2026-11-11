@@ -4,15 +4,54 @@ local hunk_nav = assert(loadfile("lua/era/m/git/hunk_nav.lua"))()
 
 local t = harness.new()
 
+---Replaces `dot` for the rest of the case with a status line whose dirty-window notifications go to `next`.
+---@param next                          ?fun(self: table, winnr: integer, opts: table|nil): nil
+---@return nil
+local function with_dirty_winline(next)
+  t:patch_global("dot", { state = { status = { dirty_winline_nr = { next = next or function() end } } } })
+end
+
+---Shows `left_bufnr` in the current window and diffs it with `right_bufnr` in a split on `side` of it, then focuses
+---the current window again. When the case ends both windows leave diff mode, the split closes and the current window
+---gets its buffer back.
+---@param left_bufnr                    integer
+---@param right_bufnr                   integer
+---@param side                          "left"|"right"
+---@param cursorbind                    ?boolean Set again in each window after `:diffthis`.
+---@return integer left_winnr
+---@return integer right_winnr
+local function diff_pair(left_bufnr, right_bufnr, side, cursorbind)
+  local left_winnr = vim.api.nvim_get_current_win()
+  local previous = vim.api.nvim_win_get_buf(left_winnr)
+  t:defer(function()
+    vim.api.nvim_win_set_buf(left_winnr, previous)
+  end)
+  vim.api.nvim_win_set_buf(left_winnr, left_bufnr)
+  local right_winnr = t:window(right_bufnr, { split = side, win = left_winnr }, true)
+  t:defer(function()
+    vim.api.nvim_set_option_value("diff", false, { win = left_winnr, scope = "local" })
+    vim.api.nvim_set_option_value("diff", false, { win = right_winnr, scope = "local" })
+  end)
+  vim.cmd("diffthis")
+  if cursorbind then
+    vim.api.nvim_set_option_value("cursorbind", true, { win = right_winnr, scope = "local" })
+  end
+  vim.api.nvim_set_current_win(left_winnr)
+  vim.cmd("diffthis")
+  if cursorbind then
+    vim.api.nvim_set_option_value("cursorbind", true, { win = left_winnr, scope = "local" })
+  end
+  return left_winnr, right_winnr
+end
+
 t:test("navigation persists until the source window changes buffer or is cleared", function()
   local winnr = vim.api.nvim_get_current_win()
   local bufnr_previous = vim.api.nvim_win_get_buf(winnr)
-  local bufnr = vim.api.nvim_create_buf(false, true)
+  local bufnr = t:buffer({ "one", "two", "three", "four" })
   local dirty_calls = {} ---@type { winnr: integer, force: boolean }[]
   local deleted_autocmds = 0
   local nvim_del_autocmd = vim.api.nvim_del_autocmd
 
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "one", "two", "three", "four" })
   vim.api.nvim_win_set_buf(winnr, bufnr)
   vim.api.nvim_win_set_cursor(winnr, { 1, 0 })
 
@@ -33,17 +72,9 @@ t:test("navigation persists until the source window changes buffer or is cleared
       },
     },
   })
-  t:patch_global("dot", {
-    state = {
-      status = {
-        dirty_winline_nr = {
-          next = function(_, dirty_winnr, opts)
-            dirty_calls[#dirty_calls + 1] = { winnr = dirty_winnr, force = opts ~= nil and opts.force == true }
-          end,
-        },
-      },
-    },
-  })
+  with_dirty_winline(function(_, dirty_winnr, opts)
+    dirty_calls[#dirty_calls + 1] = { winnr = dirty_winnr, force = opts ~= nil and opts.force == true }
+  end)
   t:patch_table(vim.api, "nvim_del_autocmd", function(autocmd_id)
     deleted_autocmds = deleted_autocmds + 1
     return nvim_del_autocmd(autocmd_id)
@@ -62,7 +93,7 @@ t:test("navigation persists until the source window changes buffer or is cleared
   t.assert_eq(1, index, "cursor movement preserves the indicator")
   t.assert_eq(2, total, "cursor movement preserves the total")
 
-  local other_bufnr = vim.api.nvim_create_buf(false, true)
+  local other_bufnr = t:buffer()
   vim.cmd("vsplit")
   local other_winnr = vim.api.nvim_get_current_win()
   vim.api.nvim_win_set_buf(other_winnr, other_bufnr)
@@ -98,45 +129,22 @@ t:test("navigation persists until the source window changes buffer or is cleared
   vim.api.nvim_win_set_buf(other_winnr, bufnr_previous)
   vim.api.nvim_win_close(winnr, true)
   t.assert_eq(3, deleted_autocmds, "source window close removes the lifecycle autocmd")
-
-  vim.api.nvim_buf_delete(bufnr, { force = true })
-  vim.api.nvim_buf_delete(other_bufnr, { force = true })
 end)
 
 t:test("diff navigation publishes native hunk position", function()
-  local left_winnr = vim.api.nvim_get_current_win()
-  local left_bufnr_previous = vim.api.nvim_win_get_buf(left_winnr)
-  local left_bufnr = vim.api.nvim_create_buf(false, true)
-  local right_bufnr = vim.api.nvim_create_buf(false, true)
+  local left_bufnr = t:buffer({ "a", "b", "c", "d", "e" })
+  local right_bufnr = t:buffer({ "A", "b", "c", "D", "e", "f" })
   local dirty_winnr = nil ---@type integer|nil
 
-  vim.api.nvim_buf_set_lines(left_bufnr, 0, -1, false, { "a", "b", "c", "d", "e" })
-  vim.api.nvim_buf_set_lines(right_bufnr, 0, -1, false, { "A", "b", "c", "D", "e", "f" })
-  vim.api.nvim_win_set_buf(left_winnr, left_bufnr)
-  vim.cmd("vsplit")
-  local right_winnr = vim.api.nvim_get_current_win()
-  vim.api.nvim_win_set_buf(right_winnr, right_bufnr)
-  vim.cmd("diffthis")
-  vim.api.nvim_set_option_value("cursorbind", true, { win = right_winnr, scope = "local" })
-  vim.api.nvim_set_current_win(left_winnr)
-  vim.cmd("diffthis")
-  vim.api.nvim_set_option_value("cursorbind", true, { win = left_winnr, scope = "local" })
+  local left_winnr, right_winnr = diff_pair(left_bufnr, right_bufnr, "left", true)
   vim.cmd("diffupdate")
   vim.api.nvim_win_set_cursor(left_winnr, { 1, 0 })
   vim.api.nvim_win_set_cursor(right_winnr, { 1, 0 })
   vim.api.nvim_set_current_win(left_winnr)
 
-  t:patch_global("dot", {
-    state = {
-      status = {
-        dirty_winline_nr = {
-          next = function(_, winnr)
-            dirty_winnr = winnr
-          end,
-        },
-      },
-    },
-  })
+  with_dirty_winline(function(_, winnr)
+    dirty_winnr = winnr
+  end)
 
   vim.cmd("clearjumps")
 
@@ -154,18 +162,10 @@ t:test("diff navigation publishes native hunk position", function()
   t.assert_eq(1, jumps[1].lnum, "native jump origin")
 
   hunk_nav.clear_nav()
-  vim.api.nvim_set_option_value("diff", false, { win = left_winnr, scope = "local" })
-  vim.api.nvim_set_option_value("diff", false, { win = right_winnr, scope = "local" })
-  vim.api.nvim_win_close(right_winnr, true)
-  vim.api.nvim_win_set_buf(left_winnr, left_bufnr_previous)
-  vim.api.nvim_buf_delete(left_bufnr, { force = true })
-  vim.api.nvim_buf_delete(right_bufnr, { force = true })
 end)
 
 t:test("diff navigation preserves empty document byte semantics", function()
-  local left_winnr = vim.api.nvim_get_current_win()
-  local left_bufnr_previous = vim.api.nvim_win_get_buf(left_winnr)
-  local left_bufnr = vim.api.nvim_create_buf(false, true)
+  local left_bufnr = t:buffer()
   local directory = t:tempdir()
   local newline_path = directory .. "/newline"
   local empty_path = directory .. "/empty"
@@ -175,6 +175,10 @@ t:test("diff navigation preserves empty document byte semantics", function()
 
   local newline_bufnr = vim.fn.bufadd(newline_path) ---@type integer
   local empty_bufnr = vim.fn.bufadd(empty_path) ---@type integer
+  t:defer(function()
+    vim.api.nvim_buf_delete(newline_bufnr, { force = true })
+    vim.api.nvim_buf_delete(empty_bufnr, { force = true })
+  end)
   vim.fn.bufload(newline_bufnr)
   vim.fn.bufload(empty_bufnr)
   vim.api.nvim_set_option_value("endofline", false, { buf = left_bufnr })
@@ -193,25 +197,9 @@ t:test("diff navigation preserves empty document byte semantics", function()
     "empty bytes"
   )
 
-  vim.api.nvim_win_set_buf(left_winnr, left_bufnr)
-  vim.cmd("vsplit")
-  local right_winnr = vim.api.nvim_get_current_win()
-  vim.api.nvim_win_set_buf(right_winnr, newline_bufnr)
-  vim.cmd("diffthis")
-  vim.api.nvim_set_option_value("cursorbind", true, { win = right_winnr, scope = "local" })
-  vim.api.nvim_set_current_win(left_winnr)
-  vim.cmd("diffthis")
-  vim.api.nvim_set_option_value("cursorbind", true, { win = left_winnr, scope = "local" })
+  local left_winnr, right_winnr = diff_pair(left_bufnr, newline_bufnr, "left", true)
 
-  t:patch_global("dot", {
-    state = {
-      status = {
-        dirty_winline_nr = {
-          next = function() end,
-        },
-      },
-    },
-  })
+  with_dirty_winline()
 
   vim.cmd("diffupdate")
   vim.api.nvim_win_set_cursor(left_winnr, { 1, 0 })
@@ -233,42 +221,16 @@ t:test("diff navigation preserves empty document byte semantics", function()
   vim.api.nvim_set_current_win(left_winnr)
   hunk_nav.nav_diff("next")
   t.assert_nil(hunk_nav.get_nav_indicator(left_winnr), "empty buffers have no synthetic hunk")
-
-  vim.api.nvim_set_option_value("diff", false, { win = left_winnr, scope = "local" })
-  vim.api.nvim_set_option_value("diff", false, { win = right_winnr, scope = "local" })
-  vim.api.nvim_win_close(right_winnr, true)
-  vim.api.nvim_win_set_buf(left_winnr, left_bufnr_previous)
-  vim.api.nvim_buf_delete(left_bufnr, { force = true })
-  vim.api.nvim_buf_delete(newline_bufnr, { force = true })
-  vim.api.nvim_buf_delete(empty_bufnr, { force = true })
 end)
 
 t:test("diff navigation does not publish boundary no-ops", function()
-  local left_winnr = vim.api.nvim_get_current_win()
-  local left_bufnr_previous = vim.api.nvim_win_get_buf(left_winnr)
-  local left_bufnr = vim.api.nvim_create_buf(false, true)
-  local right_bufnr = vim.api.nvim_create_buf(false, true)
+  local left_bufnr = t:buffer({ "a", "b", "c", "d", "e" })
+  local right_bufnr = t:buffer({ "a", "B", "c", "d", "e" })
 
-  vim.api.nvim_buf_set_lines(left_bufnr, 0, -1, false, { "a", "b", "c", "d", "e" })
-  vim.api.nvim_buf_set_lines(right_bufnr, 0, -1, false, { "a", "B", "c", "d", "e" })
-  vim.api.nvim_win_set_buf(left_winnr, left_bufnr)
-  vim.cmd("vsplit")
-  local right_winnr = vim.api.nvim_get_current_win()
-  vim.api.nvim_win_set_buf(right_winnr, right_bufnr)
-  vim.cmd("diffthis")
-  vim.api.nvim_set_current_win(left_winnr)
-  vim.cmd("diffthis")
+  local left_winnr, right_winnr = diff_pair(left_bufnr, right_bufnr, "left")
   vim.cmd("diffupdate")
 
-  t:patch_global("dot", {
-    state = {
-      status = {
-        dirty_winline_nr = {
-          next = function() end,
-        },
-      },
-    },
-  })
+  with_dirty_winline()
 
   for _, cursorbind in ipairs({ false, true }) do
     vim.api.nvim_set_option_value("cursorbind", cursorbind, { win = left_winnr, scope = "local" })
@@ -288,43 +250,16 @@ t:test("diff navigation does not publish boundary no-ops", function()
       )
     end
   end
-
-  vim.api.nvim_set_option_value("diff", false, { win = left_winnr, scope = "local" })
-  vim.api.nvim_set_option_value("diff", false, { win = right_winnr, scope = "local" })
-  vim.api.nvim_win_close(right_winnr, true)
-  vim.api.nvim_win_set_buf(left_winnr, left_bufnr_previous)
-  vim.api.nvim_buf_delete(left_bufnr, { force = true })
-  vim.api.nvim_buf_delete(right_bufnr, { force = true })
 end)
 
 t:test("diff navigation counts a one-line EOF filler in both directions", function()
-  local left_winnr = vim.api.nvim_get_current_win()
-  local left_bufnr_previous = vim.api.nvim_win_get_buf(left_winnr)
-  local left_bufnr = vim.api.nvim_create_buf(false, true)
-  local right_bufnr = vim.api.nvim_create_buf(false, true)
+  local left_bufnr = t:buffer({ "a" })
+  local right_bufnr = t:buffer({ "a", "b" })
 
-  vim.api.nvim_buf_set_lines(left_bufnr, 0, -1, false, { "a" })
-  vim.api.nvim_buf_set_lines(right_bufnr, 0, -1, false, { "a", "b" })
-  vim.api.nvim_win_set_buf(left_winnr, left_bufnr)
-  vim.cmd("vsplit")
-  local right_winnr = vim.api.nvim_get_current_win()
-  vim.api.nvim_win_set_buf(right_winnr, right_bufnr)
-  vim.cmd("diffthis")
-  vim.api.nvim_set_option_value("cursorbind", true, { win = right_winnr, scope = "local" })
-  vim.api.nvim_set_current_win(left_winnr)
-  vim.cmd("diffthis")
-  vim.api.nvim_set_option_value("cursorbind", true, { win = left_winnr, scope = "local" })
+  local left_winnr = diff_pair(left_bufnr, right_bufnr, "left", true)
   vim.cmd("diffupdate")
 
-  t:patch_global("dot", {
-    state = {
-      status = {
-        dirty_winline_nr = {
-          next = function() end,
-        },
-      },
-    },
-  })
+  with_dirty_winline()
 
   for _, direction in ipairs({ "next", "prev" }) do
     vim.api.nvim_win_set_cursor(left_winnr, { 1, 0 })
@@ -336,41 +271,18 @@ t:test("diff navigation counts a one-line EOF filler in both directions", functi
 
     hunk_nav.clear_nav()
   end
-
-  vim.api.nvim_set_option_value("diff", false, { win = left_winnr, scope = "local" })
-  vim.api.nvim_set_option_value("diff", false, { win = right_winnr, scope = "local" })
-  vim.api.nvim_win_close(right_winnr, true)
-  vim.api.nvim_win_set_buf(left_winnr, left_bufnr_previous)
-  vim.api.nvim_buf_delete(left_bufnr, { force = true })
-  vim.api.nvim_buf_delete(right_bufnr, { force = true })
 end)
 
 t:test("diff navigation shares and caches canonical Git hunks across panes", function()
-  local left_winnr = vim.api.nvim_get_current_win()
-  local left_bufnr_previous = vim.api.nvim_win_get_buf(left_winnr)
-  local right_bufnr = vim.api.nvim_create_buf(false, true)
-  local left_bufnr = vim.api.nvim_create_buf(false, true)
+  local right_bufnr = t:buffer()
+  local left_bufnr = t:buffer()
   local text_diff = vim.text.diff
   local diff_calls = 0 ---@type integer
   t.assert_true(right_bufnr < left_bufnr, "right buffer is allocated first")
 
-  vim.api.nvim_win_set_buf(left_winnr, left_bufnr)
-  vim.cmd("rightbelow vsplit")
-  local right_winnr = vim.api.nvim_get_current_win()
-  vim.api.nvim_win_set_buf(right_winnr, right_bufnr)
-  vim.cmd("diffthis")
-  vim.api.nvim_set_current_win(left_winnr)
-  vim.cmd("diffthis")
+  local left_winnr, right_winnr = diff_pair(left_bufnr, right_bufnr, "right")
 
-  t:patch_global("dot", {
-    state = {
-      status = {
-        dirty_winline_nr = {
-          next = function() end,
-        },
-      },
-    },
-  })
+  with_dirty_winline()
   t:patch_table(vim.text, "diff", function(...)
     diff_calls = diff_calls + 1
     return text_diff(...)
@@ -584,12 +496,6 @@ t:test("diff navigation shares and caches canonical Git hunks across panes", fun
   t.assert_eq(4, normal_calls, "cache invalidation uses bounded native continuation")
 
   hunk_nav.clear_nav()
-  vim.api.nvim_set_option_value("diff", false, { win = left_winnr, scope = "local" })
-  vim.api.nvim_set_option_value("diff", false, { win = right_winnr, scope = "local" })
-  vim.api.nvim_win_close(right_winnr, true)
-  vim.api.nvim_win_set_buf(left_winnr, left_bufnr_previous)
-  vim.api.nvim_buf_delete(left_bufnr, { force = true })
-  vim.api.nvim_buf_delete(right_bufnr, { force = true })
 end)
 
 t:test("git winline component renders hunk navigation position", function()

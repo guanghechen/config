@@ -1,5 +1,6 @@
 local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
+local lsp = require("__test__.support.lsp")
 local t = harness.new()
 
 bootstrap.with_global(t, "stl", { env = { IS_WIN = false } })
@@ -36,13 +37,9 @@ t:test("server commands select each workspace executable independently of editor
   end)
   vim.api.nvim_set_current_dir(roots[1])
 
-  local commands = {}
   local dispatchers = {}
   local client = {}
-  t:patch_table(vim.lsp.rpc, "start", function(args, handlers, options)
-    commands[#commands + 1] = { args = args, handlers = handlers, cwd = options.cwd }
-    return client
-  end)
+  local commands = lsp.record_starts(t, client)
 
   for server, executable in pairs(servers) do
     local config = dofile(previous_cwd .. "/lsp/" .. server .. ".lua")
@@ -55,7 +52,7 @@ t:test("server commands select each workspace executable independently of editor
       t.assert_eq(binpath, command.args[1], server .. " executable")
       t.assert_eq("--stdio", command.args[2], server .. " transport")
       t.assert_eq(2, #command.args, server .. " arguments")
-      t.assert_eq(dispatchers, command.handlers, server .. " dispatchers")
+      t.assert_eq(dispatchers, command.dispatchers, server .. " dispatchers")
       t.assert_eq(root, command.cwd, server .. " working directory")
     end
   end
@@ -65,11 +62,7 @@ t:test("server commands keep ancestor lookup and PATH fallback for unavailable l
   local root = project()
   local nested = root .. "/packages/app"
   vim.fn.mkdir(nested .. "/node_modules/.bin", "p")
-  local command
-  t:patch_table(vim.lsp.rpc, "start", function(args, _, options)
-    command = { args = args, cwd = options.cwd }
-    return {}
-  end)
+  local commands = lsp.record_starts(t)
 
   for server, executable in pairs(servers) do
     local config = dofile("lsp/" .. server .. ".lua")
@@ -81,16 +74,16 @@ t:test("server commands keep ancestor lookup and PATH fallback for unavailable l
     assert(vim.uv.fs_chmod(unavailable, 420))
 
     config.cmd({}, { root_dir = nested })
-    t.assert_eq(binpath, command.args[1], server .. " ancestor binary")
-    t.assert_eq(nested, command.cwd, server .. " nested workspace")
+    t.assert_eq(binpath, commands[#commands].args[1], server .. " ancestor binary")
+    t.assert_eq(nested, commands[#commands].cwd, server .. " nested workspace")
 
     assert(vim.uv.fs_chmod(binpath, 420))
     config.cmd({}, { root_dir = nested })
-    t.assert_eq(executable, command.args[1], server .. " PATH fallback")
+    t.assert_eq(executable, commands[#commands].args[1], server .. " PATH fallback")
 
     config.cmd({}, {})
-    t.assert_eq(executable, command.args[1], server .. " no workspace")
-    t.assert_nil(command.cwd, server .. " no workspace cwd")
+    t.assert_eq(executable, commands[#commands].args[1], server .. " no workspace")
+    t.assert_nil(commands[#commands].cwd, server .. " no workspace cwd")
   end
 end)
 

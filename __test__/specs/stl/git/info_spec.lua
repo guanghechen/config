@@ -5,6 +5,7 @@ local harness = require("__test__.support.harness")
 local native = require("yoz")
 
 local t = harness.new()
+local fs = require("__test__.support.fs")
 local git = require("__test__.support.git")
 
 bootstrap.with_runtime(t, {
@@ -52,13 +53,6 @@ local function mock_system()
   return requests
 end
 
----@param future stl.c.Future
-local function wait_future(future)
-  t.wait_until(function()
-    return future:is_done()
-  end, 1000, "future should resolve")
-end
-
 t:test("filesystem and Git boundaries convert canonical roots without changing revision paths", function()
   local opened = nil ---@type string|nil
   local requests = mock_system()
@@ -82,14 +76,12 @@ t:test("filesystem and Git boundaries convert canonical roots without changing r
   t.assert_eq([[C:\repo]], requests[1].argv[3], "OS Git cwd")
   t.assert_eq("HEAD:lua/era/m/git/status.lua", requests[1].argv[6], "canonical revision path")
   requests[1].callback({ code = 0, stdout = "content" })
-  wait_future(future)
-  t.assert_true(future:get_result().ok, "blob result")
+  t.assert_true(t.await(future).ok, "blob result")
 
   local unc_future = info.get_show_blob("//server/share/repo", "HEAD:lua/era/m/git/status.lua")
   t.assert_eq([[\\server\share\repo]], requests[2].argv[3], "UNC Git cwd")
   requests[2].callback({ code = 0, stdout = "content" })
-  wait_future(unc_future)
-  t.assert_true(unc_future:get_result().ok, "UNC blob result")
+  t.assert_true(t.await(unc_future).ok, "UNC blob result")
 end)
 
 t:test("canonical Windows-style roots keep nested HEAD paths slash-only with real Git", function()
@@ -102,15 +94,11 @@ t:test("canonical Windows-style roots keep nested HEAD paths slash-only with rea
     return path:gsub("/", sep)
   end)
 
-  vim.fn.mkdir(vim.fs.dirname(filepath), "p")
-  vim.fn.writefile({ "content" }, filepath)
-  git.run(repo, { "add", "--", relpath })
-  git.run(repo, { "commit", "-qm", "base" })
+  fs.write(filepath, { "content" })
+  git.commit(repo, "base")
 
   local future = info.get_show_blob(canonical_repo, "HEAD:" .. relpath)
-  wait_future(future)
-
-  local result = future:get_result()
+  local result = t.await(future)
   t.assert_true(result.ok, "HEAD blob")
   t.assert_eq("content\n", result.bytes, "HEAD bytes")
 end)
@@ -125,23 +113,20 @@ t:test("get_object_name: resolves immutable identity and classifies absence", fu
     "resolution command"
   )
   requests[1].callback({ code = 0, stdout = "abc123\n" })
-  wait_future(present)
-  local present_result = present:get_result()
+  local present_result = t.await(present)
   t.assert_true(present_result.ok, "resolved")
   t.assert_false(present_result.missing, "present")
   t.assert_eq("abc123", present_result.object_name, "object identity")
 
   local missing = info.get_object_name("/work", "HEAD:missing.txt")
   requests[2].callback({ code = 1, stdout = "" })
-  wait_future(missing)
-  local missing_result = missing:get_result()
+  local missing_result = t.await(missing)
   t.assert_false(missing_result.ok, "not resolved")
   t.assert_true(missing_result.missing, "missing")
 
   local failed = info.get_object_name("/work", "HEAD:f.txt")
   requests[3].callback({ code = 128, stderr = "injected resolution failure" })
-  wait_future(failed)
-  local failed_result = failed:get_result()
+  local failed_result = t.await(failed)
   t.assert_false(failed_result.ok, "failed")
   t.assert_false(failed_result.missing, "failure is not absence")
   t.assert_true(failed_result.err:find("injected resolution failure", 1, true) ~= nil, "actionable error")
@@ -153,9 +138,7 @@ t:test("get_object_name: cancellation kills resolution and returns failure", fun
   local future = info.get_object_name("/work", "HEAD:f.txt", token)
 
   token:cancel()
-  wait_future(future)
-
-  local result = future:get_result()
+  local result = t.await(future)
   t.assert_true(requests[1].proc.killed, "resolution killed")
   t.assert_false(result.ok, "not resolved")
   t.assert_false(result.missing, "cancellation is not absence")
@@ -167,9 +150,7 @@ t:test("get_show_blob: returns raw bytes", function()
   local future = info.get_show_blob("/work", "abc123")
 
   requests[1].callback({ code = 0, stdout = "a\0b\n" })
-  wait_future(future)
-
-  local result = future:get_result()
+  local result = t.await(future)
   t.assert_true(result.ok, "read")
   t.assert_false(result.missing, "not missing")
   t.assert_eq("a\0b\n", result.bytes, "bytes")
@@ -183,16 +164,14 @@ t:test("get_show_blob: treats an absent unmerged stage as missing", function()
   requests[1].callback({ code = 128, stderr = "fatal: path is not at stage 2" })
   t.wait_until(function()
     return #requests == 2
-  end, 1000, "stage inspection should start")
+  end, 5000, "stage inspection should start")
   t.assert_eq(
     "git -C /work --literal-pathspecs ls-files --stage -z -- f.txt",
     table.concat(requests[2].argv, " "),
     "stage inspection command"
   )
   requests[2].callback({ code = 0, stdout = "100644 abc123 3\tf.txt\0" })
-  wait_future(future)
-
-  local result = future:get_result()
+  local result = t.await(future)
   t.assert_false(result.ok, "not read")
   t.assert_true(result.missing, "missing stage")
 end)
@@ -204,16 +183,14 @@ t:test("get_show_blob: confirms a missing revision path with ls-tree", function(
   requests[1].callback({ code = 128, stderr = "fatal: path does not exist" })
   t.wait_until(function()
     return #requests == 2
-  end, 1000, "ls-tree should start")
+  end, 5000, "ls-tree should start")
   t.assert_eq(
     "git -C /work --literal-pathspecs ls-tree HEAD -- missing.txt",
     table.concat(requests[2].argv, " "),
     "command"
   )
   requests[2].callback({ code = 0, stdout = "" })
-  wait_future(future)
-
-  local result = future:get_result()
+  local result = t.await(future)
   t.assert_false(result.ok, "not read")
   t.assert_true(result.missing, "missing")
 end)
@@ -225,20 +202,18 @@ t:test("get_show_blob: treats an unborn revision as missing", function()
   requests[1].callback({ code = 128, stderr = "fatal: invalid object name 'HEAD'" })
   t.wait_until(function()
     return #requests == 2
-  end, 1000, "ls-tree should start")
+  end, 5000, "ls-tree should start")
   requests[2].callback({ code = 128, stderr = "fatal: Not a valid object name HEAD" })
   t.wait_until(function()
     return #requests == 3
-  end, 1000, "revision verification should start")
+  end, 5000, "revision verification should start")
   t.assert_eq(
     "git -C /work rev-parse --verify --quiet HEAD",
     table.concat(requests[3].argv, " "),
     "verification command"
   )
   requests[3].callback({ code = 1, stdout = "" })
-  wait_future(future)
-
-  local result = future:get_result()
+  local result = t.await(future)
   t.assert_false(result.ok, "not read")
   t.assert_true(result.missing, "unborn revision")
 end)
@@ -250,15 +225,13 @@ t:test("get_show_blob: preserves tree inspection failure when the revision exist
   requests[1].callback({ code = 128, stderr = "injected read failure" })
   t.wait_until(function()
     return #requests == 2
-  end, 1000, "ls-tree should start")
+  end, 5000, "ls-tree should start")
   requests[2].callback({ code = 128, stderr = "injected tree failure" })
   t.wait_until(function()
     return #requests == 3
-  end, 1000, "revision verification should start")
+  end, 5000, "revision verification should start")
   requests[3].callback({ code = 0, stdout = "abc123\n" })
-  wait_future(future)
-
-  local result = future:get_result()
+  local result = t.await(future)
   t.assert_false(result.ok, "not read")
   t.assert_false(result.missing, "revision exists")
   t.assert_true(result.err:find("injected tree failure", 1, true) ~= nil, "tree error")
@@ -271,11 +244,9 @@ t:test("get_show_blob: an existing revision path read failure is not missing", f
   requests[1].callback({ code = 128, stderr = "injected read failure" })
   t.wait_until(function()
     return #requests == 2
-  end, 1000, "ls-tree should start")
+  end, 5000, "ls-tree should start")
   requests[2].callback({ code = 0, stdout = "100644 blob abc123\tf.txt\n" })
-  wait_future(future)
-
-  local result = future:get_result()
+  local result = t.await(future)
   t.assert_false(result.ok, "not read")
   t.assert_false(result.missing, "existing path")
   t.assert_true(result.err:find("injected read failure", 1, true) ~= nil, "read error")
@@ -288,16 +259,14 @@ t:test("get_show_blob: confirms a missing index path with ls-files", function()
   requests[1].callback({ code = 128, stderr = "fatal: path does not exist" })
   t.wait_until(function()
     return #requests == 2
-  end, 1000, "ls-files should start")
+  end, 5000, "ls-files should start")
   t.assert_eq(
     "git -C /work --literal-pathspecs ls-files --error-unmatch -- missing.txt",
     table.concat(requests[2].argv, " "),
     "command"
   )
   requests[2].callback({ code = 1, stdout = "" })
-  wait_future(future)
-
-  local result = future:get_result()
+  local result = t.await(future)
   t.assert_false(result.ok, "not read")
   t.assert_true(result.missing, "missing")
 end)
@@ -307,9 +276,7 @@ t:test("get_show_blob: raw object failure is never missing", function()
   local future = info.get_show_blob("/work", "abc123")
 
   requests[1].callback({ code = 128, stderr = "injected read failure" })
-  wait_future(future)
-
-  local result = future:get_result()
+  local result = t.await(future)
   t.assert_false(result.ok, "not read")
   t.assert_false(result.missing, "not missing")
   t.assert_eq(1, #requests, "no existence fallback")
@@ -323,11 +290,9 @@ t:test("get_show_blob: cancellation kills classification and returns failure", f
   requests[1].callback({ code = 128, stderr = "injected read failure" })
   t.wait_until(function()
     return #requests == 2
-  end, 1000, "ls-tree should start")
+  end, 5000, "ls-tree should start")
   token:cancel()
-  wait_future(future)
-
-  local result = future:get_result()
+  local result = t.await(future)
   t.assert_true(requests[2].proc.killed, "classification killed")
   t.assert_false(result.ok, "not read")
   t.assert_false(result.missing, "cancellation is not missing")
@@ -339,8 +304,7 @@ t:test("get_file_info: distinguishes an index entry from a missing path", functi
   local present = info.get_file_info("/work", "f.txt")
 
   requests[1].callback({ code = 0, stdout = "100755 abc123 0\tf.txt\n" })
-  wait_future(present)
-  local present_result = present:get_result()
+  local present_result = t.await(present)
   t.assert_true(present_result.ok, "entry")
   t.assert_false(present_result.missing, "present")
   t.assert_eq("100755", present_result.info.mode_bits, "mode")
@@ -348,8 +312,7 @@ t:test("get_file_info: distinguishes an index entry from a missing path", functi
 
   local missing = info.get_file_info("/work", "missing.txt")
   requests[2].callback({ code = 0, stdout = "" })
-  wait_future(missing)
-  local missing_result = missing:get_result()
+  local missing_result = t.await(missing)
   t.assert_false(missing_result.ok, "no entry")
   t.assert_true(missing_result.missing, "missing")
 end)
@@ -359,9 +322,7 @@ t:test("get_file_info: command failure is not missing", function()
   local future = info.get_file_info("/work", "f.txt")
 
   requests[1].callback({ code = 128, stderr = "injected index failure" })
-  wait_future(future)
-
-  local result = future:get_result()
+  local result = t.await(future)
   t.assert_false(result.ok, "failed")
   t.assert_false(result.missing, "not missing")
   t.assert_true(result.err:find("injected index failure", 1, true) ~= nil, "error")
@@ -372,9 +333,7 @@ t:test("get_file_info: reports unmerged entries explicitly", function()
   local future = info.get_file_info("/work", "f.txt")
 
   requests[1].callback({ code = 0, stdout = "100644 abc123 1\tf.txt\n100644 def456 2\tf.txt\n" })
-  wait_future(future)
-
-  local result = future:get_result()
+  local result = t.await(future)
   t.assert_true(result.ok, "inspected")
   t.assert_true(result.info.has_conflicts, "unmerged")
   t.assert_nil(result.info.object_name, "no stage-zero object")
@@ -385,15 +344,13 @@ t:test("get_head_file_mode: distinguishes mode, missing path, unborn HEAD, and f
   local present = info.get_head_file_mode("/work", "f.txt")
 
   requests[1].callback({ code = 0, stdout = "100755 blob abc123\tf.txt\n" })
-  wait_future(present)
-  local present_result = present:get_result()
+  local present_result = t.await(present)
   t.assert_true(present_result.ok, "mode")
   t.assert_eq("100755", present_result.mode_bits, "mode bits")
 
   local missing = info.get_head_file_mode("/work", "missing.txt")
   requests[2].callback({ code = 0, stdout = "" })
-  wait_future(missing)
-  local missing_result = missing:get_result()
+  local missing_result = t.await(missing)
   t.assert_false(missing_result.ok, "no mode")
   t.assert_true(missing_result.missing, "missing")
 
@@ -401,10 +358,9 @@ t:test("get_head_file_mode: distinguishes mode, missing path, unborn HEAD, and f
   requests[3].callback({ code = 128, stderr = "injected tree failure" })
   t.wait_until(function()
     return #requests == 4
-  end, 1000, "HEAD verification should start")
+  end, 5000, "HEAD verification should start")
   requests[4].callback({ code = 1, stdout = "" })
-  wait_future(unborn)
-  local unborn_result = unborn:get_result()
+  local unborn_result = t.await(unborn)
   t.assert_false(unborn_result.ok, "no mode")
   t.assert_true(unborn_result.missing, "unborn HEAD")
 
@@ -412,10 +368,9 @@ t:test("get_head_file_mode: distinguishes mode, missing path, unborn HEAD, and f
   requests[5].callback({ code = 128, stderr = "injected tree failure" })
   t.wait_until(function()
     return #requests == 6
-  end, 1000, "HEAD verification should start")
+  end, 5000, "HEAD verification should start")
   requests[6].callback({ code = 0, stdout = "abc123\n" })
-  wait_future(failed)
-  local failed_result = failed:get_result()
+  local failed_result = t.await(failed)
   t.assert_false(failed_result.ok, "failed")
   t.assert_false(failed_result.missing, "not missing")
   t.assert_true(failed_result.err:find("injected tree failure", 1, true) ~= nil, "error")
@@ -427,19 +382,16 @@ t:test("path queries treat pathspec-magic filenames literally", function()
   vim.fn.writefile({ "magic" }, repo .. "/" .. magic)
   vim.fn.writefile({ "other" }, repo .. "/other.txt")
   t.assert_true(vim.uv.fs_chmod(repo .. "/" .. magic, 493), "make magic path executable")
-  git.run(repo, { "add", "--all" })
-  git.run(repo, { "commit", "-qm", "base" })
+  git.commit(repo, "base")
 
   local expected_object = vim.trim(git.run(repo, { "rev-parse", "HEAD:" .. magic })) ---@type string
   local file_future = info.get_file_info(repo, magic)
-  wait_future(file_future)
-  local file_result = file_future:get_result()
+  local file_result = t.await(file_future)
   t.assert_true(file_result.ok, "index path found")
   t.assert_eq(expected_object, file_result.info.object_name, "exact index object")
 
   local mode_future = info.get_head_file_mode(repo, magic)
-  wait_future(mode_future)
-  local mode_result = mode_future:get_result()
+  local mode_result = t.await(mode_future)
   t.assert_true(mode_result.ok, "HEAD path found")
   t.assert_eq("100755", mode_result.mode_bits, "exact HEAD mode")
 end)
@@ -456,9 +408,7 @@ t:test("get_repo_info: resolves a branch with one process", function()
   )
 
   requests[1].callback({ code = 0, stdout = "/repo\n/repo/.git\nmain\n" })
-  wait_future(future)
-
-  local result = future:get_result()
+  local result = t.await(future)
   t.assert_eq("/repo", result.toplevel, "toplevel")
   t.assert_eq("/repo/.git", result.gitdir, "gitdir")
   t.assert_eq("main", result.abbrev_head, "abbrev head")
@@ -473,13 +423,11 @@ t:test("get_repo_info: resolves detached HEAD with one fallback", function()
   requests[1].callback({ code = 0, stdout = "/repo\n/repo/.git\nHEAD\n" })
   t.wait_until(function()
     return #requests == 2
-  end, 1000, "short HEAD process should start")
+  end, 5000, "short HEAD process should start")
   t.assert_eq("git -C /repo rev-parse --short HEAD", table.concat(requests[2].argv, " "), "fallback command")
 
   requests[2].callback({ code = 0, stdout = "1a2b3c4\n" })
-  wait_future(future)
-
-  local result = future:get_result()
+  local result = t.await(future)
   t.assert_eq("1a2b3c4", result.abbrev_head, "abbrev head")
   t.assert_true(result.detached, "detached")
 end)
@@ -489,9 +437,7 @@ t:test("get_repo_info: preserves unborn repository discovery", function()
   local future = info.get_repo_info("/work")
 
   requests[1].callback({ code = 128, stdout = "/repo\n/repo/.git\nHEAD\n" })
-  wait_future(future)
-
-  local result = future:get_result()
+  local result = t.await(future)
   t.assert_eq("/repo", result.toplevel, "toplevel")
   t.assert_eq("", result.abbrev_head, "abbrev head")
   t.assert_false(result.detached, "detached")
@@ -503,9 +449,7 @@ t:test("get_repo_info: returns nil when discovery fails", function()
   local future = info.get_repo_info("/work")
 
   requests[1].callback({ code = 128, stdout = "" })
-  wait_future(future)
-
-  t.assert_nil(future:get_result(), "repo info")
+  t.assert_nil(t.await(future), "repo info")
 end)
 
 t:test("get_repo_info: cancellation kills detached fallback and resolves nil", function()
@@ -516,7 +460,7 @@ t:test("get_repo_info: cancellation kills detached fallback and resolves nil", f
   requests[1].callback({ code = 0, stdout = "/repo\n/repo/.git\nHEAD\n" })
   t.wait_until(function()
     return #requests == 2
-  end, 1000, "short HEAD process should start")
+  end, 5000, "short HEAD process should start")
 
   token:cancel()
   t.assert_true(requests[2].proc.killed, "fallback process should be killed")

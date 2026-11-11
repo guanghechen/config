@@ -1,40 +1,9 @@
 local t = require("__test__.support.harness").new()
 local bootstrap = require("__test__.support.bootstrap")
-local clock_fixture = require("__test__.fixtures.era.m.nvimbar.clock")
+local nvimbar = require("__test__.support.nvimbar")
 local Future = require("stl.c.future")
 
-bootstrap.with_runtime(t, {
-  stl = {
-    fn = { noop = function() end },
-    nvim = { fn = {
-      txt = function(text)
-        return text
-      end,
-    } },
-    reporter = {
-      error = function(details)
-        error(vim.inspect(details))
-      end,
-    },
-  },
-  dot = {
-    path = {
-      cwd = function()
-        return "/test"
-      end,
-    },
-    theme = { hlgroup = { common = {
-      resolve_mode = function()
-        return "n", "NORMAL"
-      end,
-    } } },
-  },
-  yoz = { path = {
-    basename = function(path)
-      return path:match("[^/]*$")
-    end,
-  } },
-})
+nvimbar.with_runtime(t, "/test")
 
 ---@param value                         integer
 ---@param bufnr                         ?integer
@@ -69,7 +38,7 @@ local function definition(policy)
   }
 end
 
----@param clock                         __test__.fixtures.nvimbar.IClock
+---@param clock                         __test__.support.nvimbar.IClock
 ---@param source                        era.m.nvimbar.IComponentSource
 ---@param override                      ?era.m.nvimbar.INotifyPolicy
 ---@return era.m.nvimbar.Component
@@ -87,24 +56,13 @@ local function component(clock, source, override)
   return runtime, seen
 end
 
+-- Only the window, so that a call can end an argument list.
 ---@return integer
 local function window()
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
-  local winnr = vim.api.nvim_open_win(bufnr, false, { relative = "editor", row = 1, col = 1, width = 30, height = 3 })
-  t:defer(function()
-    if vim.api.nvim_win_is_valid(winnr) then
-      vim.api.nvim_win_close(winnr, true)
-    end
-  end)
-  return winnr
+  return (nvimbar.window(t))
 end
 
----@param clock                         __test__.fixtures.nvimbar.IClock
+---@param clock                         __test__.support.nvimbar.IClock
 ---@param winnr                         integer
 ---@param interval                      ?integer
 ---@return era.m.nvimbar.Nvimbar
@@ -112,36 +70,23 @@ end
 ---@return fun(): integer
 local function bar(clock, winnr, interval)
   local seen, layouts = {}, 0
-  local result = clock.Nvimbar.new({
-    name = "test",
-    comp_sep = "",
-    comp_sep_hlname = "Normal",
-    comp_sep_hlname_active = "Normal",
-    get_preset_context = function()
-      return { winnr = winnr }
-    end,
+  local result = nvimbar.bar(t, clock.Nvimbar, winnr, {
     get_max_width = function()
       layouts = layouts + 1
       return 20
-    end,
-    is_active = function()
-      return true
     end,
     on_fulfilled = function(text)
       seen[#seen + 1] = { at = clock.now, text = text }
     end,
     draw_interval = interval,
   })
-  t:defer(function()
-    result:dispose()
-  end)
   return result, seen, function()
     return layouts
   end
 end
 
 t:test("immediate notifications follow each committed snapshot", function()
-  local clock = clock_fixture.new(t)
+  local clock = nvimbar.clock(t)
   local runtime, seen = component(clock, definition())
   runtime:request(context(1))
   clock:advance(1)
@@ -153,7 +98,7 @@ t:test("immediate notifications follow each committed snapshot", function()
 end)
 
 t:test("debounce delays notification without delaying data acquisition", function()
-  local clock = clock_fixture.new(t)
+  local clock = nvimbar.clock(t)
   local runtime, seen = component(clock, definition({ strategy = "debounce", interval = 10 }))
   runtime:request(context(1))
   clock:advance(1)
@@ -174,7 +119,7 @@ t:test("debounce delays notification without delaying data acquisition", functio
 end)
 
 t:test("throttle delivers a leading edge and the latest trailing edge without postponement", function()
-  local clock = clock_fixture.new(t)
+  local clock = nvimbar.clock(t)
   local runtime, seen = component(clock, definition({ strategy = "throttle", interval = 10 }))
   runtime:request(context(1))
   clock:advance(1)
@@ -198,7 +143,7 @@ t:test("throttle delivers a leading edge and the latest trailing edge without po
 end)
 
 t:test("lazy defaults and explicit replacement policies are captured independently", function()
-  local clock = clock_fixture.new(t)
+  local clock = nvimbar.clock(t)
   local constructions = 0
   local source = function()
     constructions = constructions + 1
@@ -225,7 +170,7 @@ t:test("lazy defaults and explicit replacement policies are captured independent
 end)
 
 t:test("scope changes cancel old notifications and start a new throttle window", function()
-  local clock = clock_fixture.new(t)
+  local clock = nvimbar.clock(t)
   local runtime, seen = component(clock, definition({ strategy = "throttle", interval = 10 }))
   runtime:request(context(1, 20))
   clock:advance(1)
@@ -240,7 +185,7 @@ t:test("scope changes cancel old notifications and start a new throttle window",
 end)
 
 t:test("cancel and dispose suppress pending notifications", function()
-  local clock = clock_fixture.new(t)
+  local clock = nvimbar.clock(t)
   local runtime, seen = component(clock, definition({ strategy = "debounce", interval = 10 }))
   runtime:request(context(1))
   clock:advance(1)
@@ -255,11 +200,8 @@ t:test("cancel and dispose suppress pending notifications", function()
 end)
 
 t:test("will_change failures and retries retain the notification throttle window", function()
-  local clock = clock_fixture.new(t)
-  local reports = {}
-  t:patch_table(stl.reporter, "error", function(report)
-    reports[#reports + 1] = report
-  end)
+  local clock = nvimbar.clock(t)
+  local reports = bootstrap.with_reporter(t)
   local source = definition({ strategy = "throttle", interval = 10 })
   source.will_change = function(ctx, prev_context)
     if ctx.changedtick > 1 then
@@ -277,7 +219,7 @@ t:test("will_change failures and retries retain the notification throttle window
   runtime:request(context(3))
   clock:advance(4)
   t.assert_eq("ready", runtime.status)
-  t.assert_eq(1, #reports)
+  t.assert_eq(1, #reports.error)
   t.assert_eq(1, #seen, "errors do not create another leading edge")
   clock:advance(11)
   t.assert_eq(2, #seen)
@@ -285,7 +227,7 @@ t:test("will_change failures and retries retain the notification throttle window
 end)
 
 t:test("pending notifications retain committed context while a newer request is running", function()
-  local clock = clock_fixture.new(t)
+  local clock = nvimbar.clock(t)
   local source = definition({ strategy = "throttle", interval = 10 })
   local refresh = source.refresh
   local resolve
@@ -313,7 +255,7 @@ t:test("pending notifications retain committed context while a newer request is 
 end)
 
 t:test("invalid policies are rejected before a placement changes the bar", function()
-  local clock = clock_fixture.new(t)
+  local clock = nvimbar.clock(t)
   local target = bar(clock, window())
   local refreshes = 0
   local source = definition()
@@ -341,7 +283,7 @@ t:test("invalid policies are rejected before a placement changes the bar", funct
 end)
 
 t:test("bar publications have a fixed trailing deadline and include the latest snapshot", function()
-  local clock = clock_fixture.new(t)
+  local clock = nvimbar.clock(t)
   local target, seen, layouts = bar(clock, window())
   local value = "A"
   target:place({
@@ -375,7 +317,7 @@ t:test("bar publications have a fixed trailing deadline and include the latest s
 end)
 
 t:test("placement overrides reach forks and a component wakes only its own bar", function()
-  local clock = clock_fixture.new(t)
+  local clock = nvimbar.clock(t)
   local first = bar(clock, window(), 0)
   local second, second_seen = bar(clock, window(), 0)
   ---@type era.m.nvimbar.IRawComponent
@@ -406,7 +348,7 @@ t:test("placement overrides reach forks and a component wakes only its own bar",
 end)
 
 t:test("a delayed notification revalidates its window owner before publication", function()
-  local clock = clock_fixture.new(t)
+  local clock = nvimbar.clock(t)
   local winnr = window()
   local target, seen = bar(clock, winnr, 0)
   target:place({
@@ -423,12 +365,7 @@ t:test("a delayed notification revalidates its window owner before publication",
   target:refresh()
   clock:advance(0)
   clock:advance(1)
-  local other = vim.api.nvim_create_buf(false, true)
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(other) then
-      vim.api.nvim_buf_delete(other, { force = true })
-    end
-  end)
+  local other = t:buffer()
   vim.api.nvim_win_set_buf(winnr, other)
   clock:advance(11)
   clock:advance(12)
@@ -440,7 +377,7 @@ t:test("a delayed notification revalidates its window owner before publication",
 end)
 
 t:test("disposing a bar cancels its delayed publication", function()
-  local clock = clock_fixture.new(t)
+  local clock = nvimbar.clock(t)
   local target, seen = bar(clock, window(), 20)
   target:refresh()
   clock:advance(0)
@@ -454,7 +391,7 @@ end)
 
 for _, throttled in ipairs({ false, true }) do
   t:test("latest scope publishes after its work when " .. (throttled and "throttled" or "queued"), function()
-    local clock = clock_fixture.new(t)
+    local clock = nvimbar.clock(t)
     local first, second, third = window(), window(), window()
     local current = first
     local target, seen = bar(clock, first)
@@ -497,7 +434,7 @@ end
 
 for _, interval in ipairs({ 16, 200 }) do
   t:test("retry after initial cancellation publishes ready content before the " .. interval .. "ms deadline", function()
-    local clock = clock_fixture.new(t)
+    local clock = nvimbar.clock(t)
     local target, seen = bar(clock, window(), interval)
     local refreshes = 0
     target:place({
@@ -525,7 +462,7 @@ for _, interval in ipairs({ 16, 200 }) do
 end
 
 t:test("queued publication does not wait for an unresolved provider", function()
-  local clock = clock_fixture.new(t)
+  local clock = nvimbar.clock(t)
   local target, seen = bar(clock, window())
   local resolve
   target:place({
@@ -551,7 +488,7 @@ t:test("queued publication does not wait for an unresolved provider", function()
 end)
 
 t:test("a refresh burst publishes the latest data once", function()
-  local clock = clock_fixture.new(t)
+  local clock = nvimbar.clock(t)
   local target, seen = bar(clock, window(), 0)
   local value, refreshes = "INITIAL", 0
   target:place({
@@ -580,7 +517,7 @@ t:test("a refresh burst publishes the latest data once", function()
 end)
 
 t:test("a window change after data completion refreshes the owner before publication", function()
-  local clock = clock_fixture.new(t)
+  local clock = nvimbar.clock(t)
   local first, second = window(), window()
   local current = first
   local target, seen = bar(clock, first)
@@ -610,7 +547,7 @@ t:test("a window change after data completion refreshes the owner before publica
 end)
 
 t:test("continuous same-scope refreshes cannot starve a queued publication", function()
-  local clock = clock_fixture.new(t)
+  local clock = nvimbar.clock(t)
   local target, seen = bar(clock, window())
   local value = 0
   target:place({

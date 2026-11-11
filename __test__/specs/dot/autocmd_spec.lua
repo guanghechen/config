@@ -1,3 +1,4 @@
+local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
 local t = harness.new()
@@ -5,7 +6,7 @@ local t = harness.new()
 ---@class dot.autocmd.test.IRuntime
 ---@field autocmds                    table<string, table>
 ---@field queries                     fun(is_zoomed: boolean|nil)[]
----@field scheduled                   fun()[]
+---@field schedule                    __test__.support.bootstrap.ISchedule
 ---@field updates                     boolean[]
 ---@field disposed                    integer
 ---@field tab_close_argc               integer|nil
@@ -27,7 +28,7 @@ local function setup()
   local runtime = {
     autocmds = {},
     queries = {},
-    scheduled = {},
+    schedule = bootstrap.with_schedule(t),
     updates = {},
     disposed = 0,
     tab_close_argc = nil,
@@ -66,9 +67,9 @@ local function setup()
     tmux = {
       query_tmux_pane_zoomed = function(callback)
         runtime.queries[#runtime.queries + 1] = function(is_zoomed)
-          runtime.scheduled[#runtime.scheduled + 1] = function()
+          vim.schedule(function()
             callback(is_zoomed)
-          end
+          end)
         end
       end,
     },
@@ -179,9 +180,6 @@ local function setup()
       end,
     },
   })
-  t:patch_table(vim, "schedule", function(callback)
-    runtime.scheduled[#runtime.scheduled + 1] = callback
-  end)
   t:patch_table(vim.api, "nvim_create_autocmd", function(_, opts)
     runtime.autocmds[opts.group] = opts
     return 1
@@ -201,15 +199,6 @@ local function setup()
 
   assert(loadfile("lua/dot/autocmd.lua"))()
   return runtime
-end
-
----@param runtime                      dot.autocmd.test.IRuntime
----@return nil
-local function run_scheduled(runtime)
-  while #runtime.scheduled > 0 do
-    local callback = table.remove(runtime.scheduled, 1)
-    callback()
-  end
 end
 
 t:test("TabClosed delegates without passing the ordinal as a handle", function()
@@ -262,12 +251,12 @@ t:test("concurrent refreshes keep one query in flight and apply the final result
   t.assert_eq(1, #runtime.queries, "in-flight queries")
 
   runtime.queries[1](false)
-  run_scheduled(runtime)
+  runtime.schedule.drain()
   t.assert_eq(2, #runtime.queries, "trailing query")
   t.assert_eq(0, #runtime.updates, "stale result must not apply")
 
   runtime.queries[2](true)
-  run_scheduled(runtime)
+  runtime.schedule.drain()
   t.assert_eq(1, #runtime.updates, "final updates")
   t.assert_true(runtime.updates[1], "final state")
 end)
@@ -276,24 +265,24 @@ t:test("VimResized equalizes only the current tab and refreshes state", function
   local runtime = setup()
 
   runtime.autocmds.bootstrap_on_VimResized.callback()
-  t.assert_eq(1, #runtime.scheduled, "scheduled resize callbacks")
+  t.assert_eq(1, #runtime.schedule.callbacks, "scheduled resize callbacks")
   t.assert_eq(1, #runtime.equalized_tabnrs, "equalized tabs")
   t.assert_eq(1, runtime.equalized_tabnrs[1], "current tab")
   t.assert_eq(0, #runtime.queries, "before scheduled resize work")
 
-  table.remove(runtime.scheduled, 1)()
+  table.remove(runtime.schedule.callbacks, 1)()
   t.assert_eq(1, #runtime.queries, "resize query")
-  t.assert_eq(0, #runtime.scheduled, "nested scheduled callbacks")
+  t.assert_eq(0, #runtime.schedule.callbacks, "nested scheduled callbacks")
 end)
 
 t:test("WinResized refreshes winline and tabline after the resize", function()
   local runtime = setup()
 
   runtime.autocmds.bootstrap_on_WinResized.callback()
-  t.assert_eq(1, #runtime.scheduled, "scheduled resize callbacks")
+  t.assert_eq(1, #runtime.schedule.callbacks, "scheduled resize callbacks")
   t.assert_eq(0, runtime.status_updates, "updates before scheduled resize work")
 
-  run_scheduled(runtime)
+  runtime.schedule.drain()
   t.assert_eq(1, runtime.tabline_updates, "tabline refreshes")
   t.assert_eq(2, runtime.status_updates, "winline and tabline refreshes")
 end)
@@ -303,7 +292,7 @@ t:test("failed query preserves the current state and permits retry", function()
 
   runtime.autocmds.state_tmux_zen_mode_on_VimEnter.callback()
   runtime.queries[1](nil)
-  run_scheduled(runtime)
+  runtime.schedule.drain()
 
   t.assert_eq(0, #runtime.updates, "state updates")
 
@@ -317,7 +306,7 @@ t:test("VimLeavePre prevents an in-flight query from updating disposed state", f
   runtime.autocmds.state_tmux_zen_mode_on_VimEnter.callback()
   runtime.autocmds.state_on_VimLeavePre.callback()
   runtime.queries[1](false)
-  run_scheduled(runtime)
+  runtime.schedule.drain()
 
   t.assert_eq(1, runtime.disposed, "dispose calls")
   t.assert_eq(0, #runtime.updates, "updates after dispose")
@@ -349,10 +338,10 @@ t:test("VimLeavePre drops deferred window updates after status disposal", functi
 
   runtime.autocmds.bootstrap_on_WinEnter.callback()
   runtime.autocmds.bootstrap_on_WinResized.callback()
-  t.assert_eq(2, #runtime.scheduled, "deferred window updates")
+  t.assert_eq(2, #runtime.schedule.callbacks, "deferred window updates")
 
   runtime.autocmds.state_on_VimLeavePre.callback()
-  run_scheduled(runtime)
+  runtime.schedule.drain()
 
   t.assert_eq(1, runtime.disposed, "dispose calls")
   t.assert_eq(0, runtime.status_updates, "status updates after dispose")
@@ -360,20 +349,17 @@ end)
 
 t:test("VimEnter reports a working directory deleted before startup", function()
   local runtime = setup()
-  local reports = {} ---@type stl.reporter.IOptions[]
-  t:patch_table(stl.reporter, "error", function(report)
-    reports[#reports + 1] = report
-  end)
+  local reports = bootstrap.with_reporter(t).error
 
   runtime.autocmds.state_on_VimEnter.callback()
-  run_scheduled(runtime)
+  runtime.schedule.drain()
   t.assert_eq(0, #reports, "reports with an existing working directory")
 
   t:patch_table(vim.uv, "cwd", function()
     return nil, "ENOENT: no such file or directory", "ENOENT"
   end)
   runtime.autocmds.state_on_VimEnter.callback()
-  run_scheduled(runtime)
+  runtime.schedule.drain()
   t.assert_eq(1, #reports, "reports with a deleted working directory")
   t.assert_eq("working directory", reports[1].subject, "subject")
   t.assert_true(reports[1].message:find("cd $PWD", 1, true) ~= nil, "the message tells how to recover")

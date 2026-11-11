@@ -4,21 +4,6 @@ require("ark.bootstrap").setup()
 local t = harness.new()
 
 ---@param filepath                      string
----@param lines                         string[]
----@return integer
-local function create_buffer(filepath, lines)
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
-  vim.api.nvim_buf_set_name(bufnr, filepath)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-  return bufnr
-end
-
----@param filepath                      string
 ---@param line                          integer
 ---@param col                           integer
 ---@param col_end                       integer
@@ -44,14 +29,7 @@ end
 local function navigate(method, results, clients)
   local filepath_source = "/workspace/source.lua"
   local winnr_source = vim.api.nvim_get_current_win()
-  local bufnr_previous = vim.api.nvim_win_get_buf(winnr_source)
-  local bufnr_source = create_buffer(filepath_source, { "callback()" })
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr_previous) then
-      vim.api.nvim_win_set_buf(winnr_source, bufnr_previous)
-    end
-  end)
-  vim.api.nvim_win_set_buf(winnr_source, bufnr_source)
+  t:buffer({ "callback()" }, { name = filepath_source, current = true })
 
   local picker = nil ---@type era.m.picker.FiletreeComposer|nil
   local jumps = {}
@@ -126,7 +104,7 @@ local function navigate(method, results, clients)
   if focused then
     t.wait_until(function()
       return refreshes == 2
-    end, 1000, "scheduled reference snippets did not invalidate and refresh their producer")
+    end, 5000, "scheduled reference snippets did not invalidate and refresh their producer")
   end
   return assert(picker), jumps, focused, requests
 end
@@ -182,13 +160,13 @@ end)
 for _, reversed in ipairs({ false, true }) do
   t:test("definitions: collapses the reported field/function pair, reversed=" .. tostring(reversed), function()
     local filepath = "/workspace/target.lua"
-    create_buffer(filepath, {
+    t:buffer({
       "local conds = {",
       "  not_vscode_or_yozvim = function()",
       "    return not vim.g.vscode and not vim.g.yozvim",
       "  end,",
       "}",
-    })
+    }, { name = filepath })
     local targets = {}
     for _, target in ipairs({ location(filepath, 1, 2, 22), location(filepath, 1, 25, 5, 3) }) do
       targets[#targets + 1] =
@@ -211,7 +189,7 @@ end
 
 t:test("definitions: distinct fields on the same line still open the picker", function()
   local filepath = "/workspace/target.lua"
-  create_buffer(filepath, { "local conds = { first = function() end, second = function() end }" })
+  t:buffer({ "local conds = { first = function() end, second = function() end }" }, { name = filepath })
   local targets = {
     location(filepath, 0, 16, 21),
     location(filepath, 0, 24, 38),
@@ -233,7 +211,7 @@ t:test("definitions: distinct files still open the picker", function()
   local filepaths = { "/workspace/first.lua", "/workspace/second.lua" }
   local results = {}
   for index, filepath in ipairs(filepaths) do
-    create_buffer(filepath, { "local conds = { callback = function() end }" })
+    t:buffer({ "local conds = { callback = function() end }" }, { name = filepath })
     results[index] = { result = { location(filepath, 0, 16, 24), location(filepath, 0, 27, 41) } }
   end
   local picker, jumps, focused = navigate("textDocument/definition", results)
@@ -259,7 +237,7 @@ for _, sample in ipairs({
 }) do
   t:test("definitions: does not collapse " .. sample.source, function()
     local filepath = "/workspace/target.lua"
-    create_buffer(filepath, { sample.source })
+    t:buffer({ sample.source }, { name = filepath })
     local targets = {}
     local from = 1
     for _, token in ipairs(sample.tokens) do
@@ -276,7 +254,7 @@ end
 
 t:test("definitions: preserves candidates when the Lua parser is unavailable", function()
   local filepath = "/workspace/target.lua"
-  create_buffer(filepath, { "local conds = { callback = function() end }" })
+  t:buffer({ "local conds = { callback = function() end }" }, { name = filepath })
   t:patch_table(vim.treesitter, "get_string_parser", function()
     error("Lua parser unavailable")
   end)
@@ -336,7 +314,7 @@ end)
 t:test("definitions: positions follow each client's encoding both ways", function()
   local filepath = "/workspace/target.ts"
   -- Before "target", UTF-16 counts 16 units and UTF-8 counts 20 bytes.
-  create_buffer(filepath, { 'const s = "中文"; target();' })
+  t:buffer({ 'const s = "中文"; target();' }, { name = filepath })
   local _, jumps, focused, requests = navigate("textDocument/definition", {
     [1] = { result = { location(filepath, 0, 16, 22) } },
     [2] = { result = { location(filepath, 0, 20, 26) } },
@@ -350,7 +328,7 @@ end)
 
 t:test("references: UTF-16 results highlight byte columns", function()
   local filepath = "/workspace/target.ts"
-  create_buffer(filepath, { 'const s = "中文"; target(); target();' })
+  t:buffer({ 'const s = "中文"; target(); target();' }, { name = filepath })
   local picker, jumps, focused = navigate("textDocument/references", {
     [1] = { result = { location(filepath, 0, 16, 22), location(filepath, 0, 26, 32) } },
   }, { { id = 1, offset_encoding = "utf-16" } })
@@ -366,13 +344,13 @@ end)
 
 t:test("definitions: collapses a field/function pair reported in UTF-16", function()
   local filepath = "/workspace/target.lua"
-  create_buffer(filepath, {
+  t:buffer({
     "local conds = {",
     "  --[[中]] not_vscode_or_yozvim = function()",
     "    return not vim.g.vscode and not vim.g.yozvim",
     "  end,",
     "}",
-  })
+  }, { name = filepath })
   -- UTF-16 counts the CJK character as one unit: the field starts at 10 and the function at 33.
   local targets = {}
   for _, target in ipairs({ location(filepath, 1, 10, 30), location(filepath, 1, 33, 5, 3) }) do

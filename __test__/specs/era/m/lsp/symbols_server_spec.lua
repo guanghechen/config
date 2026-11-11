@@ -1,11 +1,10 @@
+local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
+local lsp = require("__test__.support.lsp")
 local t = harness.new()
 
 require("ark.bootstrap").setup()
-local reports = {} ---@type table[]
-t:patch_table(stl.reporter, "error", function(report)
-  reports[#reports + 1] = report
-end)
+local reports = bootstrap.with_reporter(t)
 
 ---@class era.m.lsp.symbols.test.IServer
 ---@field client_id                     integer
@@ -18,21 +17,9 @@ end)
 ---@return integer bufnr
 ---@return integer winnr
 local function new_buffer(lines)
-  local bufnr = vim.api.nvim_create_buf(true, false)
-  vim.api.nvim_buf_set_name(bufnr, vim.fs.joinpath(t:tempdir(), "symbols.lua"))
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-  local winnr = vim.api.nvim_get_current_win()
-  local previous_bufnr = vim.api.nvim_win_get_buf(winnr)
-  vim.api.nvim_win_set_buf(winnr, bufnr)
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(previous_bufnr) then
-      vim.api.nvim_win_set_buf(winnr, previous_bufnr)
-    end
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
-  return bufnr, winnr
+  local name = vim.fs.joinpath(t:tempdir(), "symbols.lua")
+  local bufnr = t:buffer(lines, { name = name, listed = true, current = true })
+  return bufnr, vim.api.nvim_get_current_win()
 end
 
 ---@param bufnr                         integer
@@ -40,56 +27,28 @@ end
 ---@return era.m.lsp.symbols.test.IServer
 local function start_server(bufnr, symbols)
   local server = { pending = {}, cancelled = 0, hold = false, symbols = symbols } ---@type era.m.lsp.symbols.test.IServer
-  local client_id = vim.lsp.start({
+  server.client_id = lsp.start(t, bufnr, {
     name = "symbols-test",
-    cmd = function(dispatchers)
-      local stopped = false
-      local message_id = 0
-      return {
-        request = function(method, _, callback)
-          -- Unique ids let the client track and cancel each request.
-          message_id = message_id + 1
-          if method == "initialize" then
-            callback(nil, { capabilities = { textDocumentSync = 1, documentSymbolProvider = true } })
-          elseif method == "textDocument/documentSymbol" then
-            local function answer(err, result)
-              callback(err, result)
-            end
-            if server.hold then
-              server.pending[#server.pending + 1] = answer
-            else
-              vim.schedule(function()
-                answer(nil, server.symbols)
-              end)
-            end
-          else
-            callback(nil, nil)
-          end
-          return true, message_id
-        end,
-        notify = function(method)
-          if method == "$/cancelRequest" then
-            server.cancelled = server.cancelled + 1
-          end
-          return true
-        end,
-        is_closing = function()
-          return stopped
-        end,
-        terminate = function()
-          stopped = true
-          dispatchers.on_exit(0, 0)
-        end,
-      }
-    end,
-  }, { bufnr = bufnr })
-  server.client_id = assert(client_id, "client started")
-  t:defer(function()
-    local client = vim.lsp.get_client_by_id(server.client_id)
-    if client ~= nil then
-      client:stop(true)
-    end
-  end)
+    cmd = lsp.server({
+      capabilities = { textDocumentSync = 1, documentSymbolProvider = true },
+      on_request = function(method, _, respond)
+        if method ~= "textDocument/documentSymbol" then
+          respond(nil, nil)
+        elseif server.hold then
+          server.pending[#server.pending + 1] = respond
+        else
+          vim.schedule(function()
+            respond(nil, server.symbols)
+          end)
+        end
+      end,
+      on_notify = function(method)
+        if method == "$/cancelRequest" then
+          server.cancelled = server.cancelled + 1
+        end
+      end,
+    }),
+  })
   t.wait_until(function()
     return vim.lsp.buf_is_attached(bufnr, server.client_id)
   end, 5000, "client attached")
@@ -159,7 +118,7 @@ t:test("a client stopped with a request in flight settles silently and the next 
     return #server.pending == 1
   end, 5000, "request in flight")
 
-  local errors = #reports
+  local errors = #reports.error
   assert(vim.lsp.get_client_by_id(server.client_id)):stop(true)
   t.wait_until(function()
     return vim.lsp.get_client_by_id(server.client_id) == nil
@@ -174,7 +133,7 @@ t:test("a client stopped with a request in flight settles silently and the next 
     return delivered ~= nil
   end, 5000, "next request delivered")
   t.assert_eq("value@1:7", delivered, "recovered path")
-  t.assert_eq(errors, #reports, "no error reported")
+  t.assert_eq(errors, #reports.error, "no error reported")
 end)
 
 t:test("wiping the buffer cancels its in-flight request", function()
@@ -187,12 +146,7 @@ t:test("wiping the buffer cancels its in-flight request", function()
     return #server.pending == 1
   end, 5000, "request in flight")
 
-  local other_bufnr = vim.api.nvim_create_buf(true, false)
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(other_bufnr) then
-      vim.api.nvim_buf_delete(other_bufnr, { force = true })
-    end
-  end)
+  local other_bufnr = t:buffer(nil, { listed = true })
   vim.api.nvim_win_set_buf(winnr, other_bufnr)
   vim.api.nvim_buf_delete(bufnr, { force = true })
   t.wait_until(function()

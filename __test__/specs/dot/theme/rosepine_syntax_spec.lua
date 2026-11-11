@@ -22,16 +22,8 @@ local lines = {
 ---@return integer bufnr
 ---@return integer winnr
 local function open_sample()
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  t:defer(function()
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-  vim.api.nvim_set_option_value("filetype", "lua", { buf = bufnr })
-  local winnr = vim.api.nvim_open_win(bufnr, true, { split = "below", height = #lines })
-  t:defer(function()
-    vim.api.nvim_win_close(winnr, true)
-  end)
+  local bufnr = t:buffer(lines, { filetype = "lua" })
+  local winnr = t:window(bufnr, { split = "below", height = #lines }, true)
   for name, value in pairs({
     number = false,
     relativenumber = false,

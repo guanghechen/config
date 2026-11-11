@@ -178,7 +178,7 @@ t:test("locate_js_project_root: preserves nearest-marker and same-directory prec
 end)
 
 t:test("restart_server: restarts through :lsp restart instead of editing the buffer again", function()
-  t:patch_table(stl, "reporter", { info = function() end })
+  bootstrap.with_reporter(t)
   local commands = {} ---@type string[]
   t:patch_table(vim, "cmd", function(command)
     commands[#commands + 1] = command

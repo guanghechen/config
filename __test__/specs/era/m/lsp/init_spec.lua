@@ -205,18 +205,9 @@ t:test("dressing: enables LSPs for existing and future buffers without re-editin
 end)
 
 t:test("roslyn completion: rejects edits targeting another buffer", function()
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  t:defer(function()
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
-  vim.api.nvim_set_current_buf(bufnr)
-  vim.api.nvim_buf_set_name(bufnr, "/tmp/roslyn-invalid-completion.cs")
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "fo" })
+  local bufnr = t:buffer({ "fo" }, { name = "/tmp/roslyn-invalid-completion.cs", current = true })
 
-  local warnings = 0
-  t:patch_table(stl.reporter, "warn", function()
-    warnings = warnings + 1
-  end)
+  local reports = bootstrap.with_reporter(t)
   t:patch_table(vim.lsp, "get_client_by_id", function()
     return fake_roslyn_client()
   end)
@@ -236,18 +227,12 @@ t:test("roslyn completion: rejects edits targeting another buffer", function()
     },
   }, { client_id = 1, bufnr = bufnr })
 
-  t.assert_eq(1, warnings, "invalid edit warning")
+  t.assert_eq(1, #reports.warn, "invalid edit warning")
   t.assert_eq("fo", vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)[1], "unchanged buffer")
 end)
 
 t:test("roslyn completion: restores UTF-16 cursor offset after a plain edit", function()
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  t:defer(function()
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
-  vim.api.nvim_set_current_buf(bufnr)
-  vim.api.nvim_buf_set_name(bufnr, "/tmp/roslyn-offset-completion.cs")
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "x" })
+  local bufnr = t:buffer({ "x" }, { name = "/tmp/roslyn-offset-completion.cs", current = true })
   vim.api.nvim_set_option_value("fileformat", "dos", { buf = bufnr })
 
   t:patch_table(vim.lsp, "get_client_by_id", function()
@@ -277,13 +262,7 @@ t:test("roslyn completion: restores UTF-16 cursor offset after a plain edit", fu
 end)
 
 t:test("roslyn completion: expands snippet edits instead of inserting placeholders", function()
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  t:defer(function()
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
-  vim.api.nvim_set_current_buf(bufnr)
-  vim.api.nvim_buf_set_name(bufnr, "/tmp/roslyn-snippet-completion.cs")
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "  fo" })
+  local bufnr = t:buffer({ "  fo" }, { name = "/tmp/roslyn-snippet-completion.cs", current = true })
 
   t:patch_table(vim.lsp, "get_client_by_id", function()
     return fake_roslyn_client()

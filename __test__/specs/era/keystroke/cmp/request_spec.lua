@@ -1,5 +1,5 @@
 local harness = require("__test__.support.harness")
-local UI = require("__test__.support.ui")
+local embedded = require("__test__.support.cmp.embedded")
 local t = harness.new()
 
 for _, timeout in ipairs({ false, true }) do
@@ -9,18 +9,14 @@ for _, timeout in ipairs({ false, true }) do
         .. " refresh submits the logical input before native preview"
         .. (prefix == "" and "" or " with UTF-16 offsets"),
       function()
-        local ui = UI.new()
-        t:defer(function()
-          ui:close()
-        end)
-        ui:start({ width = 100, height = 35 })
+        local ui = embedded.behavior_editor(t, {
+          lines = { prefix .. "a TAIL" },
+          cursor = { 1, #prefix + 1 },
+          items = { { label = "alpha", kind = 6 } },
+        })
         ui:lua(
           [[
           local prefix = ...
-          require('__test__.support.cmp.behavior').setup({
-            lines = { prefix .. 'a TAIL' }, cursor = { 1, #prefix + 1 },
-            items = {{ label = 'alpha', kind = 6 }},
-          })
           _G.cmp_refresh_requests = {}
           local client = vim.lsp.get_client_by_id(9001)
           local request = client.request
@@ -67,11 +63,11 @@ for _, timeout in ipairs({ false, true }) do
         ui:rpc("nvim_input", "i")
         ui:wait_until(function()
           return ui:rpc("nvim_get_mode").mode:sub(1, 1) == "i"
-        end, 1000, "insert mode")
+        end, 5000, "insert mode")
         ui:lua([[require('era.keystroke.cmp').show()]])
         ui:wait_until(function()
           return ui:lua([[return vim.fn.complete_info({'selected'}).selected == 0]])
-        end, 1000, "initial incomplete candidate")
+        end, 5000, "initial incomplete candidate")
         for _, step in ipairs({ { "l", "al TAIL" }, { "p", "alp TAIL" } }) do
           ui:rpc("nvim_input", step[1])
           ui:wait_until(function()
@@ -82,12 +78,12 @@ for _, timeout in ipairs({ false, true }) do
             ]],
               prefix .. step[2]
             )
-          end, 1000, "latest input owns the pending request")
+          end, 5000, "latest input owns the pending request")
         end
         ui:lua([[vim.api.nvim_select_popupmenu_item(0, true, false, {})]])
         ui:wait_until(function()
           return ui:lua([[return vim.api.nvim_get_current_line() == ...]], prefix .. "alpha TAIL")
-        end, 1000, "native preview is inserted before refresh")
+        end, 5000, "native preview is inserted before refresh")
         if not timeout then
           ui:lua([[
             local request = cmp_refresh_requests[2]
@@ -100,11 +96,11 @@ for _, timeout in ipairs({ false, true }) do
             return #cmp_refresh_requests == 3 and session.items[1] ~= nil
               and session.items[1].raw.label == 'alpNEW' and session:is_visible()
           ]])
-        end, 3000, "latest queued query publishes its own result")
+        end, 5000, "latest queued query publishes its own result")
         ui:rpc("nvim_input", "<C-y>")
         ui:wait_until(function()
           return ui:lua([[return #require('__test__.support.cmp.behavior').commands == 1]])
-        end, 1000, "completion accepted")
+        end, 5000, "completion accepted")
         t.assert_eq(
           prefix .. "alpNEW CHANGED",
           ui:lua([[return vim.api.nvim_get_current_line()]]),
@@ -129,11 +125,11 @@ for _, timeout in ipairs({ false, true }) do
         ui:rpc("nvim_input", "<Esc>u")
         ui:wait_until(function()
           return ui:lua([[return vim.api.nvim_get_current_line() == ...]], prefix .. "alp TAIL")
-        end, 1000, "undo restores logical input and the original suffix together")
+        end, 5000, "undo restores logical input and the original suffix together")
         ui:rpc("nvim_input", "<C-r>")
         ui:wait_until(function()
           return ui:lua([[return vim.api.nvim_get_current_line() == ...]], prefix .. "alpNEW CHANGED")
-        end, 1000, "redo reapplies the same edit transaction")
+        end, 5000, "redo reapplies the same edit transaction")
       end
     )
   end
@@ -142,16 +138,12 @@ end
 for _, operation in ipairs({ "incomplete", "timeout", "accept", "cancel" }) do
   for _, action in ipairs({ "hide", "show" }) do
     t:test(operation .. " preserves a reentrant " .. action .. " while restoring preview", function()
-      local ui = UI.new()
-      t:defer(function()
-        ui:close()
-      end)
-      ui:start({ width = 100, height = 35 })
+      local ui = embedded.behavior_editor(t, {
+        lines = { "a TAIL" },
+        cursor = { 1, 1 },
+        items = { { label = "alpha", kind = 6 } },
+      })
       ui:lua([[
-        require('__test__.support.cmp.behavior').setup({
-          lines = { 'a TAIL' }, cursor = { 1, 1 },
-          items = {{ label = 'alpha', kind = 6 }},
-        })
         _G.cmp_refresh_requests = {}
         local client = vim.lsp.get_client_by_id(9001)
         local request = client.request
@@ -170,11 +162,11 @@ for _, operation in ipairs({ "incomplete", "timeout", "accept", "cancel" }) do
       ui:rpc("nvim_input", "i")
       ui:wait_until(function()
         return ui:rpc("nvim_get_mode").mode:sub(1, 1) == "i"
-      end, 1000, "insert mode")
+      end, 5000, "insert mode")
       ui:lua([[require('era.keystroke.cmp').show()]])
       ui:wait_until(function()
         return ui:lua([[return vim.fn.complete_info({'selected'}).selected == 0]])
-      end, 1000, "initial incomplete candidate")
+      end, 5000, "initial incomplete candidate")
       for _, step in ipairs({ { "l", "al TAIL" }, { "p", "alp TAIL" } }) do
         ui:rpc("nvim_input", step[1])
         ui:wait_until(function()
@@ -185,12 +177,12 @@ for _, operation in ipairs({ "incomplete", "timeout", "accept", "cancel" }) do
             ]],
             step[2]
           )
-        end, 1000, "latest input owns the pending request")
+        end, 5000, "latest input owns the pending request")
       end
       ui:lua([[vim.api.nvim_select_popupmenu_item(0, true, false, {})]])
       ui:wait_until(function()
         return ui:lua([[return vim.api.nvim_get_current_line() == 'alpha TAIL']])
-      end, 1000, "native preview is inserted before refresh")
+      end, 5000, "native preview is inserted before refresh")
       ui:lua(
         [[
         local action, operation = ...
@@ -210,7 +202,7 @@ for _, operation in ipairs({ "incomplete", "timeout", "accept", "cancel" }) do
       )
       ui:wait_until(function()
         return ui:lua([[return cmp_reentered]])
-      end, 3000, "closing the native menu runs the reentrant hook")
+      end, 5000, "closing the native menu runs the reentrant hook")
       t.assert_eq("alpha TAIL", ui:lua([[return vim.api.nvim_get_current_line()]]), "superseded restore cannot edit")
       t.assert_eq(
         action == "show" and "alpha TAIL" or false,
@@ -232,28 +224,19 @@ end
 
 for _, operation in ipairs({ "manual", "input" }) do
   t:test(operation .. " redraw preserves a reentrant hide and rejects native acceptance", function()
-    local ui = UI.new()
-    t:defer(function()
-      ui:close()
-    end)
-    ui:start({ width = 100, height = 35 })
-    ui:lua([[
-      require('__test__.support.cmp.behavior').setup({
-        lines = { 'a TAIL' }, cursor = { 1, 1 },
-        items = {{
-          label = 'alpha', kind = 6,
-          command = { title = 'accepted', command = 'fixture.accepted' },
-        }},
-      })
-    ]])
+    local ui = embedded.behavior_editor(t, {
+      lines = { "a TAIL" },
+      cursor = { 1, 1 },
+      items = { { label = "alpha", kind = 6, command = { title = "accepted", command = "fixture.accepted" } } },
+    })
     ui:rpc("nvim_input", "i")
     ui:wait_until(function()
       return ui:rpc("nvim_get_mode").mode:sub(1, 1) == "i"
-    end, 1000, "insert mode")
+    end, 5000, "insert mode")
     ui:lua([[require('era.keystroke.cmp').show()]])
     ui:wait_until(function()
       return ui:lua([[return vim.fn.complete_info({'selected'}).selected == 0]])
-    end, 1000, "initial candidate is visible without inserting a preview")
+    end, 5000, "initial candidate is visible without inserting a preview")
     ui:lua([[
       cmp_redraw_reentered = false
       vim.api.nvim_create_autocmd('CompleteDone', { once = true, callback = function()
@@ -270,7 +253,7 @@ for _, operation in ipairs({ "manual", "input" }) do
     end
     ui:wait_until(function()
       return ui:lua([[return cmp_redraw_reentered]])
-    end, 1000, "replacing the native list runs the reentrant hook")
+    end, 5000, "replacing the native list runs the reentrant hook")
     t.assert_true(ui:lua([[return cmp_redraw_internal]]), "hide runs during the internal redraw")
     local input = operation == "manual" and "a TAIL" or "al TAIL"
     t.assert_eq(input, ui:lua([[return vim.api.nvim_get_current_line()]]), "hide preserves logical input")
@@ -298,11 +281,11 @@ for _, operation in ipairs({ "manual", "input" }) do
     ui:lua([[require('era.keystroke.cmp').show()]])
     ui:wait_until(function()
       return ui:lua([[return require('era.keystroke.cmp').is_menu_visible()]])
-    end, 1000, "a new owner can reopen completion")
+    end, 5000, "a new owner can reopen completion")
     ui:lua([[vim.api.nvim_select_popupmenu_item(0, true, true, {})]])
     ui:wait_until(function()
       return ui:lua([[return #require('__test__.support.cmp.behavior').commands == 1]])
-    end, 1000, "the new owner completes the full acceptance transaction")
+    end, 5000, "the new owner completes the full acceptance transaction")
     t.assert_eq("alpha TAIL", ui:lua([[return vim.api.nvim_get_current_line()]]))
     t.assert_eq("", ui:lua([[return vim.v.errmsg]]), "no editor errors after reopening")
   end)

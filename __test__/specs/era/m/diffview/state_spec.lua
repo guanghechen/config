@@ -1,5 +1,6 @@
 require("ark.bootstrap").setup()
 local t = require("__test__.support.harness").new()
+local treeview = require("__test__.support.treeview")
 local CommitsState = require("era.m.diffview.view.commits.state").State
 local WorkspaceState = require("era.m.diffview.view.workspace.state").State
 
@@ -18,6 +19,9 @@ end)
 
 t:test("commits pagination separates requested and applied pages", function()
   local state = CommitsState.new(101, true)
+  t:defer(function()
+    state:dispose()
+  end)
 
   state:request_commits_page(3)
   t.assert_eq(3, state:get_commits_page(), "requested page")
@@ -28,7 +32,6 @@ t:test("commits pagination separates requested and applied pages", function()
   state:request_commits_page(4)
   state:reset_commits_page()
   t.assert_eq(2, state:get_commits_page(), "latest applied page")
-  state:dispose()
 end)
 
 ---@param owner                         era.view.ResultTree
@@ -41,7 +44,7 @@ local function populate_tree(owner, keys)
     owner.source:insert(root, key, { presentation = { label = key } })
     owner.entries[key] = { nodetype = "container" }
   end
-  require("__test__.support.treeview").publish(owner)
+  treeview.publish(owner)
 end
 
 t:test("expanded commits keep directory collapse state independent", function()
@@ -53,12 +56,12 @@ t:test("expanded commits keep directory collapse state independent", function()
   local owner = state:get_tree("commits")
   populate_tree(owner, { panels.key("commit:commit-a", "src", true), panels.key("commit:commit-b", "src", true) })
   state:collapse_commit_dir("commit-a", "src")
-  require("__test__.support.treeview").await(owner:ready())
+  treeview.await(owner:ready())
   t.assert_true(state:is_commit_dir_collapsed("commit-a", "src"))
   t.assert_false(state:is_commit_dir_collapsed("commit-b", "src"))
   state:toggle_commit_dir("commit-b", "src")
   state:expand_commit_dir("commit-a", "src")
-  require("__test__.support.treeview").await(owner:ready())
+  treeview.await(owner:ready())
   t.assert_false(state:is_commit_dir_collapsed("commit-a", "src"))
   t.assert_true(state:is_commit_dir_collapsed("commit-b", "src"))
 end)
@@ -79,7 +82,13 @@ end)
 
 t:test("workspace and commits keep independent per-view diff fold policies", function()
   local workspace = WorkspaceState.new(101, false)
+  t:defer(function()
+    workspace:dispose()
+  end)
   local commits = CommitsState.new(102, true)
+  t:defer(function()
+    commits:dispose()
+  end)
 
   t.assert_false(workspace:get_fold_unchanged(), "workspace expands from its default")
   t.assert_true(commits:get_fold_unchanged(), "commits folds from its default")
@@ -88,16 +97,15 @@ t:test("workspace and commits keep independent per-view diff fold policies", fun
   commits:set_fold_unchanged(false)
   t.assert_true(workspace:get_fold_unchanged(), "workspace override")
   t.assert_false(commits:get_fold_unchanged(), "commits override")
-
-  workspace:dispose()
-  commits:dispose()
 end)
 
 t:test("workspace state disposes its refresh owner and then ignores refreshes", function()
   local disposed = 0
   local uninitialized = WorkspaceState.new(100, true)
+  t:defer(function()
+    uninitialized:dispose()
+  end)
   t.assert_false(pcall(uninitialized.request_refresh, uninitialized), "uninitialized refresh still rejected")
-  uninitialized:dispose()
 
   local state = WorkspaceState.new(101, true)
   state:set_refresh({
@@ -125,23 +133,26 @@ t:test("workspace keeps staged and unstaged tree state independent", function()
     populate_tree(state:get_tree(stage), { panels.key(nil, "src", true), panels.key(nil, stage .. "/dir", true) })
   end
   state:collapse_dir("staged", "src")
-  require("__test__.support.treeview").await(state:get_tree("staged"):ready())
+  treeview.await(state:get_tree("staged"):ready())
   t.assert_true(state:is_collapsed("staged", "src"))
   t.assert_false(state:is_collapsed("unstaged", "src"))
   state:toggle_collapse("unstaged", "src")
   state:expand_dir("staged", "src")
-  require("__test__.support.treeview").await(state:get_tree("staged"):ready())
-  require("__test__.support.treeview").await(state:get_tree("unstaged"):ready())
+  treeview.await(state:get_tree("staged"):ready())
+  treeview.await(state:get_tree("unstaged"):ready())
   t.assert_false(state:is_collapsed("staged", "src"))
   t.assert_true(state:is_collapsed("unstaged", "src"))
   state:collapse_all("staged")
-  require("__test__.support.treeview").await(state:get_tree("staged"):ready())
+  treeview.await(state:get_tree("staged"):ready())
   t.assert_true(state:is_collapsed("staged", "staged/dir"))
   t.assert_false(state:is_collapsed("unstaged", "unstaged/dir"))
 end)
 
 t:test("workspace entries snapshot becomes applied only after commit", function()
   local state = WorkspaceState.new(101, true)
+  t:defer(function()
+    state:dispose()
+  end)
 
   t.assert_false(state:is_entries_snapshot_applied(), "initial empty value is not applied")
   state:set_entries({})
@@ -150,7 +161,6 @@ t:test("workspace entries snapshot becomes applied only after commit", function(
   t.assert_true(state:is_entries_snapshot_applied(), "snapshot committed after side effects")
   state:set_entries({})
   t.assert_false(state:is_entries_snapshot_applied(), "later replacement invalidates applied state")
-  state:dispose()
 end)
 
 t:run()

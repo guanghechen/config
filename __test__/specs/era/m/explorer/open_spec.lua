@@ -1,5 +1,6 @@
-local support = require("__test__.support.explorer").new()
-local t, await = support.t, support.await
+local t = require("__test__.support.harness").new()
+local support = require("__test__.support.explorer").new(t)
+local await = support.await
 
 ---@return table
 local function setup_open()

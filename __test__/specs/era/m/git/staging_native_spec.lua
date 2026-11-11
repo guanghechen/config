@@ -4,16 +4,6 @@ local diff = require("era.m.git.diff")
 local reference = assert(loadfile("__test__/fixtures/era/m/git/staging_lua_reference.lua"))()
 local t = harness.new()
 
----@param expected                      any
----@param actual                        any
----@param context                       string
----@return nil
-local function equal(expected, actual, context)
-  if not vim.deep_equal(expected, actual) then
-    error(context .. "\nexpected: " .. vim.inspect(expected) .. "\nactual: " .. vim.inspect(actual))
-  end
-end
-
 ---@param seed                          integer
 ---@return fun(limit: integer): integer
 local function random(seed)
@@ -37,7 +27,7 @@ t:test("normalization matches the frozen Lua implementation on byte/EOL combinat
   for _, text in ipairs(cases) do
     for _, eol in ipairs({ "\n", "\r\n" }) do
       local opts = { default_eol = eol, bomb = next_value(2) == 1, encoding = "UTF-8" }
-      equal(reference.from_text(text, opts), staging.from_text(text, opts), string.format("text %q", text))
+      t.assert_same(reference.from_text(text, opts), staging.from_text(text, opts), string.format("text %q", text))
     end
   end
 end)
@@ -57,11 +47,15 @@ t:test("legacy iconv codecs retain the same bytes and failures", function()
           local document = reference.from_text(text, { encoding = encoding, default_eol = eol, bomb = bomb })
           local expected, expected_err = reference.encode(document)
           local actual, actual_err = staging.encode(document)
-          equal({ expected, expected_err }, { actual, actual_err }, encoding .. " encode")
+          t.assert_same({ expected, expected_err }, { actual, actual_err }, encoding .. " encode")
           if actual then
             local expected_document, decode_err = reference.from_blob(actual, encoding, eol)
             local actual_document, actual_decode_err = staging.from_blob(actual, encoding, eol)
-            equal({ expected_document, decode_err }, { actual_document, actual_decode_err }, encoding .. " decode")
+            t.assert_same(
+              { expected_document, decode_err },
+              { actual_document, actual_decode_err },
+              encoding .. " decode"
+            )
           end
         end
       end
@@ -96,7 +90,7 @@ t:test("histogram hunks, selection projection and reconstruction match the Lua o
     local hunks = diff.run_diff(original.lines, modified.lines)
     local saved = vim.deepcopy(hunks)
     local context = string.format("case %d: %q -> %q", case, old_text, new_text)
-    equal(
+    t.assert_same(
       reference.apply_line_changes(original, modified, hunks),
       staging.apply_line_changes(original, modified, hunks),
       context
@@ -107,14 +101,14 @@ t:test("histogram hunks, selection projection and reconstruction match the Lua o
         for _, partial in ipairs({ false, true }) do
           local expected = reference.select_hunks(hunks, top, bot, partial)
           local expected_text = #expected > 0 and reference.apply_line_changes(original, modified, expected) or nil
-          equal(
+          t.assert_same(
             expected_text,
             staging.apply_selection(original, modified, hunks, top, bot, partial and "stage_partial" or "stage"),
             label .. " stage"
           )
           if partial then
             local inverted = reference.invert_hunks(expected)
-            equal(
+            t.assert_same(
               #inverted > 0 and reference.apply_line_changes(modified, original, inverted) or nil,
               staging.apply_selection(original, modified, hunks, top, bot, "unstage"),
               label .. " unstage"
@@ -122,14 +116,14 @@ t:test("histogram hunks, selection projection and reconstruction match the Lua o
           end
         end
         local expected, expected_touched = reference.without_range(hunks, top, bot)
-        equal(
+        t.assert_same(
           expected_touched and reference.apply_line_changes(original, modified, expected) or nil,
           staging.apply_selection(original, modified, hunks, top, bot, "reset"),
           label .. " reset"
         )
       end
     end
-    equal(saved, hunks, context .. " input unchanged")
+    t.assert_same(saved, hunks, context .. " input unchanged")
   end
 end)
 
@@ -138,14 +132,14 @@ t:test("single-hunk APIs preserve EOF nil/false, anchors and copy ownership", fu
     local original, modified = staging.from_text(texts[1]), staging.from_text(texts[2])
     local hunks = diff.run_diff(original.lines, modified.lines)
     for _, hunk in ipairs(hunks) do
-      equal({ reference.modified_range(hunk) }, { staging.modified_range(hunk) }, "modified range")
+      t.assert_same({ reference.modified_range(hunk) }, { staging.modified_range(hunk) }, "modified range")
       hunk.removed.no_nl_at_eof = false
-      equal(reference.invert(hunk), staging.invert(hunk), "explicit false inverted")
+      t.assert_same(reference.invert(hunk), staging.invert(hunk), "explicit false inverted")
       for top = 0, #modified.lines + 1 do
         for bot = top, #modified.lines + 1 do
-          equal(reference.touches(hunk, top, bot), staging.touches(hunk, top, bot), "touches")
+          t.assert_same(reference.touches(hunk, top, bot), staging.touches(hunk, top, bot), "touches")
           local expected, actual = reference.intersect(hunk, top, bot), staging.intersect(hunk, top, bot)
-          equal(expected, actual, "intersection")
+          t.assert_same(expected, actual, "intersection")
           if actual then
             t.assert_true(
               actual ~= hunk and actual.added ~= hunk.added and actual.removed ~= hunk.removed,
@@ -159,7 +153,7 @@ t:test("single-hunk APIs preserve EOF nil/false, anchors and copy ownership", fu
         end
       end
       for _, peer in ipairs(hunks) do
-        equal(reference.less(hunk, peer), staging.less(hunk, peer), "ordering")
+        t.assert_same(reference.less(hunk, peer), staging.less(hunk, peer), "ordering")
       end
     end
   end
@@ -170,13 +164,13 @@ t:test("reconstruction uses captured lines, not a second parse of document.text"
   original.lines[1] = "literal\r"
   local modified = staging.from_text("a\nB\n")
   local hunks = diff.run_diff({ "a", "b", "" }, modified.lines)
-  equal(
+  t.assert_same(
     reference.apply_line_changes(original, modified, hunks),
     staging.apply_line_changes(original, modified, hunks),
     "literal CR in buffer line"
   )
   original.text = "a\r\nb\n"
-  equal(
+  t.assert_same(
     reference.apply_line_changes(original, modified, hunks),
     staging.apply_line_changes(original, modified, hunks),
     "mixed-EOL encoded text"
@@ -187,9 +181,9 @@ t:test("malformed spans fail before returning writable text", function()
   local original, modified = staging.from_text("a\n"), staging.from_text("A\n")
   local hunks = diff.run_diff(original.lines, modified.lines)
   hunks[1].removed.start = 3
-  local ok, err = pcall(staging.apply_line_changes, original, modified, hunks)
-  t.assert_false(ok, "out-of-document span refused")
-  t.assert_true(tostring(err):find("does not match", 1, true) ~= nil, "actionable error")
+  t.assert_error(function()
+    staging.apply_line_changes(original, modified, hunks)
+  end, "does not match", "out-of-document span refused with an actionable error")
   hunks[1].removed.start = -1
   t.assert_false(pcall(staging.apply_line_changes, original, modified, hunks), "negative span refused")
   hunks[1].removed.start = 0

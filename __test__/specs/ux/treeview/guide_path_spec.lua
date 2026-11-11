@@ -1,11 +1,9 @@
+local UI = require("__test__.support.ui")
 local t = require("__test__.support.harness").new()
 
 t:test("the cursor path colors individual guide columns and keeps Visual's displayed ancestry", function()
-  local ui = require("__test__.support.ui").new()
+  local ui = UI.open(t)
   local grid = require("__test__.support.ui_grid").new(ui)
-  t:defer(function()
-    ui:close()
-  end)
   ui:start({ width = 100, height = 30, runtime = "native" })
   ui:lua([=[
     writes = 0
@@ -86,7 +84,7 @@ t:test("the cursor path colors individual guide columns and keeps Visual's displ
       )
     end
     local start = location.col - (depth + 1) * 2 - 2
-    local value = grid.grids[location.grid].rows[location.row + 1][start + column + 1]
+    local value = grid:row_cells(location)[start + column + 1]
     t.assert_eq(glyph, value[1], label .. " column " .. column)
     local highlight = grid.highlights[value[2]]
     t.assert_eq(foreground, highlight.foreground, label .. " column " .. column .. " color")
@@ -137,7 +135,7 @@ t:test("the cursor path colors individual guide columns and keeps Visual's displ
     )
     ui:rpc("nvim_command", "redraw!")
     local location = assert(grid:find("target"))
-    local cells = grid.grids[location.grid].rows[location.row + 1]
+    local cells = grid:row_cells(location)
     if leftcol <= 4 then
       local column = 5 - leftcol
       t.assert_eq("╰", cells[column][1], "visible connector survives clipping")

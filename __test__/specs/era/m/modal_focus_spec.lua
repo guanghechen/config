@@ -117,16 +117,12 @@ t:test("input does not restore a cursor into a replacement parent buffer", funct
   vim.api.nvim_win_set_cursor(parent_winnr, { 8, 0 })
 
   local input_winnr = input.open({ prompt = "Race", startinsert = false }, function() end)
-  local replacement_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local replacement_bufnr = t:buffer({ "a", "b", "c", "d", "e", "f", "g", "h" })
   t:defer(function()
     if vim.api.nvim_win_is_valid(parent_winnr) and vim.api.nvim_buf_is_valid(parent_bufnr) then
       vim.api.nvim_win_set_buf(parent_winnr, parent_bufnr)
     end
-    if vim.api.nvim_buf_is_valid(replacement_bufnr) then
-      vim.api.nvim_buf_delete(replacement_bufnr, { force = true })
-    end
   end)
-  vim.api.nvim_buf_set_lines(replacement_bufnr, 0, -1, false, { "a", "b", "c", "d", "e", "f", "g", "h" })
   vim.api.nvim_win_set_buf(parent_winnr, replacement_bufnr)
   vim.api.nvim_set_current_win(other_winnr)
 

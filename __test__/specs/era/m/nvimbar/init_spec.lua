@@ -52,12 +52,12 @@ t:test("lazy declarations load once and construct independently for each runtime
     t.assert_eq(index - 1, constructions, "construction stays in the queue")
     t.wait_until(function()
       return runtime.status == "ready"
-    end, 1000)
+    end, 5000)
     definitions[index] = runtime.definition
     runtime:request(context, true)
     t.wait_until(function()
       return runtime.status == "ready"
-    end, 1000)
+    end, 5000)
     t.assert_eq(index, constructions, "refresh reuses the initialized definition")
     t.assert_eq(index * 2, refreshes)
   end

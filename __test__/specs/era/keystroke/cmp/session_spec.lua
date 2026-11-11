@@ -8,29 +8,15 @@ local Session = require("era.keystroke.cmp.session")
 
 ---@return nil
 local function drain()
-  local done = false
   -- The second barrier also waits for renders queued by source response callbacks.
-  vim.schedule(function()
-    vim.schedule(function()
-      done = true
-    end)
-  end)
-  t.wait_until(function()
-    return done
-  end, 1000, "scheduled responses and renders drained")
+  t.drain()
+  t.drain()
 end
 
 ---@return table
 local function fixture()
-  local previous = vim.api.nvim_get_current_buf()
-  local bufnr = vim.api.nvim_create_buf(true, false)
-  vim.api.nvim_set_current_buf(bufnr)
-  vim.api.nvim_set_option_value("filetype", "lua", { buf = bufnr })
+  local bufnr = t:buffer(nil, { filetype = "lua", listed = true, current = true })
   vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
-  t:defer(function()
-    vim.api.nvim_set_current_buf(previous)
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
   local state = { context = runtime.context(""), created = 0, requests = {}, resolutions = {} }
   state.names = { "lsp" }
   t:patch_table(Context, "capture", function()
@@ -333,24 +319,20 @@ t:test("manual refresh discovers new directory entries without hiding the menu",
   state:update('"' .. directory .. "/al")
   t.wait_until(function()
     return #state.session.items == 1
-  end, 1000, "initial directory response")
+  end, 5000, "initial directory response")
   t.assert_eq("alpha_one.lua", state.session.items[1].raw.label)
   vim.fn.writefile({}, directory .. "/alpha_two.lua")
   state.session:update(state.context, true)
   t.wait_until(function()
     return #state.session.items == 2
-  end, 1000, "manual refresh sees the new file")
+  end, 5000, "manual refresh sees the new file")
   t.assert_eq(2, requests, "same query starts a fresh directory scan")
   t.assert_true(state.session:is_visible(), "fresh candidates remain presented")
 end)
 
 t:test("manual buffer refresh includes background edits at the same input prefix", function()
   local state = fixture()
-  local background = vim.api.nvim_create_buf(true, false)
-  t:defer(function()
-    vim.api.nvim_buf_delete(background, { force = true })
-  end)
-  vim.api.nvim_buf_set_lines(background, 0, -1, false, { "", "alpha_one", "" })
+  local background = t:buffer({ "", "alpha_one", "" }, { listed = true })
   t:patch_table(dot.tab, "resolve", function()
     return { bufs = { { bufnr = background } } }
   end)

@@ -1,3 +1,4 @@
+local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
 local t = harness.new()
@@ -20,7 +21,7 @@ local t = harness.new()
 ---@field calls                         era.m.lsp.symbols.test.ICall[]
 ---@field cancels                       integer
 ---@field timers                        era.m.lsp.symbols.test.ITimer[]
----@field scheduled                     fun()[]
+---@field schedule                      __test__.support.bootstrap.ISchedule
 ---@field errors                        table[]
 ---@field suppress                      boolean
 ---@field ready                         table<integer, boolean>
@@ -36,30 +37,25 @@ local function setup(lines)
     calls = {},
     cancels = 0,
     timers = {},
-    scheduled = {},
     errors = {},
     suppress = false,
     ready = {},
     pum = false,
   } ---@type era.m.lsp.symbols.test.IFixture
 
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines or { "function outer()", "  local inner = 1", "end" })
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local bufnr = t:buffer(lines or { "function outer()", "  local inner = 1", "end" }, { current = true })
   vim.api.nvim_buf_set_name(bufnr, "/tmp/symbols-spec-" .. bufnr .. ".lua")
   vim.b[bufnr].support_documentSymbol = 1
-  local previous_bufnr = vim.api.nvim_get_current_buf()
-  vim.api.nvim_set_current_buf(bufnr)
   t:defer(function()
+    -- Only the fixture window stays open, and it gets its buffer back.
+    if vim.api.nvim_win_is_valid(winnr) then
+      vim.api.nvim_set_current_win(winnr)
+    end
     vim.cmd("silent! only")
-    if vim.api.nvim_buf_is_valid(previous_bufnr) then
-      vim.api.nvim_set_current_buf(previous_bufnr)
-    end
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
   end)
   fixture.bufnr = bufnr
-  fixture.winnr = vim.api.nvim_get_current_win()
+  fixture.winnr = winnr
 
   t:patch_global("stl", {
     fn = { noop = function() end },
@@ -104,9 +100,7 @@ local function setup(lines)
   t:patch_table(vim.uv, "now", function()
     return fixture.now
   end)
-  t:patch_table(vim, "schedule", function(callback)
-    fixture.scheduled[#fixture.scheduled + 1] = callback
-  end)
+  fixture.schedule = bootstrap.with_schedule(t)
   t:patch_table(vim.fn, "pumvisible", function()
     return fixture.pum and 1 or 0
   end)
@@ -151,14 +145,6 @@ local function setup(lines)
 end
 
 ---@param fixture                       era.m.lsp.symbols.test.IFixture
----@return nil
-local function drain(fixture)
-  while #fixture.scheduled > 0 do
-    table.remove(fixture.scheduled, 1)()
-  end
-end
-
----@param fixture                       era.m.lsp.symbols.test.IFixture
 ---@param ms                            integer
 ---@return nil
 local function advance(fixture, ms)
@@ -169,7 +155,7 @@ local function advance(fixture, ms)
       timer.fn()
     end
   end
-  drain(fixture)
+  fixture.schedule.drain()
 end
 
 ---@param name                          string
@@ -227,7 +213,7 @@ t:test("windows in one batch share one request and each gets the path at its cur
   vim.api.nvim_win_set_cursor(other, { 2, 4 })
 
   local delivered = request(fixture, fixture.winnr, other)
-  drain(fixture)
+  fixture.schedule.drain()
   t.assert_eq(1, #fixture.calls, "requests")
   respond(
     fixture.calls[1],
@@ -246,13 +232,13 @@ end)
 t:test("a trigger during an in-flight request waits for a trailing request", function()
   local fixture = setup()
   request(fixture, fixture.winnr)
-  drain(fixture)
+  fixture.schedule.drain()
   local delivered = request(fixture, fixture.winnr)
-  drain(fixture)
+  fixture.schedule.drain()
   t.assert_eq(1, #fixture.calls, "requests while in flight")
 
   respond(fixture.calls[1], document("old"))
-  drain(fixture)
+  fixture.schedule.drain()
   t.assert_eq(1, #fixture.calls, "requests within the interval")
   advance(fixture, 128)
   t.assert_eq(2, #fixture.calls, "trailing request")
@@ -263,13 +249,13 @@ end)
 t:test("every trigger is answered by a later request even when the snapshot holds", function()
   local fixture = setup()
   request(fixture, fixture.winnr)
-  drain(fixture)
+  fixture.schedule.drain()
   respond(fixture.calls[1], document("inactive"))
   fixture.now = fixture.now + 1000
 
   local delivered = request(fixture, fixture.winnr)
   t.assert_eq("Function:inactive@1:1", names(fixture.Symbols.path(fixture.winnr)), "confirmed path")
-  drain(fixture)
+  fixture.schedule.drain()
   t.assert_eq(2, #fixture.calls, "fresh request")
   respond(fixture.calls[2], document("active"))
   t.assert_eq("Function:active@1:1", delivered[fixture.winnr], "server change")
@@ -279,7 +265,7 @@ end)
 t:test("the confirmed tree only serves its own snapshot", function()
   local fixture = setup()
   request(fixture, fixture.winnr)
-  drain(fixture)
+  fixture.schedule.drain()
   respond(fixture.calls[1], document("outer"))
   t.assert_true(fixture.Symbols.path(fixture.winnr) ~= nil, "same snapshot")
 
@@ -298,7 +284,7 @@ end)
 t:test("a response for edited text is delivered without being confirmed", function()
   local fixture = setup()
   local delivered = request(fixture, fixture.winnr)
-  drain(fixture)
+  fixture.schedule.drain()
   vim.api.nvim_buf_set_lines(fixture.bufnr, -1, -1, false, { "" })
   respond(fixture.calls[1], document("outer"))
 
@@ -309,12 +295,12 @@ end)
 t:test("failures keep the shown path, unconfirm the tree and follow the error policy", function()
   local fixture = setup()
   request(fixture, fixture.winnr)
-  drain(fixture)
+  fixture.schedule.drain()
   respond(fixture.calls[1], document("outer"))
 
   fixture.now = fixture.now + 1000
   local delivered = request(fixture, fixture.winnr)
-  drain(fixture)
+  fixture.schedule.drain()
   respond(fixture.calls[2], nil, { message = "Content modified." })
   t.assert_nil(delivered[fixture.winnr], "nothing delivered")
   t.assert_nil(fixture.Symbols.path(fixture.winnr), "unconfirmed")
@@ -322,24 +308,24 @@ t:test("failures keep the shown path, unconfirm the tree and follow the error po
 
   fixture.now = fixture.now + 1000
   request(fixture, fixture.winnr)
-  drain(fixture)
+  fixture.schedule.drain()
   respond(fixture.calls[3], nil, { message = "boom" })
   t.assert_eq(1, #fixture.errors, "reported failure")
 
   fixture.suppress = true
   fixture.now = fixture.now + 1000
   request(fixture, fixture.winnr)
-  drain(fixture)
+  fixture.schedule.drain()
   respond(fixture.calls[4], nil, { message = "boom" })
   t.assert_eq(1, #fixture.errors, "suppressed failure")
 
   fixture.now = fixture.now + 1000
   request(fixture, fixture.winnr)
-  drain(fixture)
+  fixture.schedule.drain()
   respond(fixture.calls[5], nil, { message = "trying to get AST for non-added document" })
   t.assert_true(vim.b[fixture.bufnr].dot_winline_disabled, "disabled document")
   request(fixture, fixture.winnr)
-  drain(fixture)
+  fixture.schedule.drain()
   t.assert_eq(5, #fixture.calls, "gated after disabling")
 end)
 
@@ -347,27 +333,27 @@ t:test("unsupported buffers and the current window with a popup menu are skipped
   local fixture = setup()
   vim.b[fixture.bufnr].support_documentSymbol = 0
   request(fixture, fixture.winnr)
-  drain(fixture)
+  fixture.schedule.drain()
   t.assert_eq(0, #fixture.calls, "unsupported")
 
   vim.b[fixture.bufnr].support_documentSymbol = 1
   fixture.pum = true
   request(fixture, fixture.winnr)
-  drain(fixture)
+  fixture.schedule.drain()
   t.assert_eq(0, #fixture.calls, "popup menu")
 end)
 
 t:test("a timeout reports only after every client answered once", function()
   local fixture = setup()
   request(fixture, fixture.winnr)
-  drain(fixture)
+  fixture.schedule.drain()
   advance(fixture, 10000)
   t.assert_eq(0, #fixture.errors, "client still starting")
   t.assert_eq(1, fixture.cancels, "cancelled")
 
   fixture.ready[1] = true
   request(fixture, fixture.winnr)
-  drain(fixture)
+  fixture.schedule.drain()
   advance(fixture, 10000)
   t.assert_eq(1, #fixture.errors, "timed out")
 end)
@@ -375,13 +361,13 @@ end)
 t:test("the last outstanding client detaching settles the request", function()
   local fixture = setup()
   request(fixture, fixture.winnr)
-  drain(fixture)
+  fixture.schedule.drain()
   vim.api.nvim_exec_autocmds("LspDetach", { buffer = fixture.bufnr, data = { client_id = 1 }, modeline = false })
   t.assert_eq(1, fixture.cancels, "detached client request cancelled")
 
   fixture.now = fixture.now + 1000
   request(fixture, fixture.winnr)
-  drain(fixture)
+  fixture.schedule.drain()
   t.assert_eq(2, #fixture.calls, "next request after detach")
   t.assert_eq(0, #fixture.errors, "silent detach")
 end)
@@ -390,7 +376,7 @@ t:test("the first client answer wins, errors included", function()
   local fixture = setup()
   fixture.clients = { { id = 1 }, { id = 2 } }
   local delivered = request(fixture, fixture.winnr)
-  drain(fixture)
+  fixture.schedule.drain()
   respond(fixture.calls[1], nil, { message = "Content modified." }, 2)
   respond(fixture.calls[1], document("late"), nil, 1)
   t.assert_nil(delivered[fixture.winnr], "late success ignored")
@@ -403,7 +389,7 @@ t:test("an in-process server may answer before the request returns", function()
     respond(call, document("sync"))
   end
   local delivered = request(fixture, fixture.winnr)
-  drain(fixture)
+  fixture.schedule.drain()
   t.assert_eq("Function:sync@1:1", delivered[fixture.winnr], "synchronous answer")
   t.assert_eq(0, #fixture.timers, "no timeout armed")
 end)
@@ -419,12 +405,12 @@ t:test("large documents space requests but always send the trailing request", fu
     }
   end
   request(fixture, fixture.winnr)
-  drain(fixture)
+  fixture.schedule.drain()
   respond(fixture.calls[1], large)
 
   fixture.now = fixture.now + 1000
   request(fixture, fixture.winnr)
-  drain(fixture)
+  fixture.schedule.drain()
   t.assert_eq(1, #fixture.calls, "request within the large interval")
   t.assert_true(fixture.Symbols.path(fixture.winnr) ~= nil, "confirmed path meanwhile")
   advance(fixture, 4000)
@@ -434,17 +420,17 @@ t:test("large documents space requests but always send the trailing request", fu
   respond(fixture.calls[2], large)
   fixture.now = fixture.now + 200
   request(fixture, fixture.winnr)
-  drain(fixture)
+  fixture.schedule.drain()
   t.assert_eq(3, #fixture.calls, "edited text uses the normal interval")
 end)
 
 t:test("wiping the buffer drops its state and ignores late answers", function()
   local fixture = setup()
   local delivered = request(fixture, fixture.winnr)
-  drain(fixture)
+  fixture.schedule.drain()
   local call = fixture.calls[1]
   local bufnr = fixture.bufnr
-  vim.api.nvim_set_current_buf(vim.api.nvim_create_buf(false, true))
+  vim.api.nvim_set_current_buf(t:buffer())
   vim.api.nvim_buf_delete(bufnr, { force = true })
 
   t.assert_eq(1, fixture.cancels, "cancelled")

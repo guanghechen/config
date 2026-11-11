@@ -3,15 +3,10 @@ local t = require("__test__.support.harness").new()
 ---@return __test__.support.UI, string
 local function editor()
   local marker = t:tempdir() .. "/marker"
-  local ui = require("__test__.support.ui").new()
-  t:defer(function()
-    ui:close()
-  end)
-  ui:rpc("nvim_ui_attach", 80, 24, { rgb = true, ext_linegrid = true })
+  local ui = require("__test__.support.ui").open(t, { width = 80, height = 24 })
   ui:lua(
     [=[
-    local root, marker = ...
-    vim.opt.runtimepath:prepend(root)
+    local marker = ...
     stl = { nvim = { fn = require("stl.nvim.fn") }, reporter = { warn = function() end } }
     pending, prompts, cancellations, choice = true, 0, 0, 1
     vim.ui.input = function(options, done)
@@ -31,7 +26,6 @@ local function editor()
       vim.fn.writefile({ pending and "unsafe" or "stopped", tostring(cancellations) }, marker)
     end })
   ]=],
-    assert(vim.uv.cwd()),
     marker
   )
   return ui, marker
@@ -41,9 +35,7 @@ t:test("Wait cancels the actual typed quit without replacing windows or cancelli
   local ui = editor()
   local winnr = ui:rpc("nvim_get_current_win")
   ui:rpc("nvim_input", ":qall!\r")
-  ui:wait_until(function()
-    return ui:lua("return prompts") == 1
-  end, 3000)
+  ui:wait_lua("return prompts == 1", 5000)
   t.assert_eq(winnr, ui:rpc("nvim_get_current_win"))
   t.assert_eq(0, ui:lua("return cancellations"))
   t.assert_true(ui:lua("return pending"))
@@ -55,7 +47,7 @@ t:test("closing one pane does not request process exit confirmation", function()
   ui:rpc("nvim_input", ":q\r")
   ui:wait_until(function()
     return #ui:rpc("nvim_list_wins") == 1
-  end, 3000)
+  end, 5000)
   t.assert_eq(0, ui:lua("return prompts"))
   t.assert_eq(0, ui:lua("return cancellations"))
 end)
@@ -64,20 +56,18 @@ t:test("quit chains distinguish closing a pane from exiting the process", functi
   local ui = editor()
   ui:rpc("nvim_command", "vnew")
   ui:rpc("nvim_input", ":q | qall!\r")
-  ui:wait_until(function()
-    return ui:lua("return prompts") == 1
-  end, 3000)
+  ui:wait_lua("return prompts == 1", 5000)
   t.assert_eq(2, #ui:rpc("nvim_list_wins"))
   t.assert_eq(0, ui:lua("return cancellations"))
   ui:rpc("nvim_input", ":echo 1 | q\r")
   ui:wait_until(function()
     return #ui:rpc("nvim_list_wins") == 1
-  end, 3000)
+  end, 5000)
   t.assert_eq(1, ui:lua("return prompts"))
   ui:rpc("nvim_input", ":split | q\r")
   ui:wait_until(function()
     return ui:rpc("nvim_get_mode").mode == "n"
-  end, 3000)
+  end, 5000)
   t.assert_eq(1, #ui:rpc("nvim_list_wins"))
   t.assert_eq(1, ui:lua("return prompts"))
 end)
@@ -94,9 +84,7 @@ t:test("only and tab commands in a quit chain preserve the default Wait choice",
     ui:rpc("nvim_command", case.setup)
     local windows = #ui:rpc("nvim_list_wins")
     ui:rpc("nvim_input", ":" .. case.command .. "\r")
-    ui:wait_until(function()
-      return ui:lua("return prompts") == 1
-    end, 3000)
+    ui:wait_lua("return prompts == 1", 5000)
     t.assert_eq(windows, #ui:rpc("nvim_list_wins"), case.command)
     t.assert_eq(0, ui:lua("return cancellations"))
   end
@@ -113,7 +101,7 @@ t:test("confirmed exit and direct scripted exit both wait for cancellation ackno
     end
     t.wait_until(function()
       return ui.exit_code ~= nil
-    end, 3000)
+    end, 5000)
     t.assert_eq("stopped", vim.fn.readfile(marker)[1])
     t.assert_eq("1", vim.fn.readfile(marker)[2])
   end

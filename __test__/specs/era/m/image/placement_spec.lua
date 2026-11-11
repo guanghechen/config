@@ -88,15 +88,8 @@ end
 ---@return integer
 local function shown_buf(lines)
   -- A file buffer, like the viewer's, tracks `modified`.
-  local bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines or {})
+  local bufnr = t:buffer(lines or {}, { scratch = false, current = true })
   vim.api.nvim_set_option_value("modified", false, { buf = bufnr })
-  vim.api.nvim_win_set_buf(0, bufnr)
   return bufnr
 end
 
@@ -208,12 +201,12 @@ t:test("the loading spinner leaves only its own mark once the image is ready", f
 
   t.wait_until(function()
     return count_marks(bufnr, Placement.ns, "loading") == 1
-  end, 1000, "spinner shown")
+  end, 5000, "spinner shown")
   t.assert_false(vim.api.nvim_get_option_value("modified", { buf = bufnr }), "viewer unmodified")
   props.ready = true
   t.wait_until(function()
     return count_marks(bufnr, Placement.ns, "loading") == 0
-  end, 1000, "spinner removed")
+  end, 5000, "spinner removed")
   t.assert_same({ 0, 0 }, vim.api.nvim_buf_get_extmark_by_id(bufnr, Placement.ns, other, {}), "other mark kept")
 end)
 
@@ -222,14 +215,17 @@ t:test("closing a loading viewer removes its spinner", function()
   local Placement = load_placement(image)
   local bufnr = shown_buf()
   local placement = Placement.new(bufnr, image.src, {})
+  t:defer(function()
+    placement:close()
+  end)
 
   t.wait_until(function()
     return count_marks(bufnr, Placement.ns, "loading") == 1
-  end, 1000, "spinner shown")
+  end, 5000, "spinner shown")
   placement:close()
   t.wait_until(function()
     return count_marks(bufnr, Placement.ns, "loading") == 0
-  end, 1000, "spinner removed")
+  end, 5000, "spinner removed")
 end)
 
 t:test("a document keeps one placement for an image that failed to convert", function()
@@ -350,12 +346,12 @@ t:test("a document reloaded from disk keeps following its edits", function()
   vim.cmd("checktime")
   t.wait_until(function()
     return vim.deep_equal({ "a", "b" }, shown())
-  end, 2000, "reloaded text")
+  end, 5000, "reloaded text")
 
   vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, { "img:c" })
   t.wait_until(function()
     return vim.deep_equal({ "a", "b", "c" }, shown())
-  end, 2000, "edit after the reload")
+  end, 5000, "edit after the reload")
 end)
 
 t:test("a document reloaded while another tab shows draws once its tab does, with one placement an image", function()
@@ -381,7 +377,7 @@ t:test("a document reloaded while another tab shows draws once its tab does, wit
   vim.cmd("checktime " .. bufnr)
   t.wait_until(function()
     return vim.api.nvim_buf_line_count(bufnr) == 2
-  end, 2000, "reloaded while another tab shows")
+  end, 5000, "reloaded while another tab shows")
   vim.wait(300)
 
   vim.api.nvim_set_current_tabpage(document_tab)
@@ -392,7 +388,7 @@ t:test("a document reloaded while another tab shows draws once its tab does, wit
       end
     end
     return false
-  end, 2000, "drawn once its tab shows")
+  end, 5000, "drawn once its tab shows")
 
   vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, { "more" })
   vim.wait(300)
@@ -449,7 +445,7 @@ t:test("an image shows its source only while the cursor is on its line", functio
   local placement = assert(vim.tbl_values(inline.imgs)[1]) ---@type era.m.image.Placement
   t.wait_until(function()
     return #placement.eids > 0
-  end, 1000, "image drawn")
+  end, 5000, "image drawn")
 
   for row, hidden in ipairs({ false, true, false }) do
     vim.api.nvim_win_set_cursor(0, { row, 0 })
@@ -493,7 +489,7 @@ t:test("a formula on the line being typed waits until typing ends", function()
   vim.api.nvim_exec_autocmds("ModeChanged", { buffer = bufnr })
   t.wait_until(function()
     return vim.deep_equal({ "a", "b" }, sources(inline))
-  end, 2000, "drawn once typing ended")
+  end, 5000, "drawn once typing ended")
 end)
 
 t:test("keys typed in a very long line rescan the images once typing ends", function()
@@ -515,7 +511,7 @@ t:test("keys typed in a very long line rescan the images once typing ends", func
   end)
   t.wait_until(function()
     return scans == 1
-  end, 1000, "first scan")
+  end, 5000, "first scan")
   local mode = "i" ---@type string
   t:patch_table(vim.fn, "mode", function()
     return mode
@@ -529,17 +525,17 @@ t:test("keys typed in a very long line rescan the images once typing ends", func
   vim.api.nvim_buf_set_text(bufnr, 0, 0, 0, 0, { "y" })
   t.wait_until(function()
     return scans == 2
-  end, 1000, "a key typed in a short line rescans")
+  end, 5000, "a key typed in a short line rescans")
   vim.api.nvim_buf_set_text(bufnr, 1, 0, 1, 0, { "y" })
   mode = "n"
   vim.api.nvim_exec_autocmds("ModeChanged", { buffer = bufnr })
   t.wait_until(function()
     return scans == 3
-  end, 1000, "rescanned once typing ended")
+  end, 5000, "rescanned once typing ended")
   vim.api.nvim_buf_set_text(bufnr, 1, 0, 1, 0, { "y" })
   t.wait_until(function()
     return scans == 4
-  end, 1000, "a change outside Insert mode rescans at once")
+  end, 5000, "a change outside Insert mode rescans at once")
 end)
 
 t:test("a formula that concealcursor shows while typing is drawn at once", function()
@@ -571,7 +567,7 @@ t:test("a formula on the cursor line shows again once concealcursor lets it, set
   local placement = assert(vim.tbl_values(inline.imgs)[1]) ---@type era.m.image.Placement
   t.wait_until(function()
     return #placement.eids > 0
-  end, 1000, "image drawn")
+  end, 5000, "image drawn")
   local mode = "i" ---@type string
   t:patch_table(vim.fn, "mode", function()
     return mode

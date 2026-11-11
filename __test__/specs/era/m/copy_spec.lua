@@ -80,27 +80,11 @@ local copy = assert(loadfile("lua/era/m/copy.lua"))()
 ---@param filepath                      string
 ---@return integer
 local function use_buffer(filepath)
-  local bufnr_previous = vim.api.nvim_get_current_buf() ---@type integer
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  if filepath ~= "" then
-    vim.api.nvim_buf_set_name(bufnr, filepath)
-  end
   local lines = {} ---@type string[]
   for lnum = 1, 60 do
     lines[lnum] = "line " .. lnum
   end
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-  vim.api.nvim_win_set_buf(0, bufnr)
-
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr_previous) then
-      vim.api.nvim_win_set_buf(0, bufnr_previous)
-    end
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
-  return bufnr
+  return t:buffer(lines, { name = filepath ~= "" and filepath or nil, current = true })
 end
 
 t:test("copies the current line with a GitHub location fragment", function()
@@ -199,29 +183,16 @@ end)
 
 t:test("uses the tab sourcefile filepath and cursor outside the sourcefile buffer", function()
   use_buffer("diffview://null")
-  local winnr_current = vim.api.nvim_get_current_win() ---@type integer
-  vim.cmd("vsplit")
-  winnr_sourcefile = vim.api.nvim_get_current_win()
-  bufnr_sourcefile = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_name(bufnr_sourcefile, "/workspace/lua/test.lua")
   local lines = {} ---@type string[]
   for lnum = 1, 30 do
     lines[lnum] = "source " .. lnum
   end
-  vim.api.nvim_buf_set_lines(bufnr_sourcefile, 0, -1, false, lines)
-  vim.api.nvim_win_set_buf(winnr_sourcefile, bufnr_sourcefile)
-  vim.api.nvim_win_set_cursor(winnr_sourcefile, { 17, 0 })
-  vim.api.nvim_set_current_win(winnr_current)
-
+  local bufnr = t:buffer(lines, { name = "/workspace/lua/test.lua" })
+  local winnr = t:window(bufnr, { vertical = true, win = vim.api.nvim_get_current_win() })
+  vim.api.nvim_win_set_cursor(winnr, { 17, 0 })
+  bufnr_sourcefile, winnr_sourcefile = bufnr, winnr
   t:defer(function()
-    if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
-      vim.api.nvim_win_close(winnr_sourcefile, true)
-    end
-    if bufnr_sourcefile ~= nil and vim.api.nvim_buf_is_valid(bufnr_sourcefile) then
-      vim.api.nvim_buf_delete(bufnr_sourcefile, { force = true })
-    end
-    bufnr_sourcefile = nil
-    winnr_sourcefile = nil
+    bufnr_sourcefile, winnr_sourcefile = nil, nil
   end)
 
   copied = nil

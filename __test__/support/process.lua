@@ -15,6 +15,9 @@ local ROOT = vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(source))) ---@type str
 ---@field output                        string[]
 ---@field exit_code                     ?integer
 
+---@class __test__.support.process.IScenarioOptions : __test__.support.process.IPtyOptions
+---@field timeout_ms                    integer
+
 local M = {}
 
 ---Runs a Lua script of this checkout in a fresh headless Neovim and returns the completed process.
@@ -84,6 +87,20 @@ function M.assert_exited(t, runs, timeout_ms)
     t.assert_true(exited, "Neovim did not exit:\n" .. output)
     t.assert_eq(0, run.exit_code, output)
   end
+end
+
+---Runs a scenario in Neovim on a pseudo-terminal: the run must exit cleanly within `timeout_ms`, after writing its
+---result as JSON to the file `$NVIM_TEST_RESULT` names, which this returns decoded.
+---@param t                             __test__.support.Harness
+---@param args                          string[]
+---@param options                       __test__.support.process.IScenarioOptions
+---@return table
+function M.scenario(t, args, options)
+  local result_path = t:tempdir() .. "/result.json" ---@type string
+  local env = vim.tbl_extend("force", options.env or {}, { NVIM_TEST_RESULT = result_path }) ---@type table<string, string>
+  local run = M.pty(t, args, { width = options.width, height = options.height, env = env })
+  M.assert_exited(t, { run }, options.timeout_ms)
+  return vim.json.decode(table.concat(vim.fn.readfile(result_path), "\n"))
 end
 
 return M

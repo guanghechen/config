@@ -9,23 +9,12 @@ local surface = require("ux.treeview.surface")
 
 ---@return ux.treeview.State, ux.treeview.View, string[]
 local function fixture()
-  local data = treeview.new_data()
-  support.await(data:import({
-    { key = "root", label = "root", can_expand = true },
-    { key = "a", parent = "root", label = "alpha" },
-    { key = "b", parent = "root", label = "beta" },
-    { key = "c", parent = "root", label = "gamma" },
-  }))
-  local source = data:source()
-  local state = support.await(data:create_state({ kind = "children_of", node = source:id("root") }))
-  local view = treeview.attach(state, { keymaps = false })
-  t:defer(function()
-    view:detach()
-  end)
+  local _, state, a, b, c = support.fixture({ "alpha", "beta", "gamma" })
+  local view = support.attach(t, state, { keymaps = false })
   t.wait_until(function()
     return view:frame() ~= nil and not view._busy and not view._latest
   end, 5000)
-  return state, view, { source:id("a"), source:id("b"), source:id("c") }
+  return state, view, { a, b, c }
 end
 
 ---@param view                          ux.treeview.View
@@ -223,18 +212,11 @@ t:test("an unfocused publication keeps the cursor in view when the top row's nod
   end
   local root = { kind = "children_of", node = source:id("root") }
   local state = support.await(data:create_state(root, { mode = "list", filter = ids }))
-  local view = treeview.attach(state, { keymaps = false })
-  t:defer(function()
-    view:detach()
-  end)
+  local view = support.attach(t, state, { keymaps = false })
   t.wait_until(function()
     return view:frame() ~= nil and not view._busy and not view._latest
   end, 5000)
-  vim.cmd.new()
-  local other = vim.api.nvim_get_current_win()
-  t:defer(function()
-    vim.api.nvim_win_close(other, true)
-  end)
+  t:window(t:buffer(), { split = "above" }, true)
   vim.api.nvim_win_set_height(view.winnr, 10)
   support.await(view:set_cursor(146))
   vim.api.nvim_win_call(view.winnr, function()

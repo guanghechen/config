@@ -1,4 +1,5 @@
 local bootstrap = require("__test__.support.bootstrap")
+local fs = require("__test__.support.fs")
 local harness = require("__test__.support.harness")
 
 local t = harness.new()
@@ -30,11 +31,21 @@ bootstrap.with_runtime(t, {
   },
 })
 
+---Writes the shell script `lines` as the executable `name` in `dir`.
+---@param dir                           string
+---@param name                          string
+---@param lines                         string[]
+---@return nil
+local function executable(dir, name, lines)
+  fs.write(dir .. "/" .. name, lines)
+  vim.fn.setfperm(dir .. "/" .. name, "rwxr-xr-x")
+end
+
 -- Conversions run this `magick`, which hangs on any file whose name says so. Like the real one, a conversion
 -- writes the image after `-write` (unless to memory) and its identification to the last argument, in the format a
 -- prefix may name. Each run logs its arguments.
 local bin = t:tempdir() ---@type string
-vim.fn.writefile({
+executable(bin, "magick", {
   "#!/bin/sh",
   "printf '%s\\n' \"$*\" >> '" .. bin .. "/runs.log'",
   'case "$*" in',
@@ -51,9 +62,9 @@ vim.fn.writefile({
   "done",
   'case "$prev" in [A-Z]*:*) prev="${prev#*:}" ;; esac',
   "printf 'PNG 4x2 96x96' > \"$prev\"",
-}, bin .. "/magick")
+})
 -- Formulas are typeset by this `tectonic`, which logs each run, and rasterized by this `pdftocairo`.
-vim.fn.writefile({
+executable(bin, "tectonic", {
   "#!/bin/sh",
   "printf '%s\\n' \"$*\" >> '" .. bin .. "/typeset.log'",
   'prev=""',
@@ -62,13 +73,10 @@ vim.fn.writefile({
   '  prev="$arg"',
   "done",
   'printf pdf > "$outdir/$(basename "$prev" .tex).pdf"',
-}, bin .. "/tectonic")
-vim.fn.writefile(
-  { "#!/bin/sh", 'for arg in "$@"; do last="$arg"; done', 'printf png > "$last.png"' },
-  bin .. "/pdftocairo"
-)
+})
+executable(bin, "pdftocairo", { "#!/bin/sh", 'for arg in "$@"; do last="$arg"; done', 'printf png > "$last.png"' })
 -- Charts are drawn by this `mmdc`, which logs each run.
-vim.fn.writefile({
+executable(bin, "mmdc", {
   "#!/bin/sh",
   "printf '%s\\n' \"$*\" >> '" .. bin .. "/charts.log'",
   'prev=""',
@@ -77,10 +85,7 @@ vim.fn.writefile({
   '  prev="$arg"',
   "done",
   'printf png > "$out"',
-}, bin .. "/mmdc")
-for _, name in ipairs({ "magick", "tectonic", "pdftocairo", "mmdc" }) do
-  vim.fn.setfperm(bin .. "/" .. name, "rwxr-xr-x")
-end
+})
 local path_env = vim.env.PATH ---@type string
 vim.env.PATH = bin .. ":" .. path_env
 t:defer(function()
@@ -104,22 +109,22 @@ local function conversion_of(uri)
   return convert.convert({ source = convert.source(uri) })
 end
 
----@param path                          string
----@return string
-local function read(path)
-  local fd = assert(io.open(path, "rb"))
-  local content = fd:read("*a") ---@type string
-  fd:close()
-  return content
+---@param conversion                    era.m.image.Convert
+---@return nil
+local function finish(conversion)
+  conversion:run()
+  t.wait_until(function()
+    return conversion:done()
+  end, 5000, "conversion")
 end
 
 t:test("data URIs are decoded the way browsers read them", function()
   -- "\251\255\191A" is "+/+/QQ==" in base64: here URL-safe, unpadded and broken across lines.
   local loose = conversion_of("data:image/png;base64,-_-_\nQQ")
-  t.assert_eq("\251\255\191A", read(loose.src), "loose base64")
+  t.assert_eq("\251\255\191A", fs.read(loose.src), "loose base64")
 
   local svg = conversion_of("data:image/svg+xml;charset=utf-8;base64," .. vim.base64.encode("<svg/>"))
-  t.assert_eq("<svg/>", read(svg.src), "base64 after another parameter")
+  t.assert_eq("<svg/>", fs.read(svg.src), "base64 after another parameter")
 end)
 
 t:test("an undecodable data URI fails its own conversion instead of raising", function()
@@ -127,10 +132,7 @@ t:test("an undecodable data URI fails its own conversion instead of raising", fu
   t.assert_true(ok, "conversion created")
   ---@cast conversion era.m.image.Convert
 
-  conversion:run()
-  t.wait_until(function()
-    return conversion:done()
-  end, 5000, "conversion")
+  finish(conversion)
   t.assert_true(conversion:error() ~= nil, "conversion failed")
 end)
 
@@ -146,10 +148,7 @@ t:test("a step whose output an earlier step of the same run wrote does not run a
     "steps"
   )
 
-  conversion:run()
-  t.wait_until(function()
-    return conversion:done()
-  end, 5000, "conversion")
+  finish(conversion)
 
   t.assert_nil(conversion:error(), "conversion error")
   t.assert_true(conversion.steps[1].proc ~= nil, "conversion ran")
@@ -181,33 +180,19 @@ t:test("a conversion step that hangs is stopped and frees its slot", function()
   end
 end)
 
+---The lines the fake executables logged to `name` in `bin`.
+---@param name                          string
+---@return string[]
+local function logged(name)
+  local log = bin .. "/" .. name ---@type string
+  return vim.fn.filereadable(log) == 1 and vim.fn.readfile(log) or {}
+end
+
 ---The arguments of each `magick` run after the first `skip` ones.
 ---@param skip                          integer
 ---@return string[]
 local function magick_runs(skip)
-  local log = bin .. "/runs.log" ---@type string
-  return vim.list_slice(vim.fn.filereadable(log) == 1 and vim.fn.readfile(log) or {}, skip + 1)
-end
-
----@param conversion                    era.m.image.Convert
----@return nil
-local function finish(conversion)
-  conversion:run()
-  t.wait_until(function()
-    return conversion:done()
-  end, 5000, "conversion")
-end
-
----@return string[]
-local function charts()
-  local log = bin .. "/charts.log" ---@type string
-  return vim.fn.filereadable(log) == 1 and vim.fn.readfile(log) or {}
-end
-
----@return string[]
-local function typesets()
-  local log = bin .. "/typeset.log" ---@type string
-  return vim.fn.filereadable(log) == 1 and vim.fn.readfile(log) or {}
+  return vim.list_slice(logged("runs.log"), skip + 1)
 end
 
 -- PostScript, which ImageMagick would hand to Ghostscript if it went by the content.
@@ -292,7 +277,7 @@ t:test("a formula is typeset once, and each color only recolors it", function()
   local file = t:tempdir() .. "/0123456789abcdef-content.math.tex" ---@type string
   vim.fn.writefile({ "x" }, file)
   local source = convert.source(file)
-  local typeset, skip = #typesets(), #magick_runs(0)
+  local typeset, skip = #logged("typeset.log"), #magick_runs(0)
 
   local blue = convert.convert({ source = source, color = "0078D4" })
   finish(blue)
@@ -301,7 +286,7 @@ t:test("a formula is typeset once, and each color only recolors it", function()
   finish(convert.convert({ source = source, color = "0078D4" }))
 
   t.assert_nil(pink:error(), "conversion error")
-  t.assert_eq(typeset + 1, #typesets(), "typeset once")
+  t.assert_eq(typeset + 1, #logged("typeset.log"), "typeset once")
   local recolors = vim.tbl_filter(function(run)
     return run:find("-opaque black", 1, true) ~= nil
   end, magick_runs(skip))
@@ -351,7 +336,7 @@ t:test("a new theme color redraws a formula under a new id without typesetting i
   t.wait_until(function()
     return img.sent == true
   end, 5000, "formula sent")
-  local old, typeset = img.id, #typesets()
+  local old, typeset = img.id, #logged("typeset.log")
 
   vim.api.nvim_set_hl(0, "m_img_math", { fg = 0xEB6F92 })
   Image.recolor()
@@ -359,7 +344,7 @@ t:test("a new theme color redraws a formula under a new id without typesetting i
     return img.sent == true and vim.endswith(img.file, ".EB6F92.tint.png")
   end, 5000, "formula recolored")
 
-  t.assert_eq(typeset, #typesets(), "not typeset again")
+  t.assert_eq(typeset, #logged("typeset.log"), "not typeset again")
   t.assert_eq(img, Image.new(file), "the same image")
   t.assert_true(img.id ~= old, "a new id")
   -- The terminal drops the placements of an image sent anew under its id: the new colors go under the new one, the
@@ -431,13 +416,12 @@ t:test("a formula in black ink alone takes the color", function()
     :wait()
   t.assert_eq(0, drawn.code, drawn.stderr)
   vim.uv.fs_copyfile(bin .. "/tectonic", tex_bin .. "/tectonic")
-  vim.fn.writefile(
-    { "#!/bin/sh", 'for arg in "$@"; do last="$arg"; done', "cp '" .. ink .. '\' "$last.png"' },
-    tex_bin .. "/pdftocairo"
+  vim.fn.setfperm(tex_bin .. "/tectonic", "rwxr-xr-x")
+  executable(
+    tex_bin,
+    "pdftocairo",
+    { "#!/bin/sh", 'for arg in "$@"; do last="$arg"; done', "cp '" .. ink .. '\' "$last.png"' }
   )
-  for _, name in ipairs({ "tectonic", "pdftocairo" }) do
-    vim.fn.setfperm(tex_bin .. "/" .. name, "rwxr-xr-x")
-  end
   vim.env.PATH = tex_bin .. ":" .. path_env
   local file = t:tempdir() .. "/8899aabbccddeeff-content.math.tex" ---@type string
   vim.fn.writefile({ "ink" }, file)
@@ -466,7 +450,7 @@ t:test("a chart is drawn once for each background, in the style of the one it wa
   local file = t:tempdir() .. "/0123456789abcdef-content.chart.mmd" ---@type string
   vim.fn.writefile({ "graph TD; A-->B" }, file)
   local source = convert.source(file)
-  local drawn = #charts() ---@type integer
+  local drawn = #logged("charts.log") ---@type integer
 
   vim.o.background = "dark"
   local dark = convert.convert({ source = source })
@@ -479,7 +463,7 @@ t:test("a chart is drawn once for each background, in the style of the one it wa
   finish(convert.convert({ source = source }))
 
   t.assert_nil(light:error(), "conversion error")
-  local runs = vim.list_slice(charts(), drawn + 1) ---@type string[]
+  local runs = vim.list_slice(logged("charts.log"), drawn + 1) ---@type string[]
   t.assert_eq(2, #runs, "drawn once for each background")
   t.assert_true(runs[2]:find("-t neutral", 1, true) ~= nil, runs[2])
   t.assert_true(dark.file ~= light.file, "a file for each background")

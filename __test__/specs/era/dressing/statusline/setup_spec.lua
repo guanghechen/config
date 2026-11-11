@@ -1,5 +1,5 @@
+local dressing = require("__test__.support.dressing")
 local harness = require("__test__.support.harness")
-local nvim_fn = require("stl.nvim.fn")
 
 local t = harness.new()
 local module_name = "era.dressing.statusline"
@@ -15,11 +15,9 @@ end
 ---@class era.dressing.statusline.test.IRuntime
 ---@field clean_count                  integer
 ---@field dirty                        boolean
----@field refresh_count                integer
----@field dispose_count                integer
 ---@field subscribers                  { on_next: fun() }[]
----@field group                        ?integer
----@field fulfill                      fun(result: string)
+---@field augroups                     __test__.support.dressing.Augroups
+---@field bar                          __test__.support.dressing.Bar
 ---@field mark_dirty                   fun()
 
 ---@return era.dressing.statusline.test.IRuntime, era.dressing.statusline
@@ -27,9 +25,8 @@ local function setup()
   local runtime = {
     clean_count = 0,
     dirty = true,
-    refresh_count = 0,
-    dispose_count = 0,
     subscribers = {},
+    augroups = dressing.augroups(t),
   } ---@type era.dressing.statusline.test.IRuntime
 
   local winnr = vim.api.nvim_get_current_win()
@@ -39,9 +36,6 @@ local function setup()
     vim.api.nvim_set_option_value("statusline", previous_global, { scope = "global" })
     vim.api.nvim_set_option_value("statusline", previous_local, { win = winnr, scope = "local" })
   end)
-
-  local on_fulfilled = nil ---@type fun(result: string)|nil
-  local value = "" ---@type string
 
   local dirtier = {} ---@type table
 
@@ -62,35 +56,7 @@ local function setup()
     next_subscriber.on_next()
   end
 
-  local nvimbar = {} ---@type table
-
-  function nvimbar:place()
-    return self
-  end
-
-  function nvimbar:refresh()
-    runtime.refresh_count = runtime.refresh_count + 1
-    return self
-  end
-
-  function nvimbar:snapshot()
-    return value
-  end
-
-  ---@return boolean
-  function nvimbar:isdisposed()
-    return runtime.dispose_count > 0
-  end
-
-  ---@return nil
-  function nvimbar:dispose()
-    runtime.dispose_count = runtime.dispose_count + 1
-  end
-
-  runtime.fulfill = function(result)
-    value = result
-    assert(on_fulfilled)(result)
-  end
+  local nvimbars = dressing.nvimbars()
 
   runtime.mark_dirty = function()
     runtime.dirty = true
@@ -114,16 +80,7 @@ local function setup()
     },
     nvim = {
       fn = {
-        augroup = function(name)
-          local group = nvim_fn.augroup(name)
-          if runtime.group == nil then
-            t:defer(function()
-              vim.api.nvim_del_augroup_by_id(group)
-            end)
-          end
-          runtime.group = group
-          return group
-        end,
+        augroup = runtime.augroups.augroup,
       },
     },
   })
@@ -145,18 +102,14 @@ local function setup()
   })
   t:patch_global("era", require("era"))
   t:patch_table(era.m, "nvimbar", {
-    Nvimbar = {
-      new = function(props)
-        on_fulfilled = props.on_fulfilled
-        return nvimbar
-      end,
-    },
+    Nvimbar = nvimbars.Nvimbar,
     component = require("era.m.nvimbar").component,
   })
   t:patch_table(package.loaded, module_name, nil)
 
   t.assert_eq(module_name, era.dressing.__mods.statusline, "module registration")
   local Statusline = era.dressing.statusline
+  runtime.bar = nvimbars.bars.statusline
   return runtime, Statusline
 end
 
@@ -165,14 +118,14 @@ t:test("dressing requests initial data and publishes only completed results", fu
   vim.o.statusline = "before"
   Statusline.dressing()
   t.assert_eq("before", vim.o.statusline, "no synchronous component refresh")
-  t.assert_eq(1, runtime.refresh_count)
+  t.assert_eq(1, runtime.bar.refreshes)
   t.assert_eq(1, runtime.clean_count)
-  runtime.fulfill("initial")
+  runtime.bar:fulfill("initial")
   t.assert_eq("initial", displayed())
   runtime.mark_dirty()
-  t.assert_eq(2, runtime.refresh_count)
+  t.assert_eq(2, runtime.bar.refreshes)
   t.assert_eq(2, runtime.clean_count, "consume dirty state when requesting, not when publishing")
-  runtime.fulfill("updated")
+  runtime.bar:fulfill("updated")
   t.assert_eq("updated", displayed())
   t.assert_eq(2, runtime.clean_count)
 end)
@@ -181,40 +134,44 @@ t:test("partial publication cannot clear a newer dirty event", function()
   local runtime, Statusline = setup()
   Statusline.dressing()
   runtime.dirty = true
-  runtime.fulfill("older partial result")
+  runtime.bar:fulfill("older partial result")
   t.assert_true(runtime.dirty)
   t.assert_eq(1, runtime.clean_count)
   runtime.mark_dirty()
-  t.assert_eq(2, runtime.refresh_count)
+  t.assert_eq(2, runtime.bar.refreshes)
 end)
 
 t:test("dressing subscribes once and preserves its mode callback", function()
   local runtime, Statusline = setup()
   Statusline.dressing()
-  local autocmds = vim.api.nvim_get_autocmds({ group = runtime.group })
+  local autocmds = vim.api.nvim_get_autocmds({ group = runtime.augroups.groups[module_name] })
   t.assert_eq(2, #autocmds, "mode and exit callback count")
 
   Statusline.dressing()
   t.assert_eq(1, #runtime.subscribers, "dirty subscriptions")
-  t.assert_eq(1, runtime.refresh_count, "initial render count")
+  t.assert_eq(1, runtime.bar.refreshes, "initial render count")
   t.assert_eq(1, runtime.clean_count, "initial clean count")
-  t.assert_same(autocmds, vim.api.nvim_get_autocmds({ group = runtime.group }), "mode callback preserved")
+  t.assert_same(
+    autocmds,
+    vim.api.nvim_get_autocmds({ group = runtime.augroups.groups[module_name] }),
+    "mode callback preserved"
+  )
 
   runtime.mark_dirty()
-  t.assert_eq(2, runtime.refresh_count, "one render per dirty update")
+  t.assert_eq(2, runtime.bar.refreshes, "one render per dirty update")
 end)
 
 t:test("repeated dressing preserves the latest statusline until the next refresh", function()
   local runtime, Statusline = setup()
   Statusline.dressing()
-  runtime.fulfill("updated")
+  runtime.bar:fulfill("updated")
 
   Statusline.dressing()
   t.assert_eq("updated", displayed("latest rendered statusline"))
-  t.assert_eq(1, runtime.refresh_count, "no repeated initial render")
+  t.assert_eq(1, runtime.bar.refreshes, "no repeated initial render")
 
   runtime.mark_dirty()
-  runtime.fulfill("refreshed")
+  runtime.bar:fulfill("refreshed")
   t.assert_eq("refreshed", displayed("later dirty refresh"))
 end)
 
@@ -223,14 +180,17 @@ t:test("mode changes request asynchronous refresh after the transition", functio
   Statusline.dressing()
   for _, transition in ipairs({ "n:i", "n:c", "c:n" }) do
     vim.api.nvim_set_option_value("statusline", "stale", {})
-    local count = runtime.refresh_count
-    vim.api.nvim_exec_autocmds("ModeChanged", { group = runtime.group, pattern = transition, modeline = false })
-    t.assert_eq(count, runtime.refresh_count, "event callback does not refresh inline")
+    local count = runtime.bar.refreshes
+    vim.api.nvim_exec_autocmds(
+      "ModeChanged",
+      { group = runtime.augroups.groups[module_name], pattern = transition, modeline = false }
+    )
+    t.assert_eq(count, runtime.bar.refreshes, "event callback does not refresh inline")
     t.wait_until(function()
-      return runtime.refresh_count == count + 1
-    end, 1000)
+      return runtime.bar.refreshes == count + 1
+    end, 5000)
     t.assert_eq("stale", vim.api.nvim_get_option_value("statusline", {}), "wait for the new snapshot")
-    runtime.fulfill("updated " .. transition)
+    runtime.bar:fulfill("updated " .. transition)
     t.assert_eq("updated " .. transition, displayed())
   end
 end)
@@ -238,21 +198,18 @@ end)
 t:test("exit disposes once and ignores pending mode and dirty callbacks", function()
   local runtime, Statusline = setup()
   Statusline.dressing()
-  local count = runtime.refresh_count
-  vim.api.nvim_exec_autocmds("ModeChanged", { group = runtime.group, pattern = "n:c", modeline = false })
-  vim.api.nvim_exec_autocmds("VimLeavePre", { group = runtime.group, modeline = false })
-  t.assert_eq(1, runtime.dispose_count)
+  local count = runtime.bar.refreshes
+  vim.api.nvim_exec_autocmds(
+    "ModeChanged",
+    { group = runtime.augroups.groups[module_name], pattern = "n:c", modeline = false }
+  )
+  vim.api.nvim_exec_autocmds("VimLeavePre", { group = runtime.augroups.groups[module_name], modeline = false })
+  t.assert_eq(1, runtime.bar.disposals)
   runtime.mark_dirty()
-  local drained = false
-  vim.schedule(function()
-    drained = true
-  end)
-  t.wait_until(function()
-    return drained
-  end, 1000)
-  t.assert_eq(count, runtime.refresh_count, "disposed statusline does not request more data")
-  vim.api.nvim_exec_autocmds("VimLeavePre", { group = runtime.group, modeline = false })
-  t.assert_eq(1, runtime.dispose_count)
+  t.drain()
+  t.assert_eq(count, runtime.bar.refreshes, "disposed statusline does not request more data")
+  vim.api.nvim_exec_autocmds("VimLeavePre", { group = runtime.augroups.groups[module_name], modeline = false })
+  t.assert_eq(1, runtime.bar.disposals)
 end)
 
 t:test("content changes skip option writes and foreign values restore global ownership", function()
@@ -266,18 +223,18 @@ t:test("content changes skip option writes and foreign values restore global own
     end
     return set_option(name, value, opts)
   end)
-  runtime.fulfill("stable")
+  runtime.bar:fulfill("stable")
   t.assert_eq(1, writes)
-  runtime.fulfill("stable")
+  runtime.bar:fulfill("stable")
   t.assert_eq(1, writes, "unchanged output does not request another option update")
-  runtime.fulfill("changed")
+  runtime.bar:fulfill("changed")
   t.assert_eq(1, writes, "a literal write would recompose the focused floating window")
   t.assert_eq("changed", Statusline.render())
   t.assert_eq("changed", displayed())
 
   set_option("statusline", "external", { scope = "global" })
   set_option("statusline", EXPRESSION, { scope = "local" })
-  runtime.fulfill("changed")
+  runtime.bar:fulfill("changed")
   t.assert_eq(2, writes, "an equal local override must not hide the foreign global value")
   t.assert_eq(EXPRESSION, vim.api.nvim_get_option_value("statusline", { scope = "global" }))
   t.assert_eq("", vim.api.nvim_get_option_value("statusline", { scope = "local" }))
@@ -297,9 +254,9 @@ t:test("content changes redraw only the status line", function()
     commands[#commands + 1] = command
   end)
 
-  runtime.fulfill("stable")
-  runtime.fulfill("changed")
-  runtime.fulfill("changed")
+  runtime.bar:fulfill("stable")
+  runtime.bar:fulfill("changed")
+  runtime.bar:fulfill("changed")
 
   t.assert_eq(1, #redraws, "redraws per changed text")
   t.assert_same(

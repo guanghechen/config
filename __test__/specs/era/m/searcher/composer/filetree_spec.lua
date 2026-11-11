@@ -1,46 +1,28 @@
 require("ark.bootstrap").setup()
 local t = require("__test__.support.harness").new()
+local bootstrap = require("__test__.support.bootstrap")
+local picker = require("__test__.support.picker")
 local treeview = require("__test__.support.treeview")
 local Paths = require("era.view.result_paths")
 local root = "/workspace/searcher-actions"
-
----@param value                         any
----@return stl.c.Observable
-local function observable(value)
-  return stl.c.Observable.from_value(value)
-end
 
 ---@param on_attached                   ?era.m.searcher.composer.filetree.IOnAttached
 ---@param frecency                      ?stl.c.Frecency
 ---@return era.m.searcher.FiletreeComposer
 local function fixture(on_attached, frecency)
-  local composer = era.m.searcher.FiletreeComposer.new({
+  local composer = picker.searcher(t, {
     name = "published-actions",
     permanent = false,
     preview = false,
     title = "published actions",
-    excludes = observable({}),
-    flag_exclude = observable(false),
-    flag_foldempty = observable(false),
-    flag_gitignore = observable(false),
-    flag_limit_matches = observable(true),
-    flag_regex = observable(false),
-    flag_replace = observable(false),
-    flag_case_sensitive = observable(true),
-    flag_selected = observable(false),
-    flag_viewtype = observable("tree"),
-    includes = observable({ "*.lua" }),
-    max_filesize = observable("1M"),
-    max_matches = observable(100),
-    replace_pattern = observable(""),
-    rootpath = observable(root),
-    search_pattern = observable(""),
+    includes = { "*.lua" },
+    max_matches = 100,
+    rootpath = root,
     on_attached = on_attached,
     frecency = frecency,
   })
   t:defer(function()
     vim.cmd.normal({ args = { vim.keycode("<Esc>") }, bang = true })
-    composer:dispose()
   end)
   t:patch_table(composer, "schedule_search", function() end)
   composer:reset_filepaths(root, root, { "dir/a.lua", "dir/b.lua", "other.lua" })
@@ -57,12 +39,7 @@ local function fixture(on_attached, frecency)
     tree.entries[Paths.key(root .. "/" .. path)].filematch =
       { filepath = root .. "/" .. path, relative = path, matches = {}, size = 0, mtime_sec = 0, mtime_nsec = 0 }
   end
-  composer.result:create_win({ border = "none", number = false, winhighlight = "" }, {
-    row = 0,
-    col = 0,
-    width = 60,
-    height = 12,
-  })
+  picker.show_result(composer, 60, 12)
   treeview.await(composer.result.draw())
   treeview.await(tree:ready())
   composer._published_search_inputs = composer:__snapshot_search_inputs__()
@@ -77,20 +54,6 @@ local function as_searched()
   t:patch_table(vim.uv, "fs_stat", function()
     return { size = 0, mtime = { sec = 0, nsec = 0 } }
   end)
-end
-
----@param composer                      era.m.searcher.FiletreeComposer
----@param description                   string
----@return fun(): nil
-local function action(composer, description)
-  for _, keymaps in ipairs({ composer.result.keymaps, composer.finder.keymaps }) do
-    for _, keymap in ipairs(keymaps) do
-      if keymap.desc == description then
-        return keymap.callback
-      end
-    end
-  end
-  error("missing action: " .. description)
 end
 
 t:test("files are ordered by frecency, the most visited first", function()
@@ -108,33 +71,7 @@ t:test("copy filepath offers the choices one row below and four columns right of
   t:patch_table(composer, "__retrieve_filedata__", function()
     return { filepath = root .. "/other.lua" }
   end)
-  local result_winnr = assert(composer.result:get_winnr())
-  vim.api.nvim_set_current_win(result_winnr)
-  -- A float opened with the intended offset from the same cursor gives the expected placement.
-  local reference = vim.api.nvim_open_win(vim.api.nvim_create_buf(false, true), false, {
-    relative = "cursor",
-    row = 1,
-    col = 4,
-    width = 1,
-    height = 1,
-  })
-  local expected = vim.api.nvim_win_get_config(reference)
-  vim.api.nvim_win_close(reference, true)
-
-  action(composer, "searcher: copy filepath")()
-  local popup = vim.api.nvim_get_current_win() ---@type integer
-  t:defer(function()
-    if vim.api.nvim_win_is_valid(popup) then
-      vim.api.nvim_win_close(popup, true)
-    end
-  end)
-
-  t.assert_eq(stl.e.WinTypeEnum.SELECT, vim.w[popup].wintype, "the copy choices")
-  local config = vim.api.nvim_win_get_config(popup)
-  t.assert_eq(expected.relative, config.relative, "relative to the cursor")
-  t.assert_eq(result_winnr, config.win, "anchored to the result window")
-  t.assert_eq(expected.row, config.row, "one row below the cursor")
-  t.assert_eq(expected.col, config.col, "four columns right of the cursor")
+  picker.assert_copy_choices_at_cursor(t, composer, "searcher: copy filepath")
 end)
 
 t:test("quickfix keeps published file locations after the producer is replaced", function()
@@ -149,7 +86,7 @@ t:test("quickfix keeps published file locations after the producer is replaced",
   t:patch_table(dot.state.qflist, "open_qflist", function() end)
   composer:reset_filepaths(root, root, { "replacement.lua" })
   t.assert_eq(frame:id(), tree:frame():id())
-  action(composer, "searcher: send to qflist")()
+  picker.action(composer, "searcher: send to qflist")()
   t.assert_eq(3, exported and #exported or 0, "location rows must not duplicate their file export")
   for index, path in ipairs({ "dir/a.lua", "dir/b.lua", "other.lua" }) do
     t.assert_eq(
@@ -173,7 +110,7 @@ t:test("AI location targets retain the captured file and coordinates after an un
     targets = value
   end)
   composer:reset_filepaths(root, root, { "replacement.lua" })
-  action(composer, "searcher: add to ai")()
+  picker.action(composer, "searcher: add to ai")()
   t.assert_eq(1, targets and #targets or 0)
   t.assert_eq(root .. "/dir/a.lua", targets[1].filepath)
   t.assert_eq(location.lnum, targets[1].start_lnum)
@@ -189,14 +126,14 @@ t:test("desynced Searcher ranges cannot hide files or invoke replacement", funct
     return false
   end)
   tree.view._desynced = true
-  action(composer, "searcher: mark the node invisible")()
-  action(composer, "searcher: mark the subroot invisible")()
-  action(composer, "searcher: replace all files")()
-  action(composer, "search: replace file")()
+  picker.action(composer, "searcher: mark the node invisible")()
+  picker.action(composer, "searcher: mark the subroot invisible")()
+  picker.action(composer, "searcher: replace all files")()
+  picker.action(composer, "search: replace file")()
   t.assert_nil(next(tree._hidden))
   t.assert_eq(0, replacements)
   tree.view._desynced = false
-  action(composer, "searcher: replace all files")()
+  picker.action(composer, "searcher: replace all files")()
   t.assert_eq(3, replacements)
 end)
 
@@ -213,7 +150,7 @@ t:test("replacement uses the active Visual endpoint and only the captured contai
     replaced[#replaced + 1] = data.filepath
     return false
   end)
-  local replace = action(composer, "search: replace file")
+  local replace = picker.action(composer, "search: replace file")
   vim.api.nvim_win_set_cursor(winnr, { directory, 0 })
   vim.cmd.normal({ args = { "V" }, bang = true })
   vim.api.nvim_win_set_cursor(winnr, { first, 0 })
@@ -240,7 +177,7 @@ t:test("bulk replacement updates producer locations and leaves the captured meta
     replacements[#replacements + 1] = options.filepath
     return true
   end)
-  action(composer, "searcher: replace all files")()
+  picker.action(composer, "searcher: replace all files")()
   t.assert_eq(3, #replacements)
   t.assert_same({}, tree.entries[key].locations)
   t.assert_eq(1, #original.locations)
@@ -273,7 +210,7 @@ t:test("attach and toggle retain the displayed file identity and locations after
   local frame = tree:frame()
   composer:reset_filepaths("/workspace/new-root", "/workspace/new-root", { "replacement.lua" })
   attached = {}
-  action(composer, "searcher: change root")()
+  picker.action(composer, "searcher: change root")()
   t.assert_eq(key, composer._uuid_root)
   t.assert_same({ root .. "/dir/a.lua" }, attached)
   local toggled
@@ -295,7 +232,7 @@ t:test("parent attachment uses the displayed root ancestry after a pending root 
   treeview.await(composer._treeview:ready())
   composer:reset_filepaths("/workspace/new-root", "/workspace/new-root", { "replacement.lua" })
   attached = {}
-  action(composer, "searcher: change root to parent")()
+  picker.action(composer, "searcher: change root to parent")()
   t.assert_eq(Paths.key(root), composer._uuid_root)
   t.assert_same({ root }, attached)
 end)
@@ -303,16 +240,13 @@ end)
 t:test("expansion actions typed ahead act on the tree their earlier actions produce", function()
   local composer = fixture()
   local tree = composer._treeview
-  local errors = {} ---@type table[]
-  t:patch_table(stl.reporter, "error", function(value)
-    errors[#errors + 1] = value
-  end)
+  local reports = bootstrap.with_reporter(t)
   local dir = Paths.key(root .. "/dir")
-  local open, collapse = action(composer, "searcher: open"), action(composer, "searcher: collapse")
+  local open, collapse = picker.action(composer, "searcher: open"), picker.action(composer, "searcher: collapse")
   composer.result:set_lnum_current(tree:retrieve_lnum(dir))
   treeview.await(tree:ready())
   treeview.assert_typed_ahead(t, tree, dir, open, collapse)
-  t.assert_eq(0, #errors, vim.inspect(errors))
+  t.assert_eq(0, #reports.error, vim.inspect(reports.error))
 end)
 
 t:run()

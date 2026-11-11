@@ -1,5 +1,6 @@
-local fixture = require("__test__.support.explorer").new()
-local t, await, write = fixture.t, fixture.await, fixture.write
+local t = require("__test__.support.harness").new()
+local fixture = require("__test__.support.explorer").new(t)
+local await, write = fixture.await, fixture.write
 
 t:patch_table(dot.context.explorer.trash, "snapshot", function()
   return false

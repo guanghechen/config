@@ -31,14 +31,7 @@ require("ark.keymap")
 ---@param col                           integer
 ---@return integer
 local function open(line, col)
-  local previous = vim.api.nvim_get_current_buf() ---@type integer
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  t:defer(function()
-    vim.api.nvim_set_current_buf(previous)
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
-  vim.api.nvim_set_current_buf(bufnr)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { line })
+  local bufnr = t:buffer({ line }, { current = true })
   vim.api.nvim_win_set_cursor(0, { 1, col })
   return bufnr
 end

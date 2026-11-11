@@ -7,18 +7,6 @@ local commits_view = require("era.m.diffview.view.commits.view")
 local pane_sbs = require("era.m.diffview.pane.sbs")
 local workspace_view = require("era.m.diffview.view.workspace.view")
 
----Runs the callbacks Observable notifications schedule.
----@return nil
-local function flush()
-  local flushed = false
-  vim.schedule(function()
-    flushed = true
-  end)
-  t.wait_until(function()
-    return flushed
-  end, 1000, "scheduled callbacks")
-end
-
 ---Types `keys` into a new window in the current tab that shows `bufnr`.
 ---@param bufnr                         integer
 ---@param keys                          string
@@ -38,27 +26,9 @@ end
 ---@return nil
 local function preview(session, path, stage_type)
   local entry = assert(session.state:find_entry(path, stage_type))
-  local done = false
-  stl.async.run(function()
+  t.await(stl.async.run_future(function()
     workspace_view.open_entry(session, entry)
-    done = true
-  end)
-  t.wait_until(function()
-    return done
-  end, 5000, "preview of " .. path)
-end
-
----The Normal-mode mapping `bufnr` itself has for `lhs`.
----@param bufnr                         integer
----@param lhs                           string
----@return table|nil
-local function mapping(bufnr, lhs)
-  local raw = vim.keycode(lhs)
-  for _, keymap in ipairs(vim.api.nvim_buf_get_keymap(bufnr, "n")) do
-    if keymap.lhsraw == raw or keymap.lhsrawalt == raw then
-      return keymap
-    end
-  end
+  end))
 end
 
 ---The window options a side-by-side window sets, as window `winnr` has them.
@@ -190,12 +160,12 @@ t:test("Git index events refresh Changes only when stale, and broader events alw
   end)
 
   era.m.git.state.o_refreshed:next({ change_scope = "index", generation = 1000 })
-  flush()
+  t.drain()
   t.assert_eq(1, checks, "an index event checks the snapshot")
   t.assert_eq(0, forced, "an index event does not force")
 
   era.m.git.state.o_refreshed:next({ change_scope = "unknown", generation = 1001 })
-  flush()
+  t.drain()
   t.assert_eq(1, checks, "a broader event skips the identity check")
   t.assert_eq(1, forced, "a broader event refreshes")
 end)
@@ -212,7 +182,7 @@ t:test("closing stops Git events before the refresh owner goes", function()
 
   session:close()
   era.m.git.state.o_refreshed:next({ change_scope = "unknown", generation = 2000 })
-  flush()
+  t.drain()
   t.assert_eq(0, requests)
 end)
 
@@ -254,10 +224,7 @@ t:test("previews take the filetype of their file without turning on filetype det
   -- A spec process starts without detection; no preview in this file may have turned it on.
   t.assert_eq("OFF", detection(), "filetype detection before")
 
-  local entry = assert(session.state:find_entry("x.lua", "staged"))
-  stl.async.run(function()
-    workspace_view.open_entry(session, entry)
-  end)
+  preview(session, "x.lua", "staged")
   t.wait_until(function()
     return vim.bo[vim.api.nvim_win_get_buf(session.layout.sbs_right_winnr)].filetype == "lua"
   end, 5000, "the x.lua preview is Lua")
@@ -294,10 +261,7 @@ t:test("shared side-by-side mappings run the keymap of the current tab's session
     calls[#calls + 1] = "log"
   end)
   -- A preview buffer is shared by the tabs that show it, so it carries the mappings of both.
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  t:defer(function()
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
+  local bufnr = t:buffer()
   workspace:setup_sbs(bufnr)
   log:setup_sbs(bufnr)
 
@@ -319,11 +283,7 @@ t:test("shared side-by-side mappings keep counts for handled and fallback keys",
     -- stylua: ignore
     return { { modes = { "n" }, key = "P", desc = "count probe", callback = function() handled_count = vim.v.count end } }
   end)
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  t:defer(function()
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "a" })
+  local bufnr = t:buffer({ "a" })
   local register, register_type = vim.fn.getreg('"'), vim.fn.getregtype('"')
   t:defer(function()
     vim.fn.setreg('"', register, register_type)
@@ -378,19 +338,19 @@ t:test("a working-tree file has the side-by-side mappings only while the cursor 
 
   preview(session, "a.txt", "unstaged")
   t.assert_eq(bufnr, vim.api.nvim_win_get_buf(right), "the preview shows the user's a.txt")
-  t.assert_nil(mapping(bufnr, "<C-j>"), "the cursor is in Changes")
+  t.assert_nil(diffview.mapping(bufnr, "<C-j>"), "the cursor is in Changes")
   vim.api.nvim_set_current_win(right)
-  t.assert_true(mapping(bufnr, "<C-j>") ~= nil, "the cursor is on a.txt in the preview")
+  t.assert_true(diffview.mapping(bufnr, "<C-j>") ~= nil, "the cursor is on a.txt in the preview")
   vim.api.nvim_set_current_win(home)
-  t.assert_nil(mapping(bufnr, "<C-j>"), "the user's own window on a.txt")
+  t.assert_nil(diffview.mapping(bufnr, "<C-j>"), "the user's own window on a.txt")
 
   vim.api.nvim_set_current_win(right)
   preview(session, "c.txt", "staged")
-  t.assert_nil(mapping(bufnr, "<C-j>"), "the preview moved on under the cursor")
+  t.assert_nil(diffview.mapping(bufnr, "<C-j>"), "the preview moved on under the cursor")
   preview(session, "a.txt", "unstaged")
-  t.assert_true(mapping(bufnr, "<C-j>") ~= nil, "the preview came back under the cursor")
+  t.assert_true(diffview.mapping(bufnr, "<C-j>") ~= nil, "the preview came back under the cursor")
   session:close()
-  t.assert_nil(mapping(bufnr, "<C-j>"), "the session closed")
+  t.assert_nil(diffview.mapping(bufnr, "<C-j>"), "the session closed")
 end)
 
 t:test("a working-tree file keeps its own mappings through the preview", function()
@@ -407,11 +367,11 @@ t:test("a working-tree file keeps its own mappings through the preview", functio
 
   preview(session, "a.txt", "unstaged")
   vim.api.nvim_set_current_win(assert(session.layout.sbs_right_winnr))
-  t.assert_eq("mine", assert(mapping(bufnr, "<C-j>")).desc, "while lent the other keys")
-  t.assert_true(mapping(bufnr, "gs") ~= nil, "the other keys are lent")
+  t.assert_eq("mine", assert(diffview.mapping(bufnr, "<C-j>")).desc, "while lent the other keys")
+  t.assert_true(diffview.mapping(bufnr, "gs") ~= nil, "the other keys are lent")
   session:close()
-  t.assert_eq("mine", assert(mapping(bufnr, "<C-j>")).desc, "after taking them back")
-  t.assert_nil(mapping(bufnr, "gs"), "taken back")
+  t.assert_eq("mine", assert(diffview.mapping(bufnr, "<C-j>")).desc, "after taking them back")
+  t.assert_nil(diffview.mapping(bufnr, "gs"), "taken back")
 end)
 
 t:test("a working-tree file leaves the preview with its own window options", function()
@@ -427,19 +387,19 @@ t:test("a working-tree file leaves the preview with its own window options", fun
   local session = diffview.open_workspace(t)
 
   preview(session, "a.txt", "unstaged")
-  flush()
+  t.drain()
   t.assert_true(winopts(assert(session.layout.sbs_right_winnr)).scrollbind, "a diff side while previewed")
   preview(session, "c.txt", "staged")
   t.assert_same(own, winopts_reopened(bufnr), "after the preview moved on")
 
   preview(session, "a.txt", "unstaged")
-  flush()
+  t.drain()
   session:close()
   t.assert_same(own, winopts_reopened(bufnr), "after the session closed")
 
   local again = diffview.open_workspace(t)
   preview(again, "a.txt", "unstaged")
-  flush()
+  t.drain()
   vim.api.nvim_set_current_tabpage(again.tabnr)
   vim.cmd("tabclose")
   t.assert_same(own, winopts_reopened(bufnr), "after its tab closed")

@@ -15,15 +15,10 @@ local function create_buffer(filetype, loaded)
     string.format(".nvim-lint-test-%d-%d.%s", vim.fn.getpid(), buffer_counter, filetype)
   )
 
-  local bufnr ---@type integer
-  if loaded == false then
-    bufnr = vim.fn.bufadd(filepath)
-  else
-    bufnr = vim.api.nvim_create_buf(false, true)
-    vim.api.nvim_buf_set_name(bufnr, filepath)
-    vim.api.nvim_set_option_value("filetype", filetype, { buf = bufnr })
+  if loaded ~= false then
+    return t:buffer(nil, { name = filepath, filetype = filetype })
   end
-
+  local bufnr = vim.fn.bufadd(filepath) ---@type integer
   t:defer(function()
     if vim.api.nvim_buf_is_valid(bufnr) then
       vim.api.nvim_buf_delete(bufnr, { force = true })
@@ -65,7 +60,6 @@ local function setup(opts)
   local ctx = {
     callbacks = {},
     calls = {},
-    errors = {},
     timers = {},
     subscriptions = {},
     subscription_ignore_initial = nil,
@@ -123,12 +117,6 @@ local function setup(opts)
         end,
       },
     },
-    reporter = {
-      error = function(report)
-        ctx.errors[#ctx.errors + 1] = report
-      end,
-      warn = function() end,
-    },
     timer = {
       debounce = function(callback, delay)
         local timer = {
@@ -155,6 +143,7 @@ local function setup(opts)
       end,
     },
   })
+  ctx.errors = bootstrap.with_reporter(t).error
   bootstrap.with_global(t, "dot", {
     context = {
       lsp = {
@@ -219,13 +208,7 @@ local function setup(opts)
   t:patch_table(vim.fn, "win_gettype", function(winnr)
     return window_types[winnr] or ""
   end)
-  t:patch_table(vim.api, "nvim_create_autocmd", function(events, opts)
-    events = type(events) == "table" and events or { events }
-    for _, event in ipairs(events) do
-      ctx.callbacks[event] = opts.callback
-    end
-    return 1
-  end)
+  ctx.callbacks = bootstrap.with_autocmds(t)
 
   ctx.emit = function(bufnr)
     assert(lint_schedule_subscriber):next(bufnr, nil)

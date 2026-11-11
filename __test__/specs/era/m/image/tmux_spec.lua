@@ -1,5 +1,34 @@
+local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 local t = harness.new()
+
+---Declares the globals `dressing` reads, inside tmux when `tmux` is and in the tmux pane `pane`, and an image state
+---that supports the terminal.
+---@param tmux                          boolean
+---@param pane                          ?string
+---@return table
+local function tmux_runtime(tmux, pane)
+  local state = {
+    did_setup = false,
+    data = { extnames = { ".png" }, doc = { enabled = false } },
+    is_support_terminal = function()
+      return true
+    end,
+  }
+  t:patch_global("stl", {
+    env = { IS_OSX = true, IS_TMUX = tmux },
+    fn = { observe = function() end },
+    nvim = { fn = {
+      augroup = function()
+        return 1
+      end,
+    } },
+  })
+  t:patch_global("dot", { context = { theme = {} } })
+  t:patch_table(vim, "env", { TMUX_PANE = pane })
+  t:patch_table(package.loaded, "era.m.image.state", state)
+  return state
+end
 
 local scenarios = {
   { name = "enables passthrough for the owning pane before installing image hooks", calls = 2, owns_pane = true },
@@ -11,32 +40,9 @@ local scenarios = {
 for _, scenario in ipairs(scenarios) do
   t:test(scenario.name, function()
     local commands = {}
-    local warnings = {}
     local hooks = 0
-    local state = {
-      did_setup = false,
-      data = { extnames = { ".png" }, doc = { enabled = false } },
-      is_support_terminal = function()
-        return true
-      end,
-    }
-    t:patch_global("stl", {
-      env = { IS_OSX = true, IS_TMUX = scenario.tmux ~= false },
-      fn = { observe = function() end },
-      nvim = { fn = {
-        augroup = function()
-          return 1
-        end,
-      } },
-      reporter = {
-        warn = function(report)
-          warnings[#warnings + 1] = report
-        end,
-      },
-    })
-    t:patch_global("dot", { context = { theme = {} } })
-    t:patch_table(vim, "env", { TMUX_PANE = scenario.pane ~= false and "%7312" or nil })
-    t:patch_table(package.loaded, "era.m.image.state", state)
+    local state = tmux_runtime(scenario.tmux ~= false, scenario.pane ~= false and "%7312" or nil)
+    local warnings = bootstrap.with_reporter(t).warn
     t:patch_table(vim.api, "nvim_create_autocmd", function()
       t.assert_eq(scenario.calls, #commands, "passthrough setup precedes image hooks")
       hooks = hooks + 1
@@ -102,24 +108,7 @@ for _, case in ipairs({
   t:test(("the pane gets its own passthrough %q back on exit and suspension"):format(case.own), function()
     local callbacks = {} ---@type table<string, fun()[]>
     local log = {} ---@type string[]
-    t:patch_global("stl", {
-      env = { IS_OSX = true, IS_TMUX = true },
-      fn = { observe = function() end },
-      nvim = { fn = {
-        augroup = function()
-          return 1
-        end,
-      } },
-    })
-    t:patch_global("dot", { context = { theme = {} } })
-    t:patch_table(vim, "env", { TMUX_PANE = "%7312" })
-    t:patch_table(package.loaded, "era.m.image.state", {
-      did_setup = false,
-      data = { extnames = { ".png" }, doc = { enabled = false } },
-      is_support_terminal = function()
-        return true
-      end,
-    })
+    tmux_runtime(true, "%7312")
     t:patch_table(package.loaded, "era.m.image.placement", {
       clean = function()
         log[#log + 1] = "placements closed"
@@ -167,24 +156,7 @@ t:test("images are sent again once another tmux client shows the pane", function
   local client = "4242:1793780000" ---@type string
   local focus = nil ---@type fun()|nil
   local resent, redrawn = 0, 0
-  t:patch_global("stl", {
-    env = { IS_OSX = true, IS_TMUX = true },
-    fn = { observe = function() end },
-    nvim = { fn = {
-      augroup = function()
-        return 1
-      end,
-    } },
-  })
-  t:patch_global("dot", { context = { theme = {} } })
-  t:patch_table(vim, "env", { TMUX_PANE = "%7312" })
-  t:patch_table(package.loaded, "era.m.image.state", {
-    did_setup = false,
-    data = { extnames = { ".png" }, doc = { enabled = false } },
-    is_support_terminal = function()
-      return true
-    end,
-  })
+  tmux_runtime(true, "%7312")
   t:patch_table(package.loaded, "era.m.image.image", {
     resend = function()
       resent = resent + 1

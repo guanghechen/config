@@ -277,12 +277,7 @@ t:test("normalized multiline task errors render successfully", function()
   })
   widget:__trim__()
 
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
+  local bufnr = t:buffer()
 
   local ok, err = pcall(widget.__render__, widget, bufnr)
   t.assert_true(ok, tostring(err))

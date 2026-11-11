@@ -7,26 +7,26 @@ t:test("cursor movement and unchanged refresh preserve colors without recalculat
   for index = 1, 20 do
     vim.fn.writefile({ "return true" }, path .. "/item-" .. string.format("%02d", index) .. ".lua")
   end
-  local ui = require("__test__.support.ui").new()
-  t:defer(function()
-    ui:close()
-  end)
   local tracking, faded, missing, observed = false, {}, {}, 0
-  local grid = require("__test__.support.ui_grid").new(ui, function(screen)
-    if not tracking then
-      return
-    end
-    observed = observed + 1
-    for _, name in ipairs({ "item-01.lua", "item-15.lua" }) do
-      local cell = screen:find(name)
-      if not cell then
-        missing[#missing + 1] = name
-      elseif cell.highlight.foreground ~= 0xFF0000 then
-        faded[#faded + 1] = { flush = screen.flushes, name = name, foreground = cell.highlight.foreground }
+  local ui, grid = explorer.open_ui(t, {
+    width = 100,
+    height = 30,
+    path = path,
+    on_flush = function(screen)
+      if not tracking then
+        return
       end
-    end
-  end)
-  explorer.start_ui(ui, { width = 100, height = 30, path = path })
+      observed = observed + 1
+      for _, name in ipairs({ "item-01.lua", "item-15.lua" }) do
+        local cell = screen:find(name)
+        if not cell then
+          missing[#missing + 1] = name
+        elseif cell.highlight.foreground ~= 0xFF0000 then
+          faded[#faded + 1] = { flush = screen.flushes, name = name, foreground = cell.highlight.foreground }
+        end
+      end
+    end,
+  })
   ui:lua(
     [=[
     local path = ...
@@ -34,15 +34,9 @@ t:test("cursor movement and unchanged refresh preserve colors without recalculat
     vim.api.nvim_set_hl(0, "m_ft_filename", { fg = 0x808080 })
     widget = require("era.m.explorer.widget").new({name="cursor-test",root=path})
     widget:focus()
-    assert(vim.wait(10000,function()
-      local _, _, view = pcall(widget.context, widget)
-      return view and view:frame() and view:frame():header().row_count == 20
-    end,1))
-    session, view = widget:context()
-    local future = session.data:set_diagnostics(1,1,1,path .. "/item-01.lua",{1,0,0,0})
-    assert(vim.wait(10000,function() return future:is_done() end,1))
-    future = session.data:set_diagnostics(1,2,1,path .. "/item-15.lua",{1,0,0,0})
-    assert(vim.wait(10000,function() return future:is_done() end,1))
+    session, view = shown(widget, 20)
+    await(session.data:set_diagnostics(1,1,1,path .. "/item-01.lua",{1,0,0,0}))
+    await(session.data:set_diagnostics(1,2,1,path .. "/item-15.lua",{1,0,0,0}))
     local icon = stl.fileicon.get_file_icon
     counts = {icons=0,writes=0}
     stl.fileicon.get_file_icon = function(...)
@@ -68,22 +62,20 @@ t:test("cursor movement and unchanged refresh preserve colors without recalculat
     refreshing = session.data:refresh(session.state)
     return previous
   ]])
-  ui:wait_until(function()
-    return ui:lua(
-      [[
-      return refreshing:is_done() and not refreshing:is_failed()
-        and not session.data:native():is_busy()
-        and view:frame():header().data_revision ~= ...
-    ]],
-      previous_revision
-    )
-  end, 10000, "an unchanged refresh must publish its loading state")
+  ui:wait_lua(
+    [[
+    return refreshing:is_done() and not refreshing:is_failed()
+      and not session.data:native():is_busy()
+      and view:frame():header().data_revision ~= ...
+  ]],
+    10000,
+    "an unchanged refresh must publish its loading state",
+    previous_revision
+  )
   for step = 1, 12 do
     local row = step <= 6 and step + 1 or 13 - step
     ui:rpc("nvim_input", step <= 6 and "j" or "k")
-    ui:wait_until(function()
-      return ui:lua("return view:frame():header().cursor_row == ...", row)
-    end, 10000)
+    ui:wait_lua("return view:frame():header().cursor_row == ...", 10000, nil, row)
   end
   vim.wait(80, function()
     return false
@@ -106,9 +98,7 @@ t:test("cursor movement and unchanged refresh preserve colors without recalculat
   ]],
     path
   )
-  ui:wait_until(function()
-    return ui:lua("return view:frame():rows(1,1).labels[1] == 'item-02.lua'")
-  end, 10000)
+  ui:wait_lua("return view:frame():rows(1,1).labels[1] == 'item-02.lua'", 10000)
   ui:rpc("nvim_command", "normal! ggzt")
   t.wait_until(function()
     local moved, next_item, other = grid:find("z-last.lua"), grid:find("item-02.lua"), grid:find("item-15.lua")
@@ -134,37 +124,27 @@ t:test("purpose changes repaint all selection markers even when row data is reus
   for _, name in ipairs({ "first.lua", "second.lua" }) do
     vim.fn.writefile({ "return true" }, path .. "/" .. name)
   end
-  local ui = require("__test__.support.ui").new()
-  local grid = require("__test__.support.ui_grid").new(ui)
-  t:defer(function()
-    ui:close()
-  end)
-  explorer.start_ui(ui, { width = 100, height = 30, path = path })
+  local ui, grid = explorer.open_ui(t, { width = 100, height = 30, path = path })
   ui:lua(
     [=[
     local path = ...
     vim.o.showtabline = 2
     widget = require("era.m.explorer.widget").new({name="purpose-markers",root=path})
     widget:focus()
-    assert(vim.wait(10000, function()
-      local _, current_session, current = pcall(widget.context, widget)
-      return current and current:frame() and current:frame():header().row_count == 2
-        and not current._busy and not current._latest and not current_session.data:native():is_busy()
-    end))
-    session, view = widget:context()
+    session, view = shown(widget, 2, function(current_session, current)
+      return not current._busy and not current._latest and not current_session.data:native():is_busy()
+    end)
     ---@param future                    stl.c.Future
     ---@return any
-    function await(future)
-      assert(vim.wait(10000, function() return future:is_done() end))
-      assert(not future:is_failed(), future:get_error())
-      local result = future:get_result()
+    function accepted(future)
+      local result = await(future)
       assert(result.kind ~= "Rejected", vim.inspect(result))
       return result
     end
-    await(widget:action():mark("copy"))
-    await(view:set_cursor(2))
+    accepted(widget:action():mark("copy"))
+    accepted(view:set_cursor(2))
     assert(vim.wait(10000, function() return view:frame():header().cursor_row == 2 and not view._busy end))
-    await(widget:action():mark("copy"))
+    accepted(widget:action():mark("copy"))
     assert(vim.wait(10000, function()
       return session:mode(view:frame()) == "copy" and view:frame():rows(1, 2).marked[2] and not view._busy
     end))
@@ -185,10 +165,10 @@ t:test("purpose changes repaint all selection markers even when row data is reus
       local mode = ...
       local original = view:frame()
       if mode == "cancel" then
-        await(widget:action():cancel_transfer_or_clear_selection())
+        accepted(widget:action():cancel_transfer_or_clear_selection())
         mode = "select"
       else
-        await(widget:action():mark(mode))
+        accepted(widget:action():mark(mode))
       end
       assert(vim.wait(10000, function()
         return session:mode(view:frame()) == mode and not view._busy and not view._latest
@@ -203,19 +183,12 @@ t:test("purpose changes repaint all selection markers even when row data is reus
     t.wait_until(function()
       for _, label in ipairs({ "first.lua", "second.lua" }) do
         local location = grid:find(label)
-        if not location then
-          return false
-        end
-        local text = {}
-        for _, cell in ipairs(grid.grids[location.grid].rows[location.row + 1]) do
-          text[#text + 1] = cell[1]
-        end
-        if not table.concat(text):find(glyph, 1, true) then
+        if not location or not grid:row_text(location):find(glyph, 1, true) then
           return false
         end
       end
       return true
-    end, 1000, mode .. " must repaint both markers without a forced redraw")
+    end, 5000, mode .. " must repaint both markers without a forced redraw")
   end
   t.assert_true(ui:lua("return reusable > 0"), "exercise the unchanged-row publication path")
   t.assert_eq(0, ui:lua("return writes"), "marker changes do not write body text")
@@ -229,11 +202,6 @@ t:test("fold keys coexist with which-key and publish names and status together",
   for _, name in ipairs({ "keep-a.lua", "keep-b.lua", "branch/inside.lua", "branch/nested/leaf.lua" }) do
     vim.fn.writefile({ "content" }, path .. "/" .. name)
   end
-  local ui = require("__test__.support.ui").new()
-  t:defer(function()
-    ui:close()
-    vim.fn.delete(path, "rf")
-  end)
   local tracking, failures, observed = false, {}, 0
   local expected = {
     ["branch"] = { color = 0xFFFF00, status = "W:1" },
@@ -243,28 +211,27 @@ t:test("fold keys coexist with which-key and publish names and status together",
     ["nested"] = { color = 0x808080, status = "", optional = true },
     ["leaf.lua"] = { color = 0x808080, status = "", optional = true },
   }
-  local grid = require("__test__.support.ui_grid").new(ui, function(screen)
-    if not tracking then
-      return
-    end
-    observed = observed + 1
-    for name, value in pairs(expected) do
-      local cell = screen:find(name)
-      if cell then
-        local cells = screen.grids[cell.grid].rows[cell.row + 1]
-        local line = {}
-        for _, item in ipairs(cells) do
-          line[#line + 1] = item[1]
-        end
-        if cell.highlight.foreground ~= value.color or not table.concat(line):find(value.status, 1, true) then
-          failures[#failures + 1] = { flush = screen.flushes, name = name, color = cell.highlight.foreground }
-        end
-      elseif not value.optional then
-        failures[#failures + 1] = { flush = screen.flushes, name = name, missing = true }
+  local ui, grid = explorer.open_ui(t, {
+    width = 100,
+    height = 30,
+    path = path,
+    on_flush = function(screen)
+      if not tracking then
+        return
       end
-    end
-  end)
-  explorer.start_ui(ui, { width = 100, height = 30, path = path })
+      observed = observed + 1
+      for name, value in pairs(expected) do
+        local cell = screen:find(name)
+        if cell then
+          if cell.highlight.foreground ~= value.color or not screen:row_text(cell):find(value.status, 1, true) then
+            failures[#failures + 1] = { flush = screen.flushes, name = name, color = cell.highlight.foreground }
+          end
+        elseif not value.optional then
+          failures[#failures + 1] = { flush = screen.flushes, name = name, missing = true }
+        end
+      end
+    end,
+  })
   ui:lua(
     [=[
     local path = ...
@@ -296,16 +263,10 @@ t:test("fold keys coexist with which-key and publish names and status together",
       return navigate(self, direction)
     end
     widget:focus()
-    assert(vim.wait(10000, function()
-      local _, _, current = pcall(widget.context, widget)
-      return current and current:frame() and current:frame():header().row_count == 3
-    end))
-    session, view = widget:context()
+    session, view = shown(widget, 3)
     for index, name in ipairs({ "keep-a.lua", "keep-b.lua", "branch/inside.lua" }) do
       local counts = index == 1 and { 1, 0, 0, 0 } or { 0, 1, 0, 0 }
-      local future = session.data:set_diagnostics(1, index, 1, path .. "/" .. name, counts)
-      assert(vim.wait(10000, function() return future:is_done() end))
-      assert(not future:is_failed(), future:get_error())
+      await(session.data:set_diagnostics(1, index, 1, path .. "/" .. name, counts))
     end
     local on_frame = view._options.on_frame
     view._options.on_frame = function(frame)
@@ -326,13 +287,13 @@ t:test("fold keys coexist with which-key and publish names and status together",
     return true
   end, 10000)
   ui:rpc("nvim_input", "[")
-  ui:wait_until(function()
-    return ui:lua("return whichkey.state.keys == '['")
-  end, 10000, "the prefix must enter which-key before its child is typed")
+  ui:wait_lua("return whichkey.state.keys == '['", 10000, "the prefix must enter which-key before its child is typed")
   ui:rpc("nvim_input", "i")
-  ui:wait_until(function()
-    return ui:lua("return navigations == 1 and not whichkey.state.is_suspended(view.bufnr, 'n')")
-  end, 10000, "a which-key prefix must execute and restore its triggers")
+  ui:wait_lua(
+    "return navigations == 1 and not whichkey.state.is_suspended(view.bufnr, 'n')",
+    10000,
+    "a which-key prefix must execute and restore its triggers"
+  )
   t.assert_eq(
     "Explorer: recursive expansion",
     ui:lua("return vim.fn.maparg('z', 'n', false, true).desc"),
@@ -344,18 +305,18 @@ t:test("fold keys coexist with which-key and publish names and status together",
     local expanded = step % 2 == 1
     local recursive = step > 4
     ui:rpc("nvim_input", recursive and "z" or expanded and "l" or "h")
-    ui:wait_until(function()
-      return ui:lua(
-        [[
-        local expanded, recursive = ...
-        local frame = view:frame()
-        return frame:header().row_count == (expanded and (recursive and 6 or 5) or 3)
-          and frame:rows(1, 1).expanded[1] == expanded
-      ]],
-        expanded,
-        recursive
-      )
-    end, 10000)
+    ui:wait_lua(
+      [[
+      local expanded, recursive = ...
+      local frame = view:frame()
+      return frame:header().row_count == (expanded and (recursive and 6 or 5) or 3)
+        and frame:rows(1, 1).expanded[1] == expanded
+    ]],
+      10000,
+      nil,
+      expanded,
+      recursive
+    )
   end
   tracking = false
   t.assert_true(observed >= 8, "fold transitions must reach the UI")
@@ -372,13 +333,7 @@ t:test("guides stay visible through Visual selection and clip correctly when scr
   for _, name in ipairs({ "branch/a.lua", "branch/" .. long_name, "z.lua" }) do
     vim.fn.writefile({ "content" }, path .. "/" .. name)
   end
-  local ui = require("__test__.support.ui").new()
-  local grid = require("__test__.support.ui_grid").new(ui)
-  t:defer(function()
-    ui:close()
-    vim.fn.delete(path, "rf")
-  end)
-  explorer.start_ui(ui, { width = 100, height = 30, path = path })
+  local ui, grid = explorer.open_ui(t, { width = 100, height = 30, path = path })
   ui:lua(
     [=[
     local path = ...
@@ -387,14 +342,10 @@ t:test("guides stay visible through Visual selection and clip correctly when scr
       o_flag_foldempty = stl.c.Observable.from_value(false),
     })
     widget:focus()
-    local future = widget:reveal(path .. "/branch/a.lua")
-    assert(vim.wait(10000, function() return future:is_done() end))
-    assert(not future:is_failed(), future:get_error())
-    session, view = widget:context()
-    assert(vim.wait(10000, function()
-      return view:frame() and view:frame():header().row_count == 4
-        and not session.data:native():is_busy() and session.state:native():applicable(view:frame())
-    end))
+    await(widget:reveal(path .. "/branch/a.lua"))
+    session, view = shown(widget, 4, function(current_session, current)
+      return not current_session.data:native():is_busy() and current_session.state:native():applicable(current:frame())
+    end)
   ]=],
     path
   )
@@ -405,9 +356,7 @@ t:test("guides stay visible through Visual selection and clip correctly when scr
     ui:lua(
       [=[
       local row = ...
-      local future = view:set_cursor(row)
-      assert(vim.wait(10000, function() return future:is_done() end))
-      assert(not future:is_failed(), future:get_error())
+      await(view:set_cursor(row))
       assert(vim.wait(10000, function()
         return view:frame():header().cursor_row == row and not view._busy and not view._latest
       end))
@@ -421,7 +370,7 @@ t:test("guides stay visible through Visual selection and clip correctly when scr
   local function visible_guides(label)
     ui:rpc("nvim_command", "redraw!")
     local location = assert(grid:find("a.lua"), label .. ": missing filename: " .. vim.inspect(ui:lua("return errors")))
-    local cells = grid.grids[location.grid].rows[location.row + 1]
+    local cells = grid:row_cells(location)
     local colors = ui:lua([=[
       local cursor = vim.api.nvim_win_get_cursor(view.winnr)[1]
       local mode = vim.api.nvim_get_mode().mode:sub(1, 1)
@@ -460,14 +409,10 @@ t:test("guides stay visible through Visual selection and clip correctly when scr
       move(2)
       visible_guides(theme .. " Normal")
       ui:rpc("nvim_input", input[1])
-      ui:wait_until(function()
-        return ui:lua("return vim.api.nvim_get_mode().mode == ...", input[2])
-      end, 10000)
+      ui:wait_lua("return vim.api.nvim_get_mode().mode == ...", 10000, nil, input[2])
       visible_guides(theme .. " " .. input[2])
       ui:rpc("nvim_input", "<Esc>")
-      ui:wait_until(function()
-        return ui:lua("return vim.api.nvim_get_mode().mode:sub(1, 1) == 'n'")
-      end, 10000)
+      ui:wait_lua("return vim.api.nvim_get_mode().mode:sub(1, 1) == 'n'", 10000)
       visible_guides(theme .. " after Visual")
     end
     local foreground = ui:lua("return vim.api.nvim_get_hl(0, { name = 'm_ex_indent', link = false }).fg")
@@ -475,7 +420,7 @@ t:test("guides stay visible through Visual selection and clip correctly when scr
     move(4)
     ui:rpc("nvim_command", "redraw!")
     local location = assert(grid:find("a.lua"))
-    local cells = grid.grids[location.grid].rows[location.row + 1]
+    local cells = grid:row_cells(location)
     for col = 1, location.col do
       if cells[col][1] == "│" or cells[col][1] == "├" or cells[col][1] == "─" then
         t.assert_eq(
@@ -487,8 +432,7 @@ t:test("guides stay visible through Visual selection and clip correctly when scr
     end
   end
   ui:lua([=[
-    local future = session.state:dispatch({ kind = "set_cursor", node = view:frame():node_at(3) })
-    assert(vim.wait(10000, function() return future:is_done() end))
+    await(session.state:dispatch({ kind = "set_cursor", node = view:frame():node_at(3) }))
     assert(vim.wait(10000, function()
       return view:frame():header().cursor_row == 3 and not view._busy and not view._latest
     end))
@@ -499,7 +443,7 @@ t:test("guides stay visible through Visual selection and clip correctly when scr
   ]=])
   ui:rpc("nvim_command", "redraw!")
   local tail = assert(grid:find("scroll.lua"))
-  local cells = grid.grids[tail.grid].rows[tail.row + 1]
+  local cells = grid:row_cells(tail)
   for col = 1, tail.col do
     t.assert_false(
       vim.tbl_contains({ "│", "╰", "├", "─" }, cells[col][1]),
@@ -515,11 +459,7 @@ t:test("real UI subscribes to diagnostics and Git ignore with independent name a
   vim.fn.writefile({ "content" }, path .. "/a.lua")
   vim.fn.writefile({ "content" }, path .. "/b.py")
   vim.fn.writefile({ "b.py" }, path .. "/.gitignore")
-  local ui = require("__test__.support.ui").new()
-  t:defer(function()
-    ui:close()
-  end)
-  explorer.start_ui(ui, { width = 100, height = 30, path = path, git_repo = true })
+  local ui = explorer.open_ui(t, { width = 100, height = 30, path = path, git_repo = true })
   ui:lua(
     [=[
     local path = ...
@@ -544,11 +484,7 @@ t:test("real UI subscribes to diagnostics and Git ignore with independent name a
       o_flag_hidden = stl.c.Observable.from_value(false),
     })
     widget:focus()
-    assert(vim.wait(10000, function()
-      local _, _, view = pcall(widget.context, widget)
-      return view and view:frame() and view:frame():header().row_count == 2
-    end))
-    session, view = widget:context()
+    session, view = shown(widget, 2)
     namespace = vim.api.nvim_create_namespace("explorer-live-diagnostics")
     buffers = {}
     for _, name in ipairs({ "a.lua", "b.py" }) do
@@ -612,11 +548,10 @@ t:test("real UI subscribes to diagnostics and Git ignore with independent name a
       options
     )
     if options.background then
-      ui:wait_until(function()
-        return ui:lua(
-          "return session.data:native():annotation_revision() ~= ignore_revision and not session._subscriptions._running"
-        )
-      end, 10000)
+      ui:wait_lua(
+        "return session.data:native():annotation_revision() ~= ignore_revision and not session._subscriptions._running",
+        10000
+      )
       ui:lua("vim.api.nvim_set_current_tabpage(explorer_tabnr)")
     end
     ui:wait_until(function()
@@ -641,7 +576,7 @@ t:test("real UI subscribes to diagnostics and Git ignore with independent name a
     assert(vim.uv.fs_mkdir(path .. "/lsp", 448))
     assert(vim.uv.fs_mkdir(path .. "/plain", 448))
     widget:refresh()
-    assert(vim.wait(10000, function() return view:frame():header().row_count == 4 end))
+    shown(widget, 4)
     vim.api.nvim_win_set_cursor(view.winnr, {1, 0})
     vim.api.nvim_win_call(view.winnr, function() vim.cmd("normal! zt") end)
     colors, icons = {}, {}

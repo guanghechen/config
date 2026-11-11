@@ -26,8 +26,6 @@ end
 ---@return table
 local function setup_lifecycle(options)
   options = options or {}
-  local reports = {} ---@type table[]
-  local callbacks = {} ---@type table<string, fun()>
   local restored_snapshots = {} ---@type era.dressing.im.Snapshot[]
   local current_snapshot = options.initial_snapshot or "source.english" ---@type era.dressing.im.Snapshot
   local auto_im = true ---@type boolean
@@ -37,7 +35,6 @@ local function setup_lifecycle(options)
   local capture_and_select_count = 0 ---@type integer
   local restore_count = 0 ---@type integer
   local english_switch_count = 0 ---@type integer
-  local scheduled = {} ---@type function[]
   local ui_count = options.ui_count or 1 ---@type integer
   if options.with_ui == false then
     ui_count = 0
@@ -146,12 +143,8 @@ local function setup_lifecycle(options)
         end,
       },
     },
-    reporter = {
-      error = function(report)
-        reports[#reports + 1] = report
-      end,
-    },
   })
+  local reports = bootstrap.with_reporter(t).error
   bootstrap.with_global(t, "dot", {
     context = {
       behavior = {
@@ -159,16 +152,7 @@ local function setup_lifecycle(options)
       },
     },
   })
-  t:patch_table(vim.api, "nvim_create_autocmd", function(events, opts)
-    if type(events) == "string" then
-      callbacks[events] = opts.callback
-    else
-      for _, event in ipairs(events) do
-        callbacks[event] = opts.callback
-      end
-    end
-    return 1
-  end)
+  local callbacks = bootstrap.with_autocmds(t)
   t:patch_table(vim.api, "nvim_get_mode", function()
     return { mode = mode }
   end)
@@ -179,9 +163,7 @@ local function setup_lifecycle(options)
     end
     return uis
   end)
-  t:patch_table(vim, "schedule", function(callback)
-    scheduled[#scheduled + 1] = callback
-  end)
+  local schedule = bootstrap.with_schedule(t)
   t:patch_table(vim.uv, "hrtime", function()
     return now_ns
   end)
@@ -194,15 +176,8 @@ local function setup_lifecycle(options)
     callbacks.UIEnter()
   end
 
-  ---@return nil
-  local function flush_scheduled()
-    while #scheduled > 0 do
-      local callback = table.remove(scheduled, 1)
-      callback()
-    end
-  end
   if not options.defer_ui_enter then
-    flush_scheduled()
+    schedule.drain()
   end
 
   return {
@@ -211,7 +186,7 @@ local function setup_lifecycle(options)
     reports = reports,
     restored_snapshots = restored_snapshots,
     setup_executables = setup_executables,
-    flush_scheduled = flush_scheduled,
+    flush_scheduled = schedule.drain,
     advance_time = function(milliseconds)
       now_ns = now_ns + milliseconds * 1e6
     end,
@@ -234,7 +209,7 @@ local function setup_lifecycle(options)
       return restore_count
     end,
     get_scheduled_count = function()
-      return #scheduled
+      return #schedule.callbacks
     end,
     get_unsubscribe_count = function()
       return unsubscribe_count

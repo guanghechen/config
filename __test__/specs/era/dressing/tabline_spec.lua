@@ -1,14 +1,16 @@
+local dressing = require("__test__.support.dressing")
 local harness = require("__test__.support.harness")
 local enums = require("stl.e")
 local module_name = "era.dressing.tabline"
 local t = harness.new()
 
 local function setup()
+  local nvimbars = dressing.nvimbars()
   local runtime = {
     bufnrs = { 1 },
     devmode = false,
     subscribers = {},
-    bars = {},
+    bars = nvimbars.bars,
     explorer_redraws = 0,
     dirty_winnrs = {},
   }
@@ -85,26 +87,7 @@ local function setup()
   })
   t:patch_table(era.m, "nvimbar", {
     component = require("era.m.nvimbar").component,
-    Nvimbar = {
-      new = function(props)
-        local bar = { render_count = 0 }
-        function bar:place()
-          return self
-        end
-        ---@return nil
-        function bar:refresh()
-          self.render_count = self.render_count + 1
-        end
-        function bar:snapshot()
-          return props.name
-        end
-        function bar:fulfill()
-          props.on_fulfilled(props.name)
-        end
-        runtime.bars[props.name] = bar
-        return bar
-      end,
-    },
+    Nvimbar = nvimbars.Nvimbar,
   })
   t:patch_table(package.loaded, module_name, nil)
   t.assert_eq(module_name, era.dressing.__mods.tabline, "module registration")
@@ -124,12 +107,12 @@ t:test("dressing subscribes once and preserves visibility transition state", fun
   Tabline.dressing()
   Tabline.dressing()
   t.assert_eq(1, #runtime.subscribers, "dirty subscriptions")
-  t.assert_eq(1, runtime.bars.tabline.render_count, "initial render count")
+  t.assert_eq(1, runtime.bars.tabline.refreshes, "initial render count")
   t.assert_eq(1, runtime.explorer_redraws, "initial explorer redraw")
   t.assert_eq(2, vim.api.nvim_get_option_value("showtabline", {}), "visible tabline")
 
   runtime.refresh()
-  t.assert_eq(2, runtime.bars.tabline.render_count, "one render per refresh")
+  t.assert_eq(2, runtime.bars.tabline.refreshes, "one render per refresh")
   t.assert_eq(1, runtime.explorer_redraws, "no redraw without a visibility change")
 
   runtime.bufnrs = { 1 }
@@ -156,13 +139,13 @@ t:test("dressing initializes once while hidden and responds to devmode changes",
   Tabline.dressing()
   Tabline.dressing()
   t.assert_eq(1, #runtime.subscribers, "subscriptions while initially hidden")
-  t.assert_eq(0, runtime.bars.tabline.render_count, "hidden tabline is not rendered")
+  t.assert_eq(0, runtime.bars.tabline.refreshes, "hidden tabline is not rendered")
   t.assert_eq(0, vim.api.nvim_get_option_value("showtabline", {}), "initially hidden")
 
   runtime.devmode = true
   runtime.refresh()
   t.assert_eq(2, vim.api.nvim_get_option_value("showtabline", {}), "devmode shows tabline")
-  t.assert_eq(1, runtime.bars.tabline.render_count, "devmode render")
+  t.assert_eq(1, runtime.bars.tabline.refreshes, "devmode render")
   runtime.devmode = false
   runtime.refresh()
   t.assert_eq(0, vim.api.nvim_get_option_value("showtabline", {}), "hidden after leaving devmode")
@@ -209,26 +192,26 @@ t:test("normal and maximize results only update the matching tab type", function
   runtime.bufnrs = { 1, 2 }
   Tabline.dressing()
   local normal = runtime.bars.tabline
-  normal:fulfill()
+  normal:fulfill("tabline")
   t.assert_eq("tabline", vim.api.nvim_get_option_value("tabline", {}), "normal result")
   t.assert_nil(runtime.bars.tabline_maximize, "maximize renderer stays lazy")
 
   vim.t.tabtype = enums.TabTypeEnum.MAXIMIZE
   runtime.refresh()
   local maximize = runtime.bars.tabline_maximize
-  maximize:fulfill()
-  normal:fulfill()
+  maximize:fulfill("tabline_maximize")
+  normal:fulfill("tabline")
   t.assert_eq("tabline_maximize", vim.api.nvim_get_option_value("tabline", {}), "stale normal result ignored")
 
   vim.t.tabtype = enums.TabTypeEnum.NORMAL
   runtime.refresh()
-  normal:fulfill()
-  maximize:fulfill()
+  normal:fulfill("tabline")
+  maximize:fulfill("tabline_maximize")
   t.assert_eq("tabline", vim.api.nvim_get_option_value("tabline", {}), "stale maximize result ignored")
   vim.t.tabtype = enums.TabTypeEnum.MAXIMIZE
   runtime.refresh()
   t.assert_eq(maximize, runtime.bars.tabline_maximize, "maximize renderer reused")
-  t.assert_eq(2, maximize.render_count, "maximize render count")
+  t.assert_eq(2, maximize.refreshes, "maximize render count")
 end)
 
 t:run()

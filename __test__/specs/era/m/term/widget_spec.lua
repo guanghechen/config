@@ -2,7 +2,6 @@ local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
 local t = harness.new()
-local reports = {} ---@type table[]
 
 local Observable = {}
 
@@ -45,11 +44,6 @@ bootstrap.with_runtime(t, {
     },
     nvim = {
       buf = { close = function() end },
-    },
-    reporter = {
-      error = function(report)
-        reports[#reports + 1] = report
-      end,
     },
     table = {
       truncate_inline = function(values, size)
@@ -99,18 +93,9 @@ local function create_term(uuid, permanent, bufnr, on_closed)
   return termmeta
 end
 
----@return fun()[]
-local function capture_schedules()
-  local callbacks = {} ---@type fun()[]
-  t:patch_table(vim, "schedule", function(callback)
-    callbacks[#callbacks + 1] = callback
-  end)
-  return callbacks
-end
-
 t:test("spawn failure cleans a non-permanent terminal on the next tick", function()
-  reports = {}
-  local callbacks = capture_schedules()
+  local reports = bootstrap.with_reporter(t)
+  local callbacks = bootstrap.with_schedule(t).callbacks
   local closed = 0
   local termmeta = create_term("failure-ephemeral", false, 101, function()
     closed = closed + 1
@@ -128,12 +113,12 @@ t:test("spawn failure cleans a non-permanent terminal on the next tick", functio
   t.assert_nil(state.get(termmeta.uuid), "state after cleanup")
   t.assert_eq(-1, state.indexof(termmeta.uuid), "list index")
   t.assert_eq(1, closed, "close callback count")
-  t.assert_eq(1, #reports, "error count")
+  t.assert_eq(1, #reports.error, "error count")
 end)
 
 t:test("spawn failure keeps only the registry entry for a permanent terminal", function()
-  reports = {}
-  local callbacks = capture_schedules()
+  bootstrap.with_reporter(t)
+  local callbacks = bootstrap.with_schedule(t).callbacks
   local closed = 0
   local termmeta = create_term("failure-permanent", true, 102, function()
     closed = closed + 1
@@ -153,8 +138,8 @@ t:test("spawn failure keeps only the registry entry for a permanent terminal", f
 end)
 
 t:test("a successful retry supersedes scheduled failure cleanup", function()
-  reports = {}
-  local callbacks = capture_schedules()
+  bootstrap.with_reporter(t)
+  local callbacks = bootstrap.with_schedule(t).callbacks
   local attempts = 0
   local closed = 0
   local termmeta = create_term("failure-retry", false, 103, function()

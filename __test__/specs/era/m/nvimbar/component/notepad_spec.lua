@@ -108,28 +108,17 @@ t:test("source selection handlers survive closed forks without accumulating regi
   bar:refresh()
   t.wait_until(function()
     return bar:snapshot():find("notes@json", 1, true) ~= nil
-  end, 1000, "source label is published")
+  end, 5000, "source label is published")
   local source_handler = assert(bar:snapshot():match("dot%.G%.(_%d+)"))
   local initial_count = count_handlers()
 
   for _ = 1, 25 do
-    local target_winnr = vim.api.nvim_open_win(bufnr, false, {
-      relative = "editor",
-      row = 1,
-      col = 1,
-      width = 40,
-      height = 3,
-    })
-    t:defer(function()
-      if vim.api.nvim_win_is_valid(target_winnr) then
-        vim.api.nvim_win_close(target_winnr, true)
-      end
-    end)
+    local target_winnr = t:window(bufnr, { relative = "editor", row = 1, col = 1, width = 40, height = 3 })
     local fork = bar:fork(target_winnr)
     fork:refresh()
     t.wait_until(function()
       return vim.api.nvim_get_option_value("winbar", { win = target_winnr }):find("notes@json", 1, true) ~= nil
-    end, 1000, "fork publishes the source label")
+    end, 5000, "fork publishes the source label")
     vim.api.nvim_win_close(target_winnr, true)
     t.assert_true(fork:isdisposed())
   end

@@ -42,7 +42,15 @@ t:patch_global("dot", {
   var = { WIN_BUF_HISTORY_CAPACITY = 10 },
 })
 
-t:test("window metadata forks render and release a target-owned nvimbar", function()
+---Splits the current window, the source, into a target window, and gives the source a winline whose fork renders a
+---nvimbar of the target.
+---@return dot.win Win
+---@return integer source_winnr
+---@return integer target_winnr
+---@return table target_nvimbar
+---@return table source_meta
+---@return table source_nvimbar
+local function split()
   local source_winnr = vim.api.nvim_get_current_win() ---@type integer
   vim.cmd("vsplit")
   local target_winnr = vim.api.nvim_get_current_win() ---@type integer
@@ -67,6 +75,11 @@ t:test("window metadata forks render and release a target-owned nvimbar", functi
       return target_nvimbar
     end,
   }
+  return Win, source_winnr, target_winnr, target_nvimbar, source_meta, source_nvimbar
+end
+
+t:test("window metadata forks render and release a target-owned nvimbar", function()
+  local Win, source_winnr, target_winnr, target_nvimbar, source_meta, source_nvimbar = split()
 
   Win.fork(source_winnr, target_winnr)
   t.assert_true(source_meta.winline.forks[target_winnr] == target_nvimbar, "source owns live fork")
@@ -85,30 +98,7 @@ t:test("window metadata forks render and release a target-owned nvimbar", functi
 end)
 
 t:test("closing the source detaches but does not dispose a live target owner", function()
-  local source_winnr = vim.api.nvim_get_current_win() ---@type integer
-  vim.cmd("vsplit")
-  local target_winnr = vim.api.nvim_get_current_win() ---@type integer
-  t:defer(function()
-    if vim.api.nvim_win_is_valid(target_winnr) then
-      vim.api.nvim_win_close(target_winnr, true)
-    end
-  end)
-  local Win = assert(loadfile("lua/dot/win.lua"))()
-  local source_meta = assert(Win.resolve(source_winnr, true))
-  local source_nvimbar = new_nvimbar()
-  local target_nvimbar = new_nvimbar()
-  source_meta.winline = {
-    bufnr = vim.api.nvim_win_get_buf(source_winnr),
-    nvimbar = source_nvimbar,
-    fork = function(winnr)
-      local target_meta = assert(Win.resolve(winnr, true))
-      target_meta.winline = {
-        bufnr = vim.api.nvim_win_get_buf(winnr),
-        nvimbar = target_nvimbar,
-      }
-      return target_nvimbar
-    end,
-  }
+  local Win, source_winnr, target_winnr, target_nvimbar = split()
 
   Win.fork(source_winnr, target_winnr)
   Win.on_close(source_winnr)

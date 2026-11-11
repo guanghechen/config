@@ -1,6 +1,11 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "__test__.support.diffview" ---@type string
 
+local fs = require("__test__.support.fs")
+local git = require("__test__.support.git")
+local harness = require("__test__.support.harness")
+local treeview = require("__test__.support.treeview")
+
 local M = {}
 
 local function noop() end
@@ -100,28 +105,17 @@ function M.workspace(t, root)
   return realpath
 end
 
----Writes `lines` to `path` under `root`, creating its directories.
----@param root                          string
----@param path                          string
----@param lines                         string[]
----@return nil
-function M.write(root, path, lines)
-  vim.fn.mkdir(vim.fs.dirname(root .. "/" .. path), "p")
-  vim.fn.writefile(lines, root .. "/" .. path)
-end
-
----A repository whose first commit holds `files`, which Diffview reads as the workspace for the rest of the case.
+---A repository whose first commit, "base", holds `files`, which Diffview reads as the workspace for the rest of the
+---case.
 ---@param t                             __test__.support.Harness
 ---@param files                         table<string, string[]> Lines by path.
 ---@return string root
 function M.committed(t, files)
-  local git = require("__test__.support.git")
   local root = M.workspace(t, git.repo(t))
   for path, lines in pairs(files) do
-    M.write(root, path, lines)
+    fs.write(root .. "/" .. path, lines)
   end
-  git.run(root, { "add", "." })
-  git.run(root, { "commit", "-q", "-m", "base" })
+  git.commit(root, "base")
   return root
 end
 
@@ -130,10 +124,9 @@ end
 ---@param t                             __test__.support.Harness
 ---@return string root
 function M.repository(t)
-  local git = require("__test__.support.git")
   local root = M.committed(t, { ["a.txt"] = { "one", "two", "three" }, ["b.txt"] = { "bee" }, ["d.txt"] = { "dee" } })
-  M.write(root, "a.txt", { "one", "TWO", "three" })
-  M.write(root, "c.txt", { "new" })
+  fs.write(root .. "/a.txt", { "one", "TWO", "three" })
+  fs.write(root .. "/c.txt", { "new" })
   git.run(root, { "add", "c.txt" })
   return root
 end
@@ -199,6 +192,16 @@ function M.count_refreshes(t, state)
     end)
   end)
   return count
+end
+
+---Waits until `count` of the refreshes `count_refreshes` counts have completed.
+---@param refreshes                     { completed: integer }
+---@param count                         integer
+---@return nil
+function M.await_refreshes(refreshes, count)
+  harness.wait_until(function()
+    return refreshes.completed >= count
+  end, 10000, "completed refreshes")
 end
 
 ---The row of `path`, a file or a directory, in the Changes pane of `stage_type`; nil when the pane does not show it.
@@ -281,6 +284,97 @@ function M.open_log(t, opts)
     return #session.state:get_commits() > 0
   end, 10000, "log commits")
   return session
+end
+
+---The Normal-mode mapping `bufnr` itself has for `lhs`.
+---@param bufnr                         integer
+---@param lhs                           string
+---@return table|nil
+function M.mapping(bufnr, lhs)
+  local raw = vim.keycode(lhs)
+  for _, keymap in ipairs(vim.api.nvim_buf_get_keymap(bufnr, "n")) do
+    if keymap.lhsraw == raw or keymap.lhsrawalt == raw then
+      return keymap
+    end
+  end
+end
+
+---Opens the left and right side-by-side windows below the current window, each showing a scratch buffer of `lines`,
+---for the rest of the case. The focus stays where it was.
+---@param t                             __test__.support.Harness
+---@param lines                         ?string[]
+---@return integer left_winnr
+---@return integer right_winnr
+function M.sbs_windows(t, lines)
+  local left_winnr = t:window(t:buffer(lines), { split = "below", win = vim.api.nvim_get_current_win() })
+  return left_winnr, t:window(t:buffer(lines), { split = "below", win = left_winnr })
+end
+
+---Shows the panel buffer `bufnr`, which is wiped once no window shows it, in a floating window at the top left of the
+---editor for the rest of the case; `enter` focuses the window.
+---@param t                             __test__.support.Harness
+---@param bufnr                         integer
+---@param width                         integer
+---@param height                        integer
+---@param enter                         ?boolean
+---@return integer
+local function float(t, bufnr, width, height, enter)
+  return t:window(bufnr, { relative = "editor", row = 0, col = 0, width = width, height = height }, enter)
+end
+
+---A Changes pane in a 50x10 floating window, focused when `enter` is set, for the rest of the case: a new tree renders
+---`entries` with the render `options` there.
+---@param t                             __test__.support.Harness
+---@param entries                       era.m.diffview.IFileEntry[]
+---@param options                       table The render options, which name the pane's `stage_type`.
+---@param enter                         ?boolean
+---@return era.view.ResultTree owner
+---@return { stage_type: string, bufnr: integer, winnr: integer } pane
+---@return table plan
+function M.changes_pane(t, entries, options, enter)
+  local pane_changes = require("era.m.diffview.pane.changes")
+  local bufnr = pane_changes.create_buffer(options.stage_type)
+  local owner = require("era.m.diffview.pane.tree").new()
+  t:defer(function()
+    owner:dispose()
+  end)
+  local winnr = float(t, bufnr, 50, 10, enter)
+  local plan = pane_changes.render(entries, options)
+  treeview.await(pane_changes.apply_to_buffer(bufnr, plan, owner))
+  return owner, { stage_type = options.stage_type, bufnr = bufnr, winnr = winnr }, plan
+end
+
+---A Commits pane in a floating window 60 columns wide and `height` rows high, focused when `enter` is set, for the rest
+---of the case: a new commits state whose current commit is `current` renders `commits` there as a tree that keeps
+---empty directories unfolded.
+---@param t                             __test__.support.Harness
+---@param commits                       era.m.diffview.ICommit[]
+---@param current                       era.m.diffview.ICommit
+---@param height                        integer
+---@param enter                         ?boolean
+---@return table ctx
+---@return era.view.ResultTree owner
+function M.commits_pane(t, commits, current, height, enter)
+  t:patch_table(dot.context.diffview.flag_panel_viewtype, "snapshot", function()
+    return "tree"
+  end)
+  t:patch_table(dot.context.diffview.flag_foldempty, "snapshot", function()
+    return false
+  end)
+  local bufnr = require("era.m.diffview.pane.commits").create_buffer()
+  local winnr = float(t, bufnr, 60, height, enter)
+  local state = require("era.m.diffview.view.commits.state").State.new(vim.api.nvim_get_current_tabpage(), false)
+  t:defer(function()
+    state:dispose()
+  end)
+  state:set_commits(commits)
+  state:set_current_commit(current)
+  local ctx = M.commits_context({
+    state = state,
+    layout = { tabnr = state.tabnr, layout_type = 2, commits_bufnr = bufnr, commits_winnr = winnr },
+  })
+  treeview.await(require("era.m.diffview.view.commits.view").render_commits(ctx))
+  return ctx, state:get_tree("commits")
 end
 
 return M

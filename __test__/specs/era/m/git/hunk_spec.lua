@@ -24,9 +24,8 @@ t:test("signs: excess removed lines remain a changedelete", function()
 end)
 
 t:test("textobject: returns linewise unstaged hunk regions", function()
-  local bufnr = vim.api.nvim_create_buf(false, true)
   local modified = { "one", "TWO", "THREE", "four", "six" }
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, modified)
+  local bufnr = t:buffer(modified)
   hunk.set(bufnr, diff.run_diff({ "one", "two", "three", "four", "five", "six" }, modified))
 
   local regions ---@type table[]
@@ -34,7 +33,6 @@ t:test("textobject: returns linewise unstaged hunk regions", function()
     regions = hunk.textobjects()
   end)
   hunk.remove(bufnr)
-  vim.api.nvim_buf_delete(bufnr, { force = true })
 
   t.assert_eq(2, #regions, "regions")
   t.assert_eq(1, regions[1][1], "first start")
@@ -45,8 +43,7 @@ t:test("textobject: returns linewise unstaged hunk regions", function()
 end)
 
 t:test("textobject: anchors a pure deletion to a selectable line", function()
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "next" })
+  local bufnr = t:buffer({ "next" })
   hunk.set(bufnr, diff.run_diff({ "gone", "next" }, { "next" }))
 
   local regions ---@type table[]
@@ -54,7 +51,6 @@ t:test("textobject: anchors a pure deletion to a selectable line", function()
     regions = hunk.textobjects()
   end)
   hunk.remove(bufnr)
-  vim.api.nvim_buf_delete(bufnr, { force = true })
 
   t.assert_eq(0, regions[1][1], "top deletion anchor")
   t.assert_eq(1, regions[1][3], "exclusive anchor end")

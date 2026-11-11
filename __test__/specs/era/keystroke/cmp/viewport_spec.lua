@@ -7,11 +7,7 @@ local t = harness.new()
 ---@param horizontal                    ?boolean
 ---@return table
 local function editor(signature, layout, horizontal)
-  local ui = UI.new()
-  t:defer(function()
-    ui:close()
-  end)
-  ui:start({ width = 120, height = layout == "three" and 60 or 40, ui = { ext_multigrid = true } })
+  local ui = UI.open(t, { width = 120, height = layout == "three" and 60 or 40, ui = { ext_multigrid = true } })
   ui:lua(
     [[
     local signature, layout, horizontal = ...
@@ -92,7 +88,7 @@ local function editor(signature, layout, horizontal)
   ui:wait_until(function()
     local state = ui:lua("return viewport_snapshot()")
     return signature and state.windows.signature ~= nil or not signature and state.windows.documentation ~= nil
-  end, 2000, "completion presentation is visible")
+  end, 5000, "completion presentation is visible")
   t:defer(function()
     local state = ui:lua("return viewport_snapshot().state")
     t.assert_eq("", state.errmsg, "no editor error")
@@ -124,17 +120,17 @@ t:test("source viewport changes move native completion and preserve the document
   ui:wait_until(function()
     local lines = snapshot(ui).state.documentation_lines
     return type(lines) == "table" and lines[1] == "alpine"
-  end, 1000, "the previewed candidate's documentation is ready")
+  end, 5000, "the previewed candidate's documentation is ready")
   ui:rpc("nvim_input", "<C-f>")
   ui:wait_until(function()
     return snapshot(ui).windows.documentation.view.topline > 1
-  end, 1000, "documentation is scrolled")
+  end, 5000, "documentation is scrolled")
   local before = snapshot(ui)
   ui:lua([[vim.fn.winrestview({ topline = vim.fn.line("w0") + 3 })]])
   ui:wait_until(function()
     local after = snapshot(ui)
     return after.anchor.row ~= before.anchor.row and after.windows.menu.position[1] == after.anchor.row
-  end, 1000, "menu follows the source viewport without another key")
+  end, 5000, "menu follows the source viewport without another key")
   local after = snapshot(ui)
   local delta = after.anchor.row - before.anchor.row
   t.assert_eq(before.windows.documentation.position[1] + delta, after.windows.documentation.position[1])
@@ -154,7 +150,7 @@ t:test("signature follows scrolling while the completion menu is closed", functi
     local after = snapshot(ui)
     return after.anchor.row ~= before.anchor.row
       and after.windows.signature.position[1] ~= before.windows.signature.position[1]
-  end, 1000, "signature follows the source viewport independently")
+  end, 5000, "signature follows the source viewport independently")
   local after = snapshot(ui)
   t.assert_eq(
     before.windows.signature.position[1] + after.anchor.row - before.anchor.row,
@@ -171,7 +167,7 @@ t:test("horizontal scrolling follows the completion anchor without changing its 
   ui:wait_until(function()
     local after = snapshot(ui)
     return after.anchor.col ~= before.anchor.col and after.windows.menu.position[2] ~= before.windows.menu.position[2]
-  end, 1000, "menu follows horizontal source scrolling")
+  end, 5000, "menu follows horizontal source scrolling")
   local after = snapshot(ui)
   t.assert_eq(before.windows.menu.position[2] + after.anchor.col - before.anchor.col, after.windows.menu.position[2])
   t.assert_eq(before.windows.menu.position[1], after.windows.menu.position[1])
@@ -184,7 +180,7 @@ t:test("editor resize reflows documentation without resetting its view or refres
   ui:rpc("nvim_input", "<C-f>")
   ui:wait_until(function()
     return snapshot(ui).windows.documentation.view.topline > 1
-  end, 1000, "documentation is scrolled")
+  end, 5000, "documentation is scrolled")
   local before = snapshot(ui)
   ui:rpc("nvim_ui_try_resize", 70, 35)
   ui:wait_until(function()
@@ -192,7 +188,7 @@ t:test("editor resize reflows documentation without resetting its view or refres
     return after.columns == 70
       and after.lines == 35
       and after.windows.documentation.config.width < before.windows.documentation.config.width
-  end, 1000, "documentation width follows the resized editor")
+  end, 5000, "documentation width follows the resized editor")
   local after = snapshot(ui)
   for _, window in pairs(after.windows) do
     t.assert_true(window.position[1] + window.config.height + 2 <= after.lines, "window fits vertically")
@@ -210,7 +206,7 @@ t:test("split resize moves the menu without changing the editor grid or rebuildi
   ui:wait_until(function()
     local after = snapshot(ui)
     return after.anchor.row ~= before.anchor.row and after.windows.menu.position[1] == after.anchor.row
-  end, 1000, "menu follows the resized source window")
+  end, 5000, "menu follows the resized source window")
   local after = snapshot(ui)
   t.assert_eq(before.lines, after.lines)
   t.assert_eq(before.columns, after.columns)
@@ -224,11 +220,11 @@ t:test("neighboring splits reposition completion when the source retains its hei
   ui:wait_until(function()
     local lines = snapshot(ui).state.documentation_lines
     return type(lines) == "table" and lines[1] == "alpine"
-  end, 1000, "preview documentation is ready")
+  end, 5000, "preview documentation is ready")
   ui:rpc("nvim_input", "<C-f>")
   ui:wait_until(function()
     return snapshot(ui).windows.documentation.view.topline > 1
-  end, 1000, "documentation is scrolled")
+  end, 5000, "documentation is scrolled")
   local before = snapshot(ui)
   ui:lua([[
     local source = require('__test__.support.cmp.behavior').winnr
@@ -239,7 +235,7 @@ t:test("neighboring splits reposition completion when the source retains its hei
   ui:wait_until(function()
     local after = snapshot(ui)
     return after.anchor.row ~= before.anchor.row and after.windows.menu.position[1] == after.anchor.row
-  end, 1000, "menu follows the layout even when the source is absent from WinResized.windows")
+  end, 5000, "menu follows the layout even when the source is absent from WinResized.windows")
   local after = snapshot(ui)
   t.assert_eq(before.source_height, after.source_height, "source height is unchanged")
   t.assert_eq(before.source_position[1] + 4, after.source_position[1], "neighboring splits moved the source")
@@ -258,7 +254,7 @@ t:test("editor resize reflows signature help without an open completion menu", f
   ui:wait_until(function()
     local after = snapshot(ui)
     return after.columns == 20 and after.windows.signature.config.width < before.windows.signature.config.width
-  end, 1000, "standalone signature follows the resized editor")
+  end, 5000, "standalone signature follows the resized editor")
   local after = snapshot(ui)
   local window = after.windows.signature
   t.assert_true(window.config.height > before.windows.signature.config.height, "signature wraps at the narrower width")

@@ -1,5 +1,6 @@
 require("ark.bootstrap").setup()
 local t = require("__test__.support.harness").new()
+local diffview = require("__test__.support.diffview")
 local treeview = require("__test__.support.treeview")
 local changes = require("era.m.diffview.pane.changes")
 local panels = require("era.m.diffview.pane.tree")
@@ -157,22 +158,8 @@ t:test("empty panes expose zero native rows", function()
 end)
 
 t:test("an attached Changes pane publishes through the owned native surface", function()
-  local bufnr = changes.create_buffer("staged")
-  local winnr = vim.api.nvim_open_win(bufnr, false, { relative = "editor", row = 0, col = 0, width = 50, height = 10 })
-  local owner = panels.new()
-  t:defer(function()
-    owner:dispose()
-    if vim.api.nvim_win_is_valid(winnr) then
-      vim.api.nvim_win_close(winnr, true)
-    end
-  end)
-  treeview.await(
-    changes.apply_to_buffer(
-      bufnr,
-      changes.render(entries, { stage_type = "staged", viewtype = "tree", foldempty = true }),
-      owner
-    )
-  )
+  local owner, pane = diffview.changes_pane(t, entries, { stage_type = "staged", viewtype = "tree", foldempty = true })
+  local bufnr = pane.bufnr
   t.assert_eq(owner:linecount(), vim.api.nvim_buf_line_count(bufnr))
   t.assert_false(vim.api.nvim_get_option_value("modifiable", { buf = bufnr }))
   t.assert_true(changes.get_entry_at_line(bufnr, owner:retrieve_lnum(panels.key(nil, "src/foo.lua", false))) ~= nil)

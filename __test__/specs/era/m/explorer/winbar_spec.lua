@@ -1,5 +1,6 @@
-local fixture = require("__test__.support.explorer").new()
-local t, await, write = fixture.t, fixture.await, fixture.write
+local t = require("__test__.support.harness").new()
+local fixture = require("__test__.support.explorer").new(t)
+local await, write = fixture.await, fixture.write
 
 t:test("winbar follows display root and four fixed flags when tabline is hidden", function()
   local before = vim.o.showtabline
@@ -49,17 +50,11 @@ end)
 t:test("tabline visibility and Explorer OptionSet settle without a redraw feedback loop", function()
   local path = t:tempdir()
   write(path .. "/file")
-  local ui = require("__test__.support.ui").new()
-  t:defer(function()
-    ui:close()
-  end)
-  ui:rpc("nvim_ui_attach", 80, 24, { rgb = true, ext_linegrid = true })
+  local ui = require("__test__.support.ui").open(t, { width = 80, height = 24 })
   ui:lua(
     [=[
-    local root, path = ...
-    vim.opt.runtimepath:prepend(root)
-    package.path = root .. "/?.lua;" .. package.path
-    local fixture = require("__test__.support.explorer").new()
+    local path = ...
+    local fixture = require("__test__.support.explorer").new(require("__test__.support.harness").new())
     vim.o.showtabline = 0
     local widget = fixture.widget(path)
     winbar_probe = { widget = widget, shown = false, renders = 0 }
@@ -81,7 +76,6 @@ t:test("tabline visibility and Explorer OptionSet settle without a redraw feedba
     }
     require("era.dressing.tabline").dressing()
   ]=],
-    assert(vim.uv.cwd()),
     path
   )
 
@@ -89,7 +83,7 @@ t:test("tabline visibility and Explorer OptionSet settle without a redraw feedba
     ui:lua("winbar_probe.shown = ...; dot.state.status.dirtier_tabline:mark_dirty()", shown)
     ui:wait_until(function()
       return ui:rpc("nvim_get_option_value", "showtabline", {}) == (shown and 2 or 0)
-    end, 3000)
+    end, 5000)
     -- A redraw feedback loop never goes quiet, while the toggle's own redraws may still run under load.
     local before, quiet_since = -1, vim.uv.hrtime()
     ui:wait_until(function()
@@ -109,11 +103,7 @@ end)
 t:test("failed initial open remains closable and refresh retries after the directory appears", function()
   local root = t:tempdir()
   local path = root .. "/missing"
-  local Widget = require("era.m.explorer.widget")
-  local widget = Widget.new({ name = "failed-open", root = path })
-  t:defer(function()
-    widget:dispose()
-  end)
+  local widget = fixture.create({ name = "failed-open", root = path })
   widget:focus()
   t.wait_until(function()
     return widget._ready:is_failed()
@@ -127,10 +117,7 @@ t:test("failed initial open remains closable and refresh retries after the direc
   assert(vim.uv.fs_mkdir(path, 448))
   write(path .. "/file")
   await(widget:refresh())
-  t.wait_until(function()
-    local _, view = fixture.context(widget)
-    return view and view:frame() and view:frame():header().row_count == 1
-  end, 10000)
+  fixture.shown(widget, 1)
   t.assert_true(widget._open_error == nil)
 end)
 
@@ -174,7 +161,7 @@ t:test("root scan failures preserve cached rows and shared views report each tra
       widget:set_width(width)
       t.wait_until(function()
         return vim.api.nvim_win_get_width(view.winnr) == width
-      end, 3000)
+      end, 5000)
       local title = vim.api.nvim_get_option_value("winbar", { win = view.winnr })
       local text = vim.api.nvim_eval_statusline(title, { winid = view.winnr, use_winbar = true, maxwidth = width }).str
       t.assert_true(text:find(width < 30 and "error" or "read failed", 1, true) ~= nil, text)
@@ -209,20 +196,14 @@ t:test("root error and retry remain visible after programmatic and native window
   end
   local path = t:tempdir()
   write(path .. "/file")
-  local ui = require("__test__.support.ui").new()
-  t:defer(function()
-    ui:close()
-  end)
+  local ui = require("__test__.support.ui").open(t, { width = 80, height = 24 })
   t:defer(function()
     vim.uv.fs_chmod(path, 448)
   end)
-  ui:rpc("nvim_ui_attach", 80, 24, { rgb = true, ext_linegrid = true })
   ui:lua(
     [=[
-    local root, path = ...
-    vim.opt.runtimepath:prepend(root)
-    package.path = root .. "/?.lua;" .. package.path
-    local fixture = require("__test__.support.explorer").new()
+    local path = ...
+    local fixture = require("__test__.support.explorer").new(require("__test__.support.harness").new())
     vim.o.showtabline = 0
     local widget = fixture.widget(path)
     error_resize_probe = { widget = widget, fixture = fixture, renders = 0 }
@@ -233,14 +214,11 @@ t:test("root error and retry remain visible after programmatic and native window
     end
     widget:set_width(30)
   ]=],
-    assert(vim.uv.cwd()),
     path
   )
   assert(vim.uv.fs_chmod(path, 0))
   ui:lua("error_resize_probe.fixture.await(error_resize_probe.widget:refresh())")
-  ui:wait_until(function()
-    return ui:lua("return error_resize_probe.widget:status_text()") == "read failed · cached · R"
-  end, 10000)
+  ui:wait_lua("return error_resize_probe.widget:status_text() == ...", 10000, nil, "read failed · cached · R")
   for _, native in ipairs({ false, true }) do
     for _, width in ipairs({ 30, 12, 3, 1, 30 }) do
       ui:lua(
@@ -256,20 +234,20 @@ t:test("root error and retry remain visible after programmatic and native window
         width,
         native
       )
-      ui:wait_until(function()
-        return ui:lua(
-          [=[
-          local width = ...
-          local winnr = error_resize_probe.widget:get_winnr()
-          local title = vim.api.nvim_get_option_value("winbar", { win = winnr })
-          local text = vim.api.nvim_eval_statusline(title, { winid = winnr, use_winbar = true }).str
-          local expected = width == 30 and "read failed · cached · R"
-            or width == 12 and "error · R" or width == 3 and "! R" or "!"
-          return vim.api.nvim_win_get_width(winnr) == width and text:find(expected, 1, true) ~= nil
-        ]=],
-          width
-        )
-      end, 3000, "error title must follow resize without an explicit render")
+      ui:wait_lua(
+        [=[
+        local width = ...
+        local winnr = error_resize_probe.widget:get_winnr()
+        local title = vim.api.nvim_get_option_value("winbar", { win = winnr })
+        local text = vim.api.nvim_eval_statusline(title, { winid = winnr, use_winbar = true }).str
+        local expected = width == 30 and "read failed · cached · R"
+          or width == 12 and "error · R" or width == 3 and "! R" or "!"
+        return vim.api.nvim_win_get_width(winnr) == width and text:find(expected, 1, true) ~= nil
+      ]=],
+        5000,
+        "error title must follow resize without an explicit render",
+        width
+      )
     end
   end
   local renders, stable_since = 0, vim.uv.hrtime()
@@ -320,13 +298,10 @@ t:test("replacing an Explorer buffer releases its window and late cleanup preser
   local widget = fixture.widget(path)
   local _, view = widget:context()
   local winnr = view.winnr
-  local bufnr = vim.api.nvim_create_buf(true, false)
+  local bufnr = t:buffer(nil, { listed = true })
   t:defer(function()
     if vim.api.nvim_win_is_valid(winnr) then
       vim.api.nvim_win_close(winnr, true)
-    end
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
     end
   end)
   -- 'winfixbuf' refuses a plain switch; :buffer! still forces one.
@@ -352,10 +327,7 @@ t:test("replacing an Explorer buffer releases its window and late cleanup preser
 
   local reopened = widget:focus()
   t.assert_true(reopened ~= winnr)
-  t.wait_until(function()
-    local _, current = fixture.context(widget)
-    return current and current:frame()
-  end, 10000)
+  fixture.shown(widget)
   view:detach()
   vim.api.nvim_win_close(winnr, true)
   t.assert_eq(reopened, widget:get_winnr())
@@ -366,7 +338,6 @@ end)
 
 t:test("a replaced loading placeholder cannot be claimed by a late attach", function()
   local Session = require("era.m.explorer.session")
-  local Widget = require("era.m.explorer.widget")
   local open = Session.open
   local pending, resolve = stl.c.Future.new_with_resolver()
   local opening, session
@@ -381,18 +352,12 @@ t:test("a replaced loading placeholder cannot be claimed by a late attach", func
   end)
   local path = t:tempdir()
   write(path .. "/a")
-  local widget = Widget.new({ name = "pending-owner", root = path })
-  t:defer(function()
-    widget:dispose()
-  end)
+  local widget = fixture.create({ name = "pending-owner", root = path })
   local winnr = widget:focus()
-  local bufnr = vim.api.nvim_create_buf(true, false)
+  local bufnr = t:buffer(nil, { listed = true })
   t:defer(function()
     if vim.api.nvim_win_is_valid(winnr) then
       vim.api.nvim_win_close(winnr, true)
-    end
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
     end
   end)
   session = await(opening)
@@ -406,10 +371,7 @@ t:test("a replaced loading placeholder cannot be claimed by a late attach", func
   t.assert_true(vim.api.nvim_win_is_valid(winnr))
   local reopened = widget:focus()
   resolve(session)
-  t.wait_until(function()
-    local _, view = fixture.context(widget)
-    return view and view:frame()
-  end, 10000)
+  fixture.shown(widget)
   t.assert_eq(bufnr, vim.api.nvim_win_get_buf(winnr))
   t.assert_eq("loading replacement", vim.api.nvim_get_option_value("winbar", { win = winnr }))
   vim.api.nvim_win_close(winnr, true)

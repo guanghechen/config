@@ -9,13 +9,7 @@ vim.cmd("filetype plugin on")
 ---@param keys                          string
 ---@return string[]
 local function typed(keys)
-  vim.cmd("enew")
-  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
+  t:buffer(nil, { listed = true, current = true })
   vim.api.nvim_set_option_value("filetype", "markdown", { buf = 0 })
   vim.api.nvim_feedkeys(vim.keycode(keys), "xt", false)
   return vim.api.nvim_buf_get_lines(0, 0, -1, false)

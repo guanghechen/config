@@ -1,30 +1,34 @@
-local fixture = require("__test__.support.explorer").new()
-local t = fixture.t
+local bootstrap = require("__test__.support.bootstrap")
+local t = require("__test__.support.harness").new()
+local fixture = require("__test__.support.explorer").new(t)
 local List = require("era.m.picker.composer.list")
+
+---Observables of the filter controls of a List, disposed when the case ends.
+---@return table<string, stl.c.Observable>
+local function controls()
+  local observables = {} ---@type table<string, stl.c.Observable>
+  for key, value in pairs({ search_pattern = "", flag_fuzzy = true, flag_regex = false, flag_case_sensitive = false }) do
+    local observable = stl.c.Observable.from_value(value)
+    t:defer(function()
+      observable:dispose()
+    end)
+    observables[key] = observable
+  end
+  return observables
+end
 
 t:test("closing a preview picker before its first draw cancels queued lifecycle callbacks", function()
   t:patch_table(vim.o, "lines", 60)
   t:patch_table(vim.o, "columns", 142)
   for _, permanent in ipairs({ false, true }) do
-    local errors = {}
-    t:patch_table(stl.reporter, "error", function(value)
-      errors[#errors + 1] = value.message
-    end)
+    local errors = bootstrap.with_reporter(t).error
     local previous_error = vim.v.errmsg
     vim.v.errmsg = ""
     t:defer(function()
       vim.v.errmsg = previous_error
     end)
-    local observables = {}
-    for key, value in pairs({ search_pattern = "", flag_fuzzy = true, flag_regex = false, flag_case_sensitive = false }) do
-      local observable = stl.c.Observable.from_value(value)
-      t:defer(function()
-        observable:dispose()
-      end)
-      observables[key] = observable
-    end
     local callbacks = 0
-    local picker = List.new(vim.tbl_extend("force", observables, {
+    local picker = List.new(vim.tbl_extend("force", controls(), {
       name = "preview-lifecycle",
       title = "Confirm",
       permanent = permanent,
@@ -71,20 +75,9 @@ t:test("disposing a picker cancels a preview task already queued for drawing", f
   t:patch_table(vim.o, "lines", 60)
   t:patch_table(vim.o, "columns", 142)
   for _, permanent in ipairs({ false, true }) do
-    local errors = {}
-    t:patch_table(stl.reporter, "error", function(value)
-      errors[#errors + 1] = value
-    end)
-    local observables = {}
-    for key, value in pairs({ search_pattern = "", flag_fuzzy = true, flag_regex = false, flag_case_sensitive = false }) do
-      local observable = stl.c.Observable.from_value(value)
-      t:defer(function()
-        observable:dispose()
-      end)
-      observables[key] = observable
-    end
+    local errors = bootstrap.with_reporter(t).error
     local draws = 0
-    local picker = List.new(vim.tbl_extend("force", observables, {
+    local picker = List.new(vim.tbl_extend("force", controls(), {
       name = "queued-preview-lifecycle",
       title = "Confirm",
       permanent = permanent,

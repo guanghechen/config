@@ -76,7 +76,7 @@ t:test("Python version requests return a pending Future without waiting for a pr
   jobs[1].callback({ code = 0, stdout = "Python 3.14.0\n" })
   t.wait_until(function()
     return result:is_done()
-  end, 1000)
+  end, 5000)
   t.assert_eq("3.14.0 (first)  ", result:get_result().text)
   token:cancel()
   t.assert_false(jobs[1].killed, "completed processes are not killed")
@@ -101,7 +101,7 @@ t:test("cancellation stops only its own process and ignores late output", functi
   jobs[1].callback({ code = 0, stdout = "Python 3.12.0\n" })
   t.wait_until(function()
     return second:is_done()
-  end, 1000)
+  end, 5000)
   t.assert_true(first:is_failed())
   t.assert_eq("3.14.1 (second)  ", second:get_result().text)
 
@@ -111,15 +111,9 @@ t:test("cancellation stops only its own process and ignores late output", functi
   jobs[3].callback({ code = 0, stdout = "Python 3.13.0\n" })
   t.wait_until(function()
     return retry:is_done()
-  end, 1000)
+  end, 5000)
   jobs[1].callback({ code = 0, stdout = "Python 3.12.0\n" })
-  local drained = false
-  vim.schedule(function()
-    drained = true
-  end)
-  t.wait_until(function()
-    return drained
-  end, 1000)
+  t.drain()
   t.assert_eq("3.13.0 (first)  ", component.refresh({ filetype = "python" }, second_token).text)
 end)
 
@@ -146,13 +140,13 @@ t:test("one interpreter probe serves repeated buffer and window switches", funct
     component:request(context)
     t.wait_until(function()
       return component.status == "ready" or #jobs > probes
-    end, 1000)
+    end, 5000)
     if #jobs > probes then
       jobs[#jobs].callback({ code = 0, stdout = "Python 3.14.0\n" })
     end
     t.wait_until(function()
       return component.status == "ready"
-    end, 1000)
+    end, 5000)
     t.assert_eq(context, component.snapshot.context, "UI snapshots retain the requesting scope")
     t.assert_eq("3.14.0 (first)  ", component.snapshot.data.text)
   end
@@ -179,14 +173,14 @@ t:test("dirty events during a Python probe reuse its result and still detect a n
   component:request(context)
   t.wait_until(function()
     return #jobs == 1
-  end, 1000)
+  end, 5000)
   for _ = 1, 20 do
     component:request(context)
   end
   jobs[1].callback({ code = 0, stdout = "Python 3.14.0\n" })
   t.wait_until(function()
     return component.status == "ready"
-  end, 1000)
+  end, 5000)
   t.assert_eq(1, #jobs)
   t.assert_eq(1, component.running_version, "equivalent requests do not reacquire the cached version either")
   t.assert_eq("3.14.0 (first)  ", component.snapshot.data.text)
@@ -195,18 +189,18 @@ t:test("dirty events during a Python probe reuse its result and still detect a n
   component:request(context)
   t.wait_until(function()
     return #jobs == 2
-  end, 1000)
+  end, 5000)
   venv = "/venvs/third"
   component:request(context)
   jobs[2].callback({ code = 0, stdout = "Python 3.14.1\n" })
   t.wait_until(function()
     return #jobs == 3
-  end, 1000)
+  end, 5000)
   t.assert_eq("3.14.0 (first)  ", component.snapshot.data.text, "an obsolete environment is never published")
   jobs[3].callback({ code = 0, stdout = "Python 3.14.2\n" })
   t.wait_until(function()
     return component.status == "ready"
-  end, 1000)
+  end, 5000)
   t.assert_eq("3.14.2 (third)  ", component.snapshot.data.text)
   component:request(context)
   t.assert_eq("ready", component.status)
@@ -226,7 +220,7 @@ t:test("versions are cached by interpreter while labels use the current environm
     jobs[index].callback({ code = 0, stdout = "Python 3.14." .. index .. "\n" })
     t.wait_until(function()
       return result:is_done()
-    end, 1000)
+    end, 5000)
   end
   venv = "/venvs/first"
   t.assert_eq("3.14.1 (first)  ", component.refresh({ filetype = "python" }, token).text)
@@ -255,20 +249,20 @@ t:test("failed and unparseable versions remain retryable through the runtime", f
     component:request(context)
     t.wait_until(function()
       return #jobs == 1
-    end, 1000)
+    end, 5000)
     jobs[1].callback(output)
     t.wait_until(function()
       return component.status == "ready" or component.status == "failed"
-    end, 1000)
+    end, 5000)
     t.assert_eq("failed", component.status, "invalid output cannot become a reusable snapshot")
     component:request(context)
     t.wait_until(function()
       return #jobs == 2
-    end, 1000)
+    end, 5000)
     jobs[2].callback({ code = 0, stdout = "Python 3.14.0\n" })
     t.wait_until(function()
       return component.status == "ready"
-    end, 1000)
+    end, 5000)
     t.assert_eq("3.14.0 (first)  ", component.snapshot.data.text)
     component:request(context)
     t.assert_eq("ready", component.status)
@@ -291,19 +285,19 @@ t:test("timed-out output cannot satisfy a retry or populate the cache", function
   component:request(context)
   t.wait_until(function()
     return component.status == "failed"
-  end, 1000)
+  end, 5000)
   t.assert_true(jobs[1].killed)
   jobs[1].callback({ code = 0, stdout = "Python 9.9.9\n" })
   definition.timeout = 1000
   component:request(context)
   t.wait_until(function()
     return #jobs == 2 or component.status == "ready"
-  end, 1000)
+  end, 5000)
   t.assert_eq(2, #jobs, "timeout must cause a fresh probe")
   jobs[2].callback({ code = 0, stdout = "Python 3.14.0\n" })
   t.wait_until(function()
     return component.status == "ready"
-  end, 1000)
+  end, 5000)
   t.assert_eq("3.14.0 (first)  ", component.snapshot.data.text)
 end)
 

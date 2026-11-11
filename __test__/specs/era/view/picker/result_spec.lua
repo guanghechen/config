@@ -1,5 +1,7 @@
 require("ark.bootstrap").setup()
 local t = require("__test__.support.harness").new()
+local bootstrap = require("__test__.support.bootstrap")
+local picker = require("__test__.support.picker")
 local treeview = require("__test__.support.treeview")
 
 ---@param count                         ?integer
@@ -9,20 +11,11 @@ local function tree(count)
   for row = 1, count or 2 do
     source:insert("root", tostring(row), { label = "item " .. row })
   end
-  local value = require("era.view.result_tree").new({
-    name = "result contract",
-    tree = source,
-    present = function(_, data)
-      return { label = data.label }
-    end,
-  })
+  local value = picker.result_tree(t, "result contract", source)
   value:insert("root", { nodetype = "container" })
   for row = 1, count or 2 do
     value:insert(tostring(row), { nodetype = "leaf" })
   end
-  t:defer(function()
-    value:dispose()
-  end)
   return value
 end
 
@@ -118,10 +111,7 @@ end)
 t:test("status and diagnostic policies survive a failed publication", function()
   local owner = tree()
   local fail = false
-  local reported
-  t:patch_table(stl.reporter, "error", function(value)
-    reported = value.from
-  end)
+  local reports = bootstrap.with_reporter(t)
   local value = result(owner, "picker", {
     status = function()
       return "READY", "picker_result_limit"
@@ -140,12 +130,13 @@ t:test("status and diagnostic policies survive a failed publication", function()
   treeview.await(owner:ready())
   t.wait_until(function()
     return vim.api.nvim_get_option_value("winbar", { win = winnr }):find("READY", 1, true) ~= nil
-  end, 1000)
+  end, 5000)
   local bufnr = value:get_bufnr()
   local before = table.concat(vim.api.nvim_buf_get_lines(bufnr, 0, -1, true), "\n")
   fail = true
   value._scheduler_content._task()
-  t.assert_eq("result contract -> picker.result", reported)
+  local reported = reports.error[#reports.error]
+  t.assert_eq("result contract -> picker.result", reported and reported.from)
   t.assert_eq(before, table.concat(vim.api.nvim_buf_get_lines(bufnr, 0, -1, true), "\n"))
   t.assert_false(vim.api.nvim_get_option_value("modifiable", { buf = bufnr }))
   t.assert_false(vim.api.nvim_get_option_value("readonly", { buf = bufnr }))

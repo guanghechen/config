@@ -1,18 +1,18 @@
 require("ark.bootstrap").setup()
 local t = require("__test__.support.harness").new()
+local bootstrap = require("__test__.support.bootstrap")
+local fs = require("__test__.support.fs")
 local Plainfile = require("era.m.searcher.view.plainfile")
 
 local fixture_dir = t:tempdir()
 
--- Writes exact bytes; `writefile` would end every line with LF.
+-- Writes `text` as exact bytes, line breaks included.
 ---@param name                          string
 ---@param text                          string
 ---@return string
 local function fixture(name, text)
   local filepath = vim.fs.joinpath(fixture_dir, name)
-  local file = assert(io.open(filepath, "wb"))
-  file:write(text)
-  file:close()
+  fs.write(filepath, text)
   return filepath
 end
 
@@ -100,10 +100,7 @@ t:test("search preview drops the carriage return of CRLF line breaks", function(
 end)
 
 t:test("a replace preview that cannot be made shows the matches as search does", function()
-  local errors = 0 ---@type integer
-  t:patch_table(stl.reporter, "error", function()
-    errors = errors + 1
-  end)
+  local reports = bootstrap.with_reporter(t)
 
   -- A file that is not UTF-8 text: "foo" starts at column 7 of the second line, after the byte 0xE9.
   local latin1 = fixture("latin1.txt", "a foo\r\nb caf\233 foo\r\n")
@@ -132,14 +129,11 @@ t:test("a replace preview that cannot be made shows the matches as search does",
   data = view:calc_preview_data(current)
   t.assert_same({ "café foo" }, data.lines, "the lines of the file")
   t.assert_same({ "m_sr_match 1:3-5" }, marks(data), "the bytes as search marks them")
-  t.assert_eq(0, errors, "nothing to report while drawing")
+  t.assert_eq(0, #reports.error, "nothing to report while drawing")
 end)
 
 t:test("rendering a CRLF replace preview writes clean lines and marks each row of the match", function()
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  t:defer(function()
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
+  local bufnr = t:buffer()
   view:render(context(crlf, "foo\r\nb", { 2 }, true), bufnr, crlf, true)
   t.assert_same({ "a foo", "bbar foo", "c foo" }, vim.api.nvim_buf_get_lines(bufnr, 0, -1, true), "buffer lines")
 

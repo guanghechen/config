@@ -1,5 +1,6 @@
-local fixture = require("__test__.support.explorer").new()
-local t, await = fixture.t, fixture.await
+local t = require("__test__.support.harness").new()
+local fixture = require("__test__.support.explorer").new(t)
+local await = fixture.await
 local buffers = require("era.m.explorer.buffers")
 
 for _, case in ipairs({
@@ -58,11 +59,7 @@ for _, case in ipairs({
 }) do
   t:test(case.name .. " paths agree across LSP preparation and alias buffer synchronization", function()
     t:patch_table(stl.env, "IS_WIN", case.windows)
-    local bufnr = vim.api.nvim_create_buf(true, false)
-    t:defer(function()
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end)
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "unsaved content" })
+    local bufnr = t:buffer({ "unsaved content" }, { listed = true })
     local suffix = case.single_file and "" or "/$literal space #文.lua"
     local name = case.unrelated or case.from .. suffix
     local native_name = case.windows and name:gsub("/", "\\") or name
@@ -215,15 +212,11 @@ t:test("a file Move ignores an empty descendant placeholder after its parent bec
   local source, target = path .. "/source", path .. "/target"
   fixture.write(source)
   fixture.write(path .. "/other")
-  local from = vim.fn.bufadd(source)
-  vim.fn.bufload(from)
-  vim.api.nvim_buf_set_lines(from, 0, -1, false, { "unsaved source" })
+  local from = fixture.load_buffer(source, { "unsaved source" })
   local placeholder = vim.fn.bufadd(target .. "/child")
   t:defer(function()
-    for _, bufnr in ipairs({ from, placeholder }) do
-      if vim.api.nvim_buf_is_valid(bufnr) then
-        vim.api.nvim_buf_delete(bufnr, { force = true })
-      end
+    if vim.api.nvim_buf_is_valid(placeholder) then
+      vim.api.nvim_buf_delete(placeholder, { force = true })
     end
   end)
   t.assert_false(vim.api.nvim_buf_is_loaded(placeholder))
@@ -256,15 +249,8 @@ end)
 t:test("loaded rename round trips discard only empty placeholders and preserve unsaved undo history", function()
   local path = t:tempdir()
   fixture.write(path .. "/a.txt")
-  local bufnr = vim.fn.bufadd(path .. "/a.txt")
-  vim.fn.bufload(bufnr)
-  t:defer(function()
-    for _, current in ipairs(vim.api.nvim_list_bufs()) do
-      if vim.api.nvim_buf_get_name(current):sub(1, #path + 1) == path .. "/" then
-        vim.api.nvim_buf_delete(current, { force = true })
-      end
-    end
-  end)
+  local bufnr = fixture.load_buffer(path .. "/a.txt")
+  fixture.discard_buffers(path)
   local group = vim.api.nvim_create_augroup("test_explorer_move_cache", { clear = true })
   t:defer(function()
     vim.api.nvim_del_augroup_by_id(group)
@@ -306,18 +292,8 @@ for _, directory in ipairs({ false, true }) do
       source, target = path .. "/old/a.txt", path .. "/new/a.txt"
     end
     fixture.write(source)
-    local from = vim.fn.bufadd(source)
-    vim.fn.bufload(from)
-    local to = vim.api.nvim_create_buf(true, false)
-    vim.api.nvim_buf_set_name(to, target)
-    vim.api.nvim_buf_set_lines(to, 0, -1, false, { "destination edits" })
-    t:defer(function()
-      for _, bufnr in ipairs({ from, to }) do
-        if vim.api.nvim_buf_is_valid(bufnr) then
-          vim.api.nvim_buf_delete(bufnr, { force = true })
-        end
-      end
-    end)
+    local from = fixture.load_buffer(source)
+    local to = t:buffer({ "destination edits" }, { name = target, listed = true })
     local widget = fixture.widget(path)
     fixture.cursor(widget, directory and path .. "/old" or source)
     await(widget:action():operate({ kind = "rename", name = directory and "new" or "b.txt" }))
@@ -343,12 +319,7 @@ for _, directory in ipairs({ false, true }) do
         source, destination = path .. "/old/a.txt", path .. "/new/a.txt"
       end
       fixture.write(source)
-      local target = vim.api.nvim_create_buf(true, false)
-      t:defer(function()
-        vim.api.nvim_buf_delete(target, { force = true })
-      end)
-      vim.api.nvim_buf_set_name(target, destination)
-      vim.api.nvim_buf_set_lines(target, 0, -1, false, { "destination edits" })
+      local target = t:buffer({ "destination edits" }, { name = destination, listed = true })
       local widget = fixture.widget(path)
       fixture.cursor(widget, directory and path .. "/old" or source)
       await(widget:action():operate({ kind = "rename", name = directory and "new" or "b.txt" }))
@@ -364,14 +335,11 @@ end
 t:test("a destination buffer introduced by an LSP reply is checked again before IO", function()
   local path = t:tempdir()
   fixture.write(path .. "/a.txt")
-  local source = vim.fn.bufadd(path .. "/a.txt")
-  vim.fn.bufload(source)
+  fixture.load_buffer(path .. "/a.txt")
   local target
   t:defer(function()
-    for _, bufnr in ipairs({ source, target }) do
-      if vim.api.nvim_buf_is_valid(bufnr) then
-        vim.api.nvim_buf_delete(bufnr, { force = true })
-      end
+    if target and vim.api.nvim_buf_is_valid(target) then
+      vim.api.nvim_buf_delete(target, { force = true })
     end
   end)
   local notifications = 0
@@ -412,20 +380,9 @@ t:test("a late buffer collision preserves contents and rejects writes to the obs
   local path = t:tempdir()
   local source, target = path .. "/a.txt", path .. "/b.txt"
   fixture.write(source)
-  local from = vim.fn.bufadd(source)
-  vim.fn.bufload(from)
-  vim.api.nvim_buf_set_lines(from, 0, -1, false, { "source edits" })
+  local from = fixture.load_buffer(source, { "source edits" })
   assert(vim.uv.fs_rename(source, target))
-  local to = vim.api.nvim_create_buf(true, false)
-  vim.api.nvim_buf_set_name(to, target)
-  vim.api.nvim_buf_set_lines(to, 0, -1, false, { "target edits" })
-  t:defer(function()
-    for _, bufnr in ipairs({ from, to }) do
-      if vim.api.nvim_buf_is_valid(bufnr) then
-        vim.api.nvim_buf_delete(bufnr, { force = true })
-      end
-    end
-  end)
+  local to = t:buffer({ "target edits" }, { name = target, listed = true })
   local reports = {}
   buffers.sync({
     operation = "move",

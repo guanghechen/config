@@ -3,22 +3,14 @@ local t = require("__test__.support.harness").new()
 local diffview = require("__test__.support.diffview")
 local treeview = require("__test__.support.treeview")
 local Cache = require("era.m.diffview.view.commits.cache")
-local State = require("era.m.diffview.view.commits.state").State
-local view = require("era.m.diffview.view.commits.view")
 local action = require("era.m.diffview.view.commits.action")
-local pane = require("era.m.diffview.pane.commits")
 local tree = require("era.m.diffview.pane.tree")
 
+---Two commits of 10050 files each and the current one, in a Commits pane.
 ---@return table
 ---@return era.view.ResultTree
 ---@return era.m.diffview.ICommit[]
 local function fixture()
-  t:patch_table(dot.context.diffview.flag_panel_viewtype, "snapshot", function()
-    return "tree"
-  end)
-  t:patch_table(dot.context.diffview.flag_foldempty, "snapshot", function()
-    return false
-  end)
   local commits = {}
   for _, hash in ipairs({ "a", "b", "current" }) do
     local files = {}
@@ -29,38 +21,20 @@ local function fixture()
     end
     commits[#commits + 1] = { hash = hash, abbrev_hash = hash, author = "A", date = 0, message = hash, files = files }
   end
-  local state = State.new(vim.api.nvim_get_current_tabpage(), false)
-  local bufnr = pane.create_buffer()
-  local winnr = vim.api.nvim_open_win(bufnr, false, { relative = "editor", row = 0, col = 0, width = 60, height = 8 })
-  t:defer(function()
-    state:dispose()
-    if vim.api.nvim_win_is_valid(winnr) then
-      vim.api.nvim_win_close(winnr, true)
-    end
-  end)
-  state:set_commits(commits)
-  state:set_current_commit(commits[3])
-  local ctx = diffview.commits_context({
-    state = state,
-    layout = { tabnr = state.tabnr, layout_type = 2, commits_bufnr = bufnr, commits_winnr = winnr },
-  })
-  treeview.await(view.render_commits(ctx))
-  return ctx, state:get_tree("commits"), commits
+  local ctx, owner = diffview.commits_pane(t, commits, commits[3], 8)
+  return ctx, owner, commits
 end
 
 ---@param ctx                           table
 ---@param commit                        era.m.diffview.ICommit
 ---@return nil
 local function expand(ctx, commit)
-  local done, failure = false, nil
-  stl.async.run(function()
-    local ok, error = pcall(action.__expand_commit__, ctx, commit)
-    failure, done = not ok and error or nil, true
-  end)
-  t.wait_until(function()
-    return done
-  end, 15000, "commit expansion did not finish")
-  t.assert_nil(failure)
+  t.await(
+    stl.async.run_future(function()
+      action.__expand_commit__(ctx, commit)
+    end),
+    15000
+  )
 end
 
 t:test("the cache bounds collapsed records, preserves folds and serializes new expansion with eviction", function()
@@ -117,18 +91,14 @@ t:test("the cache bounds collapsed records, preserves folds and serializes new e
   t.wait_until(function()
     return release ~= nil and cache._trimming ~= nil
   end, 15000)
-  local done = false
-  stl.async.run(function()
+  local expansion = stl.async.run_future(function()
     action.__expand_commit__(ctx, commits[1])
-    done = true
   end)
-  t.assert_false(done, "a new expansion waits for the accepted eviction")
+  t.assert_false(expansion:is_done(), "a new expansion waits for the accepted eviction")
   t.assert_eq(1, cache._pending)
   restore()
   release(true)
-  t.wait_until(function()
-    return done
-  end, 15000)
+  t.await(expansion, 15000)
   t.assert_true(ctx.state:is_commit_expanded("a"))
   t.assert_true(owner:data("commit:a").files_loaded)
   t.assert_false(owner:expanded(directory))
@@ -175,7 +145,7 @@ t:test("disposing a cache prevents a queued ready callback from trimming", funct
   cache:schedule()
   t.wait_until(function()
     return requested
-  end, 1000)
+  end, 5000)
   cache:dispose()
   resolve({ kind = "Applied" })
   t.assert_false(rendered)

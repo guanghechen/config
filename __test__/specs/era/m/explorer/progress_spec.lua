@@ -1,5 +1,7 @@
-local fixture = require("__test__.support.explorer").new()
-local t, await = fixture.t, fixture.await
+local t = require("__test__.support.harness").new()
+local fixture = require("__test__.support.explorer").new(t)
+local fs = require("__test__.support.fs")
+local await = fixture.await
 
 t:test("progress uses processed items and readable byte units before paths and flags", function()
   local before = vim.o.showtabline
@@ -84,10 +86,7 @@ for _, contents in ipairs({ "", "test" }) do
         end
       end
       for index = 1, 1000 do
-        local fd = assert(vim.uv.fs_open(path .. "/destination/source/" .. index, "r", 0))
-        local value = assert(vim.uv.fs_read(fd, #contents + 1, 0))
-        assert(vim.uv.fs_close(fd))
-        t.assert_eq(contents, value)
+        t.assert_eq(contents, fs.read(path .. "/destination/source/" .. index))
       end
     end
   )

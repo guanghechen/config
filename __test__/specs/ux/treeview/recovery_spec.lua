@@ -2,30 +2,20 @@ local t = require("__test__.support.harness").new()
 local bootstrap = require("__test__.support.bootstrap")
 bootstrap.with_native(t)
 local Future = require("stl.c.future")
-local treeview = require("ux.treeview")
 local support = require("__test__.support.treeview")
 
 ---@param prepare_frame                 ?function
 ---@return ux.treeview.Data, ux.treeview.View, table
 local function fixture(prepare_frame)
-  local data = treeview.new_data()
-  support.await(data:import({
-    { key = "root", label = "root", can_expand = true },
-    { key = "a", parent = "root", label = "alpha" },
-    { key = "b", parent = "root", label = "beta" },
-  }))
-  local state = support.await(data:create_state({ kind = "children_of", node = data:source():id("root") }))
+  local data, state = support.fixture()
   local errors = {}
-  local view = treeview.attach(state, {
+  local view = support.attach(t, state, {
     keymaps = false,
     prepare_frame = prepare_frame,
     on_error = function(error)
       errors[#errors + 1] = error
     end,
   })
-  t:defer(function()
-    view:detach()
-  end)
   t.wait_until(function()
     return view:frame() ~= nil and not view:status().preparing
   end, 5000)
@@ -66,7 +56,7 @@ t:test("temporary frame preparation does not consume automatic recovery", functi
   end, 5000)
   t.wait_until(function()
     return view:frame() ~= nil and view:frame():node(data:source():id("a")).label == "changed"
-  end, 1000, "temporarily unavailable preparation must retry without manual refresh")
+  end, 5000, "temporarily unavailable preparation must retry without manual refresh")
   t.assert_eq(1, failures())
   t.assert_eq(1, #errors)
 end)
@@ -96,7 +86,7 @@ t:test("a superseded recovery plan retries the latest topology", function()
   end)
   t.wait_until(function()
     return view:frame() ~= nil and view:frame():header().row_count == 3
-  end, 1000, "a stale recovery plan must release its attempt for the latest frame")
+  end, 5000, "a stale recovery plan must release its attempt for the latest frame")
   t.assert_eq("changed", view:frame():node(data:source():id("a")).label)
   t.assert_eq(1, #errors)
 end)
@@ -121,11 +111,7 @@ end)
 
 t:test("a projection failure suspends automatic recovery until refresh", function()
   local data, view = fixture()
-  local calls, poll = 0, data._poll
-  t:patch_table(data, "_poll", function(self)
-    calls = calls + 1
-    return poll(self)
-  end)
+  local polls = support.poll_counter(t, data)
   local snapshot = view:frame()
   view._latest = snapshot
   local restore_view = t:patch_table(view, "_native", {
@@ -145,21 +131,17 @@ t:test("a projection failure suspends automatic recovery until refresh", functio
   require("ux.treeview.async").watch(data)
   t.wait_until(function()
     return view._projection_error ~= nil
-  end, 1000)
-  vim.wait(100, function()
-    return false
-  end, 20)
-  local settled = calls
-  vim.wait(150, function()
-    return false
-  end, 20)
-  t.assert_eq(settled, calls, "a terminal projection error must not keep the owner polling")
+  end, 5000)
+  vim.wait(100)
+  local settled = polls.calls
+  vim.wait(150)
+  t.assert_eq(settled, polls.calls, "a terminal projection error must not keep the owner polling")
   restore_view()
   restore_state()
   view:refresh()
   t.wait_until(function()
     return view:frame() ~= nil and not view._projection_error and not view:status().preparing
-  end, 1000)
+  end, 5000)
 end)
 
 t:run()

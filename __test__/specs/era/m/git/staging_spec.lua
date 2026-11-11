@@ -1,3 +1,4 @@
+local fs = require("__test__.support.fs")
 local harness = require("__test__.support.harness")
 local diff = require("era.m.git.diff")
 local staging = require("era.m.git.staging")
@@ -97,19 +98,13 @@ t:test("replace_buffer_text: write preserves exact final-EOL bytes", function()
 
   for index, expected in ipairs(cases) do
     local filepath = directory .. "/" .. index ---@type string
-    local bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
-    vim.api.nvim_buf_set_name(bufnr, filepath)
+    local bufnr = t:buffer(nil, { name = filepath, scratch = false })
     staging.replace_buffer_text(bufnr, expected)
     vim.api.nvim_buf_call(bufnr, function()
       vim.cmd("silent write!")
     end)
 
-    local file = assert(io.open(filepath, "rb"))
-    local actual = file:read("*a") ---@type string
-    file:close()
-    t.assert_eq(expected, actual, string.format("bytes for %q", expected))
-
-    vim.api.nvim_buf_delete(bufnr, { force = true })
+    t.assert_eq(expected, fs.read(filepath), string.format("bytes for %q", expected))
   end
 end)
 
@@ -117,14 +112,13 @@ t:test("from_buffer: preserves document text without reparsing buffer lines", fu
   local cases = { "", "\n", "a", "a\n", "a\r\n" }
 
   for _, expected in ipairs(cases) do
-    local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+    local bufnr = t:buffer()
     vim.api.nvim_set_option_value("fileformat", expected:find("\r\n", 1, true) and "dos" or "unix", { buf = bufnr })
     staging.replace_buffer_text(bufnr, expected)
 
     local document = staging.from_buffer(bufnr)
     t.assert_eq(expected, document.text, string.format("text for %q", expected))
     t.assert_eq(expected, table.concat(document.lines, document.eol), string.format("lines for %q", expected))
-    vim.api.nvim_buf_delete(bufnr, { force = true })
   end
 end)
 
@@ -140,9 +134,7 @@ t:test("from_buffer: ends with the line break writing the buffer ends with", fun
 
   for index, case in ipairs(cases) do
     local filepath = directory .. "/" .. index ---@type string
-    local bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
-    vim.api.nvim_buf_set_name(bufnr, filepath)
-    vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, { "a", "b" })
+    local bufnr = t:buffer({ "a", "b" }, { name = filepath, scratch = false })
     for name, value in pairs({ endofline = case.eol, fixendofline = case.fixeol, binary = case.binary }) do
       vim.api.nvim_set_option_value(name, value, { buf = bufnr })
     end
@@ -150,12 +142,7 @@ t:test("from_buffer: ends with the line break writing the buffer ends with", fun
       vim.cmd("silent write!")
     end)
 
-    local file = assert(io.open(filepath, "rb"))
-    local written = file:read("*a") ---@type string
-    file:close()
-    t.assert_eq(written, staging.from_buffer(bufnr).text, vim.inspect(case))
-
-    vim.api.nvim_buf_delete(bufnr, { force = true })
+    t.assert_eq(fs.read(filepath), staging.from_buffer(bufnr).text, vim.inspect(case))
   end
 end)
 

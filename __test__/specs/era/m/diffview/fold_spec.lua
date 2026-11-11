@@ -19,65 +19,33 @@ local function is_fold_closed(winnr)
   end)
 end
 
+---Folds lines 1 to 3 of window `winnr` by hand.
 ---@param winnr                         integer
----@param lines                         string[]
----@return integer
-local function setup_fold_buffer(winnr, lines)
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-  vim.api.nvim_win_set_buf(winnr, bufnr)
+---@return nil
+local function fold(winnr)
   vim.api.nvim_set_option_value("foldenable", true, { win = winnr, scope = "local" })
   vim.api.nvim_set_option_value("foldmethod", "manual", { win = winnr, scope = "local" })
   vim.api.nvim_win_call(winnr, function()
     vim.cmd("1,3fold")
   end)
-  return bufnr
 end
 
+---Runs the scheduled fold commands and the work they schedule in turn.
+---@return nil
 local function wait_for_scheduled()
-  local done = false
-  vim.schedule(function()
-    vim.schedule(function()
-      done = true
-    end)
-  end)
-  t.wait_until(function()
-    return done
-  end, 5000, "scheduled fold commands")
+  t.drain()
+  t.drain()
 end
 
 t:test("side-by-side fold policy is deterministic and preserves panel focus", function()
   local panel_winnr = vim.api.nvim_get_current_win() ---@type integer
-  local original_panel_bufnr = vim.api.nvim_win_get_buf(panel_winnr) ---@type integer
-  vim.cmd("belowright split")
-  local left_winnr = vim.api.nvim_get_current_win() ---@type integer
-  vim.cmd("belowright split")
-  local right_winnr = vim.api.nvim_get_current_win() ---@type integer
   local lines = { "one", "two", "three", "four", "five" }
-  local panel_bufnr = setup_fold_buffer(panel_winnr, lines) ---@type integer
-  local left_bufnr = setup_fold_buffer(left_winnr, lines) ---@type integer
-  local right_bufnr = setup_fold_buffer(right_winnr, lines) ---@type integer
+  t:buffer(lines, { current = true })
+  local left_winnr, right_winnr = diffview.sbs_windows(t, lines)
+  for _, winnr in ipairs({ panel_winnr, left_winnr, right_winnr }) do
+    fold(winnr)
+  end
   normal(panel_winnr, "zR")
-
-  ---@diagnostic disable-next-line: invisible
-  t:defer(function()
-    for _, winnr in ipairs({ right_winnr, left_winnr }) do
-      if vim.api.nvim_win_is_valid(winnr) then
-        vim.api.nvim_win_close(winnr, true)
-      end
-    end
-    if vim.api.nvim_win_is_valid(panel_winnr) then
-      vim.api.nvim_win_set_buf(panel_winnr, original_panel_bufnr)
-    end
-    for _, bufnr in ipairs({ right_bufnr, left_bufnr, panel_bufnr }) do
-      if vim.api.nvim_buf_is_valid(bufnr) then
-        vim.api.nvim_buf_delete(bufnr, { force = true })
-      end
-    end
-    if vim.api.nvim_win_is_valid(panel_winnr) then
-      vim.api.nvim_set_current_win(panel_winnr)
-    end
-  end)
 
   normal(left_winnr, "zM")
   normal(right_winnr, "zM")
@@ -105,6 +73,7 @@ t:test("side-by-side fold policy is deterministic and preserves panel focus", fu
   t.assert_false(is_fold_closed(panel_winnr), "panel folds unchanged")
 
   local fold_unchanged = true
+  local left_bufnr, right_bufnr = vim.api.nvim_win_get_buf(left_winnr), vim.api.nvim_win_get_buf(right_winnr)
   pane_sbs.__apply_buffers__(left_winnr, right_winnr, left_bufnr, right_bufnr, {
     get_fold_unchanged = function()
       return fold_unchanged

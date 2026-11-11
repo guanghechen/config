@@ -1,5 +1,6 @@
-local fixture = require("__test__.support.explorer").new()
-local t, await = fixture.t, fixture.await
+local t = require("__test__.support.harness").new()
+local fixture = require("__test__.support.explorer").new(t)
+local await = fixture.await
 local Future = require("stl.c.future")
 
 ---@param widget                        era.m.explorer.Widget
@@ -16,6 +17,37 @@ end
 ---@return integer
 local function watches(view)
   return #vim.api.nvim_get_autocmds({ buf = view.bufnr, event = { "WinLeave", "BufLeave", "BufUnload" } })
+end
+
+---Holds the resolution of `target` until `release` is called with the resource it resolved to, and records that
+---resource and the navigation that follows it, once each is known, as `captured` and `navigation`.
+---@param session                       era.m.explorer.Session
+---@param target                        string
+---@return { captured: any, navigation: stl.c.Future|nil } follow
+---@return fun(value: any) release
+local function hold_follow(session, target)
+  local follow = {}
+  local data, resolve = session.data, session.data.resolve
+  local held, release = Future.new_with_resolver()
+  t:patch_table(data, "resolve", function(self, requested)
+    local pending = resolve(self, requested)
+    if requested ~= target then
+      return pending
+    end
+    return pending:then_(function(resource)
+      follow.captured = resource
+      return held
+    end)
+  end)
+  local navigate_path = session.navigate_path
+  t:patch_table(session, "navigate_path", function(self, requested, reveal, valid)
+    local pending = navigate_path(self, requested, reveal, valid)
+    if requested == target then
+      follow.navigation = pending
+    end
+    return pending
+  end)
+  return follow, release
 end
 
 for _, case in ipairs({
@@ -181,30 +213,11 @@ for _, intent in ipairs({
     end
     fixture.cursor(widget, path .. "/source")
     local target = path .. "/copied"
-    local data, resolve = session.data, session.data.resolve
-    local waiting, release = Future.new_with_resolver()
-    local captured, navigation
-    t:patch_table(data, "resolve", function(self, requested)
-      local pending = resolve(self, requested)
-      if requested ~= target then
-        return pending
-      end
-      return pending:then_(function(resource)
-        captured = resource
-        return waiting
-      end)
-    end)
-    local navigate_path = session.navigate_path
-    t:patch_table(session, "navigate_path", function(self, requested, reveal, valid)
-      local pending = navigate_path(self, requested, reveal, valid)
-      if requested == target then
-        navigation = pending
-      end
-      return pending
-    end)
+    local data = session.data
+    local follow, release = hold_follow(session, target)
     await(widget:action():operate({ kind = "copy_to_path", path = target }))
     t.wait_until(function()
-      return captured ~= nil
+      return follow.captured ~= nil
     end, 10000)
     fixture.idle(widget)
     local expected = path .. "/source"
@@ -233,13 +246,13 @@ for _, intent in ipairs({
       local schedule_display = widget._schedule_display
       t:patch_table(widget, "_schedule_display", function(self)
         schedule_display(self)
-        release(captured)
+        release(follow.captured)
       end)
       widget._options[4]:next(false)
     elseif intent == "display_ack" then
       widget._options[4]:next(widget._options[4]:snapshot(), { force = true })
       vim.schedule(function()
-        release(captured)
+        release(follow.captured)
       end)
     elseif intent == "disabled_compress" then
       widget:toggle_flag(3)
@@ -262,9 +275,9 @@ for _, intent in ipairs({
       widget:dispose()
     end
     if intent ~= "flag_observable" and intent ~= "display_ack" then
-      release(captured)
+      release(follow.captured)
     end
-    t.assert_eq(follows and "Applied" or "NoChange", await(navigation).kind)
+    t.assert_eq(follows and "Applied" or "NoChange", await(follow.navigation).kind)
     t.assert_true(vim.uv.fs_stat(target) ~= nil)
     if follows then
       followed(widget, target)
@@ -393,30 +406,11 @@ t:test("pending annotation and queued parent navigation outrank a late transfer 
   local session, view = widget:context()
   fixture.cursor(widget, path .. "/source")
   local target = path .. "/z-copy"
-  local data, resolve = session.data, session.data.resolve
-  local held, release_follow = Future.new_with_resolver()
-  local captured, following
-  t:patch_table(data, "resolve", function(self, requested)
-    local pending = resolve(self, requested)
-    if requested ~= target then
-      return pending
-    end
-    return pending:then_(function(resource)
-      captured = resource
-      return held
-    end)
-  end)
-  local navigate_path = session.navigate_path
-  t:patch_table(session, "navigate_path", function(self, requested, reveal, valid)
-    local pending = navigate_path(self, requested, reveal, valid)
-    if requested == target then
-      following = pending
-    end
-    return pending
-  end)
+  local data = session.data
+  local follow, release_follow = hold_follow(session, target)
   await(widget:action():operate({ kind = "copy_to_path", path = target }))
   t.wait_until(function()
-    return captured ~= nil
+    return follow.captured ~= nil
   end, 10000)
   fixture.idle(widget)
   local other = await(data:resolve(path .. "/other"))
@@ -432,8 +426,8 @@ t:test("pending annotation and queued parent navigation outrank a late transfer 
   t.wait_until(function()
     return queried
   end, 10000)
-  release_follow(captured)
-  local followed_result = await(following)
+  release_follow(follow.captured)
+  local followed_result = await(follow.navigation)
   release_annotation(row)
   await(annotation)
   local parent_result = await(navigating)

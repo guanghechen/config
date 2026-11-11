@@ -2,17 +2,10 @@ local harness = require("__test__.support.harness")
 local embedded = require("__test__.support.cmp.embedded")
 local t = harness.new()
 
----@param lines                         string[]
----@return __test__.support.UI
-local function editor(lines)
-  return embedded.editor(t, lines)
-end
-
 local lsp_client = embedded.lsp_client
-local wait = embedded.wait
 
 t:test("compound LSP acceptance replaces the full input instead of a suffix snippet", function()
-  local ui = editor({ "" })
+  local ui = embedded.editor(t, { "" })
   ui:lua([[
     vim.api.nvim_set_option_value('filetype', 'html', { buf = 0 })
     require('era.keystroke.cmp.policy').sources_for = function() return { 'lsp', 'snippets' } end
@@ -36,26 +29,17 @@ t:test("compound LSP acceptance replaces the full input instead of a suffix snip
   end]]
   )
   ui:rpc("nvim_input", "idiv>ul>li")
-  wait(
-    ui,
-    [[
-      for _, item in ipairs(vim.fn.complete_info({ 'items' }).items) do
-        if item.abbr:find('div>ul>li', 1, true) then return true end
-      end
-      return false
-    ]],
-    "the full LSP result has arrived alongside the local snippet"
-  )
+  embedded.wait_menu_item(ui, "div>ul>li", "the full LSP result has arrived alongside the local snippet")
   ui:rpc("nvim_input", "<C-y>")
-  wait(
-    ui,
+  ui:wait_lua(
     [[return vim.api.nvim_get_current_line() == '<div><ul><li></li></ul></div>']],
+    5000,
     "default acceptance expands the complete abbreviation"
   )
 end)
 
 t:test("accepting an invalid snippet preserves the prefix and additional edit targets", function()
-  local ui = editor({ "-- keep", "pre" })
+  local ui = embedded.editor(t, { "-- keep", "pre" })
   lsp_client(
     ui,
     [[return function(_, callback)
@@ -68,34 +52,34 @@ t:test("accepting an invalid snippet preserves the prefix and additional edit ta
   )
   ui:lua([[stl.reporter.warn = function() _G.cmp_invalid_snippet = true end]])
   ui:rpc("nvim_input", "A")
-  wait(ui, [[return vim.api.nvim_get_mode().mode:sub(1, 1) == 'i']], "insert mode")
+  ui:wait_lua([[return vim.api.nvim_get_mode().mode:sub(1, 1) == 'i']], 5000, "insert mode")
   ui:lua([[require('era.keystroke.cmp').show()]])
-  wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "candidate menu")
+  ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "candidate menu")
   ui:rpc("nvim_input", "<C-y>")
-  wait(ui, [[return cmp_invalid_snippet == true]], "invalid snippet rejected")
+  ui:wait_lua([[return cmp_invalid_snippet == true]], 5000, "invalid snippet rejected")
   t.assert_eq("-- keep\npre", ui:lua([[return table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), '\n')]]))
   t.assert_eq(0, ui:lua([[return #cmp_commands]]), "no completion command ran")
 end)
 
 t:test("acceptance creates an undo boundary and records dot repeat", function()
-  local ui = editor({ "alpha alpine", "", "" })
+  local ui = embedded.editor(t, { "alpha alpine", "", "" })
   ui:lua([[vim.api.nvim_win_set_cursor(0, { 2, 0 })]])
   ui:rpc("nvim_input", "ial")
-  wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "completion menu")
+  ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "completion menu")
   ui:rpc("nvim_input", "<C-y>")
-  wait(ui, [[return vim.api.nvim_get_current_line() == 'alpha']], "accepted text")
+  ui:wait_lua([[return vim.api.nvim_get_current_line() == 'alpha']], 5000, "accepted text")
   ui:rpc("nvim_input", "<Esc>j0.")
-  wait(ui, [[return vim.api.nvim_buf_get_lines(0, 2, 3, false)[1] == 'alpha']], "dot repeat")
+  ui:wait_lua([[return vim.api.nvim_buf_get_lines(0, 2, 3, false)[1] == 'alpha']], 5000, "dot repeat")
   ui:rpc("nvim_input", "u")
-  wait(ui, [[return vim.api.nvim_buf_get_lines(0, 2, 3, false)[1] == '']], "undo repeat")
+  ui:wait_lua([[return vim.api.nvim_buf_get_lines(0, 2, 3, false)[1] == '']], 5000, "undo repeat")
   ui:lua([[vim.api.nvim_win_set_cursor(0, { 2, 0 })]])
   ui:rpc("nvim_input", "u")
-  wait(ui, [[return vim.api.nvim_buf_get_lines(0, 1, 2, false)[1] == 'al']], "undo accepted edit")
+  ui:wait_lua([[return vim.api.nvim_buf_get_lines(0, 1, 2, false)[1] == 'al']], 5000, "undo accepted edit")
 end)
 
 for _, command in ipairs({ "editor.action.triggerSuggest", "editor.action.triggerParameterHints" }) do
   t:test("acceptance executes the native client command " .. command, function()
-    local ui = editor({ "" })
+    local ui = embedded.editor(t, { "" })
     ui:lua([[_G.cmp_completion_command = ...]], command)
     lsp_client(
       ui,
@@ -125,14 +109,13 @@ for _, command in ipairs({ "editor.action.triggerSuggest", "editor.action.trigge
       vim.notify = function(message) cmp_command_notices[#cmp_command_notices + 1] = message end
     ]])
     ui:rpc("nvim_input", "ial")
-    wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "initial menu")
+    ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "initial menu")
     ui:rpc("nvim_input", "<C-y>")
-    wait(ui, [[return vim.api.nvim_get_current_line() == 'alpha']], "completion accepted")
+    ui:wait_lua([[return vim.api.nvim_get_current_line() == 'alpha']], 5000, "completion accepted")
     if command == "editor.action.triggerSuggest" then
-      wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "command reopens completion")
+      ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "command reopens completion")
     else
-      wait(
-        ui,
+      ui:wait_lua(
         [[
         for _, winnr in ipairs(vim.api.nvim_list_wins()) do
           local bufnr = vim.api.nvim_win_get_buf(winnr)
@@ -140,6 +123,7 @@ for _, command in ipairs({ "editor.action.triggerSuggest", "editor.action.trigge
         end
         return false
       ]],
+        5000,
         "command opens parameter hints without a trigger character"
       )
     end
@@ -151,7 +135,7 @@ for _, command in ipairs({ "editor.action.triggerSuggest", "editor.action.trigge
       vim.api.nvim_buf_delete(other, { force = true })
       vim.defer_fn(function() _G.cmp_foreign_command_settled = true end, 60)
     ]])
-    wait(ui, [[return cmp_foreign_command_settled]], "other-buffer command settles")
+    ui:wait_lua([[return cmp_foreign_command_settled]], 5000, "other-buffer command settles")
     t.assert_true(
       ui:lua(
         [[
@@ -168,7 +152,7 @@ for _, command in ipairs({ "editor.action.triggerSuggest", "editor.action.trigge
 end
 
 t:test("UTF-16 acceptance applies resolved imports and commands once", function()
-  local ui = editor({ "-- imports", "" })
+  local ui = embedded.editor(t, { "-- imports", "" })
   lsp_client(
     ui,
     [[return function(params, callback)
@@ -182,9 +166,9 @@ t:test("UTF-16 acceptance applies resolved imports and commands once", function(
   end]]
   )
   ui:rpc("nvim_input", "i😀 fo")
-  wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "LSP candidate")
+  ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "LSP candidate")
   ui:rpc("nvim_input", "<C-y>")
-  wait(ui, [[return vim.api.nvim_buf_line_count(0) == 3]], "import applied")
+  ui:wait_lua([[return vim.api.nvim_buf_line_count(0) == 3]], 5000, "import applied")
   t.assert_same(
     { "local Foo = require('foo')", "-- imports", "😀 foobar" },
     ui:lua([[return vim.api.nvim_buf_get_lines(0, 0, -1, false)]]),
@@ -193,12 +177,12 @@ t:test("UTF-16 acceptance applies resolved imports and commands once", function(
   t.assert_eq(1, ui:lua([[return #cmp_commands]]), "command executed once")
   t.assert_eq(3, ui:lua("return vim.api.nvim_win_get_cursor(0)[1]"), "cursor follows import")
   ui:rpc("nvim_input", "<Esc>u")
-  wait(ui, [[return vim.api.nvim_buf_line_count(0) == 2]], "undo entire completion")
+  ui:wait_lua([[return vim.api.nvim_buf_line_count(0) == 2]], 5000, "undo entire completion")
   t.assert_eq("😀 fo", ui:lua("return vim.api.nvim_buf_get_lines(0, 1, 2, false)[1]"), "typed prefix restored")
 end)
 
 t:test("UTF-16 boundary insertions track the completion after further typing", function()
-  local ui = editor({ "" })
+  local ui = embedded.editor(t, { "" })
   lsp_client(
     ui,
     [[return function(params, callback)
@@ -213,18 +197,22 @@ t:test("UTF-16 boundary insertions track the completion after further typing", f
     end]]
   )
   ui:rpc("nvim_input", "i😀 f")
-  wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "original candidate")
+  ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "original candidate")
   ui:rpc("nvim_input", "o")
-  wait(ui, [[return vim.api.nvim_get_current_line() == '😀 fo']], "continued input")
+  ui:wait_lua([[return vim.api.nvim_get_current_line() == '😀 fo']], 5000, "continued input")
   ui:rpc("nvim_input", "<C-y>")
-  wait(ui, [[return vim.api.nvim_get_current_line() == '😀 prefix foobar suffix']], "both boundary edits applied")
+  ui:wait_lua(
+    [[return vim.api.nvim_get_current_line() == '😀 prefix foobar suffix']],
+    5000,
+    "both boundary edits applied"
+  )
   t.assert_eq(#"😀 prefix foobar", ui:lua("return vim.api.nvim_win_get_cursor(0)[2]"), "cursor precedes suffix")
   ui:rpc("nvim_input", "<Esc>u")
-  wait(ui, [[return vim.api.nvim_get_current_line() == '😀 fo']], "one undo restores the continued prefix")
+  ui:wait_lua([[return vim.api.nvim_get_current_line() == '😀 fo']], 5000, "one undo restores the continued prefix")
 end)
 
 t:test("typing during resolve prevents a late edit and command", function()
-  local ui = editor({ "" })
+  local ui = embedded.editor(t, { "" })
   lsp_client(
     ui,
     [[return function(_, callback) callback(nil, { { label = 'foobar', kind = 6 } }) end]],
@@ -234,9 +222,9 @@ t:test("typing during resolve prevents a late edit and command", function()
   end]]
   )
   ui:rpc("nvim_input", "ifo")
-  wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "LSP menu")
+  ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "LSP menu")
   ui:rpc("nvim_input", "<C-y>x")
-  wait(ui, [[return vim.api.nvim_get_current_line() == 'fox']], "new user input")
+  ui:wait_lua([[return vim.api.nvim_get_current_line() == 'fox']], 5000, "new user input")
   vim.wait(150)
   t.assert_eq("fox", ui:lua([[return vim.api.nvim_get_current_line()]]), "late resolve ignored")
   t.assert_eq(0, ui:lua([[return #cmp_commands]]), "late command ignored")
@@ -244,7 +232,7 @@ end)
 
 for _, target in ipairs({ "background", "current" }) do
   t:test(target .. " buffer edits respect pending acceptance ownership", function()
-    local ui = editor({ "" })
+    local ui = embedded.editor(t, { "" })
     ui:lua([[
       _G.cmp_background_bufnr = vim.api.nvim_get_current_buf()
       vim.api.nvim_set_option_value('bufhidden', 'hide', { buf = cmp_background_bufnr })
@@ -253,10 +241,10 @@ for _, target in ipairs({ "background", "current" }) do
       end
     ]])
     ui:rpc("nvim_input", "i")
-    wait(ui, [[return vim.api.nvim_get_mode().mode:sub(1, 1) == 'i']], "background buffer attached")
+    ui:wait_lua([[return vim.api.nvim_get_mode().mode:sub(1, 1) == 'i']], 5000, "background buffer attached")
     local version = ui:lua([[return require('era.keystroke.cmp.context').capture().buffer_version]])
     ui:rpc("nvim_input", "<Esc>")
-    wait(ui, [[return vim.api.nvim_get_mode().mode == 'n']], "leave background buffer")
+    ui:wait_lua([[return vim.api.nvim_get_mode().mode == 'n']], 5000, "leave background buffer")
     ui:lua([[
       vim.api.nvim_set_current_buf(vim.api.nvim_create_buf(true, false))
       vim.api.nvim_set_option_value('filetype', 'lua', { buf = 0 })
@@ -270,21 +258,8 @@ for _, target in ipairs({ "background", "current" }) do
       end]]
     )
     ui:rpc("nvim_input", "ifo")
-    wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "current buffer candidate")
-    ui:lua([[
-      _G.cmp_before_accept_request = #cmp_requests
-      assert(require('era.keystroke.cmp').accept())
-    ]])
-    wait(
-      ui,
-      [[
-      for index = cmp_before_accept_request + 1, #cmp_requests do
-        if cmp_requests[index].method == 'completionItem/resolve' then return true end
-      end
-      return false
-    ]],
-      "native acceptance reached resolve"
-    )
+    ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "current buffer candidate")
+    embedded.accept_resolving(ui)
     local cancelled = ui:lua(
       [[
       local target = ...
@@ -309,10 +284,10 @@ for _, target in ipairs({ "background", "current" }) do
     t.assert_eq(current and 0 or 1, ui:lua([[return #cmp_commands]]), "resolved command ownership")
     if not current then
       ui:rpc("nvim_input", "<Esc>")
-      wait(ui, [[return vim.api.nvim_get_mode().mode == 'n']], "leave completed buffer")
+      ui:wait_lua([[return vim.api.nvim_get_mode().mode == 'n']], 5000, "leave completed buffer")
       ui:lua([[vim.api.nvim_set_current_buf(cmp_background_bufnr)]])
       ui:rpc("nvim_input", "i")
-      wait(ui, [[return vim.api.nvim_get_mode().mode:sub(1, 1) == 'i']], "return to background buffer")
+      ui:wait_lua([[return vim.api.nvim_get_mode().mode:sub(1, 1) == 'i']], 5000, "return to background buffer")
       t.assert_true(
         version ~= ui:lua([[return require('era.keystroke.cmp.context').capture().buffer_version]]),
         "background edit still invalidates its own context"
@@ -322,19 +297,23 @@ for _, target in ipairs({ "background", "current" }) do
 end
 
 t:test("function completion records cursor placement inside brackets", function()
-  local ui = editor({ "", "" })
+  local ui = embedded.editor(t, { "", "" })
   ui:lua([[vim.api.nvim_win_set_cursor(0, { 1, 0 })]])
   lsp_client(ui, [[return function(_, callback) callback(nil, { { label = 'foobar', kind = 3 } }) end]])
   ui:rpc("nvim_input", "ifo")
-  wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "function menu")
+  ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "function menu")
   ui:rpc("nvim_input", "<C-y>")
-  wait(
-    ui,
+  ui:wait_lua(
     [[return vim.api.nvim_get_current_line() == 'foobar()' and vim.api.nvim_win_get_cursor(0)[2] == 7]],
+    5000,
     "bracket cursor"
   )
   ui:rpc("nvim_input", "42<Esc>j0.")
-  wait(ui, [[return vim.api.nvim_buf_get_lines(0, 1, 2, false)[1] == 'foobar(42)']], "repeat bracket placement")
+  ui:wait_lua(
+    [[return vim.api.nvim_buf_get_lines(0, 1, 2, false)[1] == 'foobar(42)']],
+    5000,
+    "repeat bracket placement"
+  )
 end)
 
 t:test("semantic brackets follow language delimiters and context exclusions after acceptance", function()
@@ -346,7 +325,7 @@ t:test("semantic brackets follow language delimiters and context exclusions afte
     { filetype = "rust", line = "fo", text = "foobar", col = 6 },
     { filetype = "java", line = "fo", text = "foobar", col = 6 },
   }) do
-    local ui = editor({ case.line })
+    local ui = embedded.editor(t, { case.line })
     lsp_client(ui, [[return function(_, callback) callback(nil, { { label = 'foobar', kind = 6 } }) end]])
     ui:lua(
       [[
@@ -371,9 +350,9 @@ t:test("semantic brackets follow language delimiters and context exclusions afte
       case.filetype
     )
     ui:rpc("nvim_input", "A")
-    wait(ui, [[return vim.api.nvim_get_mode().mode:sub(1, 1) == 'i']], "insert mode")
+    ui:wait_lua([[return vim.api.nvim_get_mode().mode:sub(1, 1) == 'i']], 5000, "insert mode")
     ui:lua([[require('era.keystroke.cmp').show()]])
-    wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], case.filetype .. " semantic candidate")
+    ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, case.filetype .. " semantic candidate")
     ui:rpc("nvim_input", "<C-y>")
     ui:wait_until(function()
       return ui:lua([[return vim.api.nvim_get_current_line()]]) == case.text
@@ -383,7 +362,7 @@ t:test("semantic brackets follow language delimiters and context exclusions afte
         vim.schedule(function() _G.cmp_accept_drained = true end)
       end)
     ]])
-    wait(ui, [[return cmp_accept_drained == true]], "acceptance callbacks drained")
+    ui:wait_lua([[return cmp_accept_drained == true]], 5000, "acceptance callbacks drained")
     t.assert_eq(case.col, ui:lua("return vim.api.nvim_win_get_cursor(0)[2]"), case.filetype .. " cursor")
     if case.allowed then
       t.assert_true(ui:lua([[return cmp_token_checks >= 2]]), "delayed semantic tokens resolved")
@@ -403,7 +382,7 @@ end)
 
 for _, action in ipairs({ "(", "<C-e>", "<CR>" }) do
   t:test("snippet preview separates display labels from insertion before " .. action, function()
-    local ui = editor({ "" })
+    local ui = embedded.editor(t, { "" })
     lsp_client(
       ui,
       [[return function(_, callback)
@@ -411,14 +390,18 @@ for _, action in ipairs({ "(", "<C-e>", "<CR>" }) do
     end]]
     )
     ui:rpc("nvim_input", "inor")
-    wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "function candidate")
+    ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "function candidate")
     t.assert_eq(
       "normalize(value)",
       ui:lua([[return vim.fn.complete_info({'items'}).items[1].abbr]]),
       "display retains the signature"
     )
     ui:rpc("nvim_input", "<Down><Down>")
-    wait(ui, [[return vim.api.nvim_get_current_line() == 'normalize']], "preview inserts only the function name")
+    ui:wait_lua(
+      [[return vim.api.nvim_get_current_line() == 'normalize']],
+      5000,
+      "preview inserts only the function name"
+    )
     ui:rpc("nvim_input", action)
     local expected = action == "(" and "normalize(" or action == "<C-e>" and "nor" or "normalize(value)"
     ui:wait_until(function()
@@ -429,7 +412,7 @@ for _, action in ipairs({ "(", "<C-e>", "<CR>" }) do
 end
 
 t:test("LSP snippets expand and Tab moves through the native snippet session", function()
-  local ui = editor({ "" })
+  local ui = embedded.editor(t, { "" })
   lsp_client(
     ui,
     [[return function(_, callback)
@@ -437,13 +420,17 @@ t:test("LSP snippets expand and Tab moves through the native snippet session", f
   end]]
   )
   ui:rpc("nvim_input", "ifu")
-  wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "snippet menu")
+  ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "snippet menu")
   ui:rpc("nvim_input", "<C-y>")
-  wait(ui, [[return vim.snippet.active() and vim.api.nvim_get_current_line() == 'call(value)']], "snippet expansion")
+  ui:wait_lua(
+    [[return vim.snippet.active() and vim.api.nvim_get_current_line() == 'call(value)']],
+    5000,
+    "snippet expansion"
+  )
   ui:rpc("nvim_input", "argument")
-  wait(ui, [[return vim.api.nvim_get_current_line() == 'call(argument)']], "placeholder edit")
+  ui:wait_lua([[return vim.api.nvim_get_current_line() == 'call(argument)']], 5000, "placeholder edit")
   ui:rpc("nvim_input", "<Tab>")
-  wait(ui, [[return vim.api.nvim_win_get_cursor(0)[2] == #'call(argument)']], "final tabstop")
+  ui:wait_lua([[return vim.api.nvim_win_get_cursor(0)[2] == #'call(argument)']], 5000, "final tabstop")
 end)
 
 for _, example in ipairs({
@@ -460,7 +447,7 @@ for _, example in ipairs({
   },
 }) do
   t:test(example.name, function()
-    local ui = editor({ "" })
+    local ui = embedded.editor(t, { "" })
     ui:lua(
       [[
       local example = ...
@@ -485,18 +472,17 @@ for _, example in ipairs({
       example
     )
     ui:rpc("nvim_input", "izzcmppreview")
-    wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "snippet menu")
+    ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "snippet menu")
     if example.preview then
       ui:rpc("nvim_input", "<Tab><Tab>")
-      wait(ui, [[return vim.fn.complete_info({ 'selected' }).selected == 0]], "native snippet selected")
+      ui:wait_lua([[return vim.fn.complete_info({ 'selected' }).selected == 0]], 5000, "native snippet selected")
       t.assert_eq(
         "zzcmppreview",
         ui:lua([[return vim.api.nvim_get_current_line()]]),
         "native inline preview uses the label"
       )
     end
-    wait(
-      ui,
+    ui:wait_lua(
       [[
       for _, winnr in ipairs(vim.api.nvim_list_wins()) do
         local bufnr = vim.api.nvim_win_get_buf(winnr)
@@ -508,6 +494,7 @@ for _, example in ipairs({
       end
       return false
     ]],
+      5000,
       "documentation contains the expanded snippet and its description"
     )
     if not example.preview then
@@ -518,9 +505,9 @@ for _, example in ipairs({
       )
     end
     ui:rpc("nvim_input", "<C-y>")
-    wait(
-      ui,
+    ui:wait_lua(
       [[return vim.api.nvim_get_current_line() == cmp_documentation_expected]],
+      5000,
       "accepted text matches documentation"
     )
     t.assert_eq(example.preview and 1 or 0, ui:lua([[return cmp_random_reads]]), "dynamic values are evaluated once")
@@ -528,7 +515,7 @@ for _, example in ipairs({
 end
 
 t:test("resolved acceptance applies before input queued behind Enter", function()
-  local ui = editor({ "" })
+  local ui = embedded.editor(t, { "" })
   lsp_client(
     ui,
     [[return function(_,callback)
@@ -537,8 +524,7 @@ t:test("resolved acceptance applies before input queued behind Enter", function(
   end]]
   )
   ui:rpc("nvim_input", "ifo")
-  wait(
-    ui,
+  ui:wait_lua(
     [[
     for _,winnr in ipairs(vim.api.nvim_list_wins()) do
       if vim.api.nvim_get_option_value('filetype',{buf=vim.api.nvim_win_get_buf(winnr)})=='cmp-documentation' then
@@ -547,10 +533,11 @@ t:test("resolved acceptance applies before input queued behind Enter", function(
     end
     return false
   ]],
+    5000,
     "completion has resolved for documentation"
   )
   ui:rpc("nvim_input", "<C-y>x")
-  wait(ui, [[return vim.api.nvim_get_current_line()=='foobarx']], "completion precedes queued input")
+  ui:wait_lua([[return vim.api.nvim_get_current_line()=='foobarx']], 5000, "completion precedes queued input")
   t.assert_eq(1, ui:lua([[return #cmp_commands]]), "completion command executes once")
 end)
 
@@ -559,7 +546,7 @@ for _, accept in ipairs({ true, false }) do
     accept and "native API acceptance applies full LSP ranges after prefix preview"
       or "native API cancellation never applies LSP imports or commands",
     function()
-      local ui = editor({ "-- imports", "foTAIL" })
+      local ui = embedded.editor(t, { "-- imports", "foTAIL" })
       ui:lua([[
       vim.api.nvim_win_set_cursor(0,{2,2})
       require('era.keystroke.cmp.policy').sources_for=function() return {'lsp'} end
@@ -573,21 +560,25 @@ for _, accept in ipairs({ true, false }) do
     end]]
       )
       ui:rpc("nvim_input", "i")
-      wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "native menu")
+      ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "native menu")
       ui:lua([[vim.api.nvim_select_popupmenu_item(0,true,false,{})]])
-      wait(ui, [[return vim.api.nvim_get_current_line()=='foobarTAIL']], "native preview replaces only the prefix")
+      ui:wait_lua(
+        [[return vim.api.nvim_get_current_line()=='foobarTAIL']],
+        5000,
+        "native preview replaces only the prefix"
+      )
       ui:lua([[vim.api.nvim_select_popupmenu_item(...,true,true,{})]], accept and 0 or -1)
       if accept then
-        wait(
-          ui,
+        ui:wait_lua(
           [[return vim.deep_equal({'IMPORT','-- imports','foobar'},vim.api.nvim_buf_get_lines(0,0,-1,false))]],
+          5000,
           "full LSP range replaces the suffix at acceptance"
         )
         t.assert_eq(1, ui:lua([[return #cmp_commands]]), "command executes once")
       else
-        wait(
-          ui,
+        ui:wait_lua(
           [[return vim.fn.pumvisible()==0 and vim.api.nvim_get_current_line()=='foTAIL']],
+          5000,
           "native cancellation restores the original input"
         )
         t.assert_eq(2, ui:lua([[return vim.api.nvim_buf_line_count(0)]]), "no import applied")
@@ -598,18 +589,18 @@ for _, accept in ipairs({ true, false }) do
 end
 
 t:test("Unicode completion records character-safe dot repeat", function()
-  local ui = editor({ "中文变量", "", "" })
+  local ui = embedded.editor(t, { "中文变量", "", "" })
   ui:lua([[vim.api.nvim_win_set_cursor(0, { 2, 0 })]])
   ui:rpc("nvim_input", "i中变")
-  wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "Unicode candidate")
+  ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "Unicode candidate")
   ui:rpc("nvim_input", "<C-y>")
-  wait(ui, [[return vim.api.nvim_get_current_line() == '中文变量']], "Unicode acceptance")
+  ui:wait_lua([[return vim.api.nvim_get_current_line() == '中文变量']], 5000, "Unicode acceptance")
   ui:rpc("nvim_input", "<Esc>j0.")
-  wait(ui, [[return vim.api.nvim_buf_get_lines(0, 2, 3, false)[1] == '中文变量']], "Unicode repeat")
+  ui:wait_lua([[return vim.api.nvim_buf_get_lines(0, 2, 3, false)[1] == '中文变量']], 5000, "Unicode repeat")
 end)
 
 t:test("multiline plain-text completions retain their cursor and undo semantics", function()
-  local ui = editor({ "" })
+  local ui = embedded.editor(t, { "" })
   lsp_client(
     ui,
     [[return function(_, callback)
@@ -617,15 +608,15 @@ t:test("multiline plain-text completions retain their cursor and undo semantics"
   end]]
   )
   ui:rpc("nvim_input", "ifr")
-  wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "multiline candidate")
+  ui:wait_lua([[return require('era.keystroke.cmp').is_menu_visible()]], 5000, "multiline candidate")
   ui:rpc("nvim_input", "<C-y>")
-  wait(ui, [[return vim.api.nvim_buf_line_count(0) == 2]], "multiline edit")
+  ui:wait_lua([[return vim.api.nvim_buf_line_count(0) == 2]], 5000, "multiline edit")
   t.assert_same({ "first", "second" }, ui:lua([[return vim.api.nvim_buf_get_lines(0, 0, -1, false)]]), "inserted lines")
   t.assert_same({ 2, 6 }, ui:lua([[return vim.api.nvim_win_get_cursor(0)]]), "cursor after inserted text")
   ui:rpc("nvim_input", "<Esc>u")
-  wait(
-    ui,
+  ui:wait_lua(
     [[return vim.api.nvim_buf_line_count(0) == 1 and vim.api.nvim_get_current_line() == 'fr']],
+    5000,
     "undo multiline edit"
   )
 end)

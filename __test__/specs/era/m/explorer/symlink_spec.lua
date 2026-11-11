@@ -1,6 +1,7 @@
 local explorer = require("__test__.support.explorer")
-local support = require("__test__.support.explorer").new()
-local t, await = support.t, support.await
+local t = require("__test__.support.harness").new()
+local support = explorer.new(t)
+local await = support.await
 
 ---@return string
 local function directory()
@@ -81,12 +82,7 @@ t:test("file and dangling-link roots are rejected without changing the display r
   local original = view:frame():header().root.node
   for _, path in ipairs({ "plain.lua", "file-link.lua", "broken-link" }) do
     local resource = await(session.data:resolve(root .. "/" .. path))
-    local future = session:navigate(resource:node(), false)
-    t.wait_until(function()
-      return future:is_done()
-    end, 10000)
-    t.assert_false(future:is_failed(), future:get_error())
-    t.assert_eq("Rejected", future:get_result().kind)
+    t.assert_eq("Rejected", t.await(session:navigate(resource:node(), false)).kind)
     t.assert_eq(original, view:frame():header().root.node)
   end
 end)
@@ -139,11 +135,7 @@ end)
 
 t:test("real UI separates file icons from right-aligned links and preserves Git tint over diagnostics", function()
   local root = directory()
-  local ui = require("__test__.support.ui").new()
-  t:defer(function()
-    ui:close()
-  end)
-  explorer.start_ui(ui, { width = 100, height = 30, path = root })
+  local ui = explorer.open_ui(t, { width = 100, height = 30, path = root })
   ui:lua(
     [=[
     local path = ...
@@ -171,11 +163,7 @@ t:test("real UI separates file icons from right-aligned links and preserves Git 
     end
     widget = require("era.m.explorer.widget").new({ name = "symlink-ui", root = path })
     widget:focus()
-    assert(vim.wait(10000, function()
-      local _, _, current = pcall(widget.context, widget)
-      return current and current:frame() and current:frame():header().row_count == 6
-    end))
-    session, view = widget:context()
+    session, view = shown(widget, 6)
     view:set_cursor(1)
     vim.api.nvim_win_call(view.winnr, function() vim.cmd("normal! zt") end)
   ]=],

@@ -1,28 +1,16 @@
 require("ark.bootstrap").setup()
+local bootstrap = require("__test__.support.bootstrap")
+local fs = require("__test__.support.fs")
 local t = require("__test__.support.harness").new()
 
 local S = era.m.notepad
 local FLUSH_ON_EXIT = "guanghechen_notepad_flush_on_VimLeavePre"
 
----@param path                          string
----@param text                          string
----@return nil
-local function write(path, text)
-  local file = assert(io.open(path, "wb"))
-  file:write(text)
-  file:close()
-end
-
+---The bytes of `path`, or nil without the file.
 ---@param path                          string
 ---@return string|nil
 local function read(path)
-  local file = io.open(path, "rb")
-  if file == nil then
-    return nil
-  end
-  local text = file:read("*a")
-  file:close()
-  return text
+  return vim.uv.fs_stat(path) ~= nil and fs.read(path) or nil
 end
 
 ---@param dirpath                       string
@@ -96,14 +84,13 @@ t:test("quitting right after a rename keeps the note under its new name", functi
 end)
 
 t:test("a lost or broken index is rebuilt from the note files without writing over them", function()
-  t:patch_table(stl.reporter, "warn", function() end)
-  t:patch_table(stl.reporter, "error", function() end)
+  bootstrap.with_reporter(t)
   for _, metadata in ipairs({ false, '{"items": [{"uuid": "a", "name": "Note"}' }) do
     local dirpath = t:tempdir()
-    write(vim.fs.joinpath(dirpath, "Note.md"), "precious\n")
-    write(vim.fs.joinpath(dirpath, "Other.md"), "other\n")
+    fs.write(vim.fs.joinpath(dirpath, "Note.md"), "precious\n")
+    fs.write(vim.fs.joinpath(dirpath, "Other.md"), "other\n")
     if metadata then
-      write(vim.fs.joinpath(dirpath, ".__notepad__"), metadata)
+      fs.write(vim.fs.joinpath(dirpath, ".__notepad__"), metadata)
     end
     local source = S.FolderSource.new(config(dirpath))
 
@@ -145,10 +132,7 @@ t:test("quitting flushes every source even when one of them fails", function()
   t:patch_table(failing, "flush", function()
     error("disk gone")
   end)
-  local errors = 0
-  t:patch_table(stl.reporter, "error", function()
-    errors = errors + 1
-  end)
+  local reports = bootstrap.with_reporter(t)
   local dirpath = t:tempdir()
   local other = cached_source(dirpath)
   local uuid = other:load(false).active_uuid
@@ -156,7 +140,7 @@ t:test("quitting flushes every source even when one of them fails", function()
 
   vim.api.nvim_exec_autocmds("VimLeavePre", { group = FLUSH_ON_EXIT })
 
-  t.assert_eq(1, errors, "the failing source is reported")
+  t.assert_eq(1, #reports.error, "the failing source is reported")
   t.assert_eq("kept\n", read(vim.fs.joinpath(dirpath, "Note.md")))
 end)
 
@@ -190,7 +174,7 @@ t:test("names that share a file reuse its note instead of emptying it", function
 end)
 
 t:test("renaming onto the file of another note is rejected, while changing only the case keeps the note", function()
-  t:patch_table(stl.reporter, "warn", function() end)
+  bootstrap.with_reporter(t)
   local source, dirpath = source_with({ { "a/b", "x" }, { "Other", "other" } })
   local other = source:load(false).name_to_uuid["Other"]
 
@@ -203,7 +187,7 @@ end)
 
 t:test("a note file missing from the index is adopted with its text", function()
   local source, dirpath = source_with({ { "Note", "first" } })
-  write(vim.fs.joinpath(dirpath, "Extra.md"), "kept\n")
+  fs.write(vim.fs.joinpath(dirpath, "Extra.md"), "kept\n")
 
   source:create("Extra")
   t.assert_true(source:flush(), "flushed")

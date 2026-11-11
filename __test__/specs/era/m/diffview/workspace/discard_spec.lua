@@ -1,7 +1,9 @@
 require("ark.bootstrap").setup()
 local t = require("__test__.support.harness").new()
+local bootstrap = require("__test__.support.bootstrap")
+local diffview = require("__test__.support.diffview")
+local fs = require("__test__.support.fs")
 local treeview = require("__test__.support.treeview")
-local tree = require("era.m.diffview.pane.tree")
 local changes = require("era.m.diffview.pane.changes")
 local action = require("era.m.diffview.view.workspace.action")
 local Jobs = require("era.m.filetree.jobs")
@@ -16,34 +18,13 @@ local function fixture(names)
     return directory
   end)
   t:patch_table(era.m.git.state, "refresh", function() end)
-  local reports = {}
-  t:patch_table(stl.reporter, "error", function(value)
-    reports[#reports + 1] = value
-  end)
-  local bufnr = changes.create_buffer("unstaged")
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
-  local owner = tree.new()
-  t:defer(function()
-    owner:dispose()
-  end)
-  local winnr = vim.api.nvim_open_win(bufnr, true, { relative = "editor", row = 0, col = 0, width = 50, height = 10 })
-  t:defer(function()
-    if vim.api.nvim_win_is_valid(winnr) then
-      vim.api.nvim_win_close(winnr, true)
-    end
-  end)
+  local reports = bootstrap.with_reporter(t).error
   local entries = {}
   for _, name in ipairs(names) do
     entries[#entries + 1] = { filepath = name, stage_type = "unstaged", status = "?" }
   end
-  treeview.await(
-    changes.apply_to_buffer(bufnr, changes.render(entries, { stage_type = "unstaged", viewtype = "list" }), owner)
-  )
-  vim.api.nvim_win_set_cursor(winnr, { assert(changes.find_entry_line(bufnr, entries[1])), 0 })
+  local owner, pane = diffview.changes_pane(t, entries, { stage_type = "unstaged", viewtype = "list" }, true)
+  vim.api.nvim_win_set_cursor(pane.winnr, { assert(changes.find_entry_line(pane.bufnr, entries[1])), 0 })
   local state = {
     disposed = false,
     refreshed = 0,
@@ -59,39 +40,22 @@ local function fixture(names)
   return {
     directory = directory,
     path = directory .. "/" .. names[1],
-    bufnr = bufnr,
-    winnr = winnr,
+    bufnr = pane.bufnr,
+    winnr = pane.winnr,
     owner = owner,
     entries = entries,
     reports = reports,
     state = state,
-    context = require("__test__.support.diffview").workspace_context({ state = state }),
+    context = diffview.workspace_context({ state = state }),
   }
-end
-
----@param future                        stl.c.Future
----@return boolean
----@return any
-local function settle(future)
-  t.wait_until(function()
-    return future:is_done()
-  end, 10000)
-  return not future:is_failed(), future:is_failed() and future:get_error() or future:get_result()
 end
 
 t:test("untracked discard uses a real native Job and preserves a modified buffer", function()
   local name = stl.env.IS_WIN and "untracked.txt" or "back\\slash.txt"
   local f = fixture({ name })
   vim.fn.writefile({ "disk" }, f.path)
-  local bufnr = vim.api.nvim_create_buf(true, false)
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
-  vim.api.nvim_buf_set_name(bufnr, f.path)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "unsaved" })
-  local ok, result = settle(action.reset(f.context))
+  local bufnr = t:buffer({ "unsaved" }, { name = f.path, listed = true })
+  local ok, result = t.settle(action.reset(f.context))
   t.assert_true(ok, result)
   t.assert_true(result.success, result.error)
   t.assert_eq(f.path, result.items[1].source)
@@ -107,8 +71,7 @@ t:test("pending discard keeps its captured path across cursor and workspace chan
   local f = fixture({ "first.txt", "second.txt" })
   vim.fn.writefile({ "first" }, f.path)
   vim.fn.writefile({ "second" }, f.directory .. "/second.txt")
-  vim.fn.mkdir(f.directory .. "/other", "p")
-  vim.fn.writefile({ "other" }, f.directory .. "/other/first.txt")
+  fs.write(f.directory .. "/other/first.txt", { "other" })
   local captured = treeview.await(Jobs.capture(f.path))
   local waiting, resolve = Future.new_with_resolver()
   local captures = 0
@@ -124,7 +87,7 @@ t:test("pending discard keeps its captured path across cursor and workspace chan
     return f.directory .. "/other"
   end)
   resolve(captured)
-  local ok, result = settle(first)
+  local ok, result = t.settle(first)
   t.assert_true(ok, result)
   t.assert_true(result.success, result.error)
   t.assert_eq(1, captures)
@@ -148,7 +111,7 @@ t:test(
     assert(vim.uv.fs_rename(f.path, f.path .. ".old"))
     vim.fn.writefile({ "replacement" }, f.path)
     resolve(captured)
-    local ok, result = settle(future)
+    local ok, result = t.settle(future)
     t.assert_true(ok, result)
     t.assert_false(result.success)
     t.assert_eq("replacement", vim.fn.readfile(f.path)[1])
@@ -156,7 +119,7 @@ t:test(
     t.assert_eq(0, f.state.refreshed)
     t.assert_eq(1, #f.reports)
     restore()
-    ok, result = settle(action.reset(f.context))
+    ok, result = t.settle(action.reset(f.context))
     t.assert_true(ok, result)
     t.assert_true(result.success, result.error)
     t.assert_nil(vim.uv.fs_lstat(f.path))
@@ -166,13 +129,13 @@ t:test(
 
 t:test("a failed capture releases the request for a later explicit retry", function()
   local f = fixture({ "missing.txt" })
-  local ok = settle(action.reset(f.context))
+  local ok = t.settle(action.reset(f.context))
   t.assert_false(ok)
   t.assert_eq(1, #f.reports)
   t.assert_eq(0, f.state.refreshed)
   vim.fn.writefile({ "new" }, f.path)
   local result
-  ok, result = settle(action.reset(f.context))
+  ok, result = t.settle(action.reset(f.context))
   t.assert_true(ok, result)
   t.assert_true(result.success, result.error)
   t.assert_nil(vim.uv.fs_lstat(f.path))
@@ -180,9 +143,8 @@ end)
 
 t:test("discard does not recursively remove an ordinary directory", function()
   local f = fixture({ "folder" })
-  vim.fn.mkdir(f.path, "p")
-  vim.fn.writefile({ "keep" }, f.path .. "/child.txt")
-  local ok, error = settle(action.reset(f.context))
+  fs.write(f.path .. "/child.txt", { "keep" })
+  local ok, error = t.settle(action.reset(f.context))
   t.assert_false(ok)
   t.assert_eq("Discard does not delete directories", error)
   t.assert_eq("keep", vim.fn.readfile(f.path .. "/child.txt")[1])
@@ -195,10 +157,9 @@ t:test("discard removes a directory symlink without following it", function()
     t.skip("needs Unix directory symlinks")
   end
   local f = fixture({ "link" })
-  vim.fn.mkdir(f.directory .. "/target", "p")
-  vim.fn.writefile({ "keep" }, f.directory .. "/target/child.txt")
+  fs.write(f.directory .. "/target/child.txt", { "keep" })
   assert(vim.uv.fs_symlink("target", f.path))
-  local ok, result = settle(action.reset(f.context))
+  local ok, result = t.settle(action.reset(f.context))
   t.assert_true(ok, result)
   t.assert_true(result.success, result.error)
   t.assert_nil(vim.uv.fs_lstat(f.path))
@@ -218,7 +179,7 @@ t:test("closing the workspace while capture is pending suppresses the late Job",
   f.state.disposed = true
   f.owner:dispose()
   resolve(captured)
-  local ok, result = settle(future)
+  local ok, result = t.settle(future)
   t.assert_true(ok)
   t.assert_nil(result)
   t.assert_eq("keep", vim.fn.readfile(f.path)[1])
@@ -237,7 +198,7 @@ t:test("an accepted Job completes after its workspace closes without refreshing 
     f.owner:dispose()
     return future
   end)
-  local ok, result = settle(action.reset(f.context))
+  local ok, result = t.settle(action.reset(f.context))
   t.assert_true(ok, result)
   t.assert_true(result.success, result.error)
   t.assert_nil(vim.uv.fs_lstat(f.path))
@@ -252,7 +213,7 @@ t:test("cancellation without completed IO preserves the file without reporting a
   t:patch_table(Jobs, "run", function()
     return Future.resolve({ items = {}, status = { cancelled = true }, success = false })
   end)
-  local ok, result = settle(action.reset(f.context))
+  local ok, result = t.settle(action.reset(f.context))
   t.assert_true(ok, result)
   t.assert_true(result.status.cancelled)
   t.assert_eq("keep", vim.fn.readfile(f.path)[1])
@@ -270,7 +231,7 @@ t:test("completed IO with a synchronization error refreshes the pane and reports
       return result
     end)
   end)
-  local ok, result = settle(action.reset(f.context))
+  local ok, result = t.settle(action.reset(f.context))
   t.assert_true(ok, result)
   t.assert_true(result.success, result.error)
   t.assert_nil(vim.uv.fs_lstat(f.path))
@@ -291,7 +252,7 @@ t:test("a Job completion error cannot hide an already completed delete or its er
       return result
     end)
   end)
-  local ok, result = settle(action.reset(f.context))
+  local ok, result = t.settle(action.reset(f.context))
   t.assert_true(ok, result)
   t.assert_false(result.success)
   t.assert_nil(vim.uv.fs_lstat(f.path))
@@ -311,7 +272,7 @@ t:test("cancellation after completed IO still refreshes the deleted file", funct
       return result
     end)
   end)
-  local ok, result = settle(action.reset(f.context))
+  local ok, result = t.settle(action.reset(f.context))
   t.assert_true(ok, result)
   t.assert_true(result.status.cancelled)
   t.assert_nil(vim.uv.fs_lstat(f.path))

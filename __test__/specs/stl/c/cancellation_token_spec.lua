@@ -209,18 +209,9 @@ t:test("throw_if_cancelled: throws if cancelled", function()
   local token = CancellationToken.new()
   token:cancel()
 
-  local threw = false
-  local ok, err = pcall(function()
+  t.assert_error(function()
     token:throw_if_cancelled()
-  end)
-  if not ok then
-    threw = true
-    t.assert_true(
-      type(err) == "string" and string.find(err, "cancelled") ~= nil,
-      "error message should mention cancelled"
-    )
-  end
-  t.assert_true(threw, "should throw error")
+  end, "cancelled", "should throw error")
 end)
 
 t:test("isdisposed: returns false before cancel", function()

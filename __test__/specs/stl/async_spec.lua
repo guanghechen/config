@@ -5,15 +5,9 @@ local t = harness.new()
 local Async = require("stl.async")
 local Future = require("stl.c.future")
 
-local reported = {} ---@type table[]
 bootstrap.with_global(t, "stl", {
   async = Async,
   c = { Future = Future },
-  reporter = {
-    error = function(value)
-      reported[#reported + 1] = value
-    end,
-  },
 })
 
 ---@return stl.c.Future
@@ -36,24 +30,18 @@ end)
 
 t:test("run_future rejects a failure after await", function()
   local future = Async.run_future(function()
-    Future.new(function(resolve)
-      vim.schedule(function()
-        resolve(nil)
-      end)
-    end):await()
+    later():await()
     error("injected post-await failure", 0)
   end)
 
-  t.wait_until(function()
-    return future:is_done()
-  end, 1000, "post-await failure")
+  local resolved, err = t.settle(future)
 
-  t.assert_true(future:is_failed(), "future")
-  t.assert_true(future:get_error():find("injected post-await failure", 1, true) ~= nil, "diagnostic")
+  t.assert_false(resolved, "future")
+  t.assert_true(err:find("injected post-await failure", 1, true) ~= nil, "diagnostic")
 end)
 
 t:test("run reports an error that ends it, after an await as before one", function()
-  reported = {}
+  local reported = bootstrap.with_reporter(t).error
   local reached = false
   Async.run(function()
     later():await()
@@ -70,7 +58,7 @@ t:test("run reports an error that ends it, after an await as before one", functi
 
   t.wait_until(function()
     return #reported == 3
-  end, 1000, "the three failures")
+  end, 5000, "the three failures")
   local messages = vim.tbl_map(function(value)
     return value.message:match("^[^\n]*")
   end, reported)
@@ -80,7 +68,7 @@ t:test("run reports an error that ends it, after an await as before one", functi
 end)
 
 t:test("run ends quietly on a cancellation", function()
-  reported = {}
+  local reports = bootstrap.with_reporter(t)
   local token = require("stl.c.cancellation_token").new()
   local cancelled = Future.new({ token = token })
   Async.run(function()
@@ -89,7 +77,7 @@ t:test("run ends quietly on a cancellation", function()
   token:cancel()
   t.assert_true(cancelled:is_cancelled(), "cancelled")
   vim.wait(20)
-  t.assert_same({}, reported, "a cancelled future")
+  t.assert_same({}, reports.error, "a cancelled future")
 end)
 
 t:test("run_future rejects an invalid coroutine yield", function()

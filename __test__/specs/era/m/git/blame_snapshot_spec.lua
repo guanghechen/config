@@ -1,3 +1,4 @@
+local fs = require("__test__.support.fs")
 local harness = require("__test__.support.harness")
 local t = harness.new()
 local git = require("__test__.support.git")
@@ -18,18 +19,6 @@ end
 local function new_repo(format)
   workspace = git.repo(t, { "--object-format=" .. (format or "sha1") })
   return workspace
-end
-
----@param path                          string
----@param content                       string
----@return nil
-local function write(path, content)
-  local fd = assert(vim.uv.fs_open(path, "w", 420))
-  local close = t:defer(function()
-    assert(vim.uv.fs_close(fd))
-  end)
-  assert(vim.uv.fs_write(fd, content))
-  close()
 end
 
 ---@param path                          string
@@ -81,12 +70,10 @@ end
 
 t:test("full snapshots match the Lua oracle across history and unsaved changes", function()
   local root = new_repo()
-  write(root .. "/file", "one\ntwo\nthree\nfour\n")
-  run({ "add", "file" })
-  run({ "commit", "-qm", "base" })
-  write(root .. "/file", "one\nchanged\nthree\nfour\n")
-  run({ "add", "file" })
-  run({ "commit", "-qm", "second" })
+  fs.write(root .. "/file", "one\ntwo\nthree\nfour\n")
+  git.commit(root, "base")
+  fs.write(root .. "/file", "one\nchanged\nthree\nfour\n")
+  git.commit(root, "second")
   local snapshot = assert_parity("file", "UNSAVED\none\nchanged\nthree\nfour\n")
   local lines, commits = snapshot:stats()
   t.assert_eq(5, lines, "line count")
@@ -106,9 +93,8 @@ end)
 
 t:test("SHA-256 snapshots retain full identities and eight-character display abbreviations", function()
   local root = new_repo("sha256")
-  write(root .. "/file", "one\ntwo\n")
-  run({ "add", "file" })
-  run({ "commit", "-qm", "base" })
+  fs.write(root .. "/file", "one\ntwo\n")
+  git.commit(root, "base")
   local snapshot = assert_parity("file", "one\nUNSAVED\n")
   t.assert_eq(64, #snapshot:commit_at(1).sha, "full SHA-256")
   t.assert_eq(8, #snapshot:commit_at(1).abbrev_sha, "display abbreviation")
@@ -119,29 +105,26 @@ t:test("rename metadata and literal pathname bytes match the old porcelain contr
   -- macOS and Windows require Unicode filenames; other Unix systems also exercise invalid UTF-8.
   local suffix = (package.config:sub(1, 1) == "/" and vim.uv.os_uname().sysname ~= "Darwin") and "\255" or "字"
   local old, new = "old-" .. suffix, "new-" .. suffix
-  write(root .. "/" .. old, "one\ntwo\nthree\n")
-  run({ "add", "--", old })
-  run({ "commit", "-qm", "base" })
+  fs.write(root .. "/" .. old, "one\ntwo\nthree\n")
+  git.commit(root, "base")
   run({ "mv", "--", old, new })
-  run({ "commit", "-qm", "rename" })
+  git.commit(root, "rename")
   assert_parity(new, "one\ntwo\nthree\n")
 end)
 
 t:test("contents preserve CRLF, BOM, legacy encoding and missing final newline", function()
   for _, content in ipairs({ "one\r\ntwo\r\n", "\239\187\191one\ntwo\n", "caf\233\ntwo\n", "one\ntwo" }) do
     local root = new_repo()
-    write(root .. "/file", content)
-    run({ "add", "file" })
-    run({ "commit", "-qm", "bytes" })
+    fs.write(root .. "/file", content)
+    git.commit(root, "bytes")
     assert_parity("file", content)
   end
 end)
 
 t:test("exports cannot mutate the snapshot and annotation projection reuses literal labels", function()
   local root = new_repo()
-  write(root .. "/file", "one\ntwo\nthree\n")
-  run({ "add", "file" })
-  run({ "commit", "-qm", "base" })
+  fs.write(root .. "/file", "one\ntwo\nthree\n")
+  git.commit(root, "base")
   local snapshot = assert_parity("file", "one\ntwo\nthree\n")
   snapshot:commits()[1].author = "changed"
   snapshot:entries()[1].summary = "changed"
@@ -157,13 +140,12 @@ end)
 
 t:test("unborn HEAD and absent paths fail without returning a partial snapshot", function()
   local root = new_repo()
-  write(root .. "/file", "one\n")
+  fs.write(root .. "/file", "one\n")
   local state, snapshot, err = query("file", "one\n")
   t.assert_eq("failed", state, "unborn HEAD")
   t.assert_nil(snapshot, "no partial snapshot")
   t.assert_true(type(err) == "string" and #err > 0, "Git diagnostic")
-  run({ "add", "file" })
-  run({ "commit", "-qm", "base" })
+  git.commit(root, "base")
   state, snapshot = query("missing", "one\n")
   t.assert_eq("failed", state, "missing path")
   t.assert_nil(snapshot, "missing path has no data")
@@ -171,9 +153,8 @@ end)
 
 t:test("annotations retain validation, byte values and array-prefix semantics", function()
   local root = new_repo()
-  write(root .. "/file", "one\ntwo\n")
-  run({ "add", "file" })
-  run({ "commit", "-qm", "base" })
+  fs.write(root .. "/file", "one\ntwo\n")
+  git.commit(root, "base")
   local state, snapshot, err = query("file", "one\ntwo\n")
   t.assert_eq("completed", state, err)
   local literal = "\0\255 literal %1 <sha>"
@@ -200,9 +181,9 @@ t:test("annotations retain validation, byte values and array-prefix semantics", 
   for index = 1, 12000 do
     oversized[index] = "label " .. index
   end
-  local ok, error_text = pcall(snapshot.annotations, snapshot, oversized)
-  t.assert_false(ok, "oversized labels rejected")
-  t.assert_true(tostring(error_text):find("must match", 1, true) ~= nil, "count error, not native panic")
+  t.assert_error(function()
+    snapshot:annotations(oversized)
+  end, "must match", "oversized labels rejected with a count error, not a native panic")
   t.assert_eq(literal, snapshot:annotations({ literal })[1], "usable after errors")
 
   state, snapshot, err = query("file", "")

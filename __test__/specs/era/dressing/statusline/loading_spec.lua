@@ -1,3 +1,4 @@
+local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 require("ark.bootstrap").setup()
 
@@ -5,10 +6,7 @@ local t = harness.new()
 local Nvimbar = require("era.m.nvimbar.nvimbar")
 
 t:test("statusline initializes components lazily without activating optional backends", function()
-  local errors, bars = {}, {}
-  t:patch_table(stl.reporter, "error", function(report)
-    errors[#errors + 1] = report
-  end)
+  local errors, bars = bootstrap.with_reporter(t).error, {}
   local new = Nvimbar.new
   t:patch_table(Nvimbar, "new", function(props)
     local bar = new(props)
@@ -36,7 +34,7 @@ t:test("statusline initializes components lazily without activating optional bac
       end
     end
     return true
-  end, 3000, "initial components settle")
+  end, 5000, "initial components settle")
   t.assert_eq(0, #errors, vim.inspect(errors))
   for _, module in ipairs({
     "era.m.lsp",

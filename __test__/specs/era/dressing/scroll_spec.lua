@@ -1,3 +1,5 @@
+local bootstrap = require("__test__.support.bootstrap")
+local dressing = require("__test__.support.dressing")
 local harness = require("__test__.support.harness")
 
 local t = harness.new()
@@ -20,19 +22,8 @@ local function get_upvalue(callback, name)
   error("missing upvalue: " .. name)
 end
 
----@class era.dressing.scroll.test.ITimer
----@field callback                     fun()|nil
----@field cleared                      boolean
-local Timer = {}
-Timer.__index = Timer
-
----@param _timeout                      integer
----@param _interval                     integer
----@param callback                      fun()
----@return nil
-function Timer:start(_timeout, _interval, callback)
-  self.callback = callback
-end
+---@class era.dressing.scroll.test.ITimer : __test__.support.dressing.Timer
+---@field cleared                      ?boolean
 
 ---@class era.dressing.scroll.test.IRuntime
 ---@field autocmds                      table<string, table>
@@ -69,8 +60,8 @@ local function setup()
     float = false,
     view = { lnum = 1, col = 0, coladd = 0, curswant = 0, topline = 1, topfill = 0, leftcol = 0, skipcol = 0 },
     options = { virtualedit = "", scrolloff = 4, scrollbind = false },
-    scheduled = {},
-    timers = {},
+    scheduled = bootstrap.with_schedule(t).callbacks,
+    timers = dressing.timers(t),
     observe_calls = 0,
     enabled = true,
   } ---@type era.dressing.scroll.test.IRuntime
@@ -113,19 +104,11 @@ local function setup()
     },
   })
 
-  t:patch_table(vim, "schedule", function(callback)
-    runtime.scheduled[#runtime.scheduled + 1] = callback
-  end)
   t:patch_table(vim, "on_key", function(callback, _)
     if callback ~= nil then
       runtime.on_key = callback
     end
     return 1
-  end)
-  t:patch_table(vim.uv, "new_timer", function()
-    local timer = setmetatable({ callback = nil, cleared = false }, Timer)
-    runtime.timers[#runtime.timers + 1] = timer
-    return timer
   end)
   t:patch_table(vim.api, "nvim_create_autocmd", function(event, opts)
     runtime.autocmds[type(event) == "string" and event or table.concat(event, ",")] = opts

@@ -1,3 +1,4 @@
+local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 local loader = require("era.m.plugin.loader")
 
@@ -256,7 +257,6 @@ t:test("a main require failure restores its cache before a later explicit load",
   local module_name = "__test__.specs.era.m.plugin.loader.retry_main"
   local attempts = 0
   local setup_runs = 0
-  local scheduled = {} ---@type fun()[]
   local events = {} ---@type table[]
 
   t:patch_table(package.loaded, module_name, nil)
@@ -271,9 +271,7 @@ t:test("a main require failure restores its cache before a later explicit load",
       end,
     }
   end)
-  t:patch_table(vim, "schedule", function(callback)
-    scheduled[#scheduled + 1] = callback
-  end)
+  local scheduled = bootstrap.with_schedule(t).callbacks
   t:patch_table(vim.api, "nvim_exec_autocmds", function(event, opts)
     events[#events + 1] = { event = event, opts = opts }
   end)

@@ -1,37 +1,33 @@
 require("ark.bootstrap").setup()
 local t = require("__test__.support.harness").new()
+local picker = require("__test__.support.picker")
 local treeview = require("__test__.support.treeview")
+local UI = require("__test__.support.ui")
 local Source = require("era.view.result_source")
-local Tree = require("era.view.result_tree")
 
 ---@return era.view.ResultTree
 local function fixture()
   local source = Source.new("root", { label = "root" })
   source:insert("root", "dir", { label = "directory" })
   source:insert("dir", "file", { label = "file.lua" })
-  local tree = Tree.new({
-    name = "native picker",
-    tree = source,
-    present = function(_, data)
-      return { label = data.label }
-    end,
-  })
+  local tree = picker.result_tree(t, "native picker", source)
   tree:insert("root", { nodetype = "container" })
   tree:insert("dir", { nodetype = "container" })
   tree:insert("file", { nodetype = "leaf" })
-  t:defer(function()
-    tree:dispose()
-  end)
   return tree
 end
 
-t:test("Result publishes native counts and preserves state through hide and reopen", function()
-  local tree = fixture()
+---A result over the whole of `tree`, disposed when the case ends.
+---@param tree                          era.view.ResultTree
+---@param uuid                          string
+---@param name                          string The name of the result, its diagnostic scope and its augroup prefix.
+---@return era.view.PickerResult
+local function new_result(tree, uuid, name)
   local result = era.view.PickerResult.new({
-    uuid = "native result",
-    name = "native result",
-    diagnostic_scope = "native result",
-    augroup_prefix = "native result",
+    uuid = uuid,
+    name = name,
+    diagnostic_scope = name,
+    augroup_prefix = name,
     winline_hl = "Normal",
     tree = tree,
     keymaps = {},
@@ -43,6 +39,12 @@ t:test("Result publishes native counts and preserves state through hide and reop
   t:defer(function()
     result:dispose()
   end)
+  return result
+end
+
+t:test("Result publishes native counts and preserves state through hide and reopen", function()
+  local tree = fixture()
+  local result = new_result(tree, "native result", "native result")
   result:create_win({ border = "none", number = true, winhighlight = "" }, { row = 0, col = 0, width = 40, height = 6 })
   treeview.await(tree:ready())
   t.assert_eq(2, result.lnum_total:snapshot())
@@ -78,22 +80,7 @@ end)
 for _, change in ipairs({ "producer", "published", "edited", "deleted" }) do
   t:test("a hidden result recovers a " .. change .. " buffer or source on reopen", function()
     local tree = fixture()
-    local result = era.view.PickerResult.new({
-      uuid = "hidden " .. change,
-      name = "hidden result",
-      diagnostic_scope = "hidden result",
-      augroup_prefix = "hidden result",
-      winline_hl = "Normal",
-      tree = tree,
-      keymaps = {},
-      flags = {},
-      draw = function()
-        return tree:publish({ mode = "tree", rootuuid = "root" })
-      end,
-    })
-    t:defer(function()
-      result:dispose()
-    end)
+    local result = new_result(tree, "hidden " .. change, "hidden result")
     result:create_win(
       { border = "none", number = false, winhighlight = "" },
       { row = 0, col = 0, width = 40, height = 6 }
@@ -198,22 +185,9 @@ end)
 
 t:test("a late cursor acknowledgement preserves the current Visual endpoint", function()
   local tree = fixture()
-  local result = era.view.PickerResult.new({
-    uuid = "cursor acknowledgement",
-    name = "cursor acknowledgement",
-    diagnostic_scope = "cursor acknowledgement",
-    augroup_prefix = "cursor acknowledgement",
-    winline_hl = "Normal",
-    tree = tree,
-    keymaps = {},
-    flags = {},
-    draw = function()
-      return tree:publish({ mode = "tree", rootuuid = "root" })
-    end,
-  })
+  local result = new_result(tree, "cursor acknowledgement", "cursor acknowledgement")
   t:defer(function()
     vim.cmd.normal({ args = { vim.keycode("<Esc>") }, bang = true })
-    result:dispose()
   end)
   result:create_win(
     { border = "none", number = false, winhighlight = "" },
@@ -238,10 +212,7 @@ t:test("opening and reopening a file picker never writes a readonly native surfa
   vim.fn.mkdir(directory .. "/src", "p")
   vim.fn.writefile({ "local first = true" }, directory .. "/src/one.lua")
   vim.fn.writefile({ "local second = true" }, directory .. "/src/two.lua")
-  local ui = require("__test__.support.ui").new()
-  t:defer(function()
-    ui:close()
-  end)
+  local ui = UI.open(t)
   local warnings = {}
   ui.on_redraw = function(events)
     for _, event in ipairs(events) do
@@ -265,13 +236,9 @@ t:test("opening and reopening a file picker never writes a readonly native surfa
     vim.api.nvim_create_autocmd("FileChangedRO", {
       callback = function(event) readonly_changes[#readonly_changes+1] = event.buf end,
     })
-    local function observable(value) return stl.c.Observable.from_value(value) end
-    picker = era.m.picker.FiletreeComposer.new({
+    picker = era.m.picker.FiletreeComposer.new(require("__test__.support.picker").tree_props({
       name="readonly picker", permanent=true, preview=true, title="readonly picker",
-      search_pattern=observable(""), flag_foldempty=observable(false), flag_fuzzy=observable(false),
-      flag_regex=observable(false), flag_case_sensitive=observable(true), flag_selected=observable(false),
-      flag_viewtype=observable("tree"),
-    })
+    }))
     picker:reset_filepaths(directory, {"src/one.lua", "src/two.lua"}, false)
     vim.keymap.set("n", "gp", function() picker:focus() end)
   ]],
@@ -279,14 +246,16 @@ t:test("opening and reopening a file picker never writes a readonly native surfa
   )
   for _ = 1, 2 do
     ui:rpc("nvim_input", "gp")
-    ui:wait_until(function()
-      return ui:lua([[
+    ui:wait_lua(
+      [[
         local preview = picker._composer.preview
         return picker._treeview.view and picker._treeview:linecount() == 3
           and preview._tree_view and preview._tree_view:frame()
           and preview._tree_view:frame():header().row_count == 2 or false
-      ]])
-    end, 5000, "Picker result and directory preview did not publish")
+      ]],
+      5000,
+      "Picker result and directory preview did not publish"
+    )
     local status = ui:lua([[
       local result, preview = picker.result:get_bufnr(), picker._composer.preview:get_bufnr()
       return {
@@ -309,58 +278,52 @@ t:test("opening and reopening a file picker never writes a readonly native surfa
 end)
 
 t:test("Visual Tab selects a mixed range uniformly and clears a fully selected range", function()
-  local ui = require("__test__.support.ui").new()
-  t:defer(function()
-    ui:close()
-  end)
-  ui:start({ width = 100, height = 40, runtime = "ark" })
+  local ui = UI.open(t, { width = 100, height = 40, runtime = "ark" })
   ui:lua([[
     selection_errors = {}
     stl.reporter.error = function(value) selection_errors[#selection_errors+1] = value.message end
-    local function observable(value) return stl.c.Observable.from_value(value) end
-    picker = era.m.picker.FiletreeComposer.new({
-      name="Visual selection", permanent=true, preview=false, title="Visual selection",
-      search_pattern=observable(""), flag_foldempty=observable(false), flag_fuzzy=observable(false),
-      flag_regex=observable(false), flag_case_sensitive=observable(true), flag_selected=observable(false),
-      flag_viewtype=observable("list"),
-    })
+    picker = era.m.picker.FiletreeComposer.new(require("__test__.support.picker").tree_props({
+      name="Visual selection", permanent=true, preview=false, title="Visual selection", flag_viewtype="list",
+    }))
     picker:reset_filepaths("/workspace", {"one.lua", "two.lua"}, false)
     picker.result:create_win({border="none",number=false,winhighlight=""}, {row=0,col=0,width=60,height=8})
     picker.result:focus()
     one, two = yoz.fn.md5("/workspace/one.lua"), yoz.fn.md5("/workspace/two.lua")
   ]])
-  ui:wait_until(function()
-    return ui:lua(
-      "return picker.result.lnum_total:snapshot() == 2 and picker._treeview.view and picker._treeview.view:frame() ~= nil"
-    )
-  end, 5000)
+  ui:wait_lua(
+    "return picker.result.lnum_total:snapshot() == 2 and picker._treeview.view and picker._treeview.view:frame() ~= nil",
+    5000,
+    "two rows"
+  )
   ui:lua("picker._treeview:toggle_select(one, true, true)")
-  ui:wait_until(function()
-    return ui:lua(
-      "assert(#selection_errors == 0, vim.inspect(selection_errors)); return picker._treeview:isselected(one)"
-    )
-  end, 5000)
+  ui:wait_lua(
+    "assert(#selection_errors == 0, vim.inspect(selection_errors)); return picker._treeview:isselected(one)",
+    5000,
+    "one selected"
+  )
   for _, expected in ipairs({ true, false }) do
     ui:rpc("nvim_input", "ggVj")
-    ui:wait_until(function()
-      return ui:lua([[
+    ui:wait_lua(
+      [[
         return vim.api.nvim_get_mode().mode == "V"
           and vim.api.nvim_win_get_cursor(picker.result:get_winnr())[1] == 2
-      ]])
-    end, 5000)
+      ]],
+      5000,
+      "Visual range over both rows"
+    )
     ui:lua("picker._treeview:toggle_selection()")
-    ui:wait_until(function()
-      return ui:lua(
-        [[
+    ui:wait_lua(
+      [[
         local expected = ...
         return not picker._treeview:selection_pending()
           and picker._treeview:isselected(one) == expected
           and picker._treeview:isselected(two) == expected
           and vim.api.nvim_get_mode().mode == "n"
       ]],
-        expected
-      )
-    end, 5000, "Visual range must use one selection value")
+      5000,
+      "Visual range must use one selection value",
+      expected
+    )
   end
   local errors = ui:lua("return selection_errors")
   t.assert_eq(0, #errors, vim.inspect(errors))

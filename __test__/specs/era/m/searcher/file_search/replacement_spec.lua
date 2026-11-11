@@ -2,6 +2,9 @@ local harness = require("__test__.support.harness")
 require("ark.bootstrap").setup()
 
 local t = harness.new()
+local bootstrap = require("__test__.support.bootstrap")
+local fs = require("__test__.support.fs")
+local picker = require("__test__.support.picker")
 local treeview = require("__test__.support.treeview")
 
 local workspace = t:tempdir()
@@ -12,12 +15,6 @@ local FILES = {
   ["alpha.txt"] = { "needle one", "a needle and a Needle", "nothing here" },
   ["beta.txt"] = { "NEEDLE upper", "needle" },
 } ---@type table<string, string[]>
-
----@param value                         unknown
----@return stl.c.Observable
-local function observable(value)
-  return stl.c.Observable.from_value(value)
-end
 
 -- Each case searches its own directory, so a case that writes files leaves the others alone.
 ---@return string
@@ -46,48 +43,28 @@ end
 ---@return __test__.specs.era.m.searcher.file_search.replacement.IControls
 local function new_composer(dir)
   local controls = {
-    search_pattern = observable(""),
-    replace_pattern = observable(""),
-    flag_regex = observable(false),
-    flag_replace = observable(true),
+    search_pattern = picker.observable(""),
+    replace_pattern = picker.observable(""),
+    flag_regex = picker.observable(false),
+    flag_replace = picker.observable(true),
   } ---@type __test__.specs.era.m.searcher.file_search.replacement.IControls
-  local composer = era.m.searcher.FiletreeComposer.new({
+  local composer = picker.searcher(t, {
     name = "replacement-" .. case_count,
     permanent = false,
     preview = false,
     title = "replacement test",
-
-    excludes = observable({}),
-    flag_exclude = observable(false),
-    flag_foldempty = observable(false),
-    flag_gitignore = observable(false),
-    flag_limit_matches = observable(true),
     flag_regex = controls.flag_regex,
     flag_replace = controls.flag_replace,
-    flag_case_sensitive = observable(false),
-    flag_selected = observable(false),
-    flag_viewtype = observable("tree"),
-    includes = observable({ "*.txt" }),
-    max_filesize = observable("1M"),
-    max_matches = observable(500),
+    flag_case_sensitive = false,
     replace_pattern = controls.replace_pattern,
-    rootpath = observable(dir),
+    rootpath = dir,
     search_pattern = controls.search_pattern,
     -- As Search Files does.
     on_refresh = function(composer)
       composer:schedule_search()
     end,
   })
-  t:defer(function()
-    composer:dispose()
-    vim.wait(20)
-  end)
-  composer.result:create_win({ border = "none", number = false, winhighlight = "" }, {
-    row = 0,
-    col = 0,
-    width = 80,
-    height = 10,
-  })
+  picker.show_result(composer, 80, 10)
   treeview.await(composer._treeview:ready())
   return composer, controls
 end
@@ -114,14 +91,13 @@ end
 ---@param composer                      era.m.searcher.FiletreeComposer
 ---@param msg                           string
 ---@param predicate                     ?fun(): boolean
----@param timeout_ms                    ?integer
 ---@return nil
-local function settle(composer, msg, predicate, timeout_ms)
+local function settle(composer, msg, predicate)
   t.wait_until(function()
     return composer._file_search._active == nil
       and composer:__is_search_projection_current__()
       and (predicate == nil or predicate())
-  end, timeout_ms or 5000, msg)
+  end, 5000, msg)
 end
 
 -- Outlasts the 64 ms search debounce, so a search the debounce held back would have started.
@@ -167,18 +143,6 @@ local function texts(composer)
 end
 
 ---@param composer                      era.m.searcher.FiletreeComposer
----@param desc                          string
----@return fun(): nil
-local function action(composer, desc)
-  for _, keymap in ipairs(composer.finder.keymaps) do
-    if keymap.desc == desc then
-      return keymap.callback --[[@as fun(): nil]]
-    end
-  end
-  error("no action: " .. desc)
-end
-
----@param composer                      era.m.searcher.FiletreeComposer
 ---@param controls                      __test__.specs.era.m.searcher.file_search.replacement.IControls
 ---@param replacement                   string
 ---@return nil
@@ -199,7 +163,7 @@ t:test("a replacement edit searches without waiting for the debounce", function(
   t.assert_false(composer:__is_search_projection_current__(), "previews of the old replacement are stale at once")
   settle(composer, "the replacement edit waited for the debounce", function()
     return seen.searches == 2
-  end, 1000)
+  end)
   t.assert_eq(5, count_texts(composer, "thread"), "previews of the new replacement")
   t.assert_eq(0, count_texts(composer, "pin"), "no preview keeps the old replacement")
 end)
@@ -213,13 +177,13 @@ t:test("toggling replace mode searches without waiting for the debounce", functi
   controls.flag_replace:next(false)
   settle(composer, "turning replace mode off waited for the debounce", function()
     return seen.searches == 2
-  end, 1000)
+  end)
   t.assert_eq(0, count_texts(composer, "pin"), "plain previews without replace mode")
 
   controls.flag_replace:next(true)
   settle(composer, "turning replace mode on waited for the debounce", function()
     return seen.searches == 3
-  end, 1000)
+  end)
   t.assert_eq(5, count_texts(composer, "pin"), "replacement previews in replace mode")
 end)
 
@@ -328,11 +292,11 @@ t:test("a refresh brings hidden matches back with the offsets its search finds",
   treeview.await(composer.result.draw())
   composer.result:set_lnum_current(assert(tree:retrieve_lnum(tree:retrieve(key).locations[1].locationuuid)))
   treeview.await(tree:ready())
-  action(composer, "search: replace file")()
+  picker.action(composer, "search: replace file")()
   treeview.await(composer.result.draw())
   t.assert_same({ "foo foo foo foo foo" }, vim.fn.readfile(dir .. "/four.txt"), "the first match replaced")
 
-  action(composer, "searcher: refresh")()
+  picker.action(composer, "searcher: refresh")()
   treeview.await(composer.result.draw())
   t.assert_false(tree:isvisible(hidden), "the hidden match waits for the search, its offset not moved")
   settle(composer, "the refresh did not publish", function()
@@ -354,12 +318,12 @@ t:test("replacing all after a single replacement changes only the matches the re
   -- The replacement of the first match brings in a match at offset 4 that the results do not list.
   composer.result:set_lnum_current(assert(tree:retrieve_lnum(tree:retrieve(key).locations[1].locationuuid)))
   treeview.await(tree:ready())
-  action(composer, "search: replace file")()
+  picker.action(composer, "search: replace file")()
   treeview.await(composer.result.draw())
   t.assert_same({ "foo foo foo foo foo" }, vim.fn.readfile(dir .. "/four.txt"), "the first match replaced")
   t.assert_eq(3, #tree:retrieve(key).locations, "the three other matches listed")
 
-  action(composer, "searcher: replace all files")()
+  picker.action(composer, "searcher: replace all files")()
   -- Five foo kept and three doubled: the one at offset 4 stays as it is.
   t.assert_same({ "foo foo foo foo foo foo foo foo" }, vim.fn.readfile(dir .. "/four.txt"), "the listed matches")
 end)
@@ -368,10 +332,7 @@ t:test("a pattern that matches bytes outside UTF-8 is searched but tells once th
   local dir = fixture()
   vim.fn.writefile({ "café needle" }, dir .. "/accent.txt")
   local composer, controls = new_composer(dir)
-  local warnings = {} ---@type string[]
-  t:patch_table(stl.reporter, "warn", function(value)
-    warnings[#warnings + 1] = value.message
-  end)
+  local warnings = bootstrap.with_reporter(t).warn
 
   -- The two bytes of "é".
   controls.flag_regex:next(true)
@@ -380,7 +341,7 @@ t:test("a pattern that matches bytes outside UTF-8 is searched but tells once th
   settle(composer, "the search did not publish")
   t.assert_same({ "café needle" }, texts(composer), "the match without a replacement")
   t.assert_eq(1, #warnings, "replace mode tells why")
-  t.assert_true(warnings[1]:find("invalid UTF-8", 1, true) ~= nil, "the reason: " .. warnings[1])
+  t.assert_true(warnings[1].message:find("invalid UTF-8", 1, true) ~= nil, "the reason: " .. warnings[1].message)
 
   controls.replace_pattern:next("thread")
   settle(composer, "the replacement edit did not publish", function()
@@ -388,7 +349,7 @@ t:test("a pattern that matches bytes outside UTF-8 is searched but tells once th
   end)
   t.assert_eq(1, #warnings, "an edit of the replacement does not tell again")
 
-  action(composer, "searcher: replace all files")()
+  picker.action(composer, "searcher: replace all files")()
   t.assert_eq(2, #warnings, "replacing all says why it does not")
   t.assert_same({ "café needle" }, vim.fn.readfile(dir .. "/accent.txt"), "the file as it was")
 
@@ -408,10 +369,7 @@ t:test("a file that is not UTF-8 text lists the search alone, and replacing all 
   local latin1 = dir .. "/latin1.txt"
   vim.fn.writefile({ "caf\233 needle" }, latin1)
   local composer, controls = new_composer(dir)
-  local errors = {} ---@type table[]
-  t:patch_table(stl.reporter, "error", function(value)
-    errors[#errors + 1] = value
-  end)
+  local errors = bootstrap.with_reporter(t).error
 
   search(composer, controls, "pin")
   local rows = {} ---@type table<string, string>
@@ -424,7 +382,7 @@ t:test("a file that is not UTF-8 text lists the search alone, and replacing all 
   -- The byte outside UTF-8 shows as U+FFFD.
   t.assert_eq("caf\239\191\189 needle m_ss_matches", rows["latin1.txt"], "the row of the file that is not UTF-8 text")
 
-  action(composer, "searcher: replace all files")()
+  picker.action(composer, "searcher: replace all files")()
   t.assert_same({ "pin one", "a pin and a pin", "nothing here" }, vim.fn.readfile(dir .. "/alpha.txt"), "alpha")
   t.assert_same({ "caf\233 needle" }, vim.fn.readfile(latin1), "the file that is not UTF-8 text")
   t.assert_eq(1, #errors, "one report")
@@ -462,24 +420,15 @@ local function buffer_lines(bufnr)
   return vim.api.nvim_buf_get_lines(bufnr, 0, -1, true)
 end
 
----@return string[]
-local function capture_warnings()
-  local warnings = {} ---@type string[]
-  t:patch_table(stl.reporter, "warn", function(value)
-    warnings[#warnings + 1] = value.message
-  end)
-  return warnings
-end
-
 t:test("a file open with unsaved changes is replaced in its buffer, through the lines the changes moved", function()
   local dir = fixture()
   local composer, controls = new_composer(dir)
-  local warnings = capture_warnings()
+  local warnings = bootstrap.with_reporter(t).warn
   local alpha = load(dir .. "/alpha.txt")
   edit(alpha, 0, 0, { "a new first line" })
 
   search(composer, controls, "pin")
-  action(composer, "searcher: replace all files")()
+  picker.action(composer, "searcher: replace all files")()
   t.assert_same(FILES["alpha.txt"], vim.fn.readfile(dir .. "/alpha.txt"), "the file keeps its text")
   t.assert_same(
     { "a new first line", "pin one", "a pin and a pin", "nothing here" },
@@ -503,12 +452,12 @@ end)
 t:test("a match the unsaved changes edited is left as it is and told", function()
   local dir = fixture()
   local composer, controls = new_composer(dir)
-  local warnings = capture_warnings()
+  local warnings = bootstrap.with_reporter(t).warn
   local alpha = load(dir .. "/alpha.txt")
   edit(alpha, 1, 2, { "a needle and a Needle, edited" })
 
   search(composer, controls, "pin")
-  action(composer, "searcher: replace all files")()
+  picker.action(composer, "searcher: replace all files")()
   treeview.await(composer.result.draw())
   t.assert_same(
     { "pin one", "a needle and a Needle, edited", "nothing here" },
@@ -516,7 +465,7 @@ t:test("a match the unsaved changes edited is left as it is and told", function(
     "the match of the line kept as it was"
   )
   t.assert_eq(1, #warnings, "told once")
-  t.assert_true(warnings[1]:find("Left 2 of 3 matches in", 1, true) ~= nil, warnings[1])
+  t.assert_true(warnings[1].message:find("Left 2 of 3 matches in", 1, true) ~= nil, warnings[1].message)
   t.assert_eq(2, #composer._treeview:retrieve(composer._uuids_order[1]).locations, "the two left stay listed")
 end)
 
@@ -531,7 +480,7 @@ t:test("replacing one match of a file open with unsaved changes replaces it in t
   local key = composer._uuids_order[1] ---@type string
   composer.result:set_lnum_current(assert(tree:retrieve_lnum(tree:retrieve(key).locations[2].locationuuid)))
   treeview.await(tree:ready())
-  action(composer, "search: replace file")()
+  picker.action(composer, "search: replace file")()
   treeview.await(composer.result.draw())
   t.assert_same(
     { "a new first line", "needle one", "a pin and a Needle", "nothing here" },
@@ -548,7 +497,7 @@ t:test("a file open without changes shows the replacement at once", function()
   local beta = load(dir .. "/beta.txt")
 
   search(composer, controls, "pin")
-  action(composer, "searcher: replace all files")()
+  picker.action(composer, "searcher: replace all files")()
   t.assert_same({ "pin upper", "pin" }, vim.fn.readfile(dir .. "/beta.txt"), "the file")
   t.assert_same({ "pin upper", "pin" }, buffer_lines(beta), "its buffer")
   t.assert_false(vim.bo[beta].modified, "nothing left to save")
@@ -557,9 +506,7 @@ end)
 t:test("a buffer with CRLF line breaks takes the replacement through them", function()
   local dir = fixture()
   local crlf = dir .. "/crlf.txt"
-  local file = assert(io.open(crlf, "wb"))
-  file:write("x\r\nneedle\r\ny needle\r\n")
-  file:close()
+  fs.write(crlf, "x\r\nneedle\r\ny needle\r\n")
   local composer, controls = new_composer(dir)
   local bufnr = load(crlf)
   t.assert_eq("dos", vim.bo[bufnr].fileformat, "read as CRLF")
@@ -570,7 +517,7 @@ t:test("a buffer with CRLF line breaks takes the replacement through them", func
   controls.replace_pattern:next("<$1>")
   controls.search_pattern:next([[needle\r?\n(\w)]])
   settle(composer, "the search did not publish")
-  action(composer, "searcher: replace all files")()
+  picker.action(composer, "searcher: replace all files")()
   t.assert_same({ "x, edited", "<y> needle" }, buffer_lines(bufnr), "the line break replaced with the match")
   t.assert_eq("dos", vim.bo[bufnr].fileformat, "still CRLF")
 end)
@@ -578,11 +525,9 @@ end)
 t:test("a match that ends inside a CRLF line break of a buffer is left as it is", function()
   local dir = fixture()
   local crlf = dir .. "/crlf.txt"
-  local file = assert(io.open(crlf, "wb"))
-  file:write("x\r\nme\r\n")
-  file:close()
+  fs.write(crlf, "x\r\nme\r\n")
   local composer, controls = new_composer(dir)
-  local warnings = capture_warnings()
+  local warnings = bootstrap.with_reporter(t).warn
   local bufnr = load(crlf)
   edit(bufnr, 0, 1, { "x, edited" })
 
@@ -590,7 +535,7 @@ t:test("a match that ends inside a CRLF line break of a buffer is left as it is"
   controls.replace_pattern:next("!")
   controls.search_pattern:next([[e\r]])
   settle(composer, "the search did not publish")
-  action(composer, "searcher: replace all files")()
+  picker.action(composer, "searcher: replace all files")()
   t.assert_same({ "x, edited", "me" }, buffer_lines(bufnr), "the rows of the buffer cannot split the line break")
   t.assert_eq(1, #warnings, "told")
 end)
@@ -598,30 +543,30 @@ end)
 t:test("a file changed after the search is left as it is and told", function()
   local dir = fixture()
   local composer, controls = new_composer(dir)
-  local warnings = capture_warnings()
+  local warnings = bootstrap.with_reporter(t).warn
   search(composer, controls, "pin")
 
   -- Another program deletes the first line: every listed offset of alpha.txt now falls elsewhere.
   vim.fn.writefile({ "a needle and a Needle", "nothing here" }, dir .. "/alpha.txt")
-  action(composer, "searcher: replace all files")()
+  picker.action(composer, "searcher: replace all files")()
   treeview.await(composer.result.draw())
   t.assert_same({ "a needle and a Needle", "nothing here" }, vim.fn.readfile(dir .. "/alpha.txt"), "alpha as it is")
   t.assert_same({ "pin upper", "pin" }, vim.fn.readfile(dir .. "/beta.txt"), "beta replaced")
   t.assert_eq(1, #warnings, "told once")
-  t.assert_true(warnings[1]:find("alpha.txt changed after the search", 1, true) ~= nil, warnings[1])
+  t.assert_true(warnings[1].message:find("alpha.txt changed after the search", 1, true) ~= nil, warnings[1].message)
   t.assert_eq(3, #composer._treeview:retrieve(composer._uuids_order[1]).locations, "its matches stay listed")
 
   -- A change of the modification time alone tells as well.
   local beta = dir .. "/beta.txt"
   vim.fn.writefile(FILES["beta.txt"], beta)
   settle(composer, "the search did not publish")
-  action(composer, "searcher: refresh")()
+  picker.action(composer, "searcher: refresh")()
   settle(composer, "the refresh did not publish", function()
     return #composer._uuids_order == 2
   end)
   local stat = assert(vim.uv.fs_stat(beta))
   assert(vim.uv.fs_utime(beta, stat.atime.sec, stat.mtime.sec + 10))
-  action(composer, "searcher: replace all files")()
+  picker.action(composer, "searcher: replace all files")()
   t.assert_same(FILES["beta.txt"], vim.fn.readfile(beta), "beta as it is")
   t.assert_eq(2, #warnings, "told again")
 end)

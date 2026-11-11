@@ -1,6 +1,7 @@
 require("ark.bootstrap").setup()
 local t = require("__test__.support.harness").new()
 local diffview = require("__test__.support.diffview")
+local fs = require("__test__.support.fs")
 local git = require("__test__.support.git")
 local action = require("era.m.diffview.view.workspace.action")
 local commits_view = require("era.m.diffview.view.commits.view")
@@ -24,13 +25,13 @@ local function open(opts)
   end
   local root = diffview.committed(t, files)
   for _, path in ipairs(opts.edited or {}) do
-    diffview.write(root, path, { "changed" })
+    fs.write(root .. "/" .. path, { "changed" })
   end
   if opts.staged then
     git.run(root, vim.list_extend({ "add", "--" }, opts.staged))
   end
   for _, path in ipairs(opts.untracked or {}) do
-    diffview.write(root, path, { "new" })
+    fs.write(root .. "/" .. path, { "new" })
   end
   return diffview.open_workspace(t), root
 end
@@ -61,11 +62,12 @@ local function record_tree_focus(session)
   return focus
 end
 
+---Makes `path` in `stage_type` the current entry, leaving the cursor where it is.
 ---@param session                       era.m.diffview.WorkspaceSession
 ---@param path                          string
 ---@param stage_type                    "staged"|"unstaged"
 ---@return nil
-local function select(session, path, stage_type)
+local function set_current(session, path, stage_type)
   session.state:set_current_entry(assert(session.state:find_entry(path, stage_type)))
 end
 
@@ -97,7 +99,7 @@ t:test("hiding untracked files selects the first remaining rendered entry", func
   flag_untracked:next(true)
   local session = open({ edited = { "dir/hidden.lua", "tracked.lua" }, untracked = { "new.lua" } })
   diffview.collapse(t, session, "unstaged", "dir", "dir/hidden.lua")
-  select(session, "new.lua", "unstaged")
+  set_current(session, "new.lua", "unstaged")
   local opened = record_previews()
   local dirty = 0
   t:patch_table(dot.state.status.dirtier_tabline, "mark_dirty", function()
@@ -120,7 +122,7 @@ t:test("hiding untracked files while History previews moves the Changes selectio
   end)
   flag_untracked:next(true)
   local session = open({ edited = { "tracked.lua" }, untracked = { "new.lua" } })
-  select(session, "new.lua", "unstaged")
+  set_current(session, "new.lua", "unstaged")
   session.history:begin_preview()
   local opened = record_previews()
   local cleared = 0
@@ -139,7 +141,7 @@ end)
 t:test("cross-pane navigation follows visible changes order and wraps", function()
   local session = open({ edited = { "a.lua", "b.lua", "collapsed/hidden.lua" }, staged = { "a.lua" } })
   diffview.collapse(t, session, "unstaged", "collapsed", "collapsed/hidden.lua")
-  select(session, "a.lua", "staged")
+  set_current(session, "a.lua", "staged")
   diffview.cursor_on(session, "staged", "a.lua")
   local opened = record_previews()
   local focus = record_tree_focus(session)
@@ -167,11 +169,11 @@ t:test("navigation skips a hidden current entry without losing direction", funct
   diffview.collapse(t, session, "unstaged", "b", "b/hidden.lua")
   local opened = record_previews()
 
-  select(session, "b/hidden.lua", "unstaged")
+  set_current(session, "b/hidden.lua", "unstaged")
   action.goto_next_entry(session)
   t.assert_eq("unstaged:c/after.lua", current(session), "next visible entry after hidden current")
 
-  select(session, "b/hidden.lua", "unstaged")
+  set_current(session, "b/hidden.lua", "unstaged")
   action.goto_prev_entry(session)
   t.assert_eq("unstaged:a/before.lua", current(session), "previous visible entry before hidden current")
   t.assert_eq(2, #opened, "preview count")
@@ -180,7 +182,7 @@ end)
 t:test("navigation does not enter entries hidden by the rendered panel", function()
   local session = open({ edited = { "collapsed/hidden.lua" } })
   diffview.collapse(t, session, "unstaged", "collapsed", "collapsed/hidden.lua")
-  select(session, "collapsed/hidden.lua", "unstaged")
+  set_current(session, "collapsed/hidden.lua", "unstaged")
   local opened = record_previews()
 
   action.goto_next_entry(session)
@@ -191,7 +193,7 @@ end)
 t:test("reveal expands hidden entry ancestors, focuses the entry, then hides Changes", function()
   local session = open({ edited = { "middle/hidden.lua" } })
   diffview.collapse(t, session, "unstaged", "middle", "middle/hidden.lua")
-  select(session, "middle/hidden.lua", "unstaged")
+  set_current(session, "middle/hidden.lua", "unstaged")
   local focus = record_tree_focus(session)
   vim.api.nvim_set_current_win(session.layout.sbs_left_winnr)
 
@@ -207,7 +209,7 @@ end)
 
 t:test("navigation falls back to state order without a changes panel", function()
   local session = open({ edited = { "a.lua", "b.lua" }, staged = { "a.lua" } })
-  select(session, "a.lua", "staged")
+  set_current(session, "a.lua", "staged")
   workspace_view.hide_changes(session.layout)
   local opened = record_previews()
 
@@ -222,7 +224,7 @@ t:test("goto file preserves a literal POSIX backslash", function()
   local relative = "back\\slash.lua"
   local target_tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local session, root = open({ edited = { relative } })
-  select(session, relative, "unstaged")
+  set_current(session, relative, "unstaged")
   local filepath = root .. "/" .. relative
 
   action.goto_file(session)

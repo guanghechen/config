@@ -2,17 +2,6 @@ local t = require("__test__.support.harness").new()
 local fixture = require("__test__.support.directory_picker")
 
 ---@param ui                            __test__.support.UI
----@param expression                    string
----@return nil
-local function wait(ui, expression)
-  local started = vim.uv.hrtime()
-  ui:wait_until(function()
-    t.assert_true(vim.uv.hrtime() - started < 8000000000, expression)
-    return ui:lua("return " .. expression)
-  end, 8000)
-end
-
----@param ui                            __test__.support.UI
 ---@return nil
 local function actions(ui)
   ui:lua([[
@@ -58,7 +47,7 @@ t:test("an action typed right after a query reads the rows of that query", funct
   local ui, path = fixture.new(t)
   -- One burst, as fast typing gives it: <CR> runs before the 64 ms filter debounce does.
   ui:rpc("nvim_input", "itwo<CR>")
-  wait(ui, [[vim.api.nvim_buf_get_name(0):match("Alpha%-two%.txt$") ~= nil]])
+  ui:wait_lua([[return vim.api.nvim_buf_get_name(0):match("Alpha%-two%.txt$") ~= nil]], 8000, "Alpha-two.txt opened")
   t.assert_eq(
     vim.uv.fs_realpath(path .. "/Alpha-two.txt"),
     vim.uv.fs_realpath(ui:lua("return vim.api.nvim_buf_get_name(0)"))
@@ -69,7 +58,7 @@ t:test("native create/copy/rename/delete update the current directory and editor
   local ui, path = fixture.new(t)
   actions(ui)
   ui:lua([[action("alpha.lua","c","copied.lua")]])
-  wait(ui, [[present("copied.lua") and not require("era.m.filetree.jobs").pending()]])
+  ui:wait_lua([[return present("copied.lua") and not require("era.m.filetree.jobs").pending()]], 8000, "copy listed")
   t.assert_true(vim.uv.fs_stat(path .. "/copied.lua") ~= nil)
   ui:lua(
     [[
@@ -80,15 +69,31 @@ t:test("native create/copy/rename/delete update the current directory and editor
   ]],
     path
   )
-  wait(ui, [[present("renamed.lua") and not present("copied.lua") and not require("era.m.filetree.jobs").pending()]])
+  ui:wait_lua(
+    [[return present("renamed.lua") and not present("copied.lua") and not require("era.m.filetree.jobs").pending()]],
+    8000,
+    "rename listed"
+  )
   t.assert_eq(vim.uv.fs_realpath(path .. "/renamed.lua"), ui:lua("return vim.api.nvim_buf_get_name(renamed_buffer)"))
   t.assert_nil(vim.uv.fs_stat(path .. "/copied.lua"))
   ui:lua([[action("../","oa","new-dir/")]])
-  wait(ui, [[present("new-dir") and not require("era.m.filetree.jobs").pending()]])
+  ui:wait_lua(
+    [[return present("new-dir") and not require("era.m.filetree.jobs").pending()]],
+    8000,
+    "new directory listed"
+  )
   t.assert_eq("directory", vim.uv.fs_stat(path .. "/new-dir").type)
   ui:lua([[action("new-dir","od","yes")]])
-  wait(ui, [[not present("new-dir") and not require("era.m.filetree.jobs").pending()]])
-  wait(ui, [[not surface._focus and select(2,surface:retrieve(picker.result.lnum_current:snapshot()))==false]])
+  ui:wait_lua(
+    [[return not present("new-dir") and not require("era.m.filetree.jobs").pending()]],
+    8000,
+    "deleted directory unlisted"
+  )
+  ui:wait_lua(
+    [[return not surface._focus and select(2,surface:retrieve(picker.result.lnum_current:snapshot()))==false]],
+    8000,
+    "cursor settled off the parent row"
+  )
   t.assert_nil(vim.uv.fs_stat(path .. "/new-dir"))
   t.assert_eq(0, ui:lua("return #errors"), vim.inspect(ui:lua("return errors")))
 end)
@@ -106,9 +111,10 @@ t:test("completion preserves navigation made while the file operation was runnin
     choose("Alpha-two.txt")
     finish_operation({success=true,status={},items={{status="success"}}})
   ]])
-  wait(
-    ui,
-    [[not surface._focus and surface:retrieve(picker.result.lnum_current:snapshot()):info().label=="Alpha-two.txt"]]
+  ui:wait_lua(
+    [[return not surface._focus and surface:retrieve(picker.result.lnum_current:snapshot()):info().label=="Alpha-two.txt"]],
+    8000,
+    "cursor kept on Alpha-two.txt"
   )
   t.assert_eq(0, ui:lua("return #errors"))
 end)
@@ -120,13 +126,17 @@ t:test("parent guards, no overwrite, and captured resource identity survive prom
   t.assert_eq(0, ui:lua("return #prompts"))
   t.assert_eq(3, ui:lua("return #errors"))
   ui:lua([[errors={}; action("alpha.lua","c","Alpha-two.txt")]])
-  wait(ui, [[#errors>0 and not require("era.m.filetree.jobs").pending()]])
+  ui:wait_lua([[return #errors>0 and not require("era.m.filetree.jobs").pending()]], 8000, "overwriting copy refused")
   t.assert_eq("other", vim.fn.readfile(path .. "/Alpha-two.txt")[1])
   ui:lua([[errors={}; action("alpha.lua","or",nil,true)]])
   assert(vim.uv.fs_rename(path .. "/alpha.lua", path .. "/saved.lua"))
   vim.fn.writefile({ "replacement" }, path .. "/alpha.lua")
   ui:lua([[pending_prompt("moved.lua")]])
-  wait(ui, [[#errors>0 and not require("era.m.filetree.jobs").pending()]])
+  ui:wait_lua(
+    [[return #errors>0 and not require("era.m.filetree.jobs").pending()]],
+    8000,
+    "move of a replaced file refused"
+  )
   t.assert_nil(vim.uv.fs_stat(path .. "/moved.lua"))
   t.assert_eq("replacement", vim.fn.readfile(path .. "/alpha.lua")[1])
   t.assert_eq("hello", vim.fn.readfile(path .. "/saved.lua")[1])
@@ -148,15 +158,15 @@ for _, command in ipairs({ "cd", "lcd", "tcd" }) do
       path,
       command
     )
-    wait(ui, [[present("only-other.txt")]])
+    ui:wait_lua([[return present("only-other.txt")]], 8000, "relative path listed")
     t.assert_eq(
       vim.uv.fs_realpath(path .. "/other/sub"),
       ui:lua([[return surface.data:inspect(surface:frame():source(),surface:frame():header().root.node):path()]])
     )
     ui:lua([[picker:hide(); require("era.fn.find-explorer")()]])
-    wait(ui, [[present("only-other.txt")]])
+    ui:wait_lua([[return present("only-other.txt")]], 8000, "remembered directory listed")
     ui:lua([[picker:hide(); require("era.fn.find-explorer")(...)]], path .. "/folder/sub")
-    wait(ui, [[present("deep.txt") and not present("only-other.txt")]])
+    ui:wait_lua([[return present("deep.txt") and not present("only-other.txt")]], 8000, "absolute path listed")
     t.assert_eq(0, ui:lua("return #errors"))
   end)
 end

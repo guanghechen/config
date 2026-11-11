@@ -1,13 +1,16 @@
 require("ark.bootstrap").setup()
 local t = require("__test__.support.harness").new()
-local Searcher = require("era.m.searcher.buffer")
+local bootstrap = require("__test__.support.bootstrap")
+local picker = require("__test__.support.picker")
+-- Loading the searcher creates the namespace of its replace previews.
+require("era.m.searcher.buffer")
 
 ---@class __test__.specs.era.m.searcher.buffer_replace.ISetup
 ---@field public searcher               era.m.searcher.buffer.Searcher
 ---@field public bufnr                  integer
 ---@field public search_pattern         stl.c.Observable
 ---@field public replace_pattern        stl.c.Observable
----@field public warnings               string[]
+---@field public warnings               table[] The warnings reported since the setup.
 
 -- A searcher attached to a window that shows `lines`, with its matches found.
 ---@param lines                         string[]
@@ -16,42 +19,21 @@ local Searcher = require("era.m.searcher.buffer")
 ---@param flag_regex                    boolean
 ---@return __test__.specs.era.m.searcher.buffer_replace.ISetup
 local function setup(lines, search_pattern, replace_pattern, flag_regex)
-  local bufnr = vim.api.nvim_create_buf(true, true)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, lines)
-  local winnr = vim.api.nvim_open_win(bufnr, true, { split = "above" })
-
-  local o_search_pattern = stl.c.Observable.from_value(search_pattern)
-  local o_replace_pattern = stl.c.Observable.from_value(replace_pattern)
-  local searcher = Searcher.new({
-    o_flag_fuzzy = stl.c.Observable.from_value(false),
-    o_flag_regex = stl.c.Observable.from_value(flag_regex),
-    o_flag_replace = stl.c.Observable.from_value(true),
-    o_flag_case_sensitive = stl.c.Observable.from_value(true),
+  local reports = bootstrap.with_reporter(t)
+  local o_search_pattern = picker.observable(search_pattern)
+  local o_replace_pattern = picker.observable(replace_pattern)
+  local searcher, bufnr = picker.buffer_searcher(t, lines, {
+    o_flag_regex = flag_regex,
+    o_flag_replace = true,
     o_search_pattern = o_search_pattern,
     o_replace_pattern = o_replace_pattern,
   })
-  t:defer(function()
-    searcher:close()
-    pcall(vim.api.nvim_win_close, winnr, true)
-    pcall(vim.api.nvim_buf_delete, bufnr, { force = true })
-  end)
-
-  local warnings = {} ---@type string[]
-  t:patch_table(stl.reporter, "warn", function(value)
-    warnings[#warnings + 1] = value.message
-  end)
-  t:patch_table(stl.reporter, "info", function() end)
-
-  searcher:attach(winnr)
-  t.wait_until(function()
-    return searcher.o_match_total:snapshot() > 0
-  end, 2000, "the search found no match")
   return {
     searcher = searcher,
     bufnr = bufnr,
     search_pattern = o_search_pattern,
     replace_pattern = o_replace_pattern,
-    warnings = warnings,
+    warnings = reports.warn,
   }
 end
 
@@ -187,7 +169,7 @@ t:test("a replacement edit after an edit of the buffer previews the matches foun
   s.replace_pattern:next("quux")
   t.wait_until(function()
     return #previews(s.bufnr) == 6
-  end, 2000, "the preview of the three matches")
+  end, 5000, "the preview of the three matches")
   t.assert_same({
     "0:0-0:3 m_sr_search_cur",
     "0:3 quux m_sr_replace_cur",

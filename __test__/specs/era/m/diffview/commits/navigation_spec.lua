@@ -179,13 +179,7 @@ t:test("panel recreation reuses native state and a requested cursor waits for it
   local identity = owner.state
   vim.api.nvim_buf_delete(bufnr, { force = true })
   local next_bufnr = commits.create_buffer()
-  local winnr =
-    vim.api.nvim_open_win(next_bufnr, false, { relative = "editor", row = 0, col = 0, width = 60, height = 10 })
-  t:defer(function()
-    if vim.api.nvim_win_is_valid(winnr) then
-      vim.api.nvim_win_close(winnr, true)
-    end
-  end)
+  local winnr = t:window(next_bufnr, { relative = "editor", row = 0, col = 0, width = 60, height = 10 })
   treeview.await(commits.apply_to_buffer(
     next_bufnr,
     commits.render({ first, second }, {

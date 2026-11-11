@@ -32,18 +32,8 @@ local sign = require("era.m.git.sign")
 ---@return integer
 ---@return integer
 local function create_buffer(lines)
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines or { "one", "two", "three" })
-  local winnr = vim.api.nvim_open_win(bufnr, false, { relative = "editor", row = 0, col = 0, width = 40, height = 10 })
-  t:defer(function()
-    if vim.api.nvim_win_is_valid(winnr) then
-      vim.api.nvim_win_close(winnr, true)
-    end
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
-  return bufnr, winnr
+  local bufnr = t:buffer(lines or { "one", "two", "three" })
+  return bufnr, t:window(bufnr, { relative = "editor", row = 0, col = 0, width = 40, height = 10 })
 end
 
 ---@param bufnr                      integer

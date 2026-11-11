@@ -1,3 +1,4 @@
+local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 local async = require("stl.async")
 local Future = require("stl.c.future")
@@ -5,15 +6,7 @@ local CancellationToken = require("stl.c.cancellation_token")
 
 local t = harness.new()
 
-local reported = {} ---@type table[]
-t:patch_global("stl", {
-  async = async,
-  reporter = {
-    error = function(value)
-      reported[#reported + 1] = value
-    end,
-  },
-})
+t:patch_global("stl", { async = async })
 
 ---@type table<string, fun(): stl.c.Future>
 local STATES = {
@@ -267,7 +260,7 @@ t:test("finally: multiple listeners all called", function()
 end)
 
 t:test("finally: a failing listener is reported and the others still run", function()
-  reported = {}
+  local reported = bootstrap.with_reporter(t).error
   local future = Future.new()
   local second_called = false
 
@@ -286,11 +279,10 @@ t:test("finally: a failing listener is reported and the others still run", funct
   t.assert_eq(1, #reported, "the failure reported, the cancellation not")
   t.assert_true(reported[1].message:find("intentional error", 1, true) ~= nil, reported[1].message)
 
-  reported = {}
   future:finally(function()
     error("late listener error")
   end)
-  t.assert_eq(1, #reported, "a listener of a settled future too")
+  t.assert_eq(2, #reported, "a listener of a settled future too")
 end)
 
 t:test("cancel: finally called on cancellation", function()

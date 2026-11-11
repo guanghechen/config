@@ -1,7 +1,6 @@
-local fixture = require("__test__.support.explorer").new()
-local Widget = require("era.m.explorer.widget")
+local t = require("__test__.support.harness").new()
+local fixture = require("__test__.support.explorer").new(t)
 local Session = require("era.m.explorer.session")
-local t = fixture.t
 
 ---@param widget                        era.m.explorer.Widget
 ---@param path                          string
@@ -11,6 +10,20 @@ local function root_is(widget, path)
     return fixture.context(widget) ~= nil and widget:get_root_filepath() == path
   end, 10000)
   fixture.idle(widget)
+end
+
+---Makes the first later `Session.open` return `pending` instead of opening.
+---@param pending                       stl.c.Future
+---@return fun() restore
+local function hold_open(pending)
+  local open, first = Session.open, true
+  return t:patch_table(Session, "open", function(...)
+    if first then
+      first = false
+      return pending
+    end
+    return open(...)
+  end)
 end
 
 t:test("cold focus_cwd keeps the constructor workspace as the gw destination", function()
@@ -43,10 +56,7 @@ t:test("a missing constructor workspace does not block another root and can be r
   local workspace, target = path .. "/missing", path .. "/target"
   assert(vim.uv.fs_mkdir(target, 448))
   fixture.write(target .. "/file")
-  local widget = Widget.new({ name = "missing-workspace", root = workspace })
-  t:defer(function()
-    widget:dispose()
-  end)
+  local widget = fixture.create({ name = "missing-workspace", root = workspace })
   fixture.await(widget:set_root(target))
   root_is(widget, target)
   t.assert_eq(workspace, widget:context().native:workspace_path())
@@ -67,10 +77,7 @@ t:test("an observed workspace keeps its resolved path after obsolete parent comp
     fixture.write(path .. "/workspace/file")
     fixture.write(path .. "/other/file")
     local input = path .. "/unused/../workspace"
-    local widget = Widget.new({ name = "resolved-workspace-" .. tostring(replace), root = input })
-    t:defer(function()
-      widget:dispose()
-    end)
+    local widget = fixture.create({ name = "resolved-workspace-" .. tostring(replace), root = input })
     if replace then
       fixture.await(widget:set_root(input .. "/"))
     else
@@ -108,10 +115,7 @@ t:test("cold child replacement retains a workspace observed through filesystem p
     assert(vim.uv.fs_mkdir(prefix .. "/workspace/sub", 448))
     fixture.write(prefix .. "/workspace/sub/file")
     local input = path .. "/unused/../workspace"
-    local widget = Widget.new({ name = "child-workspace-" .. tostring(linked), root = input })
-    t:defer(function()
-      widget:dispose()
-    end)
+    local widget = fixture.create({ name = "child-workspace-" .. tostring(linked), root = input })
     fixture.await(widget:set_root(input .. "/sub"))
     root_is(widget, prefix .. "/workspace/sub")
     t.assert_true(widget:context().native:workspace() ~= nil)
@@ -137,10 +141,7 @@ t:test("parent traversal after a child symlink cannot rebind workspace to an ext
   fixture.write(path .. "/workspace/file")
   fixture.write(path .. "/outside/other/file")
   assert(vim.uv.fs_symlink("../outside/leaf", path .. "/workspace/link"))
-  local widget = Widget.new({ name = "external-parent-workspace", root = path .. "/workspace" })
-  t:defer(function()
-    widget:dispose()
-  end)
+  local widget = fixture.create({ name = "external-parent-workspace", root = path .. "/workspace" })
   fixture.await(widget:set_root(path .. "/workspace/link/../other"))
   root_is(widget, path .. "/outside/other")
   t.assert_eq(path .. "/workspace", widget:context().native:workspace_path())
@@ -159,18 +160,9 @@ t:test("replacement roots discard queued navigation and late opening completion"
     local pending = stl.c.Future.new(function(done, fail)
       resolve, reject = done, fail
     end)
-    local open, first = Session.open, true
-    local restore = t:patch_table(Session, "open", function(...)
-      if first then
-        first = false
-        return pending
-      end
-      return open(...)
-    end)
-    local widget = Widget.new({ name = "replaced-opening-" .. tostring(success), root = path })
-    t:defer(function()
-      widget:dispose()
-    end)
+    local open = Session.open
+    local restore = hold_open(pending)
+    local widget = fixture.create({ name = "replaced-opening-" .. tostring(success), root = path })
     local reveal = widget:reveal(path .. "/one/file")
     widget:set_root(path .. "/one")
     fixture.await(widget:set_root(path .. "/two"))
@@ -217,10 +209,7 @@ t:test("a shared-data workspace renamed after resolution retains its observed oc
     end
     return create_state(self, root, display)
   end)
-  local widget = Widget.new({ name = "concurrent-workspace", root = path .. "/child", data = data })
-  t:defer(function()
-    widget:dispose()
-  end)
+  local widget = fixture.create({ name = "concurrent-workspace", root = path .. "/child", data = data })
   widget:focus()
   fixture.await(widget._ready)
   root_is(widget, path .. "/renamed")
@@ -239,23 +228,17 @@ t:test("custom roots and shared data fix their own workspace while a shared sess
     fixture.write(path .. "/" .. name .. "/file")
   end
   local owner = fixture.widget(path .. "/custom")
-  local shared = Widget.new({ name = "shared-workspace", root = path, session = (owner:context()) })
-  t:defer(function()
-    shared:dispose()
-  end)
+  local shared = fixture.create({ name = "shared-workspace", root = path, session = (owner:context()) })
   fixture.await(shared:set_root(path .. "/destination"))
   root_is(shared, path .. "/destination")
   t.assert_eq((owner:context()), (shared:context()))
   t.assert_eq(path .. "/custom", shared:context().native:workspace_path())
 
-  local independent = Widget.new({
+  local independent = fixture.create({
     name = "independent-workspace",
     root = path .. "/independent",
     data = owner:context().data,
   })
-  t:defer(function()
-    independent:dispose()
-  end)
   fixture.await(independent:set_root(path .. "/destination"))
   root_is(independent, path .. "/destination")
   t.assert_eq(path .. "/independent", independent:context().native:workspace_path())
@@ -265,15 +248,9 @@ t:test("custom roots and shared data fix their own workspace while a shared sess
 end)
 
 t:test("one failed opening reports once across views, display changes and reveal; each retry reports once", function()
-  local reports = {}
-  t:patch_table(stl.reporter, "warn", function(value)
-    reports[#reports + 1] = value.message
-  end)
+  local reported = #fixture.messages
   local path = t:tempdir() .. "/missing"
-  local widget = Widget.new({ name = "opening-reports", root = path })
-  t:defer(function()
-    widget:dispose()
-  end)
+  local widget = fixture.create({ name = "opening-reports", root = path })
   widget:focus()
   widget:toggle_flag(4)
   widget:reveal(path .. "/file")
@@ -289,10 +266,11 @@ t:test("one failed opening reports once across views, display changes and reveal
   t.wait_until(function()
     return widget._ready:is_failed() and not widget._display_scheduled
   end, 10000)
-  t.assert_eq(1, #reports)
-  t.assert_true(reports[1]:find("NotFound", 1, true) ~= nil)
-  t.assert_true(reports[1]:find("R in Explorer", 1, true) ~= nil)
-  t.assert_true(reports[1]:find("stack traceback", 1, true) == nil)
+  t.assert_eq(reported + 1, #fixture.messages)
+  local report = fixture.messages[reported + 1]
+  t.assert_true(report:find("NotFound", 1, true) ~= nil)
+  t.assert_true(report:find("R in Explorer", 1, true) ~= nil)
+  t.assert_true(report:find("stack traceback", 1, true) == nil)
   t.assert_true(
     widget._ready:get_error():find("stack traceback", 1, true) ~= nil,
     "the Future retains diagnostic detail"
@@ -303,55 +281,35 @@ t:test("one failed opening reports once across views, display changes and reveal
   t.wait_until(function()
     return widget._ready ~= previous and widget._ready:is_failed()
   end, 10000)
-  t.assert_eq(2, #reports)
+  t.assert_eq(reported + 2, #fixture.messages)
   assert(vim.uv.fs_mkdir(path, 448))
   fixture.write(path .. "/file")
   fixture.await(widget:refresh())
-  t.wait_until(function()
-    local _, view = fixture.context(widget)
-    return view and view:frame() and view:frame():header().row_count == 1
-  end, 10000)
-  t.assert_eq(2, #reports)
+  fixture.shown(widget, 1)
+  t.assert_eq(reported + 2, #fixture.messages)
   t.assert_eq(nil, widget._open_error)
 end)
 
 t:test("late opening failures cannot report or reclaim a newer opening or disposed widget", function()
   for _, dispose in ipairs({ false, true }) do
-    local reports = {}
-    t:patch_table(stl.reporter, "warn", function(value)
-      reports[#reports + 1] = value.message
-    end)
+    local reported = #fixture.messages
     local reject
     local pending = stl.c.Future.new(function(_, fail)
       reject = fail
     end)
-    local open = Session.open
-    local first = true
-    local restore = t:patch_table(Session, "open", function(...)
-      if first then
-        first = false
-        return pending
-      end
-      return open(...)
-    end)
+    local restore = hold_open(pending)
     local path = t:tempdir()
     fixture.write(path .. "/file")
-    local widget = Widget.new({ name = "obsolete-opening-" .. tostring(dispose), root = path })
-    t:defer(function()
-      widget:dispose()
-    end)
+    local widget = fixture.create({ name = "obsolete-opening-" .. tostring(dispose), root = path })
     widget:focus()
     if dispose then
       widget:dispose()
     else
       fixture.await(widget:set_root(path))
-      t.wait_until(function()
-        local _, view = fixture.context(widget)
-        return view and view:frame()
-      end, 10000)
+      fixture.shown(widget)
     end
     reject("ProviderError: obsolete opening")
-    t.assert_eq(0, #reports)
+    t.assert_eq(reported, #fixture.messages)
     t.assert_eq(nil, widget._open_error)
     if not dispose then
       t.assert_true(widget:context() ~= nil)
@@ -361,23 +319,17 @@ t:test("late opening failures cannot report or reclaim a newer opening or dispos
 end)
 
 t:test("a view attachment failure after a successful opening still reports", function()
-  local reports = {}
-  t:patch_table(stl.reporter, "warn", function(value)
-    reports[#reports + 1] = value.message
-  end)
+  local reported = #fixture.messages
   local path = t:tempdir()
   fixture.write(path .. "/file")
-  local widget = Widget.new({ name = "attachment-error", root = path })
-  t:defer(function()
-    widget:dispose()
-  end)
+  local widget = fixture.create({ name = "attachment-error", root = path })
   fixture.await(widget._ready)
   t:patch_table(require("ux.filetree"), "attach", function()
     error("attachment failed", 0)
   end)
   widget:focus()
-  t.assert_eq(1, #reports)
-  t.assert_true(reports[1]:find("attachment failed", 1, true) ~= nil)
+  t.assert_eq(reported + 1, #fixture.messages)
+  t.assert_true(fixture.messages[reported + 1]:find("attachment failed", 1, true) ~= nil)
   t.assert_eq(nil, widget._open_error)
 end)
 

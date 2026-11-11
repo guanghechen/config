@@ -4,14 +4,6 @@ local native = require("yoz").git.word_diff
 local reference = assert(loadfile("__test__/fixtures/era/m/git/diff_lua_reference.lua"))()
 local t = harness.new()
 
----@param expected                      any
----@param actual                        any
----@param context                       string
----@return nil
-local function equal(expected, actual, context)
-  t.assert_same(expected, actual, context .. "\n" .. vim.inspect({ expected = expected, actual = actual }))
-end
-
 ---@param text                          string
 ---@return string
 local function bytes_as_lines(text)
@@ -55,7 +47,7 @@ t:test("word ranges match the frozen Lua implementation on byte and boundary cas
     { string.rep("a", 500) .. "X", string.rep("a", 500) .. "Y" },
     { string.rep("a", 65536), string.rep("b", 65536) },
   }) do
-    equal(reference.compute_word_diff(case[1], case[2]), diff.compute_word_diff(case[1], case[2]), "word diff")
+    t.assert_same(reference.compute_word_diff(case[1], case[2]), diff.compute_word_diff(case[1], case[2]), "word diff")
   end
 end)
 
@@ -85,7 +77,11 @@ t:test("seeded byte edits preserve the actual histogram output and final ranges"
       end
     end
     local old_text, new_text = table.concat(old), table.concat(new)
-    equal(reference.compute_word_diff(old_text, new_text), diff.compute_word_diff(old_text, new_text), "case " .. case)
+    t.assert_same(
+      reference.compute_word_diff(old_text, new_text),
+      diff.compute_word_diff(old_text, new_text),
+      "case " .. case
+    )
   end
 end)
 
@@ -94,7 +90,7 @@ t:test("identity and empty-side fast paths do not cross the native boundary", fu
     error("fast paths must not prepare diff inputs")
   end)
   for _, case in ipairs({ { "same", "same" }, { "", string.rep("a", 600) }, { string.rep("b", 600), "" } }) do
-    equal(reference.compute_word_diff(case[1], case[2]), diff.compute_word_diff(case[1], case[2]), "fast path")
+    t.assert_same(reference.compute_word_diff(case[1], case[2]), diff.compute_word_diff(case[1], case[2]), "fast path")
   end
 end)
 
@@ -104,13 +100,13 @@ t:test("Neovim failure retains the old bounded fallback; empty raw data stays em
     local restore = t:patch_table(vim.text, "diff", function()
       return failure
     end)
-    equal(reference.compute_word_diff(old, new), diff.compute_word_diff(old, new), "non-table fallback")
+    t.assert_same(reference.compute_word_diff(old, new), diff.compute_word_diff(old, new), "non-table fallback")
     restore()
   end
   local restore = t:patch_table(vim.text, "diff", function()
     error("injected diff failure")
   end)
-  equal(reference.compute_word_diff(old, new), diff.compute_word_diff(old, new), "throw fallback")
+  t.assert_same(reference.compute_word_diff(old, new), diff.compute_word_diff(old, new), "throw fallback")
   local result = diff.compute_word_diff(old, new)
   t.assert_eq(500, result[1].old_end, "fallback does not expand beyond the cap")
   t.assert_eq(500, result[1].new_end)
@@ -118,7 +114,7 @@ t:test("Neovim failure retains the old bounded fallback; empty raw data stays em
   t:patch_table(vim.text, "diff", function()
     return {}
   end)
-  equal({}, diff.compute_word_diff(old, new), "successful empty diff")
+  t.assert_same({}, diff.compute_word_diff(old, new), "successful empty diff")
 end)
 
 t:test("malformed raw coordinates fail without returning partial ranges", function()
@@ -127,7 +123,7 @@ t:test("malformed raw coordinates fail without returning partial ranges", functi
   end
   t.assert_false(pcall(native.finish, "old", "new", { { 0, 1, 1, 1 } }), "zero nonempty start")
   t.assert_false(pcall(native.finish, "old", "new", { { 1, 1, 1 } }), "truncated row")
-  equal(reference.compute_word_diff("fooBar", "fooBaz"), diff.compute_word_diff("fooBar", "fooBaz"), "recovery")
+  t.assert_same(reference.compute_word_diff("fooBar", "fooBaz"), diff.compute_word_diff("fooBar", "fooBaz"), "recovery")
 end)
 
 t:test("hunk pairing, unequal line counts and input ownership remain unchanged", function()
@@ -141,9 +137,9 @@ t:test("hunk pairing, unequal line counts and input ownership remain unchanged",
       diff.run_diff(vim.split(texts[1], "\n", { plain = true }), vim.split(texts[2], "\n", { plain = true }))
     local saved = vim.deepcopy(hunks)
     for _, hunk in ipairs(hunks) do
-      equal(reference.compute_hunk_word_diff(hunk), diff.compute_hunk_word_diff(hunk), "paired lines")
+      t.assert_same(reference.compute_hunk_word_diff(hunk), diff.compute_hunk_word_diff(hunk), "paired lines")
     end
-    equal(saved, hunks, "input unchanged")
+    t.assert_same(saved, hunks, "input unchanged")
   end
 end)
 

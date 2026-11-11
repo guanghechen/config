@@ -1,11 +1,8 @@
+local UI = require("__test__.support.ui")
 local t = require("__test__.support.harness").new()
 
 t:test("an attached UI draws ephemeral viewport marks and independent shared-state buffers", function()
-  local channel = require("__test__.support.ui").new()
-  t:defer(function()
-    channel:close()
-  end)
-  channel:start({ width = 100, height = 30, runtime = "native" })
+  local channel = UI.open(t, { width = 100, height = 30, runtime = "native" })
   channel:lua([[
     treeview_drawn = {}
     local set_extmark = vim.api.nvim_buf_set_extmark
@@ -96,11 +93,7 @@ t:test("an attached UI draws ephemeral viewport marks and independent shared-sta
 end)
 
 t:test("connectors and navigation are exact, and persistent decoration errors stop after one resync", function()
-  local channel = require("__test__.support.ui").new()
-  t:defer(function()
-    channel:close()
-  end)
-  channel:start({ width = 80, height = 30, runtime = "native" })
+  local channel = UI.open(t, { width = 80, height = 30, runtime = "native" })
   channel:lua([[
     marks, writes = {}, 0
     local await = require("__test__.support.treeview").await
@@ -180,11 +173,7 @@ t:test("connectors and navigation are exact, and persistent decoration errors st
 end)
 
 t:test("labels hidden by right-aligned marks or the window edge end with a marker in the label's color", function()
-  local channel = require("__test__.support.ui").new()
-  t:defer(function()
-    channel:close()
-  end)
-  channel:start({ width = 30, height = 10, runtime = "native" })
+  local channel = UI.open(t, { width = 30, height = 10, runtime = "native" })
   local rows = channel:lua([[
     vim.api.nvim_set_hl(0, "TruncatedLabel", { fg = 0x123456 })
     local await = require("__test__.support.treeview").await
@@ -238,11 +227,7 @@ t:test("labels hidden by right-aligned marks or the window edge end with a marke
 end)
 
 t:test("every row keeps the selection column only while something is selected, unless the view reserves it", function()
-  local channel = require("__test__.support.ui").new()
-  t:defer(function()
-    channel:close()
-  end)
-  channel:start({ width = 40, height = 12, runtime = "native" })
+  local channel = UI.open(t, { width = 40, height = 12, runtime = "native" })
   channel:lua([[
     local await = require("__test__.support.treeview").await
     treeview = require("ux.treeview")

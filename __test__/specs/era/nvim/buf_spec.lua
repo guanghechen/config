@@ -1,6 +1,15 @@
+local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
 local t = harness.new()
+
+---@param reports                       table[]
+---@return string[]
+local function messages(reports)
+  return vim.tbl_map(function(report)
+    return report.message
+  end, reports)
+end
 
 t:test("tab-local close deletes only requested unreferenced buffers", function()
   local requested_bufnr = 41
@@ -55,9 +64,8 @@ end)
 ---Stubs the tab, path and reporter collaborators of `era.nvim.buf` around buffers named "/work/<bufnr>.lua".
 ---@param unsaved_bufnr                 integer
 ---@param tab                           table
----@return string[] warnings
+---@return table[] warnings
 local function stub_close(unsaved_bufnr, tab)
-  local warnings = {} ---@type string[]
   t:patch_global("stl", {
     nvim = {
       buf = {
@@ -71,12 +79,8 @@ local function stub_close(unsaved_bufnr, tab)
         end,
       },
     },
-    reporter = {
-      warn = function(opts)
-        warnings[#warnings + 1] = opts.message
-      end,
-    },
   })
+  local warnings = bootstrap.with_reporter(t).warn
   t:patch_global("dot", {
     path = {
       cwd = function()
@@ -123,7 +127,7 @@ t:test("tab-local close keeps buffers with unsaved changes in the tab and report
 
   t.assert_same({ saved_bufnr }, closed, "buffers taken off the tab")
   t.assert_same({ saved_bufnr }, deleted, "deleted buffers")
-  t.assert_same({ "Kept buffers with unsaved changes: 62.lua" }, warnings, "report")
+  t.assert_same({ "Kept buffers with unsaved changes: 62.lua" }, messages(warnings), "report")
 end)
 
 t:test("close stays on a source buffer with unsaved changes", function()
@@ -150,19 +154,18 @@ t:test("close stays on a source buffer with unsaved changes", function()
 
   t.assert_false(switched, "the window keeps the buffer")
   t.assert_same({}, deleted, "deleted buffers")
-  t.assert_same({ "Kept buffers with unsaved changes: 71.lua" }, warnings, "report")
+  t.assert_same({ "Kept buffers with unsaved changes: 71.lua" }, messages(warnings), "report")
 end)
 
 ---Loads Find Buffers with its collaborators stubbed, then presses its close key on the selected buffer.
 ---@param unsaved                       boolean Whether the selected buffer has unsaved changes.
----@return { selected: integer, candidates: integer[]|nil, deleted: integer[], warnings: string[] }
+---@return { selected: integer, candidates: integer[]|nil, deleted: integer[], warnings: table[] }
 local function close_in_find_buffers(unsaved)
   local selected_bufnr = 51
   local unrelated_bufnr = 52
   local props = nil ---@type table|nil
   local candidates = nil ---@type integer[]|nil
   local deleted = {} ---@type integer[]
-  local warnings = {} ---@type string[]
   local picker = {
     _composer = {
       get_result_lnum = function()
@@ -212,17 +215,13 @@ local function close_in_find_buffers(unsaved)
         end,
       },
     },
-    reporter = {
-      warn = function(opts)
-        warnings[#warnings + 1] = opts.message
-      end,
-    },
     table = {
       find_index = function()
         return 1
       end,
     },
   })
+  local warnings = bootstrap.with_reporter(t).warn
   t:patch_global("dot", {
     context = {
       select = {
@@ -301,7 +300,7 @@ t:test("find-buffers close keeps a buffer with unsaved changes", function()
 
   t.assert_nil(result.candidates, "no tab let the buffer go")
   t.assert_same({}, result.deleted, "deleted buffers")
-  t.assert_same({ "Kept a buffer with unsaved changes: a.lua" }, result.warnings, "report")
+  t.assert_same({ "Kept a buffer with unsaved changes: a.lua" }, messages(result.warnings), "report")
 end)
 
 t:run()

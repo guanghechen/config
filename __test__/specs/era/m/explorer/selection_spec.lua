@@ -1,5 +1,6 @@
-local fixture = require("__test__.support.explorer").new()
-local t, await = fixture.t, fixture.await
+local t = require("__test__.support.harness").new()
+local fixture = require("__test__.support.explorer").new(t)
+local await = fixture.await
 local Task = require("ux.treeview.task")
 local jobs = require("era.m.explorer.jobs")
 local Session = require("era.m.explorer.session")
@@ -56,13 +57,7 @@ t:test("copying paths offers the choices one row below and four columns right of
   local selected = selected_directory()
   local parent = vim.api.nvim_get_current_win() ---@type integer
   -- A float opened with the intended offset from the same cursor gives the expected placement.
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
-  local reference = vim.api.nvim_open_win(bufnr, false, {
+  local reference = t:window(t:buffer(), {
     relative = "cursor",
     row = 1,
     col = 4,
@@ -90,16 +85,13 @@ end)
 
 t:test("read-only selection loads missing children without scanning a fully selected directory", function()
   local selected = selected_directory()
-  local captured
-  t:patch_table(era.fn, "select_copy_filepaths", function(options)
-    captured = options.filepaths
-  end)
+  local copied = fixture.record_copy()
   await(selected.action:auxiliary("copy_path"))
-  t.assert_same({ selected.path .. "/dir" }, captured)
+  t.assert_same({ selected.path .. "/dir" }, copied.filepaths)
   make_pending(selected)
-  captured = nil
+  copied.filepaths = nil
   await(selected.action:auxiliary("copy_path"))
-  t.assert_same({ selected.path .. "/dir/b", selected.path .. "/dir/c" }, captured)
+  t.assert_same({ selected.path .. "/dir/b", selected.path .. "/dir/c" }, copied.filepaths)
   t.assert_false(await(selected.session.state:inspect_selection()).summary.pending)
   t.assert_false(selected.session:busy())
   t.assert_eq(2, await(selected.session.state:inspect_selection()).subtree_roots:len())
@@ -112,14 +104,11 @@ t:test("a paged directory exports every selected file once after excluding one c
     fixture.write(string.format("%s/dir/file-%04d", selected.path, index))
   end
   make_pending(selected)
-  local captured
-  t:patch_table(era.fn, "select_copy_filepaths", function(options)
-    captured = options.filepaths
-  end)
+  local copied = fixture.record_copy()
   await(selected.action:auxiliary("copy_path"))
-  t.assert_eq(2999, #captured)
+  t.assert_eq(2999, #copied.filepaths)
   local seen = {}
-  for _, path in ipairs(captured) do
+  for _, path in ipairs(copied.filepaths) do
     t.assert_false(seen[path] == true, "duplicate source: " .. path)
     t.assert_false(path == selected.path .. "/dir/a")
     seen[path] = true
@@ -138,21 +127,15 @@ t:test("cancelling source loading discards late results and preserves the select
     waiting = true
     return pending
   end)
-  local captured
-  t:patch_table(era.fn, "select_copy_filepaths", function(options)
-    captured = options.filepaths
-  end)
+  local copied = fixture.record_copy()
   local future = selected.action:auxiliary("copy_path")
   t.wait_until(function()
     return waiting
   end, 10000)
   t.assert_true(selected.session:busy() and jobs.pending())
   t.assert_eq("loading selection · <Space> cancel", selected.session:status_text())
-  local blocked = selected.action:auxiliary("copy_path")
-  t.wait_until(function()
-    return blocked:is_done()
-  end, 10000)
-  t.assert_true(blocked:is_failed())
+  local ok = t.settle(selected.action:auxiliary("copy_path"))
+  t.assert_false(ok)
   t:patch_table(vim.ui, "select", function(items, _, done)
     t.assert_true(vim.tbl_contains(items, "Cancel operation"))
     done("Cancel operation")
@@ -160,7 +143,7 @@ t:test("cancelling source loading discards late results and preserves the select
   selected.action:menu()
   resolve({ kind = "Ready" })
   await(future)
-  t.assert_nil(captured)
+  t.assert_nil(copied.filepaths)
   t.assert_false(selected.session:busy() or jobs.pending())
   t.assert_eq("copy", selected.session:mode())
   restore()
@@ -168,7 +151,7 @@ t:test("cancelling source loading discards late results and preserves the select
     return not selected.session.data:native():is_busy()
   end, 10000)
   await(selected.action:auxiliary("copy_path"))
-  t.assert_eq(2, #captured)
+  t.assert_eq(2, #copied.filepaths)
 end)
 
 t:test("a preparation rejection releases its lock without consuming the selection", function()
@@ -177,17 +160,11 @@ t:test("a preparation rejection releases its lock without consuming the selectio
   t:patch_table(Task, "prepare_sources", function()
     return stl.c.Future.resolve({ kind = "Rejected", error = { code = "Io", message = "directory is unavailable" } })
   end)
-  local captured
-  t:patch_table(era.fn, "select_copy_filepaths", function(options)
-    captured = options.filepaths
-  end)
-  local future = selected.action:auxiliary("copy_path")
-  t.wait_until(function()
-    return future:is_done()
-  end, 10000)
-  t.assert_true(future:is_failed())
-  t.assert_true(future:get_error():find("directory is unavailable", 1, true) ~= nil)
-  t.assert_nil(captured)
+  local copied = fixture.record_copy()
+  local ok, err = t.settle(selected.action:auxiliary("copy_path"))
+  t.assert_false(ok)
+  t.assert_true(err:find("directory is unavailable", 1, true) ~= nil)
+  t.assert_nil(copied.filepaths)
   t.assert_false(selected.session:busy() or jobs.pending())
   t.assert_eq("copy", selected.session:mode())
 end)
@@ -204,10 +181,7 @@ t:test("real directory read failures retry after permissions recover without a s
     assert(vim.uv.fs_chmod(dirpath, 448))
   end)
   assert(vim.uv.fs_chmod(dirpath, 0))
-  local captured
-  t:patch_table(era.fn, "select_copy_filepaths", function(options)
-    captured = options.filepaths
-  end)
+  local copied = fixture.record_copy()
   for _ = 1, 2 do
     local before = session.data:source():revision()
     local future = selected.action:auxiliary("copy_path")
@@ -215,7 +189,7 @@ t:test("real directory read failures retry after permissions recover without a s
       return future:is_done() and not session.data:native():is_busy()
     end, 10000)
     t.assert_true(future:is_failed(), "unreadable children must fail without partial output")
-    t.assert_nil(captured)
+    t.assert_nil(copied.filepaths)
     t.assert_false(session:busy() or jobs.pending())
     t.assert_eq("copy", session:mode())
     local node = session.data:source():node(selected.directory)
@@ -228,15 +202,15 @@ t:test("real directory read failures retry after permissions recover without a s
   await(session.state:select_node({ selected.directory }, true))
   local before = session.data:source():revision()
   await(selected.action:auxiliary("copy_path"))
-  t.assert_same({ dirpath }, captured)
+  t.assert_same({ dirpath }, copied.filepaths)
   t.assert_eq(before, session.data:source():revision())
   t.assert_eq("error", session.data:source():node(selected.directory).load_state)
   make_pending(selected)
-  captured = nil
+  copied.filepaths = nil
 
   assert(vim.uv.fs_chmod(dirpath, 448))
   await(selected.action:auxiliary("copy_path"))
-  t.assert_same({ dirpath .. "/b", dirpath .. "/c" }, captured)
+  t.assert_same({ dirpath .. "/b", dirpath .. "/c" }, copied.filepaths)
   t.assert_false(session:busy() or jobs.pending())
   t.assert_eq("copy", session:mode())
 end)
@@ -251,22 +225,15 @@ t:test("pending selection is locked before its acquisition reply reaches Lua", f
     waiting = true
     Session.await(pending)
   end)
-  local captured
-  t:patch_table(era.fn, "select_copy_filepaths", function(options)
-    captured = options.filepaths
-  end)
+  local copied = fixture.record_copy()
   local future = selected.action:auxiliary("copy_path")
   t.wait_until(function()
     return waiting
   end, 10000)
-  local cleared = state:clear_selection()
-  t.wait_until(function()
-    return cleared:is_done()
-  end, 10000)
-  t.assert_eq("Busy", cleared:get_result().error.code)
+  t.assert_eq("Busy", t.await(state:clear_selection()).error.code)
   resolve(true)
   await(future)
-  t.assert_same({ selected.path .. "/dir/b", selected.path .. "/dir/c" }, captured)
+  t.assert_same({ selected.path .. "/dir/b", selected.path .. "/dir/c" }, copied.filepaths)
   t.assert_eq("copy", selected.session:mode())
   t.assert_false(selected.session:busy() or jobs.pending())
 end)
@@ -284,14 +251,11 @@ t:test("a selection change queued before acquisition follows owner order", funct
       return native:prepare_selection()
     end,
   })
-  local captured
-  t:patch_table(era.fn, "select_copy_filepaths", function(options)
-    captured = options.filepaths
-  end)
+  local copied = fixture.record_copy()
   await(selected.action:auxiliary("copy_path"))
   restore()
   await(cleared)
-  t.assert_same({ cursor }, captured)
+  t.assert_same({ cursor }, copied.filepaths)
   t.assert_eq(0, await(state:inspect_selection()).subtree_roots:len())
   t.assert_false(session:busy() or jobs.pending())
 end)
@@ -329,10 +293,7 @@ t:test("cancel and disposal retain acquisition ownership until a late lock is re
           end,
         })
       end
-      local captured
-      t:patch_table(era.fn, "select_copy_filepaths", function(options)
-        captured = options.filepaths
-      end)
+      local copied = fixture.record_copy()
       local future = selected.action:auxiliary("copy_path")
       if not before_submit then
         t.wait_until(function()
@@ -346,7 +307,7 @@ t:test("cancel and disposal retain acquisition ownership until a late lock is re
       end
       await(future)
       restore_wait()
-      t.assert_nil(captured)
+      t.assert_nil(copied.filepaths)
       t.assert_true(token ~= nil)
       t.assert_false(state:status().locked or jobs.pending())
       t.assert_nil(session._preparation)
@@ -354,11 +315,7 @@ t:test("cancel and disposal retain acquisition ownership until a late lock is re
         t.assert_nil(session.data)
       else
         local current = await(state:lock_selection())
-        local stale = Task.new(state, token):unlock()
-        t.wait_until(function()
-          return stale:is_done()
-        end, 10000)
-        t.assert_eq("Stale", stale:get_result().error.code)
+        t.assert_eq("Stale", t.await(Task.new(state, token):unlock()).error.code)
         t.assert_true(state:status().locked)
         await(current:unlock())
         t.assert_eq("copy", session:mode())
@@ -377,10 +334,7 @@ t:test("closing or disposing the originating pane suppresses a delayed action", 
       waiting = true
       return pending
     end)
-    local captured
-    t:patch_table(era.fn, "select_copy_filepaths", function(options)
-      captured = options.filepaths
-    end)
+    local copied = fixture.record_copy()
     local future = selected.action:auxiliary("copy_path")
     t.wait_until(function()
       return waiting
@@ -393,7 +347,7 @@ t:test("closing or disposing the originating pane suppresses a delayed action", 
     restore()
     resolve({ kind = "Pending" })
     await(future)
-    t.assert_nil(captured)
+    t.assert_nil(copied.filepaths)
     t.assert_false(jobs.pending())
     if dispose then
       t.assert_nil(selected.session.data)

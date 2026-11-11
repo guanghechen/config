@@ -95,4 +95,24 @@ function M:find(text)
   return nil
 end
 
+---The cells of the screen row that holds `at`, a `find` result.
+---@param at                            table
+---@return table[]
+function M:row_cells(at)
+  return self.grids[at.grid].rows[at.row + 1]
+end
+
+---The text of the screen row that holds `at`, a `find` result, or of its cells `first` to `last`.
+---@param at                            table
+---@param first                         ?integer
+---@param last                          ?integer
+---@return string
+function M:row_text(at, first, last)
+  local cells, text = self:row_cells(at), {} ---@type table[], string[]
+  for col = first or 1, last or #cells do
+    text[#text + 1] = cells[col][1]
+  end
+  return table.concat(text)
+end
+
 return M

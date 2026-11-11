@@ -1,4 +1,5 @@
 local harness = require("__test__.support.harness")
+local process = require("__test__.support.process")
 local t = harness.new()
 
 t:test("Neovim exit acknowledges cancellation of a blocked native blame process", function()
@@ -23,30 +24,10 @@ fn main() {
     })
     :wait(15000)
   t.assert_eq(0, build.code, build.stderr)
-  local command = {
-    vim.v.progpath,
-    "--headless",
-    "-u",
-    "NONE",
-    "-i",
-    "NONE",
-    "-n",
-    "-l",
-    repo .. "/__test__/fixtures/era/m/git/job_exit.lua",
-    repo,
-    root,
-    marker,
-    "blame",
-  }
-  local result = vim
-    .system(command, {
-      text = true,
-      env = {
-        PATH = root .. (windows and ";" or ":") .. (vim.env.PATH or ""),
-        YOZ_TEST_BLAME_MARKER = marker,
-      },
-    })
-    :wait(10000)
+  local result = process.script(t, "__test__/fixtures/era/m/git/job_exit.lua", { repo, root, marker, "blame" }, {
+    PATH = root .. (windows and ";" or ":") .. (vim.env.PATH or ""),
+    YOZ_TEST_BLAME_MARKER = marker,
+  })
   t.assert_eq(0, result.code, result.stderr)
   t.assert_true(result.stdout:find("native-exit-acknowledged", 1, true) ~= nil, "worker acknowledged exit cleanup")
 end)

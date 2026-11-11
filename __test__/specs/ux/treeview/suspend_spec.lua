@@ -2,7 +2,6 @@ local t = require("__test__.support.harness").new()
 local bootstrap = require("__test__.support.bootstrap")
 bootstrap.with_native(t)
 local Future = require("stl.c.future")
-local treeview = require("ux.treeview")
 local support = require("__test__.support.treeview")
 local decorations = require("ux.treeview.decorations")
 
@@ -11,27 +10,15 @@ local fixture = support.fixture
 ---@return integer
 ---@return integer
 local function window()
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  local winnr = vim.api.nvim_open_win(bufnr, false, { relative = "editor", row = 0, col = 0, width = 40, height = 6 })
-  t:defer(function()
-    if vim.api.nvim_win_is_valid(winnr) then
-      vim.api.nvim_win_close(winnr, true)
-    end
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
-  return winnr, bufnr
+  local bufnr = t:buffer()
+  return t:window(bufnr, { relative = "editor", row = 0, col = 0, width = 40, height = 6 }), bufnr
 end
 
 t:test("suspension retains ownership, rebinds a window and restores each window's options", function()
   local data, state = fixture()
   local first, original = window()
   vim.api.nvim_set_option_value("wrap", true, { win = first })
-  local view = treeview.attach(state, { winnr = first, keymaps = false })
-  t:defer(function()
-    view:detach()
-  end)
+  local view = support.attach(t, state, { winnr = first, keymaps = false })
   t.wait_until(function()
     return view:frame() and not view:status().preparing
   end, 5000)
@@ -80,16 +67,13 @@ t:test("a preparation reply from the released window cannot publish into the res
   local data, state = fixture()
   local first = window()
   local errors, held, stale_commit = {}, nil, false
-  local view = treeview.attach(state, {
+  local view = support.attach(t, state, {
     winnr = first,
     keymaps = false,
     on_error = function(error)
       errors[#errors + 1] = error
     end,
   })
-  t:defer(function()
-    view:detach()
-  end)
   t.wait_until(function()
     return view:frame() and not view:status().preparing
   end, 5000)
@@ -125,7 +109,7 @@ for _, binding in ipairs({ 1, 2 }) do
   t:test("closing during window binding " .. binding .. " does not reactivate the view", function()
     local data, state = fixture()
     local count = 0
-    local view = treeview.attach(state, {
+    local view = support.attach(t, state, {
       winnr = window(),
       keymaps = false,
       on_attach = function(current)
@@ -135,9 +119,6 @@ for _, binding in ipairs({ 1, 2 }) do
         end
       end,
     })
-    t:defer(function()
-      view:detach()
-    end)
     if binding == 2 then
       t.wait_until(function()
         return view:frame() and not view:status().preparing
@@ -154,7 +135,7 @@ end
 t:test("closing the bound window detaches through what wraps detach", function()
   local _, state = fixture()
   local winnr = window()
-  local view = treeview.attach(state, { winnr = winnr, keymaps = false })
+  local view = support.attach(t, state, { winnr = winnr, keymaps = false })
   local calls = {} ---@type (boolean|nil)[]
   local detach = view.detach
   view.detach = function(current, closing)

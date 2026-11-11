@@ -1,11 +1,12 @@
 require("ark.bootstrap").setup()
 local t = require("__test__.support.harness").new()
 local diffview = require("__test__.support.diffview")
+local fs = require("__test__.support.fs")
 local action = require("era.m.diffview.view.workspace.action")
 
 t:test("Changes copy the absolute filepath of the file row at the cursor", function()
   local root = diffview.committed(t, { ["src/main.lua"] = { "main" } })
-  diffview.write(root, "src/main.lua", { "changed" })
+  fs.write(root .. "/src/main.lua", { "changed" })
   local session = diffview.open_workspace(t)
   local selections = {} ---@type era.fn.select_copy_filepath.IParams[]
   t:patch_table(era.fn, "select_copy_filepath", function(params)

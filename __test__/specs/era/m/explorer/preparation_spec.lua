@@ -1,5 +1,6 @@
-local fixture = require("__test__.support.explorer").new()
-local t, await = fixture.t, fixture.await
+local t = require("__test__.support.harness").new()
+local fixture = require("__test__.support.explorer").new(t)
+local await = fixture.await
 local Session = require("era.m.explorer.session")
 local jobs = require("era.m.explorer.jobs")
 
@@ -50,13 +51,10 @@ t:test("read-only selection uses one snapshot across unrelated source updates", 
     Session.await(session.data:resolve(path .. "/branch/new"))
     t.assert_true(reply.revisions.data ~= session.data:source():revision())
   end)
-  local captured
-  t:patch_table(era.fn, "select_copy_filepaths", function(options)
-    captured = options.filepaths
-  end)
+  local copied = fixture.record_copy()
   await(widget:action():auxiliary("copy_path"))
   t.assert_true(changed)
-  t.assert_same({ path .. "/a" }, captured)
+  t.assert_same({ path .. "/a" }, copied.filepaths)
   t.assert_false(session:busy())
 end)
 
@@ -75,11 +73,9 @@ t:test("direct transfers reject selection changes even after the selection becom
   end)
   local future = widget:action():transfer("cut")
   restore()
-  t.wait_until(function()
-    return future:is_done()
-  end, 10000)
-  t.assert_true(future:is_failed())
-  t.assert_true(future:get_error():find("selection intent changed", 1, true) ~= nil)
+  local ok, err = t.settle(future)
+  t.assert_false(ok)
+  t.assert_true(err:find("selection intent changed", 1, true) ~= nil)
   t.assert_false(prompted or session:busy() or jobs.pending())
   t.assert_true(vim.uv.fs_stat(path .. "/a") ~= nil)
 end)
@@ -98,12 +94,9 @@ t:test("complete read-only selection coexists with an active job", function()
   t.wait_until(function()
     return confirming
   end, 10000)
-  local captured
-  t:patch_table(era.fn, "select_copy_filepaths", function(options)
-    captured = options.filepaths
-  end)
+  local copied = fixture.record_copy()
   await(widget:action():auxiliary("copy_path"))
-  t.assert_same({ path .. "/a" }, captured)
+  t.assert_same({ path .. "/a" }, copied.filepaths)
   t.assert_true(session.job == job)
   t.assert_nil(session._preparation)
   t.assert_true(session.state:status().locked)
@@ -121,10 +114,7 @@ t:test("cancelling a complete inspection discards its late snapshot without a ta
     waiting = true
     Session.await(pending)
   end)
-  local captured
-  t:patch_table(era.fn, "select_copy_filepaths", function(options)
-    captured = options.filepaths
-  end)
+  local copied = fixture.record_copy()
   local future = widget:action():auxiliary("copy_path")
   t.wait_until(function()
     return waiting
@@ -133,7 +123,7 @@ t:test("cancelling a complete inspection discards its late snapshot without a ta
   jobs.cancel(session)
   resolve(true)
   await(future)
-  t.assert_nil(captured)
+  t.assert_nil(copied.filepaths)
   t.assert_false(session:busy() or jobs.pending())
 end)
 

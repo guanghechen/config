@@ -2,22 +2,16 @@ local harness = require("__test__.support.harness")
 require("ark.bootstrap").setup()
 
 local t = harness.new()
+local fs = require("__test__.support.fs")
+local picker = require("__test__.support.picker")
 local treeview = require("__test__.support.treeview")
-
----@param value                         unknown
----@return stl.c.Observable
-local function observable(value)
-  return stl.c.Observable.from_value(value)
-end
 
 ---@param files                         table<string, string>
 ---@return string root
 local function workspace(files)
   local root = t:tempdir()
   for name, text in pairs(files) do
-    local file = assert(io.open(vim.fs.joinpath(root, name), "wb"))
-    file:write(text)
-    file:close()
+    fs.write(vim.fs.joinpath(root, name), text)
   end
   return root
 end
@@ -26,10 +20,7 @@ end
 ---@param name                          string
 ---@return string
 local function read(root, name)
-  local file = assert(io.open(vim.fs.joinpath(root, name), "rb"))
-  local text = file:read("*a")
-  file:close()
-  return text
+  return fs.read(vim.fs.joinpath(root, name))
 end
 
 ---Searches `root` with replacement on and waits until the result is published.
@@ -39,39 +30,20 @@ end
 ---@param regex                         boolean
 ---@return era.m.searcher.FiletreeComposer
 local function search(root, pattern, replacement, regex)
-  local search_pattern = observable("")
-  local composer = era.m.searcher.FiletreeComposer.new({
+  local search_pattern = picker.observable("")
+  local composer = picker.searcher(t, {
     name = "replace-exclusion",
     permanent = false,
     preview = false,
     title = "replace exclusion test",
-
-    excludes = observable({}),
-    flag_exclude = observable(false),
-    flag_foldempty = observable(false),
-    flag_gitignore = observable(false),
-    flag_limit_matches = observable(false),
-    flag_regex = observable(regex),
-    flag_replace = observable(true),
-    flag_case_sensitive = observable(true),
-    flag_selected = observable(false),
-    flag_viewtype = observable("tree"),
-    includes = observable({ "*.txt" }),
-    max_filesize = observable("1M"),
-    max_matches = observable(500),
-    replace_pattern = observable(replacement),
-    rootpath = observable(root),
+    flag_limit_matches = false,
+    flag_regex = regex,
+    flag_replace = true,
+    replace_pattern = replacement,
+    rootpath = root,
     search_pattern = search_pattern,
   })
-  t:defer(function()
-    composer:dispose()
-  end)
-  composer.result:create_win({ border = "none", number = false, winhighlight = "" }, {
-    row = 0,
-    col = 0,
-    width = 80,
-    height = 20,
-  })
+  picker.show_result(composer, 80, 20)
   treeview.await(composer._treeview:ready())
   search_pattern:next(pattern)
   t.wait_until(function()
@@ -84,14 +56,8 @@ end
 ---@param desc                          string
 ---@return nil
 local function run(composer, desc)
-  for _, keymap in ipairs(composer.finder.keymaps) do
-    if keymap.desc == desc then
-      keymap.callback()
-      treeview.await(composer._treeview:ready())
-      return
-    end
-  end
-  error("no action is bound as " .. desc)
+  picker.action(composer, desc)()
+  treeview.await(composer._treeview:ready())
 end
 
 ---Runs `desc` on the row of the `index`-th match of `name`, as pressing its key there does.
@@ -110,7 +76,7 @@ local function run_on_match(composer, name, index, desc)
     end
   end
   local location = assert(locations and locations[index], string.format("%s has no match %d", name, index))
-  local bufnr = vim.api.nvim_create_buf(false, true)
+  local bufnr = t:buffer()
   treeview.await(composer.result.draw(bufnr))
   composer.result:set_lnum_current(assert(composer._treeview:retrieve_lnum(location.locationuuid)))
   treeview.await(composer._treeview:ready())

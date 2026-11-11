@@ -45,54 +45,44 @@ t:test("placement owns identity before registering with an image", function()
   })
 
   local Placement = assert(loadfile("lua/era/m/image/placement.lua"))()
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
+  local bufnr = t:buffer()
 
   local first = Placement.new(bufnr, "first.png", { inline = true, pos = { 1, 0 } })
+  t:defer(function()
+    first:close()
+  end)
   local second = Placement.new(bufnr, "second.png", { inline = true, pos = { 1, 0 } })
+  t:defer(function()
+    second:close()
+  end)
 
   t.assert_eq(11, first.id, "first placement id")
   t.assert_eq(12, second.id, "second placement id")
   t.assert_same({ 11, 12 }, registered, "registered ids")
-  first:close()
-  second:close()
 end)
 
 t:test("image registration requires placement-owned identity", function()
   local Image = assert(loadfile("lua/era/m/image/image.lua"))()
   local image = setmetatable({ placements = {} }, Image)
 
-  local ok, err = pcall(function()
+  t.assert_error(function()
     image:place({})
-  end)
-
-  t.assert_false(ok, "missing placement identity")
-  t.assert_true(tostring(err):find("placement.id", 1, true) ~= nil, "identity error")
+  end, "placement.id", "missing placement identity")
 end)
 
 t:test("inline validates the injected document contract synchronously", function()
   local Inline = assert(loadfile("lua/era/m/image/inline.lua"))()
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
+  local bufnr = t:buffer()
 
-  local ok_document, document_err = pcall(Inline.new, bufnr, nil)
-  local ok_find, find_err = pcall(Inline.new, bufnr, {})
-  local ok_math, math_err = pcall(Inline.new, bufnr, { find_visible = function() end })
-
-  t.assert_false(ok_document, "missing document")
-  t.assert_true(tostring(document_err):find("document should be a table", 1, true) ~= nil, "document error")
-  t.assert_false(ok_find, "missing find_visible")
-  t.assert_true(tostring(find_err):find("document.find_visible", 1, true) ~= nil, "find_visible error")
-  t.assert_false(ok_math, "missing math_enabled")
-  t.assert_true(tostring(math_err):find("document.math_enabled", 1, true) ~= nil, "math_enabled error")
+  t.assert_error(function()
+    Inline.new(bufnr, nil)
+  end, "document should be a table", "missing document")
+  t.assert_error(function()
+    Inline.new(bufnr, {})
+  end, "document.find_visible", "missing find_visible")
+  t.assert_error(function()
+    Inline.new(bufnr, { find_visible = function() end })
+  end, "document.math_enabled", "missing math_enabled")
 end)
 
 t:test("image sizing preserves the state facade", function()
@@ -150,13 +140,8 @@ t:test("terminal output reads the environment owner without loading state", func
 end)
 
 t:test("document injects its query contract into inline rendering", function()
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local bufnr = t:buffer()
   local provider = nil ---@type era.m.image.inline.IDocument|nil
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
   t:patch_table(package.loaded, "era.m.image.inline", {
     new = function(_, document)
       provider = document

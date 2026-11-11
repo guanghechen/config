@@ -26,14 +26,7 @@ end
 ---@param name                          string
 ---@return integer
 local function named_buffer(name)
-  local bufnr = vim.api.nvim_create_buf(true, true)
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
-  vim.api.nvim_buf_set_name(bufnr, ROOT .. "/" .. name)
-  return bufnr
+  return t:buffer(nil, { name = ROOT .. "/" .. name, listed = true, scratch = true })
 end
 
 ---@param name                          string

@@ -3,11 +3,7 @@ local t = require("__test__.support.harness").new()
 t:test("symbol preview clears its range when the filter or source removes the target", function()
   local filepath = vim.fs.joinpath(t:tempdir(), "sample.lua")
   vim.fn.writefile({ "local function sample()", "  return true", "end" }, filepath)
-  local ui = require("__test__.support.ui").new()
-  t:defer(function()
-    ui:close()
-  end)
-  ui:start({ width = 160, height = 50, runtime = "ark" })
+  local ui = require("__test__.support.ui").open(t, { width = 160, height = 50, runtime = "ark" })
   ui:lua(
     [[
     local filepath = ...

@@ -1,3 +1,4 @@
+local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
 local t = harness.new()
@@ -18,9 +19,10 @@ local function setup(opts)
   local calls = {} ---@type era.m.paste.test.ICall[]
   local idle_callback = nil ---@type fun()|nil
   local idle_pending = false
+  local schedule = bootstrap.with_schedule(t)
   local runtime = {
     events = {},
-    scheduled = {},
+    scheduled = schedule.callbacks,
     flush_idle = function()
       if idle_pending and idle_callback ~= nil then
         idle_pending = false
@@ -57,9 +59,6 @@ local function setup(opts)
   end)
   t:patch_table(vim.fn, "getcmdtype", function()
     return opts.cmdtype or ""
-  end)
-  t:patch_table(vim, "schedule", function(callback)
-    runtime.scheduled[#runtime.scheduled + 1] = callback
   end)
   t:patch_table(vim.api, "nvim_buf_is_valid", function()
     return true

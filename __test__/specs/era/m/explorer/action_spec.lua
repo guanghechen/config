@@ -1,5 +1,7 @@
-local fixture = require("__test__.support.explorer").new()
-local t, await, write = fixture.t, fixture.await, fixture.write
+local t = require("__test__.support.harness").new()
+local fixture = require("__test__.support.explorer").new(t)
+local fs = require("__test__.support.fs")
+local await, write = fixture.await, fixture.write
 
 ---@param widget                        era.m.explorer.Widget
 ---@param mark                          string
@@ -76,14 +78,7 @@ end)
 t:test("rename preserves a modified buffer and delete leaves that buffer alive", function()
   local path = t:tempdir()
   write(path .. "/a")
-  local bufnr = vim.api.nvim_create_buf(true, false)
-  vim.api.nvim_buf_set_name(bufnr, path .. "/a")
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "unsaved content" })
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
+  local bufnr = t:buffer({ "unsaved content" }, { name = path .. "/a", listed = true })
   local widget = fixture.widget(path)
   fixture.cursor(widget, path .. "/a")
   await(widget:action():operate({ kind = "rename", name = "renamed" }))
@@ -122,10 +117,7 @@ t:test("accepting Rename's default preserves a native Unix name containing a bac
   fixture.idle(widget)
   t.assert_eq(name, default)
   t.assert_eq(nil, vim.uv.fs_stat(path .. "/b"))
-  local fd = assert(vim.uv.fs_open(path .. "/" .. name, "r", 384))
-  local content = assert(vim.uv.fs_read(fd, 4, 0))
-  assert(vim.uv.fs_close(fd))
-  t.assert_eq("test", content)
+  t.assert_eq("test", fs.read(path .. "/" .. name))
 end)
 
 t:test("a pending conflict survives closing the pane and cancellation preserves selection", function()
@@ -149,10 +141,7 @@ t:test("a pending conflict survives closing the pane and cancellation preserves 
   widget:hide()
   t.assert_false(job:status().terminal)
   widget:focus()
-  t.wait_until(function()
-    local _, view = fixture.context(widget)
-    return view and view:frame()
-  end, 10000)
+  fixture.shown(widget)
   t.assert_true(session.state:status().locked)
   require("era.m.explorer.jobs").cancel(session)
   fixture.idle(widget)
@@ -274,16 +263,13 @@ t:test("create prefixes respect native root separators and preserve the captured
         end,
       },
     }
-    local future = Jobs.start(session, {
+    local ok, err = t.settle(Jobs.start(session, {
       frame = function()
         return {}
       end,
-    }, { kind = "create" })
-    t.wait_until(function()
-      return future:is_done()
-    end, 5000)
-    t.assert_true(future:is_failed())
-    t.assert_true(future:get_error():find("stop before native create", 1, true) == 1, future:get_error())
+    }, { kind = "create" }))
+    t.assert_false(ok)
+    t.assert_true(err:find("stop before native create", 1, true) == 1, err)
     t.assert_eq(case.default, default, case.destination)
     t.assert_eq(destination, captured.target)
     t.assert_eq("new.txt", captured.path)
@@ -431,13 +417,7 @@ t:test("rename applies LSP edits before IO and notifies only after a successful 
   local path = t:tempdir()
   write(path .. "/a.lua")
   write(path .. "/use.lua")
-  local bufnr = vim.fn.bufadd(path .. "/use.lua")
-  vim.fn.bufload(bufnr)
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
+  local bufnr = fixture.load_buffer(path .. "/use.lua")
   local before, after = 0, 0
   local client = {
     offset_encoding = "utf-16",
@@ -592,11 +572,8 @@ t:test("a non-missing resolve error cannot authorize creating parents through it
     end
     return resolve(self, filepath)
   end)
-  local operation = widget:action():operate({ kind = "copy_to_path", path = path .. "/blocked/copied" })
-  t.wait_until(function()
-    return operation:is_done()
-  end, 10000)
-  t.assert_true(operation:is_failed())
+  local ok = t.settle(widget:action():operate({ kind = "copy_to_path", path = path .. "/blocked/copied" }))
+  t.assert_false(ok)
   t.assert_nil(vim.uv.fs_stat(path .. "/blocked"))
   fixture.idle(widget)
 end)
@@ -611,12 +588,9 @@ t:test("copy to an alias inside the source is rejected before creating missing p
   assert(vim.uv.fs_symlink("source", path .. "/alias"))
   local widget = fixture.widget(path)
   fixture.cursor(widget, path .. "/source")
-  local operation = widget:action():operate({ kind = "copy_to_path", path = path .. "/alias/created/copy" })
-  t.wait_until(function()
-    return operation:is_done()
-  end, 10000)
-  t.assert_true(operation:is_failed())
-  t.assert_true(operation:get_error():find("inside its source", 1, true) ~= nil)
+  local ok, err = t.settle(widget:action():operate({ kind = "copy_to_path", path = path .. "/alias/created/copy" }))
+  t.assert_false(ok)
+  t.assert_true(err:find("inside its source", 1, true) ~= nil)
   t.assert_eq(nil, vim.uv.fs_stat(path .. "/source/created"))
   fixture.idle(widget)
 end)
@@ -627,17 +601,8 @@ t:test("an unrelated non-UTF8 buffer does not interrupt successful move synchron
   end
   local path = t:tempdir()
   write(path .. "/a")
-  local raw, normal = vim.api.nvim_create_buf(true, false), vim.fn.bufadd(path .. "/a")
-  vim.fn.bufload(normal)
-  vim.api.nvim_buf_set_name(raw, path .. "/" .. string.char(255))
-  vim.api.nvim_buf_set_lines(normal, 0, -1, false, { "unsaved" })
-  t:defer(function()
-    for _, bufnr in ipairs({ raw, normal }) do
-      if vim.api.nvim_buf_is_valid(bufnr) then
-        vim.api.nvim_buf_delete(bufnr, { force = true })
-      end
-    end
-  end)
+  local raw = t:buffer(nil, { name = path .. "/" .. string.char(255), listed = true })
+  local normal = fixture.load_buffer(path .. "/a", { "unsaved" })
   local widget = fixture.widget(path)
   fixture.cursor(widget, path .. "/a")
   await(widget:action():operate({ kind = "rename", name = "b" }))

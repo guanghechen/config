@@ -1,28 +1,19 @@
 local UI = require("__test__.support.ui")
 local t = require("__test__.support.harness").new()
 
----@return __test__.support.UI
-local function child()
-  local ui = UI.new()
-  t:defer(function()
-    ui:close()
-  end)
-  return ui
-end
-
 t:test("a predicate that makes RPC requests still times out", function()
-  local ui = child()
+  local ui = UI.open(t)
   local start = vim.uv.hrtime()
-  local ok, err = pcall(ui.wait_until, ui, function()
-    return ui:lua("return false")
-  end, 50, "remote condition")
-  t.assert_false(ok, "unready remote condition")
-  t.assert_true(tostring(err):find("remote condition within 50 ms", 1, true) ~= nil, tostring(err))
+  t.assert_error(function()
+    ui:wait_until(function()
+      return ui:lua("return false")
+    end, 50, "remote condition")
+  end, "remote condition within 50 ms", "unready remote condition")
   t.assert_true((vim.uv.hrtime() - start) / 1e6 < 2000, "responsive RPC cannot prevent the polling deadline")
 end)
 
 t:test("polling stops when the remote condition becomes true", function()
-  local ui = child()
+  local ui = UI.open(t)
   local value = ui:wait_until(function()
     return ui:lua("poll_count = (poll_count or 0) + 1; return poll_count == 3 and 'ready'")
   end, 1000)
@@ -31,7 +22,7 @@ t:test("polling stops when the remote condition becomes true", function()
 end)
 
 t:test("a message from the child ends the wait between polls", function()
-  local ui = child()
+  local ui = UI.open(t)
   local notified = false
   ui.on_notification = function(method)
     notified = notified or method == "ready"
@@ -46,7 +37,7 @@ t:test("a message from the child ends the wait between polls", function()
 end)
 
 t:test("notifications reach the child and start prepares the checkout runtime", function()
-  local ui = child()
+  local ui = UI.open(t)
   ui:notify("nvim_set_var", "notified", 1)
   ui:start({ width = 40, height = 10, runtime = "native" })
   t.assert_eq(1, ui:lua("return vim.g.notified"))
@@ -54,6 +45,23 @@ t:test("notifications reach the child and start prepares the checkout runtime", 
     return ui.redraws > 0
   end, 5000, "attached UI receives redraws")
   t.assert_true(ui:lua("return type(yoz.fuzzy) == 'table' and stl.c.Future ~= nil and reports ~= nil"))
+end)
+
+t:test("open starts the child with its runtime and closes it when the case ends", function()
+  local ui ---@type __test__.support.UI
+  local inner = require("__test__.support.harness").new()
+  inner:test("case", function()
+    ui = UI.open(inner, { runtime = "native" })
+    t.assert_true(ui:lua("return reports ~= nil"), "started with the native runtime")
+  end)
+  t.assert_eq(1, inner:run({ exit = false, quiet = true }).passed)
+  t.assert_true(ui.exit_code ~= nil, "closed with its case")
+end)
+
+t:test("wait_lua passes arguments to the chunk and returns its value", function()
+  local ui = UI.open(t)
+  ui:lua("vim.defer_fn(function() ready = true end, 50)")
+  t.assert_eq("ready:7", ui:wait_lua("local n = ...; return ready and 'ready:' .. n", 5000, "deferred flag", 7))
 end)
 
 t:run()

@@ -1,3 +1,4 @@
+local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
 local t = harness.new()
@@ -8,7 +9,7 @@ local t = harness.new()
 ---@field fail_message                  string|nil
 ---@field flush                         fun(): nil
 ---@field reports                       { level: integer, options: table }[]
----@field scheduled                     fun()[]
+---@field drain                         fun(): nil Runs the queued `vim.schedule` callbacks.
 ---@field transient                     string
 ---@field command                       string
 ---@field mode                          string
@@ -20,13 +21,14 @@ local t = harness.new()
 
 ---@return era.dressing.ui_attach.messages, era.dressing.ui_attach.messages.test.IRuntime
 local function setup()
+  local schedule = bootstrap.with_schedule(t)
   local runtime = {
     deferred = {},
     errors = {},
     fail_message = nil,
     flush = function() end,
     reports = {},
-    scheduled = {},
+    drain = schedule.drain,
     transient = "",
     command = "",
     mode = "",
@@ -108,9 +110,6 @@ local function setup()
     t.assert_eq(3000, timeout, "transient timeout")
     runtime.deferred[#runtime.deferred + 1] = callback
   end)
-  t:patch_table(vim, "schedule", function(callback)
-    runtime.scheduled[#runtime.scheduled + 1] = callback
-  end)
   t:patch_table(vim.fn, "getreg", function(register)
     t.assert_eq("/", register, "search register")
     return runtime.search_pattern
@@ -134,10 +133,7 @@ local next_task_id = 0
 ---@return nil
 local function run_scheduled(runtime)
   runtime.flush()
-  while #runtime.scheduled > 0 do
-    local callback = table.remove(runtime.scheduled, 1)
-    callback()
-  end
+  runtime.drain()
 end
 
 ---@param kind                          string

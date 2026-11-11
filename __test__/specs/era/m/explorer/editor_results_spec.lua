@@ -1,21 +1,7 @@
-local fixture = require("__test__.support.explorer").new()
-local t, await = fixture.t, fixture.await
+local t = require("__test__.support.harness").new()
+local fixture = require("__test__.support.explorer").new(t)
+local await = fixture.await
 local buffers = require("era.m.explorer.buffers")
-
----@param path                          string
----@param contents                      string
----@return integer
-local function edited_buffer(path, contents)
-  local bufnr = vim.fn.bufadd(path)
-  vim.fn.bufload(bufnr)
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { contents })
-  return bufnr
-end
 
 ---@param value                         any
 ---@return nil
@@ -36,7 +22,7 @@ t:test("a late buffer collision survives 129 successful results without changing
     fixture.write(string.format("%s/file-%03d", path, index))
   end
   local source, target = path .. "/file-001", path .. "/dst/file-001"
-  local from = edited_buffer(source, "unsaved source edits")
+  local from = fixture.load_buffer(source, { "unsaved source edits" })
   local widget = fixture.widget(path)
   local session, view = widget:context()
   local nodes = {}
@@ -53,13 +39,9 @@ t:test("a late buffer collision survives 129 successful results without changing
     if item.source == source then
       t.assert_eq("success", item.status)
       t.assert_nil(vim.uv.fs_stat(source))
-      to = edited_buffer(target, "unsaved target edits")
+      to = fixture.load_buffer(target, { "unsaved target edits" })
     end
     return sync(owner, item)
-  end)
-  local messages = {}
-  t:patch_table(stl.reporter, "info", function(value)
-    messages[#messages + 1] = value.message
   end)
   -- Observe collection after the caller's temporary Job userdata leaves its stack frame.
   ---@return table
@@ -86,7 +68,9 @@ t:test("a late buffer collision survives 129 successful results without changing
   t.assert_nil(issue.sync_error)
   t.assert_eq(1, issue.editor_error.failures)
   t.assert_true(issue.editor_error.message:find("target name belongs to another buffer", 1, true) ~= nil)
-  t.assert_true(messages[#messages]:find("130 succeeded, 0 failed, 0 skipped, 1 editor sync issue", 1, true) ~= nil)
+  t.assert_true(
+    fixture.infos[#fixture.infos]:find("130 succeeded, 0 failed, 0 skipped, 1 editor sync issue", 1, true) ~= nil
+  )
   t.assert_eq(0, session.issues_omitted)
   t.assert_true(session._issue_bytes <= 1024 * 1024)
   assert_plain_result(issue)
@@ -103,7 +87,9 @@ t:test("a late buffer collision survives 129 successful results without changing
     done("Last results")
   end)
   widget:action():menu()
-  t.assert_true(messages[#messages]:find("Editor synchronization: " .. issue.editor_error.message, 1, true) ~= nil)
+  t.assert_true(
+    fixture.infos[#fixture.infos]:find("Editor synchronization: " .. issue.editor_error.message, 1, true) ~= nil
+  )
   t.assert_eq(target, vim.b[from].filetree_move_target)
   local written = pcall(vim.api.nvim_buf_call, from, function()
     vim.cmd.write({ bang = true })
@@ -131,7 +117,7 @@ t:test("an unexpected notification failure preserves earlier buffer failures in 
   local path = t:tempdir()
   local source, target = path .. "/source", path .. "/target"
   fixture.write(source)
-  local bufnr = edited_buffer(source, "unsaved edits")
+  local bufnr = fixture.load_buffer(source, { "unsaved edits" })
   assert(vim.uv.fs_rename(source, target))
   t:patch_table(era.m.lsp.event, "rename_buf", function()
     error("injected buffer rename failure", 0)
@@ -241,10 +227,6 @@ for _, large in ipairs({ false, true }) do
           t.assert_eq("...", item.editor_error.message:sub(-3))
         end
       end
-      local message
-      t:patch_table(stl.reporter, "info", function(value)
-        message = value.message
-      end)
       t:patch_table(vim.ui, "select", function(_, _, done)
         done("Last results")
       end)
@@ -252,6 +234,7 @@ for _, large in ipairs({ false, true }) do
       fixture.idle(widget)
       session, view = widget:context()
       widget:action():menu()
+      local message = fixture.infos[#fixture.infos]
       t.assert_true(message:find("520 editor sync issues", 1, true) ~= nil)
       t.assert_true(message:find(session.issues_omitted .. " additional issues omitted", 1, true) ~= nil)
       await(session:operate(view, { kind = "create", target = target, path = "next" }))

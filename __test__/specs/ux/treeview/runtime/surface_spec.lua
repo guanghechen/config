@@ -10,12 +10,8 @@ t:test("closing the tab of a view's only window still reports TabClosed", functi
   local _, state = fixture()
   vim.cmd.tabnew()
   -- The view takes over the window's empty scratch buffer, so no other buffer can replace it.
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_win_set_buf(0, bufnr)
-  local view = treeview.attach(state, { bufnr = bufnr, keymaps = false })
-  t:defer(function()
-    view:detach()
-  end)
+  local bufnr = t:buffer(nil, { current = true })
+  local view = support.attach(t, state, { bufnr = bufnr, keymaps = false })
   local closed = false
   local group = vim.api.nvim_create_augroup("TreeviewTabClosedTest", { clear = true })
   t:defer(function()
@@ -33,14 +29,12 @@ t:test("closing the tab of a view's only window still reports TabClosed", functi
   t.assert_true(view:status().closed, "the view closes with its window")
   t.wait_until(function()
     return not vim.api.nvim_buf_is_valid(bufnr)
-  end, 1000, "the view's buffer is deleted once its window is gone")
+  end, 5000, "the view's buffer is deleted once its window is gone")
 end)
 
 t:test("an empty scratch buffer transfers to the view without entering another buffer", function()
   local _, state = fixture()
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_set_option_value("filetype", "custom_tree", { buf = bufnr })
-  vim.api.nvim_win_set_buf(0, bufnr)
+  local bufnr = t:buffer(nil, { filetype = "custom_tree", current = true })
   local enters = 0
   local group = vim.api.nvim_create_augroup("TreeviewBufferTransferTest", { clear = true })
   t:defer(function()
@@ -52,10 +46,7 @@ t:test("an empty scratch buffer transfers to the view without entering another b
       enters = enters + 1
     end,
   })
-  local view = treeview.attach(state, { bufnr = bufnr, keymaps = false })
-  t:defer(function()
-    view:detach()
-  end)
+  local view = support.attach(t, state, { bufnr = bufnr, keymaps = false })
   t.wait_until(function()
     return view:frame() ~= nil
   end, 5000)
@@ -68,11 +59,7 @@ end)
 
 t:test("buffer transfer rejects existing contents before claiming the surface", function()
   local _, state = fixture()
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  t:defer(function()
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "keep this content" })
+  local bufnr = t:buffer({ "keep this content" })
   vim.api.nvim_set_option_value("modified", false, { buf = bufnr })
   local ok = pcall(treeview.attach, state, { bufnr = bufnr, keymaps = false })
   t.assert_false(ok)
@@ -82,10 +69,7 @@ end)
 t:test("an empty buffer already owned by another view cannot be transferred", function()
   local data = treeview.new_data()
   local state = t.await(data:create_state({ kind = "forest", nodes = {} }))
-  local view = treeview.attach(state, { keymaps = false })
-  t:defer(function()
-    view:detach()
-  end)
+  local view = support.attach(t, state, { keymaps = false })
   t.wait_until(function()
     return view:frame() and not view._busy
   end, 5000)
@@ -102,7 +86,7 @@ t:test("buffer unload revokes pending frame work before deferred surface cleanup
   local pending = require("stl.c.future").new(function(_, failed)
     reject = failed
   end)
-  local view = treeview.attach(state, {
+  local view = support.attach(t, state, {
     keymaps = false,
     prepare_frame = function()
       preparing = true
@@ -115,9 +99,6 @@ t:test("buffer unload revokes pending frame work before deferred surface cleanup
       frames = frames + 1
     end,
   })
-  t:defer(function()
-    view:detach()
-  end)
   t.wait_until(function()
     return preparing == true
   end, 5000)
@@ -140,10 +121,7 @@ t:test("buffer unload revokes pending frame work before deferred surface cleanup
   view:detach()
   view:detach()
   support.applied(state:dispatch({ kind = "set_cursor", node = b }, { frame = state:snapshot() }))
-  local replacement = treeview.attach(state, { keymaps = false })
-  t:defer(function()
-    replacement:detach()
-  end)
+  local replacement = support.attach(t, state, { keymaps = false })
   t.wait_until(function()
     return replacement:frame() ~= nil and not replacement:status().preparing
   end, 5000)
@@ -153,15 +131,12 @@ end)
 t:test("dedicated buffers publish body, delta, decorations, and empty sentinel", function()
   local data, state, a = fixture()
   local errors = {}
-  local view = treeview.attach(state, {
+  local view = support.attach(t, state, {
     keymaps = false,
     on_error = function(error)
       errors[#errors + 1] = error
     end,
   })
-  t:defer(function()
-    view:detach()
-  end)
   t.wait_until(function()
     return view:frame() ~= nil
   end, 5000, "initial frame was not published: " .. vim.inspect(errors))
@@ -196,15 +171,12 @@ t:test("partial buffer failure disables input and resynchronizes the complete fr
   support.applied(data:import(records))
   local state = t.await(data:create_state({ kind = "children_of", node = data:source():id("root") }))
   local errors = {}
-  local view = treeview.attach(state, {
+  local view = support.attach(t, state, {
     keymaps = false,
     on_error = function(value)
       errors[#errors + 1] = value
     end,
   })
-  t:defer(function()
-    view:detach()
-  end)
   t.wait_until(function()
     return view:frame() ~= nil
   end, 5000)
@@ -237,10 +209,7 @@ end)
 
 t:test("an external buffer write invalidates mapping until reset", function()
   local _, state = fixture()
-  local view = treeview.attach(state, { keymaps = false, on_error = function() end })
-  t:defer(function()
-    view:detach()
-  end)
+  local view = support.attach(t, state, { keymaps = false, on_error = function() end })
   t.wait_until(function()
     return view:frame() ~= nil
   end, 5000)
@@ -257,7 +226,7 @@ end)
 t:test("attachment installs preparation before the first frame and decoration refresh rejects stale work", function()
   local _, state = fixture()
   local pending, commits = {}, 0
-  local view = treeview.attach(state, {
+  local view = support.attach(t, state, {
     keymaps = false,
     on_attach = function(current)
       t.assert_nil(current:frame())
@@ -270,9 +239,6 @@ t:test("attachment installs preparation before the first frame and decoration re
       end
     end,
   })
-  t:defer(function()
-    view:detach()
-  end)
   t.wait_until(function()
     return #pending == 1
   end, 5000)
@@ -322,15 +288,15 @@ t:test("failed attachment releases the view and restores its original buffer", f
   local data, state = fixture()
   local bufnr = vim.api.nvim_get_current_buf()
   local attached
-  local ok, failure = pcall(treeview.attach, state, {
-    keymaps = false,
-    on_attach = function(view)
-      attached = view
-      error("attachment rejected", 0)
-    end,
-  })
-  t.assert_false(ok)
-  t.assert_true(tostring(failure):find("attachment rejected", 1, true) ~= nil)
+  t.assert_error(function()
+    treeview.attach(state, {
+      keymaps = false,
+      on_attach = function(view)
+        attached = view
+        error("attachment rejected", 0)
+      end,
+    })
+  end, "attachment rejected")
   t.assert_true(attached:status().closed)
   t.assert_eq(nil, next(data._views))
   t.assert_eq(bufnr, vim.api.nvim_get_current_buf())

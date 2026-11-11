@@ -1,5 +1,6 @@
 require("ark.bootstrap").setup()
 local t = require("__test__.support.harness").new()
+local fs = require("__test__.support.fs")
 local treeview = require("__test__.support.treeview")
 local Paths = require("era.view.result_paths")
 local Files = require("era.m.searcher.view.filetree")
@@ -59,9 +60,7 @@ t:test("result rows take whole last characters and keep the CRLF breaks a match 
   local files =
     { ["zh.txt"] = "这是中文文本\n", ["crlf.txt"] = "ab\r\ncd\r\n", ["mark.txt"] = "a" .. mark .. "b\n" }
   for name, text in pairs(files) do
-    local file = assert(io.open(vim.fs.joinpath(root, name), "wb"))
-    file:write(text)
-    file:close()
+    fs.write(vim.fs.joinpath(root, name), text)
   end
   local tree = Files.new({ name = "search rows", tree = Paths.new() })
   t:defer(function()

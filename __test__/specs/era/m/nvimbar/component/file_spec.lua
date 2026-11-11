@@ -11,12 +11,7 @@ t:test("clicking the file path offers the copy choices above the status line at 
   end)
   file.path("f_sl")
 
-  local bufnr = vim.api.nvim_create_buf(true, false) ---@type integer
-  vim.api.nvim_buf_set_name(bufnr, t:tempdir() .. "/main.lua")
-  vim.api.nvim_win_set_buf(0, bufnr)
-  t:defer(function()
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
+  t:buffer(nil, { name = t:tempdir() .. "/main.lua", listed = true, current = true })
 
   assert(clicked, "the path component registers its click handler")()
   local popup = vim.api.nvim_get_current_win() ---@type integer

@@ -1,5 +1,6 @@
-local fixture = require("__test__.support.explorer").new()
-local t, await, write = fixture.t, fixture.await, fixture.write
+local t = require("__test__.support.harness").new()
+local fixture = require("__test__.support.explorer").new(t)
+local await, write = fixture.await, fixture.write
 
 t:test("a hidden Job drains its complete result backlog before releasing the session", function()
   local path = t:tempdir()
@@ -82,14 +83,11 @@ t:test("early failures and skips survive the successful tail and remain availabl
   t.assert_eq(path .. "/file-002", session.issues[2].source)
   t.assert_eq("skipped", session.issues[2].status)
   t.assert_eq(0, session.issues_omitted)
-  local message
-  t:patch_table(stl.reporter, "info", function(value)
-    message = value.message
-  end)
   t:patch_table(vim.ui, "select", function(_, _, done)
     done("Last results")
   end)
   widget:action():menu()
+  local message = fixture.infos[#fixture.infos]
   t.assert_true(message:find("file-001", 1, true) ~= nil)
   t.assert_true(message:find(session.issues[1].error.message, 1, true) ~= nil)
   t.assert_nil(session.job)
@@ -140,17 +138,15 @@ for _, deep in ipairs({ false, true }) do
     else
       t.assert_eq(512, #session.issues)
     end
-    local message
-    t:patch_table(stl.reporter, "info", function(value)
-      message = value.message
-    end)
     t:patch_table(vim.ui, "select", function(_, _, done)
       done("Last results")
     end)
     widget:focus()
     fixture.idle(widget)
     widget:action():menu()
-    t.assert_true(message:find(session.issues_omitted .. " additional issues omitted", 1, true) ~= nil)
+    t.assert_true(
+      fixture.infos[#fixture.infos]:find(session.issues_omitted .. " additional issues omitted", 1, true) ~= nil
+    )
   end)
 end
 

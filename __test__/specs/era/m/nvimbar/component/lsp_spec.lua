@@ -30,17 +30,12 @@ bootstrap.with_runtime(t, {
 local Lsp = assert(loadfile("lua/era/m/nvimbar/component/lsp.lua"))()
 
 t:test("a breadcrumb click jumps to its symbol however far down the file it is", function()
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
   local lines = {} ---@type string[]
   for index = 1, 2000 do
     lines[index] = string.format("local value_%04d = %d", index, index)
   end
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-  local winnr = vim.api.nvim_open_win(bufnr, false, { relative = "editor", row = 0, col = 0, width = 80, height = 10 })
-  t:defer(function()
-    vim.api.nvim_win_close(winnr, true)
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
+  local bufnr = t:buffer(lines)
+  local winnr = t:window(bufnr, { relative = "editor", row = 0, col = 0, width = 80, height = 10 })
   -- Columns of symbols are 1-based.
   symbols = { { name = "near", kind = 12, row = 10, col = 5 }, { name = "far", kind = 12, row = 600, col = 9 } }
   t:patch_table(vim.fn, "getmousepos", function()

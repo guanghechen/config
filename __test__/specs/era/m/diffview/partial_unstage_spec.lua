@@ -1,6 +1,8 @@
 require("ark.bootstrap").setup()
 local t = require("__test__.support.harness").new()
+local bootstrap = require("__test__.support.bootstrap")
 local diffview = require("__test__.support.diffview")
+local fs = require("__test__.support.fs")
 local git = require("__test__.support.git")
 local action = require("era.m.diffview.view.workspace.action")
 local staging = require("era.m.git.staging")
@@ -9,7 +11,7 @@ local workspace_view = require("era.m.diffview.view.workspace.view")
 
 t:test("workspace action forwards the right-buffer index snapshot", function()
   local root = diffview.committed(t, { ["f.txt"] = { "one", "two", "three", "four" } })
-  diffview.write(root, "f.txt", { "one", "INDEX2", "INDEX3", "four" })
+  fs.write(root .. "/f.txt", { "one", "INDEX2", "INDEX3", "four" })
   git.run(root, { "add", "f.txt" })
   local session = diffview.open_workspace(t)
   local right_winnr = assert(session.layout.sbs_right_winnr)
@@ -18,12 +20,7 @@ t:test("workspace action forwards the right-buffer index snapshot", function()
     return vim.api.nvim_buf_get_name(bufnr) == util.gen_index_bufname("f.txt") and vim.b[bufnr].git_object_name ~= nil
   end, 10000, "the index preview")
 
-  local errors = {} ---@type string[]
-  for _, level in ipairs({ "warn", "error" }) do
-    t:patch_table(stl.reporter, level, function(report)
-      errors[#errors + 1] = report.message
-    end)
-  end
+  local reports = bootstrap.with_reporter(t)
   local captured = nil ---@type table|nil
   t:patch_table(era.m.git.buffer, "unstage_range", function(opts)
     captured = opts
@@ -57,7 +54,7 @@ t:test("workspace action forwards the right-buffer index snapshot", function()
   t.assert_eq(3, unstage_opts.range[2], "range end")
   t.assert_true(refreshed, "view refreshed")
   t.assert_false(opened, "refresh owns reopening")
-  t.assert_eq(0, #errors, "no errors")
+  t.assert_eq(0, #reports.warn + #reports.error, "no errors")
 end)
 
 t:test("workspace view binds keymaps after replacing null buffers", function()

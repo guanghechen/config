@@ -8,10 +8,7 @@ local fixture = support.fixture
 
 t:test("source frames coalesce while accepted selection publishes the latest source immediately", function()
   local data, state, a = fixture()
-  local view = treeview.attach(state, { keymaps = false })
-  t:defer(function()
-    view:detach()
-  end)
+  local view = support.attach(t, state, { keymaps = false })
   t.wait_until(function()
     return view:frame() and not view._busy
   end, 5000)
@@ -53,10 +50,7 @@ t:test("the first nonempty source frame bypasses a pending display deadline", fu
   support.applied(data:import({ { key = "root", label = "root", can_expand = true } }))
   local root = data:source():id("root")
   local state = t.await(data:create_state({ kind = "children_of", node = root }))
-  local view = treeview.attach(state, { keymaps = false })
-  t:defer(function()
-    view:detach()
-  end)
+  local view = support.attach(t, state, { keymaps = false })
   t.wait_until(function()
     return view:frame() and view:frame():header().row_count == 0 and not view._busy
   end, 5000)
@@ -84,7 +78,7 @@ t:test("active frame preparation still applies backpressure to subsequent provid
   support.applied(data:batch({ { kind = "insert", key = "root", label = "root", can_expand = true } }))
   local state = t.await(data:create_state({ kind = "children_of", node = data:source():id("root") }))
   local view
-  view = treeview.attach(state, {
+  view = support.attach(t, state, {
     keymaps = false,
     prepare_frame = function()
       if not preparing then
@@ -100,9 +94,6 @@ t:test("active frame preparation still applies backpressure to subsequent provid
     end,
   })
   view._source_after = 0
-  t:defer(function()
-    view:detach()
-  end)
   t.wait_until(function()
     return preparing
   end, 5000)
@@ -133,40 +124,27 @@ t:test("reentrant watch survives an idle result and explicit unwatch stays remov
   async.watch(owner)
   t.wait_until(function()
     return calls >= 2
-  end, 1000)
+  end, 5000)
   async.run({
     poll = function()
       return true, nil
     end,
   })
-  vim.wait(50, function()
-    return false
-  end, 50)
+  vim.wait(50)
   t.assert_eq(2, calls, "an unrelated request must not revive an explicitly removed watcher")
 end)
 
 t:test("a visible idle view sleeps and native publication wakes it without another Lua request", function()
   local data, state, a = fixture()
-  local calls, poll = 0, data._poll
-  t:patch_table(data, "_poll", function(self)
-    calls = calls + 1
-    return poll(self)
-  end)
-  local view = treeview.attach(state, { keymaps = false })
-  t:defer(function()
-    view:detach()
-  end)
+  local polls = support.poll_counter(t, data)
+  local view = support.attach(t, state, { keymaps = false })
   t.wait_until(function()
     return view:frame() and not view._busy
   end, 5000)
-  vim.wait(100, function()
-    return false
-  end, 10)
-  local idle_calls = calls
-  vim.wait(150, function()
-    return false
-  end, 10)
-  t.assert_eq(idle_calls, calls, "an unchanged visible view must not poll on a timer")
+  vim.wait(100)
+  local idle_calls = polls.calls
+  vim.wait(150)
+  t.assert_eq(idle_calls, polls.calls, "an unchanged visible view must not poll on a timer")
   local ticket = data:native():batch({
     base_revision = data:source():revision(),
     operations = { { kind = "update", id = a, label = "awakened" } },
@@ -177,7 +155,7 @@ t:test("a visible idle view sleeps and native publication wakes it without anoth
   local done, result = ticket:poll()
   t.assert_true(done)
   t.assert_eq("Applied", result.kind, vim.inspect(result))
-  t.assert_true(calls > idle_calls)
+  t.assert_true(polls.calls > idle_calls)
 end)
 
 t:test("closing a notification lease releases capacity before Lua garbage collection", function()
@@ -212,14 +190,8 @@ end)
 
 t:test("a failed notification stream reports once and preserves publication through polling", function()
   local data, state, a = fixture()
-  local errors = {}
-  t:patch_table(stl.reporter, "error", function(value)
-    errors[#errors + 1] = value.message
-  end)
-  local view = treeview.attach(state, { keymaps = false })
-  t:defer(function()
-    view:detach()
-  end)
+  local errors = bootstrap.with_reporter(t).error
+  local view = support.attach(t, state, { keymaps = false })
   t.wait_until(function()
     return view:frame() and not view._busy
   end, 5000)
@@ -228,7 +200,7 @@ t:test("a failed notification stream reports once and preserves publication thro
     return data._notification_failed
   end, 5000)
   t.assert_eq(1, #errors)
-  t.assert_true(errors[1]:find("notification stream closed", 1, true) ~= nil)
+  t.assert_true(errors[1].message:find("notification stream closed", 1, true) ~= nil)
   local ticket = data:native():batch({
     base_revision = data:source():revision(),
     operations = { { kind = "update", id = a, label = "recovered" } },
@@ -242,10 +214,7 @@ end)
 
 t:test("native view polling reuses unchanged frames and returns a complete changed frame", function()
   local data, state, a = fixture()
-  local view = treeview.attach(state, { keymaps = false })
-  t:defer(function()
-    view:detach()
-  end)
+  local view = support.attach(t, state, { keymaps = false })
   t.wait_until(function()
     return view:frame() ~= nil
   end, 5000)
@@ -279,7 +248,7 @@ t:test("frame preparation preserves the old publication through retries and stal
       commits[#commits + 1] = label
     end
   end
-  local view = treeview.attach(state, {
+  local view = support.attach(t, state, {
     keymaps = false,
     prepare_frame = function()
       if not delayed then
@@ -296,9 +265,6 @@ t:test("frame preparation preserves the old publication through retries and stal
       errors[#errors + 1] = error
     end,
   })
-  t:defer(function()
-    view:detach()
-  end)
   t.wait_until(function()
     return view:frame() ~= nil
   end, 5000)
@@ -358,27 +324,17 @@ t:test("frame preparation rechecks viewport size and ignores detached completion
   end
   support.applied(data:import(records))
   local state = t.await(data:create_state({ kind = "children_of", node = data:source():id("root") }))
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
-  local winnr = vim.api.nvim_open_win(bufnr, true, {
+  local bufnr = t:buffer()
+  local winnr = t:window(bufnr, {
     relative = "editor",
     row = 0,
     col = 0,
     width = 40,
     height = 6,
     style = "minimal",
-  })
-  t:defer(function()
-    if vim.api.nvim_win_is_valid(winnr) then
-      vim.api.nvim_win_close(winnr, true)
-    end
-  end)
+  }, true)
   local pending, commits = {}, 0
-  local view = treeview.attach(state, {
+  local view = support.attach(t, state, {
     winnr = winnr,
     keymaps = false,
     prepare_frame = function(_, _, first, last)
@@ -387,9 +343,6 @@ t:test("frame preparation rechecks viewport size and ignores detached completion
       end)
     end,
   })
-  t:defer(function()
-    view:detach()
-  end)
   t.wait_until(function()
     return #pending == 1
   end, 5000)

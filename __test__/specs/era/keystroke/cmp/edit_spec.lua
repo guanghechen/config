@@ -7,14 +7,7 @@ local Edit = require("era.keystroke.cmp.edit")
 local Brackets = require("era.keystroke.cmp.brackets")
 
 t:test("applying completion preserves an unlisted source buffer", function()
-  local previous = vim.api.nvim_get_current_buf()
-  local bufnr = vim.api.nvim_create_buf(false, false)
-  t:defer(function()
-    vim.api.nvim_set_current_buf(previous)
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
-  vim.api.nvim_set_current_buf(bufnr)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "al" })
+  local bufnr = t:buffer({ "al" }, { scratch = false, current = true })
   local context = runtime.context("al")
   t:patch_table(require("era.keystroke.cmp.context"), "capture", function()
     return context
@@ -149,15 +142,8 @@ t:test("range boundaries allow insertions and reject interior overlaps", functio
 end)
 
 t:test("additional edits can append at the document's final newline", function()
-  local previous = vim.api.nvim_get_current_buf()
-  local bufnr = vim.api.nvim_create_buf(true, false)
-  t:defer(function()
-    vim.api.nvim_set_current_buf(previous)
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
-  vim.api.nvim_set_current_buf(bufnr)
+  local bufnr = t:buffer({ "al" }, { listed = true, current = true })
   vim.api.nvim_set_option_value("endofline", true, { buf = bufnr })
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "al" })
   local context = runtime.context("al")
   local item = assert(Item.new(context, "lsp", {
     label = "alpha",

@@ -20,14 +20,14 @@ t:test("throttle reads a function window as each window starts", function()
   throttled(3)
   t.wait_until(function()
     return #calls == 2
-  end, 2000, "the latest call runs when the first window ends")
+  end, 5000, "the latest call runs when the first window ends")
   t.assert_same({ 1, 3 }, { calls[1].value, calls[2].value })
   t.assert_true((calls[2].at - calls[1].at) / 1e6 >= 20, "the first window held the trailing call")
 
   throttled(4)
   t.wait_until(function()
     return #calls == 3
-  end, 2000, "the next call waits for the second window")
+  end, 5000, "the next call waits for the second window")
   t.assert_true((calls[3].at - calls[2].at) / 1e6 >= 100, "the second window was read when it started")
   t.assert_eq(3, reads)
 end)

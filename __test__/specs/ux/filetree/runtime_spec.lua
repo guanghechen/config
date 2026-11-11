@@ -1,6 +1,8 @@
-local fixture = require("__test__.support.filetree").new()
-local t, filetree = fixture.t, fixture.filetree
-local await, write = fixture.await, fixture.write
+local t = require("__test__.support.harness").new()
+local fixture = require("__test__.support.filetree").new(t)
+local support = require("__test__.support.treeview")
+local filetree = fixture.filetree
+local attach, await, write = fixture.attach, fixture.await, fixture.write
 
 t:test("directory pages finish while a source publication waits for its display deadline", function()
   local path = t:tempdir()
@@ -9,10 +11,7 @@ t:test("directory pages finish while a source publication waits for its display 
   end
   local data = await(filetree.open(path))
   local state = await(data:create_state())
-  local view = filetree.attach(state, { keymaps = false })
-  t:defer(function()
-    view:detach()
-  end)
+  local view = attach(state, { keymaps = false })
   t.wait_until(function()
     return view:frame() and view:frame():header().row_count == 1200 and not view._busy
   end, 10000)
@@ -61,10 +60,7 @@ t:test("watch revisions reach subscribers and the original handler once through 
   t:defer(function()
     subscription:unsubscribe()
   end)
-  local view = filetree.attach(state, { keymaps = false })
-  t:defer(function()
-    view:detach()
-  end)
+  local view = attach(state, { keymaps = false })
   t.wait_until(function()
     return #wrapped > 0 and wrapped[#wrapped].directories > 0
   end, 10000)
@@ -134,12 +130,7 @@ t:test("native resolve distinguishes missing resources from invalid parent types
   write(path .. "/file")
   local data = await(filetree.open(path))
   for _, case in ipairs({ { path .. "/missing/child", "NotFound" }, { path .. "/file/child", "ProviderError" } }) do
-    local future = data:resolve(case[1])
-    t.wait_until(function()
-      return future:is_done()
-    end, 10000)
-    t.assert_false(future:is_failed(), future:get_error())
-    local result = future:get_result()
+    local result = t.await(data:resolve(case[1]))
     t.assert_eq("Rejected", result.kind)
     t.assert_eq(case[2], result.error.code)
   end
@@ -150,16 +141,8 @@ t:test("a visible idle Filetree sleeps until a real filesystem notification arri
   write(path .. "/first")
   local data = await(filetree.open(path))
   local state = await(data:create_state())
-  local owner, calls = data._tree, 0
-  local poll = owner._poll
-  t:patch_table(owner, "_poll", function(self)
-    calls = calls + 1
-    return poll(self)
-  end)
-  local view = filetree.attach(state, { keymaps = false })
-  t:defer(function()
-    view:detach()
-  end)
+  local polls = support.poll_counter(t, data._tree)
+  local view = attach(state, { keymaps = false })
   t.wait_until(function()
     return view:frame()
       and view:frame():header().row_count == 1
@@ -167,19 +150,14 @@ t:test("a visible idle Filetree sleeps until a real filesystem notification arri
       and not data:native():is_busy()
   end, 10000)
   -- The registration read may finish after watch coverage is first published.
-  local observed_calls, unchanged_since = calls, vim.uv.hrtime()
-  t.wait_until(function()
-    if calls ~= observed_calls then
-      observed_calls, unchanged_since = calls, vim.uv.hrtime()
-    end
-    return vim.uv.hrtime() - unchanged_since >= 150000000
-  end, 5000, "a visible Filetree must become idle after its initial watch registration")
-  local idle_calls = calls
+  local idle_calls = support.wait_steady(function()
+    return polls.calls
+  end, 150, 5000, "a visible Filetree must become idle after its initial watch registration")
   write(path .. "/second")
   t.wait_until(function()
     return view:frame():header().row_count == 2
   end, 10000)
-  t.assert_true(calls > idle_calls)
+  t.assert_true(polls.calls > idle_calls)
 end)
 
 t:test("hidden idle data stops polling and a new request or view resumes it", function()
@@ -187,40 +165,26 @@ t:test("hidden idle data stops polling and a new request or view resumes it", fu
   write(path .. "/first")
   local data = await(filetree.open(path))
   local state = await(data:create_state())
-  local owner, calls, sleeping = data._tree, 0, false
-  local poll = owner._poll
-  t:patch_table(owner, "_poll", function(self)
-    calls = calls + 1
-    local value = poll(self)
-    sleeping = value == nil
-    return value
-  end)
-  local view = filetree.attach(state, { keymaps = false })
-  t:defer(function()
-    view:detach()
-  end)
+  local polls = support.poll_counter(t, data._tree)
+  local view = attach(state, { keymaps = false })
   t.wait_until(function()
     return view:frame() and view:frame():header().row_count == 1
   end, 10000)
   view:detach()
   t.wait_until(function()
-    return sleeping and data:watch_status().directories == 0
+    return polls.sleeping and data:watch_status().directories == 0
   end, 10000)
-  vim.wait(50, function()
-    return false
-  end, 50)
-  local idle_calls = calls
-  vim.wait(50, function()
-    return false
-  end, 50)
-  t.assert_eq(idle_calls, calls, "no polling while this retained data is idle")
+  vim.wait(50)
+  local idle_calls = polls.calls
+  vim.wait(50)
+  t.assert_eq(idle_calls, polls.calls, "no polling while this retained data is idle")
   write(path .. "/second")
   local resource = await(data:resolve(path .. "/second"))
   t.assert_eq(path .. "/second", resource:path())
   t.wait_until(function()
-    return calls > idle_calls and sleeping
+    return polls.calls > idle_calls and polls.sleeping
   end, 10000)
-  view = filetree.attach(state, { keymaps = false })
+  view = attach(state, { keymaps = false })
   t.wait_until(function()
     return view:frame() and view:frame():header().row_count == 2 and data:watch_status().directories > 0
   end, 10000)
@@ -241,26 +205,17 @@ t:test("hidden task deadlines deliver failure without another request and then s
       end,
     }))
     local state = await(data:create_state())
-    local owner, calls, sleeping = data._tree, 0, false
-    local poll = owner._poll
-    t:patch_table(owner, "_poll", function(self)
-      calls = calls + 1
-      local value = poll(self)
-      sleeping = value == nil
-      return value
-    end)
+    local polls = support.poll_counter(t, data._tree)
     local task = await(state:lock_selection(deadline))
     t.wait_until(function()
-      return #failures == 1 and sleeping
+      return #failures == 1 and polls.sleeping
     end, 5000, "deadline failure must arrive without another native request")
     t.assert_eq(task.token, failures[1].lock)
     t.assert_false(state:status().locked)
-    local idle_calls = calls
-    vim.wait(50, function()
-      return false
-    end, 50)
+    local idle_calls = polls.calls
+    vim.wait(50)
     t.assert_eq(1, #failures)
-    t.assert_eq(idle_calls, calls)
+    t.assert_eq(idle_calls, polls.calls)
   end
 end)
 
@@ -316,39 +271,28 @@ t:test("prepared and unlocked hidden tasks release deadline polling demand", fun
   local state = await(data:create_state())
   -- A poll that returns a value keeps the owner polling. Requests that settle at once leave their
   -- wakeup poll for a later tick, which may land in an idle window; it must find nothing to do.
-  local owner, demands, sleeping = data._tree, 0, false
-  local poll = owner._poll
-  t:patch_table(owner, "_poll", function(self)
-    local value = poll(self)
-    sleeping = value == nil
-    demands = demands + (sleeping and 0 or 1)
-    return value
-  end)
+  local polls = support.poll_counter(t, data._tree)
   local task = await(state:lock_selection(1000))
   t.assert_eq("Ready", await(task:prepare_sources()).kind)
   t.wait_until(function()
-    return sleeping
+    return polls.sleeping
   end, 5000)
-  local idle_demands = demands
-  vim.wait(1100, function()
-    return false
-  end, 50)
+  local idle_demands = polls.demands
+  vim.wait(1100)
   t.assert_true(state:status().locked, "prepared tasks survive their preparation deadline")
-  t.assert_true(sleeping, "prepared tasks keep the owner asleep")
-  t.assert_eq(idle_demands, demands, "the preparation deadline adds no polling demand")
+  t.assert_true(polls.sleeping, "prepared tasks keep the owner asleep")
+  t.assert_eq(idle_demands, polls.demands, "the preparation deadline adds no polling demand")
   await(task:unlock())
   task = await(state:lock_selection(1000))
   await(task:unlock())
   t.wait_until(function()
-    return sleeping
+    return polls.sleeping
   end, 5000)
-  idle_demands = demands
-  vim.wait(50, function()
-    return false
-  end, 50)
+  idle_demands = polls.demands
+  vim.wait(50)
   t.assert_false(state:status().locked)
-  t.assert_true(sleeping, "unlocked tasks leave the owner asleep")
-  t.assert_eq(idle_demands, demands, "unlocked tasks release polling demand")
+  t.assert_true(polls.sleeping, "unlocked tasks leave the owner asleep")
+  t.assert_eq(idle_demands, polls.demands, "unlocked tasks release polling demand")
   t.assert_eq(0, failures)
 end)
 
@@ -358,10 +302,7 @@ t:test("native List loads a real directory and preserves old resource paths on r
   write(path .. "/before/file")
   local data = await(filetree.open(path))
   local state = await(data:create_state(nil, { mode = "list" }))
-  local view = filetree.attach(state, { keymaps = false })
-  t:defer(function()
-    view:detach()
-  end)
+  local view = attach(state, { keymaps = false })
   t.wait_until(function()
     return vim.deep_equal(vim.api.nvim_buf_get_lines(view.bufnr, 0, -1, true), { "  before", "  before/file" })
   end, 10000)
@@ -387,10 +328,7 @@ t:test("paged native reads keep progressing while only the state and view remain
   end
   local data = await(filetree.open(path))
   local state = await(data:create_state(nil, { mode = "list" }))
-  local view = filetree.attach(state, { keymaps = false })
-  t:defer(function()
-    view:detach()
-  end)
+  local view = attach(state, { keymaps = false })
   data = nil
   collectgarbage("collect")
   t.wait_until(function()
@@ -403,10 +341,7 @@ t:test("native watch updates the actual buffer without manual refresh", function
   local path = t:tempdir()
   local data = await(filetree.open(path))
   local state = await(data:create_state(nil, { mode = "list" }))
-  local view = filetree.attach(state, { keymaps = false })
-  t:defer(function()
-    view:detach()
-  end)
+  local view = attach(state, { keymaps = false })
   t.wait_until(function()
     local status = data:watch_status()
     t.assert_eq(nil, status.error)
@@ -434,10 +369,7 @@ t:test("watch activity moves with files changing on disk, not with directories r
   vim.wait(1000)
   local data = await(filetree.open(path))
   local state = await(data:create_state())
-  local view = filetree.attach(state, { keymaps = false })
-  t:defer(function()
-    view:detach()
-  end)
+  local view = attach(state, { keymaps = false })
   t.wait_until(function()
     return data:watch_status().directories > 0 and data:native():is_settled()
   end, 10000)

@@ -2,28 +2,8 @@ local harness = require("__test__.support.harness")
 
 local t = harness.new()
 
-local Observable = {}
-Observable.__index = Observable
-
----@param value                          any
----@return table
-function Observable.from_value(value)
-  return setmetatable({ value = value }, Observable)
-end
-
----@return any
-function Observable:snapshot()
-  return self.value
-end
-
----@param value                          any
----@return nil
-function Observable:next(value)
-  self.value = value
-end
-
 t:test("scope defaults and serialization remain independent", function()
-  t:patch_global("stl", { c = { Observable = Observable } })
+  t:patch_global("stl", require("stl"))
   t:patch_table(package.loaded, "dot.context.workspace.select_item", {
     defaults = function()
       return {}
@@ -61,7 +41,8 @@ t:test("scope defaults and serialization remain independent", function()
 end)
 
 t:test("pickers default to fuzzy matching, the searcher to literal, and stored flags win", function()
-  t:patch_global("stl", { c = { Observable = Observable, History = { deserialize = function() end } } })
+  t:patch_global("stl", require("stl"))
+  t:patch_table(stl.c, "History", { deserialize = function() end })
   t:patch_table(package.loaded, "dot.context.workspace.select_item", nil)
   local Select = assert(loadfile("lua/dot/context/workspace/select.lua"))()
 

@@ -17,20 +17,13 @@ bootstrap.with_runtime(t, {
 
 t:patch_table(package.loaded, "era.m.image.state", { data = { img_dirs = {} } })
 
+---A markdown buffer of `lines` named `doc.md` in `dir`.
 ---@param dir                           string
 ---@param lines                         string[]
+---@param current                       ?boolean Shown in the current window.
 ---@return integer
-local function markdown(dir, lines)
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
-  vim.api.nvim_buf_set_name(bufnr, dir .. "/doc.md")
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-  vim.api.nvim_set_option_value("filetype", "markdown", { buf = bufnr })
-  return bufnr
+local function markdown(dir, lines, current)
+  return t:buffer(lines, { name = dir .. "/doc.md", filetype = "markdown", current = current })
 end
 
 ---@param document                      era.m.image.doc
@@ -108,8 +101,7 @@ end)
 t:test("the visible images include the line after the last one shown whole, which may show in part", function()
   local document = assert(loadfile("lua/era/m/image/doc.lua"))()
   local dir = t:tempdir() ---@type string
-  local bufnr = markdown(dir, vim.fn["repeat"]({ "" }, 200))
-  vim.api.nvim_win_set_buf(0, bufnr)
+  local bufnr = markdown(dir, vim.fn["repeat"]({ "" }, 200), true)
   local botline = vim.fn.getwininfo(vim.api.nvim_get_current_win())[1].botline ---@type integer
   vim.api.nvim_buf_set_lines(bufnr, botline, botline + 2, false, { "![](part.png)", "![](below.png)" })
 

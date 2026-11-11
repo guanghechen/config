@@ -1,4 +1,5 @@
 require("ark.bootstrap").setup()
+local bootstrap = require("__test__.support.bootstrap")
 local t = require("__test__.support.harness").new()
 
 ---A workspace state file in a new directory, set as the storage of this instance.
@@ -72,14 +73,11 @@ t:test("the first save of a workspace takes the lock in the directory it creates
   dot.context.set_storage({ workspace = filepath })
   dot.context.load({ workspace = filepath })
   dot.context.bookmark.pinned:next({ "/first.md" })
-  local warnings = 0
-  t:patch_table(stl.reporter, "warn", function()
-    warnings = warnings + 1
-  end)
+  local reports = bootstrap.with_reporter(t)
 
   dot.context.save({ workspace = filepath })
 
-  t.assert_eq(0, warnings, "saved under the lock")
+  t.assert_eq(0, #reports.warn, "saved under the lock")
   t.assert_eq("/first.md", assert(stl.fs.read_json({ filepath = filepath })).bookmark.pinned[1])
 end)
 
@@ -88,17 +86,14 @@ t:test("a held lock delays the save until it times out, and the save still lands
   dot.context.load({ workspace = filepath })
   dot.context.bookmark.pinned:next({ "/mine.md" })
   local held = assert(yoz.fs.lock(filepath .. ".lock", 0))
-  local warnings = 0
-  t:patch_table(stl.reporter, "warn", function()
-    warnings = warnings + 1
-  end)
+  local reports = bootstrap.with_reporter(t)
 
   local started = vim.uv.hrtime()
   dot.context.save({ workspace = filepath })
   held:unlock()
 
   t.assert_true((vim.uv.hrtime() - started) / 1e6 >= 2000, "waited for the holder")
-  t.assert_eq(1, warnings, "saving without the lock is reported")
+  t.assert_eq(1, #reports.warn, "saving without the lock is reported")
   t.assert_eq("/mine.md", assert(stl.fs.read_json({ filepath = filepath })).bookmark.pinned[1])
   local free = assert(yoz.fs.lock(filepath .. ".lock", 0), "the save released its hold")
   free:unlock()

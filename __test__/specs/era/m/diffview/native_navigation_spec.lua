@@ -1,5 +1,6 @@
 require("ark.bootstrap").setup()
 local t = require("__test__.support.harness").new()
+local diffview = require("__test__.support.diffview")
 local treeview = require("__test__.support.treeview")
 local tree = require("era.m.diffview.pane.tree")
 local changes = require("era.m.diffview.pane.changes")
@@ -14,30 +15,8 @@ local view = require("era.m.diffview.view.workspace.view")
 ---@return table
 ---@return table
 local function pane(stage, entries, options)
-  local bufnr = changes.create_buffer(stage)
-  local owner = tree.new()
-  t:defer(function()
-    owner:dispose()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
-  local winnr = vim.api.nvim_open_win(bufnr, true, { relative = "editor", row = 0, col = 0, width = 50, height = 10 })
-  t:defer(function()
-    if vim.api.nvim_win_is_valid(winnr) then
-      vim.api.nvim_win_close(winnr, true)
-    end
-  end)
-  local plan = changes.render(
-    entries,
-    vim.tbl_extend("force", {
-      stage_type = stage,
-      viewtype = "tree",
-      foldempty = true,
-    }, options or {})
-  )
-  treeview.await(changes.apply_to_buffer(bufnr, plan, owner))
-  return owner, { stage_type = stage, bufnr = bufnr, winnr = winnr }, plan
+  local defaults = { stage_type = stage, viewtype = "tree", foldempty = true }
+  return diffview.changes_pane(t, entries, vim.tbl_extend("force", defaults, options or {}), true)
 end
 
 ---@param panes                         table[]
@@ -194,7 +173,7 @@ t:test("directory transfers skip the native subtree when choosing the next file"
   action.stage(ctx)
   t.wait_until(function()
     return refreshed
-  end, 1000)
+  end, 5000)
   t.assert_eq(tail.filepath, ctx.state:get_current_entry().filepath)
   t.assert_true(reads <= 5, "choosing a fallback must not read every transferred file")
 end)

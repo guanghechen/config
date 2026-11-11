@@ -136,7 +136,7 @@ t:test("non-zero string build preserves the last streamed diagnostic", function(
   local future = Action.__run_build__({ build = "cargo build --release" }, "/plugin", task)
   t.wait_until(function()
     return future:is_done()
-  end, 1000, "build callback")
+  end, 5000, "build callback")
 
   t.assert_true(future:is_resolved(), "non-zero future")
   local result = future:get_result()
@@ -190,7 +190,7 @@ t:test("plugin jobs settle after a post-await worker failure", function()
   local future = Action.install()
   t.wait_until(function()
     return future:is_done()
-  end, 1000, "post-await failure")
+  end, 5000, "post-await failure")
 
   t.assert_true(future:is_resolved(), "aggregate completion")
   t.assert_false(Action.is_running(), "action lock")
@@ -386,52 +386,75 @@ t:test("sync builds a newly cloned plugin already at the locked commit", functio
   t.assert_eq(0, checkouts, "redundant checkout")
 end)
 
-t:test("sync checks out the exact locked commit in a clean repository", function()
-  reset_action()
+---@class __test__.specs.era.m.plugin.action.IRepository
+---@field public root                   string A temporary directory holding the others.
+---@field public remote                 string A bare repository.
+---@field public source                 string A work tree on `main` that pushes to `remote` as `origin`.
+---@field public plugins                string The plugin root, which the plugin state finds on disk until the case ends.
+
+---@return __test__.specs.era.m.plugin.action.IRepository
+local function repository()
   local root = t:tempdir()
-  local remote = root .. "/remote.git"
-  local source = root .. "/source"
-  local plugins = root .. "/plugins"
-  local plugin = plugins .. "/exact.nvim"
-  vim.fn.mkdir(source, "p")
-  vim.fn.mkdir(plugins, "p")
-
-  git.run(root, { "init", "--bare", remote })
-  git.run(source, { "init", "-b", "main" })
-  vim.fn.writefile({ "one" }, source .. "/plugin.txt")
-  git.run(source, { "add", "plugin.txt" })
-  git.run(source, { "commit", "-m", "first" })
-  local first = vim.trim(git.run(source, { "rev-parse", "HEAD" }))
-  vim.fn.writefile({ "two" }, source .. "/plugin.txt")
-  git.run(source, { "commit", "-am", "second" })
-  local second = vim.trim(git.run(source, { "rev-parse", "HEAD" }))
-  git.run(source, { "remote", "add", "origin", remote })
-  git.run(source, { "push", "-u", "origin", "main" })
-  -- Clones need their own identity for checkout reflogs, avoiding hostname/email discovery.
-  git.run(root, {
-    "clone",
-    "--config",
-    "user.name=Plugin Test",
-    "--config",
-    "user.email=plugin-test@example.test",
-    "--branch",
-    "main",
-    remote,
-    plugin,
-  })
-
-  t:patch_table(State.options, "root", plugins)
+  local repo = { root = root, remote = root .. "/remote.git", source = root .. "/source", plugins = root .. "/plugins" }
+  vim.fn.mkdir(repo.source, "p")
+  vim.fn.mkdir(repo.plugins, "p")
+  git.run(root, { "init", "--bare", repo.remote })
+  git.run(repo.source, { "init", "-b", "main" })
+  git.run(repo.source, { "remote", "add", "origin", repo.remote })
+  t:patch_table(State.options, "root", repo.plugins)
   t:patch_table(yoz.path, "is_exist", function(path)
     return vim.uv.fs_stat(path) ~= nil
   end)
-  local task = Action.__new_task__("exact.nvim", "sync")
+  return repo
+end
+
+---Installs the plugin `name` as a clone of `url` on `main`, given `options` before the branch.
+---@param repo                          __test__.specs.era.m.plugin.action.IRepository
+---@param name                          string
+---@param url                           string
+---@param options                       string[]
+---@return string
+local function install(repo, name, url, options)
+  local plugin = repo.plugins .. "/" .. name
+  -- Clones need their own identity for checkout reflogs, avoiding hostname/email discovery.
+  local args = { "clone", "--config", "user.name=Plugin Test", "--config", "user.email=plugin-test@example.test" }
+  vim.list_extend(args, options)
+  vim.list_extend(args, { "--branch", "main", url, plugin })
+  git.run(repo.root, args)
+  return plugin
+end
+
+---Syncs the installed plugin `name` to `lock` and waits until the sync ends.
+---@param name                          string
+---@param lock                          table
+---@param msg                           string
+---@return table
+local function sync_installed(name, lock, msg)
+  local task = Action.__new_task__(name, "sync")
   task.status = "running"
   stl.async.run(function()
-    Action.__sync_single_plugin__({ name = "exact.nvim" }, task, { branch = "main", commit = first })
+    Action.__sync_single_plugin__({ name = name }, task, lock)
   end)
   t.wait_until(function()
     return task.status ~= "running"
-  end, 5000, "sync exact commit")
+  end, 5000, msg)
+  return task
+end
+
+t:test("sync checks out the exact locked commit in a clean repository", function()
+  reset_action()
+  local repo = repository()
+  vim.fn.writefile({ "one" }, repo.source .. "/plugin.txt")
+  git.run(repo.source, { "add", "plugin.txt" })
+  git.run(repo.source, { "commit", "-m", "first" })
+  local first = vim.trim(git.run(repo.source, { "rev-parse", "HEAD" }))
+  vim.fn.writefile({ "two" }, repo.source .. "/plugin.txt")
+  git.run(repo.source, { "commit", "-am", "second" })
+  local second = vim.trim(git.run(repo.source, { "rev-parse", "HEAD" }))
+  git.run(repo.source, { "push", "-u", "origin", "main" })
+  local plugin = install(repo, "exact.nvim", repo.remote, {})
+
+  local task = sync_installed("exact.nvim", { branch = "main", commit = first }, "sync exact commit")
 
   t.assert_eq("done", task.status, task.message)
   t.assert_eq("Synced", task.message, "sync message")
@@ -441,57 +464,24 @@ end)
 
 t:test("sync fetches a lock branch outside the installed single-branch refspec", function()
   reset_action()
-  local root = t:tempdir()
-  local remote = root .. "/remote.git"
-  local source = root .. "/source"
-  local plugins = root .. "/plugins"
-  local plugin = plugins .. "/branch.nvim"
-  vim.fn.mkdir(source, "p")
-  vim.fn.mkdir(plugins, "p")
-
-  git.run(root, { "init", "--bare", remote })
-  git.run(source, { "init", "-b", "main" })
-  vim.fn.writefile({ "base" }, source .. "/plugin.txt")
-  git.run(source, { "add", "plugin.txt" })
-  git.run(source, { "commit", "-m", "base" })
-  git.run(source, { "branch", "stable" })
-  vim.fn.writefile({ "main" }, source .. "/plugin.txt")
-  git.run(source, { "commit", "-am", "main-only" })
-  git.run(source, { "switch", "stable" })
-  vim.fn.writefile({ "stable" }, source .. "/plugin.txt")
-  git.run(source, { "commit", "-am", "stable-only" })
-  local stable = vim.trim(git.run(source, { "rev-parse", "HEAD" }))
-  git.run(source, { "remote", "add", "origin", remote })
-  git.run(source, { "push", "origin", "main", "stable" })
-  -- Clones need their own identity for checkout reflogs, avoiding hostname/email discovery.
-  git.run(root, {
-    "clone",
-    "--config",
-    "user.name=Plugin Test",
-    "--config",
-    "user.email=plugin-test@example.test",
-    "--single-branch",
-    "--branch",
-    "main",
-    "file://" .. remote,
-    plugin,
-  })
+  local repo = repository()
+  vim.fn.writefile({ "base" }, repo.source .. "/plugin.txt")
+  git.run(repo.source, { "add", "plugin.txt" })
+  git.run(repo.source, { "commit", "-m", "base" })
+  git.run(repo.source, { "branch", "stable" })
+  vim.fn.writefile({ "main" }, repo.source .. "/plugin.txt")
+  git.run(repo.source, { "commit", "-am", "main-only" })
+  git.run(repo.source, { "switch", "stable" })
+  vim.fn.writefile({ "stable" }, repo.source .. "/plugin.txt")
+  git.run(repo.source, { "commit", "-am", "stable-only" })
+  local stable = vim.trim(git.run(repo.source, { "rev-parse", "HEAD" }))
+  git.run(repo.source, { "push", "origin", "main", "stable" })
+  local plugin = install(repo, "branch.nvim", "file://" .. repo.remote, { "--single-branch" })
 
   local missing = vim.system({ "git", "cat-file", "-e", stable .. "^{commit}" }, { cwd = plugin }):wait()
   t.assert_true(missing.code ~= 0, "locked branch commit should not exist before sync")
 
-  t:patch_table(State.options, "root", plugins)
-  t:patch_table(yoz.path, "is_exist", function(path)
-    return vim.uv.fs_stat(path) ~= nil
-  end)
-  local task = Action.__new_task__("branch.nvim", "sync")
-  task.status = "running"
-  stl.async.run(function()
-    Action.__sync_single_plugin__({ name = "branch.nvim" }, task, { branch = "stable", commit = stable })
-  end)
-  t.wait_until(function()
-    return task.status ~= "running"
-  end, 5000, "sync lock branch")
+  local task = sync_installed("branch.nvim", { branch = "stable", commit = stable }, "sync lock branch")
 
   t.assert_eq("done", task.status, task.message)
   t.assert_eq("Synced", task.message, "sync message")

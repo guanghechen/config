@@ -30,13 +30,7 @@ local function capture(bufnr)
 end
 
 t:test("real popup text, byte highlights and cleanup match the Lua renderer input", function()
-  local source_bufnr = vim.api.nvim_create_buf(false, true)
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(source_bufnr) then
-      vim.api.nvim_buf_delete(source_bufnr, { force = true })
-    end
-  end)
-  vim.api.nvim_set_current_buf(source_bufnr)
+  local source_bufnr = t:buffer(nil, { current = true })
   for _, case in ipairs({
     {
       { "fooBar", "local 文本 = '你好🙂'", "tail", "" },

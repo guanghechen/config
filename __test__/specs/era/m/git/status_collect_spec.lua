@@ -1,9 +1,8 @@
 local bootstrap = require("__test__.support.bootstrap")
+local git_buffer = require("__test__.support.git_buffer")
 local harness = require("__test__.support.harness")
 local t = harness.new()
-bootstrap.with_global(t, "stl", {
-  c = { CancellationToken = require("stl.c.cancellation_token"), Future = require("stl.c.future") },
-})
+git_buffer.with_futures(t)
 bootstrap.with_runtime(t, {
   dot = {
     path = {
@@ -52,14 +51,6 @@ local function new_job()
   return job
 end
 
----@param future                        stl.c.Future
----@return nil
-local function wait(future)
-  t.wait_until(function()
-    return future:is_done()
-  end, 3000, "adapter Future did not settle")
-end
-
 t:test("native snapshot is published without materializing its entries", function()
   local job = new_job()
   local future = new_status().collect({ base = "HEAD", include_numstat = true, include_untracked = false })
@@ -69,7 +60,7 @@ t:test("native snapshot is published without materializing its entries", functio
   t.assert_true(job.options.include_numstat, "numstat request")
   t.assert_eq("HEAD", job.options.base, "base")
   job.state = "completed"
-  wait(future)
+  t.settle(future)
   t.assert_true(future:get_result() == job.snapshot, "native handle passed through")
   t.assert_eq(1, job.disposed, "completed job disposed")
 end)
@@ -80,7 +71,7 @@ t:test("cancellation waits for worker acknowledgement and suppresses completed d
   local future = new_status().collect(nil, token)
   token:cancel()
   job.state = "completed"
-  wait(future)
+  t.settle(future)
   t.assert_eq(1, job.cancelled, "native cancel requested")
   t.assert_true(future:is_failed(), "stale completion rejected")
   t.assert_eq("Operation cancelled", future:get_error(), "cancellation result")
@@ -98,7 +89,7 @@ t:test("worker errors and poll failures reject once and release resources", func
       end
     end
     local future = new_status().collect()
-    wait(future)
+    t.settle(future)
     t.assert_true(future:is_failed(), "failure propagated")
     t.assert_eq(1, job.disposed, "failed job disposed")
   end

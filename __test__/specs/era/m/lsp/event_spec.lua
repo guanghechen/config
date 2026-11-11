@@ -128,18 +128,21 @@ local function add_client(bufnr, name, methods)
   return client
 end
 
----@param bufnr                         integer
----@return nil
-local function delete_buffer(bufnr)
-  for client_id, client in pairs(clients) do
-    client.attached_buffers[bufnr] = nil
-    if vim.tbl_isempty(client.attached_buffers) then
-      clients[client_id] = nil
+-- A scratch buffer, or a listed file buffer when `listed` is true, that the fake clients leave before it is deleted
+-- when the case ends.
+---@param listed                        ?boolean
+---@return integer
+local function new_buffer(listed)
+  local bufnr = t:buffer(nil, { listed = listed })
+  t:defer(function()
+    for client_id, client in pairs(clients) do
+      client.attached_buffers[bufnr] = nil
+      if vim.tbl_isempty(client.attached_buffers) then
+        clients[client_id] = nil
+      end
     end
-  end
-  if vim.api.nvim_buf_is_valid(bufnr) then
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end
+  end)
+  return bufnr
 end
 
 ---@param bufnr                         integer
@@ -190,10 +193,7 @@ t:test("capabilities: include completion deltas without loading completion", fun
 end)
 
 t:test("keymaps: reconcile dynamic capability changes with bounded writes", function()
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  t:defer(function()
-    delete_buffer(bufnr)
-  end)
+  local bufnr = new_buffer() ---@type integer
   local client = add_client(bufnr, "tailwindcss")
   local keymap_sets = 0 ---@type integer
   local keymap_dels = 0 ---@type integer
@@ -252,10 +252,7 @@ t:test("keymaps: reconcile dynamic capability changes with bounded writes", func
 end)
 
 t:test("codelens: the refresh mapping requests lenses afresh even while they are enabled", function()
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  t:defer(function()
-    delete_buffer(bufnr)
-  end)
+  local bufnr = new_buffer() ---@type integer
   local client = add_client(bufnr, "lens", { [Methods.textDocument_codeLens] = true })
   Event.on_attach(client, bufnr)
   local refresh ---@type function|nil
@@ -274,10 +271,7 @@ t:test("codelens: the refresh mapping requests lenses afresh even while they are
 end)
 
 t:test("keymaps: client-specific mappings win and detach restores fallback", function()
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  t:defer(function()
-    delete_buffer(bufnr)
-  end)
+  local bufnr = new_buffer() ---@type integer
   local vtsls = add_client(bufnr, "vtsls")
   local tailwind = add_client(bufnr, "tailwindcss")
 
@@ -317,10 +311,7 @@ end)
 
 t:test("keymaps: generic and client mappings do not wait for Neovim's default gr* mappings", function()
   t.assert_true(vim.fn.maparg("grr", "n") ~= "", "default grr mapping")
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  t:defer(function()
-    delete_buffer(bufnr)
-  end)
+  local bufnr = new_buffer() ---@type integer
   local vtsls = add_client(bufnr, "vtsls", { [Methods.textDocument_references] = true })
 
   Event.on_attach(vtsls, bufnr)
@@ -340,20 +331,14 @@ t:test("keymaps: generic and client mappings do not wait for Neovim's default gr
 end)
 
 t:test("foldexpr: restores visible windows after the last folding client detaches", function()
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  t:defer(function()
-    delete_buffer(bufnr)
-  end)
+  local bufnr = new_buffer() ---@type integer
   local original = vim.api.nvim_get_current_win() ---@type integer
   vim.api.nvim_win_set_buf(original, bufnr)
   vim.api.nvim_set_option_value("foldexpr", "v:lua.vim.treesitter.foldexpr()", { win = original, scope = "local" })
 
   local first = add_client(bufnr, "lua_ls", { ["textDocument/foldingRange"] = true })
   Event.on_attach(first, bufnr)
-  local split = vim.api.nvim_open_win(bufnr, false, { split = "below", win = original }) ---@type integer
-  t:defer(function()
-    vim.api.nvim_win_close(split, true)
-  end)
+  local split = t:window(bufnr, { split = "below", win = original }) ---@type integer
   local second = add_client(bufnr, "vtsls", { ["textDocument/foldingRange"] = true })
   Event.on_attach(second, bufnr)
 
@@ -370,10 +355,7 @@ t:test("foldexpr: restores visible windows after the last folding client detache
 end)
 
 t:test("foldexpr: uses native LSP folding and restores the previous provider", function()
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  t:defer(function()
-    delete_buffer(bufnr)
-  end)
+  local bufnr = new_buffer() ---@type integer
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   vim.api.nvim_win_set_buf(winnr, bufnr)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "local function example()", "  return true", "end", "" })
@@ -390,10 +372,7 @@ t:test("foldexpr: uses native LSP folding and restores the previous provider", f
 end)
 
 t:test("foldexpr: a highlighter without fold queries still uses LSP", function()
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  t:defer(function()
-    delete_buffer(bufnr)
-  end)
+  local bufnr = new_buffer() ---@type integer
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   vim.api.nvim_win_set_buf(winnr, bufnr)
   vim.treesitter.start(bufnr, "lua")
@@ -406,14 +385,8 @@ t:test("foldexpr: a highlighter without fold queries still uses LSP", function()
 end)
 
 t:test("foldexpr: restores a hidden buffer when it re-enters a window", function()
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  t:defer(function()
-    delete_buffer(bufnr)
-  end)
-  local other_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  t:defer(function()
-    vim.api.nvim_buf_delete(other_bufnr, { force = true })
-  end)
+  local bufnr = new_buffer() ---@type integer
+  local other_bufnr = t:buffer() ---@type integer
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   vim.api.nvim_win_set_buf(winnr, bufnr)
   vim.api.nvim_set_option_value("foldexpr", "v:lua.vim.treesitter.foldexpr()", { win = winnr, scope = "local" })
@@ -432,10 +405,7 @@ end)
 
 for _, detach_hidden in ipairs({ false, true }) do
   t:test("foldexpr: restores an explicit zero, hidden detach: " .. tostring(detach_hidden), function()
-    local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-    t:defer(function()
-      delete_buffer(bufnr)
-    end)
+    local bufnr = new_buffer() ---@type integer
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "local function example()", "  return true", "end" })
     vim.treesitter.start(bufnr, "lua")
     local winnr = vim.api.nvim_get_current_win() ---@type integer
@@ -445,10 +415,7 @@ for _, detach_hidden in ipairs({ false, true }) do
     Event.on_attach(client, bufnr)
     t.assert_eq("v:lua.vim.lsp.foldexpr()", vim.wo[winnr].foldexpr, "native owner")
     if detach_hidden then
-      local other_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-      t:defer(function()
-        vim.api.nvim_buf_delete(other_bufnr, { force = true })
-      end)
+      local other_bufnr = t:buffer() ---@type integer
       vim.api.nvim_win_set_buf(winnr, other_bufnr)
     end
     Event.on_detach(client, bufnr)
@@ -460,10 +427,7 @@ end
 
 for _, has_folds in ipairs({ true, false }) do
   t:test("foldexpr: hidden attachment restores available syntax, folds query: " .. tostring(has_folds), function()
-    local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-    t:defer(function()
-      delete_buffer(bufnr)
-    end)
+    local bufnr = new_buffer() ---@type integer
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "local function example()", "  return true", "end" })
     vim.treesitter.start(bufnr, "lua")
     if not has_folds then
@@ -486,7 +450,7 @@ end
 
 if vim.env.NVIM_LSP_EVENT_BENCHMARK == "1" then
   t:test("benchmark: dynamic capability reconciliation", function()
-    local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+    local bufnr = new_buffer() ---@type integer
     local client = add_client(bufnr, "tailwindcss")
     Event.on_attach(client, bufnr)
 
@@ -548,7 +512,6 @@ if vim.env.NVIM_LSP_EVENT_BENCHMARK == "1" then
     )
 
     t.assert_eq(0, count_desc(bufnr, "lsp: code action"), "benchmark final capability state")
-    delete_buffer(bufnr)
   end)
 end
 
@@ -586,10 +549,7 @@ t:test("inlay hints: pause in the buffer being typed in and resume once the mode
   end)
   local bufnrs = {} ---@type integer[]
   for index, name in ipairs({ "a", "b", "c" }) do
-    local bufnr = vim.api.nvim_create_buf(true, false) ---@type integer
-    t:defer(function()
-      delete_buffer(bufnr)
-    end)
+    local bufnr = new_buffer(true) ---@type integer
     bufnrs[index] = bufnr
     names[bufnr] = name
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "alpha beta gamma" })
@@ -686,10 +646,7 @@ t:test("display switches: inlay hints follow the switch without stopping clients
   local stops = 0 ---@type integer
   local bufnrs = {} ---@type integer[]
   for index, name in ipairs({ "a", "b" }) do
-    local bufnr = vim.api.nvim_create_buf(true, false) ---@type integer
-    t:defer(function()
-      delete_buffer(bufnr)
-    end)
+    local bufnr = new_buffer(true) ---@type integer
     bufnrs[index] = bufnr
     names[bufnr] = name
     local client = add_client(bufnr, "lua_ls", { [Methods.textDocument_inlayHint] = true })
@@ -726,14 +683,8 @@ t:test("display switches: code lenses follow the switch in normal buffers withou
   t:defer(function()
     switches.code_lens = true
   end)
-  local normal = vim.api.nvim_create_buf(true, false) ---@type integer
-  t:defer(function()
-    delete_buffer(normal)
-  end)
-  local scratch = vim.api.nvim_create_buf(false, true) ---@type integer
-  t:defer(function()
-    delete_buffer(scratch)
-  end)
+  local normal = new_buffer(true) ---@type integer
+  local scratch = new_buffer() ---@type integer
   local calls = {} ---@type string[]
   t:patch_table(vim.lsp.codelens, "enable", function(enable, filter)
     calls[#calls + 1] = tostring(enable) .. "@" .. (filter.bufnr == normal and "normal" or "scratch")
@@ -761,10 +712,7 @@ t:test("document colors: only servers reporting hex literals drop their colors",
       disabled[#disabled + 1] = vim.lsp.get_client_by_id(filter.client_id).name .. "@" .. tostring(filter.bufnr)
     end
   end)
-  local bufnr = vim.api.nvim_create_buf(true, false) ---@type integer
-  t:defer(function()
-    delete_buffer(bufnr)
-  end)
+  local bufnr = new_buffer(true) ---@type integer
 
   local methods = { [Methods.textDocument_documentColor] = true }
   for _, name in ipairs({ "lua_ls", "jsonls", "cssls", "tailwindcss", "dartls" }) do

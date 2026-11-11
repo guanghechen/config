@@ -6,7 +6,6 @@ local enums = assert(loadfile("lua/stl/e.lua"))()
 local maximized = assert(loadfile("lua/dot/state/maximized.lua"))()
 
 local winnr_command = 0 ---@type integer
-local warnings = {} ---@type table[]
 local forked_winnrs = nil ---@type integer[]|nil
 
 bootstrap.with_runtime(t, {
@@ -45,13 +44,10 @@ bootstrap.with_runtime(t, {
         end,
       },
     },
-    reporter = {
-      warn = function(report)
-        warnings[#warnings + 1] = report
-      end,
-    },
   },
 })
+-- Every case may report warnings; the case that checks them records its own.
+bootstrap.with_reporter(t)
 
 local Maximize = assert(loadfile("lua/era/m/maximize.lua"))()
 
@@ -101,7 +97,6 @@ local function register_cleanup(tabnr, winnr, bufnr, created_bufnrs, extra_tabnr
     end
     winnr_command = 0
     forked_winnrs = nil
-    warnings = {}
   end)
 end
 
@@ -206,6 +201,7 @@ t:test("direct maximize tab close clears state without stealing focus", function
 end)
 
 t:test("explicit close clears state when TabClosed reports an error after closing", function()
+  local reports = bootstrap.with_reporter(t)
   local source_tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   local source_winnr = vim.api.nvim_get_current_win() ---@type integer
   local original_bufnr = vim.api.nvim_win_get_buf(source_winnr) ---@type integer
@@ -235,46 +231,7 @@ t:test("explicit close clears state when TabClosed reports an error after closin
   t.assert_false(vim.api.nvim_tabpage_is_valid(normal.maximize_tabnr), "closed maximize tab")
   t.assert_nil(maximized.get_normal(), "cleared normal context")
   t.assert_eq(source_tabnr, vim.api.nvim_get_current_tabpage(), "restored source tab")
-  t.assert_eq(1, #warnings, "reported TabClosed failure")
-end)
-
-t:test("float maximize reconfigures and restores the original window", function()
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local source_winnr = vim.api.nvim_get_current_win() ---@type integer
-  local source_bufnr = vim.api.nvim_win_get_buf(source_winnr) ---@type integer
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  local float_winnr = vim.api.nvim_open_win(bufnr, true, {
-    relative = "editor",
-    row = 2,
-    col = 3,
-    width = 20,
-    height = 5,
-    border = "single",
-  })
-  register_cleanup(tabnr, source_winnr, source_bufnr, { bufnr })
-  t:defer(function()
-    if vim.api.nvim_win_is_valid(float_winnr) then
-      vim.api.nvim_win_close(float_winnr, true)
-    end
-    maximized.clear_original_float()
-  end)
-
-  local original = vim.api.nvim_win_get_config(float_winnr) ---@type vim.api.keyset.win_config
-  winnr_command = float_winnr
-  Maximize.toggle()
-
-  local maximized_cfg = vim.api.nvim_win_get_config(float_winnr) ---@type vim.api.keyset.win_config
-  t.assert_true(maximized.get_original_float() ~= nil, "float context")
-  t.assert_eq(tabnr, vim.api.nvim_get_current_tabpage(), "same tab")
-  t.assert_true(maximized_cfg.width > original.width, "maximized width")
-
-  Maximize.toggle()
-  local restored = vim.api.nvim_win_get_config(float_winnr) ---@type vim.api.keyset.win_config
-
-  t.assert_nil(maximized.get_original_float(), "cleared float context")
-  t.assert_eq(original.relative, restored.relative, "restored relative")
-  t.assert_eq(original.width, restored.width, "restored width")
-  t.assert_eq(original.height, restored.height, "restored height")
+  t.assert_eq(1, #reports.warn, "reported TabClosed failure")
 end)
 
 ---@param border                        string
@@ -302,6 +259,28 @@ local function open_float(border)
   end)
   return float_winnr
 end
+
+t:test("float maximize reconfigures and restores the original window", function()
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local float_winnr = open_float("single")
+
+  local original = vim.api.nvim_win_get_config(float_winnr) ---@type vim.api.keyset.win_config
+  winnr_command = float_winnr
+  Maximize.toggle()
+
+  local maximized_cfg = vim.api.nvim_win_get_config(float_winnr) ---@type vim.api.keyset.win_config
+  t.assert_true(maximized.get_original_float() ~= nil, "float context")
+  t.assert_eq(tabnr, vim.api.nvim_get_current_tabpage(), "same tab")
+  t.assert_true(maximized_cfg.width > original.width, "maximized width")
+
+  Maximize.toggle()
+  local restored = vim.api.nvim_win_get_config(float_winnr) ---@type vim.api.keyset.win_config
+
+  t.assert_nil(maximized.get_original_float(), "cleared float context")
+  t.assert_eq(original.relative, restored.relative, "restored relative")
+  t.assert_eq(original.width, restored.width, "restored width")
+  t.assert_eq(original.height, restored.height, "restored height")
+end)
 
 t:test("a maximized float covers the tabline and leaves the status line and the command line in sight", function()
   t:patch_table(stl.nvim.fn, "is_statusline_visible", function()

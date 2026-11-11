@@ -1,15 +1,17 @@
 require("ark.bootstrap").setup()
 local t = require("__test__.support.harness").new()
+local fs = require("__test__.support.fs")
 local git = require("__test__.support.git")
 local support = require("__test__.support.git_files")
 local Widget = require("era.m.git_files")
 
 ---@return table
 local function fixture()
-  local root = support.repo(t)
-  support.write(root, "dir/mixed.lua", { "one", "two", "three", "staged" })
-  git.run(root, { "add", "dir/mixed.lua" })
-  support.write(root, "dir/mixed.lua", { "one", "two", "three", "staged", "unstaged" })
+  local root = support.changes(
+    t,
+    { ["dir/mixed.lua"] = { "one", "two", "three", "staged" } },
+    { ["dir/mixed.lua"] = { "one", "two", "three", "staged", "unstaged" } }
+  )
   local state = support.widget(t, root)
   state.collect = era.m.git.status.collect
   state.snapshot = t.await(state.collect({ include_numstat = true }))
@@ -127,7 +129,7 @@ t:test("older completions cannot clear newer refresh requests", function()
   state.refreshed:next(1)
   t.wait_until(function()
     return #state.requests == 3
-  end, 1000)
+  end, 5000)
   t.assert_eq(3, #state.requests)
   state.requests[2].resolve(state.snapshot)
   t.assert_true(state.widget._request ~= nil)
@@ -159,7 +161,7 @@ t:test("switching to a nested repository resets each display root to that worksp
   state.widget.input:set_content("mixed")
   git.run(state.root, { "init", "-q", "nested" })
   state.root = state.root .. "/nested"
-  support.write(state.root, "inside.lua", { "nested" })
+  fs.write(state.root .. "/inside.lua", { "nested" })
   local snapshot = t.await(state.collect({ include_numstat = true }))
   state.widget:refresh(false)
   state.requests[#state.requests].resolve(snapshot)

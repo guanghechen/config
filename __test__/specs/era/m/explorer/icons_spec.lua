@@ -1,6 +1,7 @@
 local explorer = require("__test__.support.explorer")
-local fixture = require("__test__.support.explorer").new()
-local t, await = fixture.t, fixture.await
+local t = require("__test__.support.harness").new()
+local fixture = explorer.new(t)
+local await = fixture.await
 local icons = require("era.m.explorer.icons")
 
 ---@param widget                        era.m.explorer.Widget
@@ -129,11 +130,7 @@ end)
 
 t:test("real scrolling and theme changes prepare icons outside redraw without rewriting text", function()
   local path = t:tempdir()
-  local ui = require("__test__.support.ui").new()
-  t:defer(function()
-    ui:close()
-  end)
-  explorer.start_ui(ui, { width = 100, height = 30, path = path })
+  local ui = explorer.open_ui(t, { width = 100, height = 30, path = path })
   ui:lua(
     [[
       local path = ...
@@ -173,19 +170,15 @@ t:test("real scrolling and theme changes prepare icons outside redraw without re
       end
       widget = require("era.m.explorer.widget").new({ name = "viewport-icons", root = path })
       widget:focus()
-      assert(vim.wait(10000, function()
-        local _, _, view = pcall(widget.context, widget)
-        return view and view:frame() and view:frame():header().row_count == 0 and not view:status().preparing
-      end, 1))
+      local function prepared(_, view)
+        return not view:status().preparing
+      end
+      shown(widget, 0, prepared)
       for index = 1, 100 do
         vim.fn.writefile({ "test" }, path .. string.format("/item-%03d.lua", index))
       end
       widget:refresh()
-      assert(vim.wait(10000, function()
-        local _, _, view = pcall(widget.context, widget)
-        return view and view:frame() and view:frame():header().row_count == 100 and not view:status().preparing
-      end, 1))
-      session, view = widget:context()
+      session, view = shown(widget, 100, prepared)
       writes = 0
       local lines = vim.api.nvim_buf_set_lines
       vim.api.nvim_buf_set_lines = function(bufnr, ...)
@@ -195,33 +188,39 @@ t:test("real scrolling and theme changes prepare icons outside redraw without re
     ]],
     path
   )
-  ui:wait_until(function()
-    return ui:lua("return drawn[1] == 'A'")
-  end, 10000)
+  ui:wait_lua("return drawn[1] == 'A'", 10000)
   t.assert_true(ui:lua("return empty_redraws") > 0)
   ui:rpc("nvim_input", "65G")
-  ui:wait_until(function()
-    return ui:lua("return drawn[65] == 'A' and view:frame():header().cursor_row == 65 and not view:status().preparing")
-  end, 10000, "typed scrolling must prepare the new viewport")
+  ui:wait_lua(
+    "return drawn[65] == 'A' and view:frame():header().cursor_row == 65 and not view:status().preparing",
+    10000,
+    "typed scrolling must prepare the new viewport"
+  )
   ui:rpc("nvim_command", "normal! zt")
-  ui:wait_until(function()
-    return ui:lua("return drawn[90] == 'A' and not view:status().preparing")
-  end, 10000, "scrolling below a fixed cursor must prepare its newly visible rows")
+  ui:wait_lua(
+    "return drawn[90] == 'A' and not view:status().preparing",
+    10000,
+    "scrolling below a fixed cursor must prepare its newly visible rows"
+  )
   ui:rpc("nvim_command", "normal! zb")
-  ui:wait_until(function()
-    return ui:lua([[
-        local first = vim.api.nvim_win_call(view.winnr, vim.fn.winsaveview).topline
-        return first < 65 and drawn[first] == "A" and not view:status().preparing
-      ]])
-  end, 10000, "viewport changes without cursor movement must also prepare icons")
+  ui:wait_lua(
+    [[
+      local first = vim.api.nvim_win_call(view.winnr, vim.fn.winsaveview).topline
+      return first < 65 and drawn[first] == "A" and not view:status().preparing
+    ]],
+    10000,
+    "viewport changes without cursor movement must also prepare icons"
+  )
   local before = ui:lua("return queries")
   ui:lua([[
       glyph, drawn = "B", {}
       vim.api.nvim_exec_autocmds("ColorScheme", { pattern = "viewport-test" })
     ]])
-  ui:wait_until(function()
-    return ui:lua("return drawn[65] == 'B' and not view:status().preparing")
-  end, 10000, "theme changes must invalidate the committed icon cache")
+  ui:wait_lua(
+    "return drawn[65] == 'B' and not view:status().preparing",
+    10000,
+    "theme changes must invalidate the committed icon cache"
+  )
   t.assert_true(ui:lua("return queries") > before)
   t.assert_eq(0, ui:lua("return writes"))
   t.assert_eq(0, ui:lua("return #errors"))

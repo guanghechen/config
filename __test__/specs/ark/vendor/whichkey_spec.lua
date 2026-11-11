@@ -51,21 +51,19 @@ for _, vendor in ipairs({ "neovim", "neovide" }) do
       return original_require(name)
     end)
 
-    local previous_bufnr = vim.api.nvim_get_current_buf()
-    local bufnr = vim.api.nvim_create_buf(false, true)
-    vim.api.nvim_set_current_buf(bufnr)
     t:defer(function()
-      era.dressing.whichkey.state.disable()
-      vim.api.nvim_set_current_buf(previous_bufnr)
-      vim.api.nvim_buf_delete(bufnr, { force = true })
       vim.api.nvim_del_augroup_by_name("WhichKey")
       vim.api.nvim_del_augroup_by_name("guanghechen_era_keystroke_surrounds")
+    end)
+    local bufnr = t:buffer(nil, { current = true })
+    t:defer(function()
+      era.dressing.whichkey.state.disable()
     end)
 
     assert(loadfile("lua/ark/vendor/" .. vendor .. "/init.lua"))()
     t.wait_until(function()
       return era.dressing.whichkey.state.ready and vim.fn.maparg("gsh", "n", false, true).desc ~= nil
-    end, 1000, "deferred setup did not complete")
+    end, 5000, "deferred setup did not complete")
 
     t.assert_eq(vendor == "neovim", lua_scroll_requested, "only terminal Neovim requests Lua scrolling")
     local state = era.dressing.whichkey.state

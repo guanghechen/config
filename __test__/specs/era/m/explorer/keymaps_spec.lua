@@ -1,6 +1,7 @@
 local explorer = require("__test__.support.explorer")
-local fixture = require("__test__.support.explorer").new()
-local t, await = fixture.t, fixture.await
+local t = require("__test__.support.harness").new()
+local fixture = explorer.new(t)
+local await = fixture.await
 
 ---@param widget                        era.m.explorer.Widget
 ---@param keys                          string
@@ -288,12 +289,9 @@ t:test("a queued selection change cannot turn a cursor path operation into a sel
     prompted = true
     done(nil)
   end)
-  local future = widget:action():transfer("copy")
-  t.wait_until(function()
-    return future:is_done()
-  end, 10000)
-  t.assert_true(future:is_failed())
-  t.assert_true(future:get_error():find("selection intent changed", 1, true) ~= nil)
+  local ok, err = t.settle(widget:action():transfer("copy"))
+  t.assert_false(ok)
+  t.assert_true(err:find("selection intent changed", 1, true) ~= nil)
   t.assert_false(prompted)
   t.assert_false(session:busy())
   selected(widget, "select", 1)
@@ -367,11 +365,7 @@ end)
 t:test("leader toggle wins over the Space menu with separately typed keys and after which-key", function()
   local path = t:tempdir()
   fixture.write(path .. "/file")
-  local ui = require("__test__.support.ui").new()
-  t:defer(function()
-    ui:close()
-  end)
-  explorer.start_ui(ui, { width = 100, height = 30, path = path })
+  local ui = explorer.open_ui(t, { width = 100, height = 30, path = path })
   ui:lua(
     [=[
     local path = ...
@@ -393,22 +387,15 @@ t:test("leader toggle wins over the Space menu with separately typed keys and af
     whichkey.state.enable()
     entry.focus()
     widget = entry.get_widget()
-    assert(vim.wait(10000, function()
-      local _, _, current = pcall(widget.context, widget)
-      return current and current:frame() and current:frame():header().row_count == 1
-    end))
+    shown(widget, 1)
   ]=],
     path
   )
   for cycle = 1, 2 do
     ui:rpc("nvim_input", "[")
-    ui:wait_until(function()
-      return ui:lua("return whichkey.state.keys == '['")
-    end, 10000)
+    ui:wait_lua("return whichkey.state.keys == '['", 10000)
     ui:rpc("nvim_input", "i")
-    ui:wait_until(function()
-      return ui:lua("return whichkey.state.keys == ''")
-    end, 10000)
+    ui:wait_lua("return whichkey.state.keys == ''", 10000)
     t.assert_eq(0, ui:lua("return vim.fn.maparg(' ', 'n', false, true).nowait"))
     t.assert_eq(1, ui:lua("return vim.fn.maparg('z', 'n', false, true).nowait"))
     ui:rpc("nvim_input", " ")
@@ -416,27 +403,28 @@ t:test("leader toggle wins over the Space menu with separately typed keys and af
       return false
     end, 5)
     ui:rpc("nvim_input", "1")
-    ui:wait_until(function()
-      return ui:lua("local expected = ...; return toggles == expected and not widget:isvisible()", cycle * 2 - 1)
-    end, 10000)
+    ui:wait_lua(
+      "local expected = ...; return toggles == expected and not widget:isvisible()",
+      10000,
+      nil,
+      cycle * 2 - 1
+    )
     t.assert_eq(0, ui:lua("return menus"))
     ui:rpc("nvim_input", " 1")
-    ui:wait_until(function()
-      return ui:lua(
-        [=[
-        local expected = ...
-        local _, _, view = pcall(widget.context, widget)
-        return toggles == expected and view and view:frame() and view:frame():header().row_count == 1
-      ]=],
-        cycle * 2
-      )
-    end, 10000)
+    ui:wait_lua(
+      [=[
+      local expected = ...
+      local _, _, view = pcall(widget.context, widget)
+      return toggles == expected and view and view:frame() and view:frame():header().row_count == 1
+    ]=],
+      10000,
+      nil,
+      cycle * 2
+    )
   end
   ui:lua("menu_started = vim.uv.hrtime()")
   ui:rpc("nvim_input", " ")
-  ui:wait_until(function()
-    return ui:lua("return menus == 1")
-  end, 10000)
+  ui:wait_lua("return menus == 1", 10000)
   t.assert_true(ui:lua("return menu_at - menu_started >= 200000000"))
   t.assert_eq(0, ui:lua("return #errors"))
   ui:lua("widget:dispose(); entry.widget = nil; whichkey.state.disable()")

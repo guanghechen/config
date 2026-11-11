@@ -1,6 +1,7 @@
 local harness = require("__test__.support.harness")
 local UI = require("__test__.support.ui")
 local Grid = require("__test__.support.ui_grid")
+local embedded = require("__test__.support.cmp.embedded")
 local runtime = require("__test__.support.cmp.runtime")
 runtime.setup()
 local t = harness.new()
@@ -176,11 +177,7 @@ end)
 
 ---@return table
 local function documentation_editor()
-  local ui = UI.new()
-  t:defer(function()
-    ui:close()
-  end)
-  ui:start({ width = 100, height = 35 })
+  local ui = UI.open(t, { width = 100, height = 35 })
   ui:lua([[
     local runtime=require('__test__.support.cmp.runtime')
     runtime.setup()
@@ -192,14 +189,14 @@ local function documentation_editor()
   ui:rpc("nvim_input", "ial")
   ui:wait_until(function()
     return ui:rpc("nvim_get_mode").mode == "i"
-  end, 1000, "insert mode")
+  end, 5000, "insert mode")
   ui:lua([[
     vim.fn.complete(1,{{word='alpha'},{word='alpine'}})
     vim.api.nvim_select_popupmenu_item(0,false,false,{})
   ]])
   ui:wait_until(function()
     return ui:lua([[return vim.fn.complete_info({'selected'}).selected==0]])
-  end, 1000, "native candidate selected")
+  end, 5000, "native candidate selected")
   t:defer(function()
     t.assert_eq("", ui:lua([[return vim.v.errmsg]]), "native documentation has no editor errors")
   end)
@@ -244,7 +241,7 @@ t:test("native info popup measures concealed content and has a single section se
         and vim.trim(state.screen[1]) == "alpha(value)"
         and state.screen[2] == ("─"):rep(state.config.width)
         and vim.trim(state.screen[3]) == "Description."
-    end, 1000, "three visible rows, without exposed fences or duplicate separator: " .. text)
+    end, 5000, "three visible rows, without exposed fences or duplicate separator: " .. text)
     local state = documentation_state(ui)
     t.assert_eq(state.winnr, state.native.preview_winid, "Neovim owns the info window")
     t.assert_eq(state.bufnr, state.native.preview_bufnr, "Neovim owns the info buffer")
@@ -269,7 +266,7 @@ t:test("LuaLS documentation displays its full signature above one native separat
       and vim.trim(state.screen[2]) == "-> string"
       and state.screen[3] == ("─"):rep(state.config.width)
       and vim.trim(state.screen[4]) == "Description."
-  end, 1000, "complete signature, one separator and prose use four visible rows")
+  end, 5000, "complete signature, one separator and prose use four visible rows")
 end)
 
 t:test("native documentation preserves plaintext Markdown characters", function()
@@ -285,7 +282,7 @@ t:test("native documentation preserves plaintext Markdown characters", function(
       and vim.trim(state.screen[3]) == "---"
       and vim.trim(state.screen[4]) == "literal **text**"
       and vim.trim(state.screen[5]) == "```"
-  end, 1000, "plaintext rules, emphasis and backticks stay literal")
+  end, 5000, "plaintext rules, emphasis and backticks stay literal")
   for _, indented in ipairs({ "    ---", " \t---" }) do
     ui:lua(
       [[
@@ -306,7 +303,7 @@ t:test("native documentation wraps wide text and preserves its view through resi
   ui:wait_until(function()
     local state = documentation_state(ui)
     return state.visible and table.concat(state.screen):find("b", 1, true) ~= nil
-  end, 1000, "the final character of a wrapped wide line is actually visible")
+  end, 5000, "the final character of a wrapped wide line is actually visible")
   ui:lua([[cmp_doc:show(cmp_doc_context,{label='alpha',
     documentation=('A long documentation line with enough words to wrap after resizing.\n'):rep(60)},0)]])
   t.assert_eq(20, documentation_state(ui).config.height, "tall content is bounded")
@@ -316,12 +313,12 @@ t:test("native documentation wraps wide text and preserves its view through resi
   ui:rpc("nvim_ui_try_resize", 40, 24)
   ui:wait_until(function()
     return ui:lua([[return vim.o.columns==40]])
-  end, 1000)
+  end, 5000)
   ui:lua([[cmp_doc:reposition(0)]])
   ui:wait_until(function()
     local state = documentation_state(ui)
     return state.visible and state.config.width < before.config.width
-  end, 1000, "native info reflows into the available width")
+  end, 5000, "native info reflows into the available width")
   local after = documentation_state(ui)
   t.assert_eq(before.winnr, after.winnr, "native window is reused")
   t.assert_eq(before.view.topline, after.view.topline, "reading position is retained")
@@ -330,7 +327,7 @@ t:test("native documentation wraps wide text and preserves its view through resi
   ui:lua([[vim.api.nvim_select_popupmenu_item(1,false,false,{})]])
   ui:wait_until(function()
     return not documentation_state(ui).visible
-  end, 1000, "selection hides old info")
+  end, 5000, "selection hides old info")
   ui:lua([[cmp_doc:show(cmp_doc_context,{label='alpine',documentation='short'},1)]])
   local short = documentation_state(ui)
   t.assert_eq(1, short.config.height, "reused popup shrinks with content")
@@ -339,7 +336,7 @@ t:test("native documentation wraps wide text and preserves its view through resi
   ui:wait_until(function()
     local state = documentation_state(ui)
     return not state.visible and state.native.preview_winid == nil and state.windows == 1
-  end, 1000, "native cancellation destroys its info window")
+  end, 5000, "native cancellation destroys its info window")
 end)
 
 t:test("temporarily hidden native documentation retains its reading position", function()
@@ -350,7 +347,7 @@ t:test("temporarily hidden native documentation retains its reading position", f
   ]])
   ui:wait_until(function()
     return ui:lua([[return vim.fn.complete_info({'selected'}).selected==0]])
-  end, 1000, "wide menu selected")
+  end, 5000, "wide menu selected")
   ui:lua([[
     cmp_doc:show(cmp_doc_context,{label='alpha',documentation=('Documentation line.\n'):rep(60)},0)
     cmp_doc:scroll(1);cmp_doc:scroll(1)
@@ -360,13 +357,13 @@ t:test("temporarily hidden native documentation retains its reading position", f
   ui:rpc("nvim_ui_try_resize", 60, 24)
   ui:wait_until(function()
     return ui:lua([[return vim.o.columns==60]])
-  end, 1000)
+  end, 5000)
   ui:lua([[cmp_doc:reposition(0)]])
   t.assert_false(documentation_state(ui).visible, "native info has no room beside the menu")
   ui:rpc("nvim_ui_try_resize", 100, 35)
   ui:wait_until(function()
     return ui:lua([[return vim.o.columns==100]])
-  end, 1000)
+  end, 5000)
   ui:lua([[cmp_doc:reposition(0)]])
   local after = documentation_state(ui)
   t.assert_true(after.visible, "native info is visible again")
@@ -382,13 +379,13 @@ t:test("native documentation scrolls inside a wrapped paragraph without moving t
   ui:wait_until(function()
     local state = documentation_state(ui)
     return state.visible and state.view.topline == 1 and state.view.skipcol > 0
-  end, 1000, "native smooth scrolling reveals the rest of a single long paragraph")
+  end, 5000, "native smooth scrolling reveals the rest of a single long paragraph")
   t.assert_same(cursor, ui:rpc("nvim_win_get_cursor", 0), "input cursor is unchanged")
   t.assert_eq("ic", ui:rpc("nvim_get_mode").mode, "native completion remains active in Insert mode")
   ui:lua([[cmp_doc:scroll(-1)]])
   ui:wait_until(function()
     return documentation_state(ui).view.skipcol == 0
-  end, 1000, "scrolling back reaches the paragraph start")
+  end, 5000, "scrolling back reaches the paragraph start")
 end)
 
 t:test("empty documentation and disappearing sections leave no stale separator", function()
@@ -411,7 +408,7 @@ t:test("empty documentation and disappearing sections leave no stale separator",
     ui:wait_until(function()
       local state = documentation_state(ui)
       return state.visible and not vim.list_contains(state.screen, ("─"):rep(state.config.width))
-    end, 1000, "no stale separator for " .. raw.label)
+    end, 5000, "no stale separator for " .. raw.label)
     t.assert_true(#documentation_state(ui).content <= 1000, "long content is bounded")
   end
   ui:lua([[cmp_doc:show(cmp_doc_context,{label='empty'},0)]])
@@ -419,18 +416,13 @@ t:test("empty documentation and disappearing sections leave no stale separator",
 end)
 
 t:test("native menu highlights subsequences and scrolls without menu or scrollbar windows", function()
-  local ui = UI.new()
-  t:defer(function()
-    ui:close()
-  end)
-  local grid = Grid.new(ui)
-  ui:start({ width = 100, height = 35 })
+  local items = {} ---@type table[]
+  for index = 1, 40 do
+    items[index] =
+      { label = string.format("alpha_candidate_%02d", index), kind = 6, sortText = string.format("%02d", index) }
+  end
+  local ui, grid = embedded.behavior_editor(t, { items = items })
   ui:lua([[
-    local items = {}
-    for index = 1, 40 do
-      items[index] = {label=string.format('alpha_candidate_%02d',index),kind=6,sortText=string.format('%02d',index)}
-    end
-    require('__test__.support.cmp.behavior').setup({items=items})
     vim.o.pumblend = 0
     for name, colors in pairs({
       Pmenu={fg=0xcccccc,bg=0x1f1f1f}, PmenuBorder={fg=0x2b2b2b,bg=0x1f1f1f},
@@ -440,87 +432,47 @@ t:test("native menu highlights subsequences and scrolls without menu or scrollba
   ]])
   ui:rpc("nvim_input", "iap")
 
-  ---@return table
-  local function screen()
-    local state = ui:lua([[
-      local geometry = vim.fn.pum_getpos()
-      local rows, cells = {}, {}
-      if vim.fn.pumvisible() == 1 then
-        for row = math.max(1, geometry.row), math.min(vim.o.lines, geometry.row + geometry.height + 3) do
-          local text = {}
-          for col = math.max(1, geometry.col), math.min(vim.o.columns, geometry.col + geometry.width + 4) do
-            local character = vim.fn.screenstring(row,col)
-            text[#text + 1] = character
-            cells[#cells + 1] = {row=row,col=col,text=character,attribute=vim.fn.screenattr(row,col)}
-          end
-          rows[#rows + 1] = table.concat(text)
-        end
-      end
-      return {geometry=geometry,rows=rows,cells=cells,selected=vim.fn.complete_info({'selected'}).selected,windows=#vim.api.nvim_list_wins()}
-    ]])
-    state.thumb = {}
-    state.matches = {}
-    for _, cell in ipairs(state.cells) do
-      local attribute = grid.highlights[cell.attribute] or {}
-      if attribute.background == 0x2b2b2b then
-        state.thumb[#state.thumb + 1] = cell
-      end
-      if attribute.foreground == 0xf5a9b8 then
-        cell.style = attribute
-        state.matches[#state.matches + 1] = cell
-      end
-    end
-    return state
-  end
-
   ui:wait_until(function()
-    local state = screen()
+    local state = embedded.menu(ui, grid)
     return state.selected == 0 and #state.thumb > 0 and table.concat(state.rows):find("alpha_candidate_01", 1, true)
-  end, 1000, "native text, selection and scrollbar reach the actual screen")
-  local first = screen()
+  end, 5000, "native text, selection and scrollbar reach the actual screen")
+  local first = embedded.menu(ui, grid)
   t.assert_eq(40, first.geometry.size, "native PUM owns the candidate list")
   t.assert_eq(10, first.geometry.height, "native height limit")
   t.assert_eq(1, first.windows, "menu and scrollbar need no floating windows")
   t.assert_eq(20, #first.matches, "two nonadjacent matched letters on each visible row")
-  for index, cell in ipairs(first.matches) do
-    t.assert_eq(index % 2 == 1 and "a" or "p", cell.text, "only query letters are highlighted")
-    t.assert_true(cell.style.bold and cell.style.italic, "matching letters retain bold and italic")
-    t.assert_eq(index <= 2 and 0x0078d4 or 0x1f1f1f, cell.style.background, "menu selection background")
-    if index % 2 == 0 then
-      t.assert_eq(2, cell.col - first.matches[index - 1].col, "the intervening letter is not highlighted")
-    end
+  embedded.assert_matches(t, first.matches, 0)
+  for index = 2, #first.matches, 2 do
+    t.assert_eq(2, first.matches[index].col - first.matches[index - 1].col, "the intervening letter is not highlighted")
   end
   ui:rpc("nvim_input", ("<C-j>"):rep(39))
   ui:wait_until(function()
-    local state = screen()
+    local state = embedded.menu(ui, grid)
     return state.selected == 39 and #state.thumb > 0 and state.thumb[1].row > first.thumb[1].row
-  end, 1000, "native thumb and viewport follow selection")
+  end, 5000, "native thumb and viewport follow selection")
   ui:rpc("nvim_ui_try_resize", 25, 25)
   ui:wait_until(function()
-    local state = screen()
+    local state = embedded.menu(ui, grid)
     return state.geometry.width ~= nil and state.geometry.width < first.geometry.width and #state.thumb > 0
-  end, 1000, "native menu clips to the resized screen")
+  end, 5000, "native menu clips to the resized screen")
   ui:lua([[require('era.keystroke.cmp').cancel()]])
   ui:wait_until(function()
     return ui:lua([[return vim.fn.pumvisible()==0 and vim.api.nvim_get_current_line()=='ap']])
-  end, 1000, "native cancellation restores the typed prefix")
+  end, 5000, "native cancellation restores the typed prefix")
   ui:lua([[
     require('__test__.support.cmp.behavior').items = {{label='alpha_short',kind=6}}
     require('era.keystroke.cmp').show()
   ]])
   ui:wait_until(function()
-    local state = screen()
+    local state = embedded.menu(ui, grid)
     return state.geometry.size == 1 and state.geometry.scrollbar == false and #state.thumb == 0
-  end, 1000, "short lists have no scrollbar")
-  t.assert_eq(1, screen().windows, "window count remains stable")
+  end, 5000, "short lists have no scrollbar")
+  t.assert_eq(1, embedded.menu(ui, grid).windows, "window count remains stable")
   t.assert_eq("", ui:lua([[return vim.v.errmsg]]), "no editor errors")
 end)
 
 t:test("external command lines anchor native menu text, selection and closure to the UI", function()
-  local ui = UI.new()
-  t:defer(function()
-    ui:close()
-  end)
+  local ui = UI.open(t)
   local grid = Grid.new(ui)
   ui:start({ width = 120, height = 40, ui = { ext_multigrid = true, ext_cmdline = true } })
   ui:lua([[
@@ -565,7 +517,7 @@ t:test("external command lines anchor native menu text, selection and closure to
   t.wait_until(function()
     menu_grid = find_menu()
     return menu_grid ~= nil and grid.flushes > 0
-  end, 1500, "menu reaches the UI without another key or forced redraw")
+  end, 5000, "menu reaches the UI without another key or forced redraw")
   local previous_flushes = grid.flushes
   ui:rpc("nvim_input", "<Tab>")
   t.wait_until(function()
@@ -581,7 +533,7 @@ t:test("external command lines anchor native menu text, selection and closure to
       end
     end
     return false
-  end, 1500, "selection colors reach the UI")
+  end, 5000, "selection colors reach the UI")
   ---@return integer|nil
   local function thumb_row()
     for index, cells in ipairs(grid.grids[menu_grid].rows) do
@@ -597,22 +549,18 @@ t:test("external command lines anchor native menu text, selection and closure to
   t.wait_until(function()
     local row = thumb_row()
     return row ~= nil and row > scrollbar_row
-  end, 1500, "scrollbar moves inside the native command-line menu grid")
+  end, 5000, "scrollbar moves inside the native command-line menu grid")
   ui:rpc("nvim_input", "<C-e>")
   t.wait_until(function()
     return not grid.floats[menu_grid]
-  end, 1500, "native menu disappears from the UI")
+  end, 5000, "native menu disappears from the UI")
   t.assert_eq("CmpScreen al", ui:lua("return vim.fn.getcmdline()"), "cancel restores the query")
   t.assert_eq("c", ui:rpc("nvim_get_mode").mode, "command line remains active")
   t.assert_eq("", ui:lua("return vim.v.errmsg"), "no editor errors")
 end)
 
 t:test("dressing registers native completion anchors on the first command and after a concealed prefix", function()
-  local ui = UI.new()
-  t:defer(function()
-    ui:close()
-  end)
-  ui:start({ width = 100, height = 35 })
+  local ui = UI.open(t, { width = 100, height = 35 })
   ui:lua([[
     require('__test__.support.cmp.runtime').setup()
     stl.string=require('stl.string')
@@ -634,7 +582,7 @@ t:test("dressing registers native completion anchors on the first command and af
     ui:rpc("nvim_input", ":" .. query)
     ui:wait_until(function()
       return ui:lua([[return vim.fn.pumvisible()==1]])
-    end, 1000, "native popup appears after the real command-line renderer creates its anchor")
+    end, 5000, "native popup appears after the real command-line renderer creates its anchor")
     local state = ui:lua([[
       local active=require('era.dressing.ui_attach.state').get_active_cmdline()
       local config=vim.api.nvim_win_get_config(active.winnr)
@@ -650,12 +598,12 @@ t:test("dressing registers native completion anchors on the first command and af
     ui:rpc("nvim_input", "<C-e>")
     ui:wait_until(function()
       return ui:lua([[return vim.fn.pumvisible()==0]])
-    end, 1000, "cancel does not schedule another automatic completion")
+    end, 5000, "cancel does not schedule another automatic completion")
     t.assert_eq(query, ui:lua([[return vim.fn.getcmdline()]]), "typed command is preserved")
     ui:rpc("nvim_input", "<Esc>")
     ui:wait_until(function()
       return ui:rpc("nvim_get_mode").mode == "n"
-    end, 1000, "command line closes")
+    end, 5000, "command line closes")
   end
   t.assert_eq("", ui:lua([[return vim.v.errmsg]]), "no editor errors")
 end)

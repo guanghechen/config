@@ -1,19 +1,12 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "__test__.support.git_files" ---@type string
 
+local bootstrap = require("__test__.support.bootstrap")
+local fs = require("__test__.support.fs")
 local git = require("__test__.support.git")
 local harness = require("__test__.support.harness")
 
 local M = {}
-
----@param root                          string
----@param path                          string
----@param lines                         string[]
----@return nil
-function M.write(root, path, lines)
-  vim.fn.mkdir(yoz.canonical_path.dirname(root .. "/" .. path, false), "p")
-  vim.fn.writefile(lines, root .. "/" .. path)
-end
 
 ---A repository with a committed file in a directory, a second file beside it and one outside it.
 ---@param t                             __test__.support.Harness
@@ -22,20 +15,45 @@ end
 function M.repo(t, unborn)
   local root = git.repo(t)
   if not unborn then
-    M.write(root, "dir/mixed.lua", { "one", "two", "three" })
-    M.write(root, "dir/second.lua", { "base" })
-    M.write(root, "outside.lua", { "base" })
-    git.run(root, { "add", "." })
-    git.run(root, { "commit", "-qm", "fixture" })
+    fs.write(root .. "/dir/mixed.lua", { "one", "two", "three" })
+    fs.write(root .. "/dir/second.lua", { "base" })
+    fs.write(root .. "/outside.lua", { "base" })
+    git.commit(root, "fixture")
   end
   return root
 end
 
----@param t                             table
+---The `repo` fixture with `staged` written and staged, then `unstaged` written over the worktree, so a path in both
+---is partially staged.
+---@param t                             __test__.support.Harness
+---@param staged                        table<string, string[]> Lines by path.
+---@param unstaged                      table<string, string[]> Lines by path.
+---@return string
+function M.changes(t, staged, unstaged)
+  local root = M.repo(t)
+  for path, lines in pairs(staged) do
+    fs.write(root .. "/" .. path, lines)
+    git.run(root, { "add", "--", path })
+  end
+  for path, lines in pairs(unstaged) do
+    fs.write(root .. "/" .. path, lines)
+  end
+  return root
+end
+
+---A Git Files widget on `root` as `widget`, with the reports since in `warnings` and `errors`. It is disposed when the
+---case ends, which fails if anything reported an error.
+---@param t                             __test__.support.Harness
 ---@param root                          string
 ---@return table
 function M.widget(t, root)
-  local state = { root = root, warnings = {}, errors = {}, refreshed = stl.c.Observable.from_value(0) }
+  local reports = bootstrap.with_reporter(t)
+  local state = {
+    root = root,
+    warnings = reports.warn,
+    errors = reports.error,
+    refreshed = stl.c.Observable.from_value(0),
+  }
   t:patch_table(dot.path, "workspace", function()
     return state.root
   end)
@@ -46,12 +64,6 @@ function M.widget(t, root)
   t:patch_table(era.m.git.state, "refresh_index", function()
     return stl.c.Future.resolve()
   end)
-  t:patch_table(stl.reporter, "warn", function(value)
-    state.warnings[#state.warnings + 1] = value
-  end)
-  t:patch_table(stl.reporter, "error", function(value)
-    state.errors[#state.errors + 1] = value
-  end)
   state.widget = require("era.m.git_files").new()
   t:defer(function()
     state.widget:dispose()
@@ -61,15 +73,13 @@ function M.widget(t, root)
   return state
 end
 
+---Waits until `widget` has finished refreshing and its trees are ready.
 ---@param widget                        era.m.git_files.Widget
 ---@return nil
 function M.ready(widget)
-  assert(
-    vim.wait(10000, function()
-      return widget._request == nil
-    end, 1),
-    "Git Files refresh timed out"
-  )
+  harness.wait_until(function()
+    return widget._request == nil
+  end, 10000, "Git Files refresh timed out")
   assert(not widget._failed, "Git Files refresh failed")
   for _, pane in pairs(widget.panes) do
     harness.await(pane.tree:ready())

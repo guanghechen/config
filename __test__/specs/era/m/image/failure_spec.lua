@@ -59,12 +59,7 @@ end)
 
 t:test("the failure message is highlighted by treesitter alone", function()
   local Placement = assert(loadfile("lua/era/m/image/placement.lua"))()
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
+  local bufnr = t:buffer()
 
   setmetatable({ bufnr = bufnr, opts = {}, img = {} }, Placement):error()
   t.assert_eq("# Image Conversion Failed:", vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1])

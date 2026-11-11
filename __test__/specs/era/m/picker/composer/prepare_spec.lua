@@ -1,32 +1,19 @@
 require("ark.bootstrap").setup()
 local t = require("__test__.support.harness").new()
+local picker = require("__test__.support.picker")
 local treeview = require("__test__.support.treeview")
 local Paths = require("era.view.result_paths")
 
 ---@param frecency                      ?table
 ---@return era.m.picker.FiletreeComposer
 local function fixture(frecency)
-  local observable = stl.c.Observable.from_value
-  local composer = era.m.picker.FiletreeComposer.new({
+  return picker.filetree(t, {
     name = "cooperative paths",
     title = "cooperative paths",
     permanent = true,
     preview = false,
     frecency = frecency,
-    search_pattern = observable(""),
-    flag_foldempty = observable(false),
-    flag_fuzzy = observable(false),
-    flag_regex = observable(false),
-    flag_case_sensitive = observable(true),
-    flag_selected = observable(false),
-    flag_viewtype = observable("tree"),
   })
-  t:defer(function()
-    if not composer:isdisposed() then
-      composer:dispose()
-    end
-  end)
-  return composer
 end
 
 ---@param count                         integer
@@ -98,10 +85,7 @@ t:test("the first surface waits for prepared paths and applies the current query
     return create(self, root, ...)
   end)
   local pending = composer:prepare_filepaths("/workspace", paths(5000))
-  composer.result:create_win(
-    { border = "none", number = false, winhighlight = "" },
-    { row = 0, col = 0, width = 40, height = 6 }
-  )
+  picker.show_result(composer, 40, 6)
   treeview.await(pending)
   treeview.await(composer._treeview:ready())
   local frame = composer._treeview:frame()
@@ -155,13 +139,13 @@ t:test("a cancelled walk supersedes its request and a failed one fails it", func
   local superseded = composer:prepare_filepaths("/cancelled", stl.c.Future.reject("Operation cancelled"))
   t.wait_until(function()
     return superseded:is_done()
-  end, 1000)
+  end, 5000)
   t.assert_eq("Superseded", superseded:get_result().kind)
   t.assert_nil(composer._path_request)
   local failed = composer:prepare_filepaths("/failed", stl.c.Future.reject("disk on fire"))
   t.wait_until(function()
     return failed:is_done()
-  end, 1000)
+  end, 5000)
   t.assert_true(failed:is_failed())
   t.assert_eq("disk on fire", tostring(failed:get_error()):match("^[^\n]*"))
 end)

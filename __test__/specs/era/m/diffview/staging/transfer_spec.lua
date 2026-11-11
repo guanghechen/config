@@ -1,6 +1,7 @@
 require("ark.bootstrap").setup()
 local t = require("__test__.support.harness").new()
 local diffview = require("__test__.support.diffview")
+local fs = require("__test__.support.fs")
 local git = require("__test__.support.git")
 local action = require("era.m.diffview.view.workspace.action")
 
@@ -18,20 +19,11 @@ local function assert_transfer_call(call, command, root, expected)
   t.assert_same(expected, diffview.pathspecs(call), "pathspecs")
 end
 
----@param refreshes                     { completed: integer }
----@param count                         integer
----@return nil
-local function await_refreshes(refreshes, count)
-  t.wait_until(function()
-    return refreshes.completed >= count
-  end, 10000, "completed refreshes")
-end
-
 t:test("Changes rows stage and unstage the entry at the cursor rather than the previewed one", function()
   local root = diffview.committed(t, { ["a.txt"] = { "a" }, ["b.txt"] = { "b" } })
-  diffview.write(root, "a.txt", { "A" })
-  diffview.write(root, "b.txt", { "B" })
-  diffview.write(root, "c.txt", { "c" })
+  fs.write(root .. "/a.txt", { "A" })
+  fs.write(root .. "/b.txt", { "B" })
+  fs.write(root .. "/c.txt", { "c" })
   git.run(root, { "add", "c.txt" })
   local session = diffview.open_workspace(t)
   local calls = diffview.record_git(t)
@@ -40,12 +32,12 @@ t:test("Changes rows stage and unstage the entry at the cursor rather than the p
   t.assert_eq("c.txt", session.state:get_current_entry().filepath, "the preview")
   diffview.cursor_on(session, "unstaged", "b.txt")
   action.stage(session)
-  await_refreshes(refreshes, 1)
+  diffview.await_refreshes(refreshes, 1)
 
   session.state:set_current_entry(assert(session.state:find_entry("a.txt", "unstaged")))
   diffview.cursor_on(session, "staged", "c.txt")
   action.unstage(session)
-  await_refreshes(refreshes, 2)
+  diffview.await_refreshes(refreshes, 2)
 
   local index = diffview.index_calls(calls)
   t.assert_eq(3, #index, "git calls")
@@ -58,7 +50,7 @@ end)
 
 t:test("a whole-file stage waits its turn in the repository index queue", function()
   local root = diffview.committed(t, { ["queued.txt"] = { "a" } })
-  diffview.write(root, "queued.txt", { "A" })
+  fs.write(root .. "/queued.txt", { "A" })
   local session = diffview.open_workspace(t)
   local calls = diffview.record_git(t)
   local refreshes = diffview.count_refreshes(t, session.state)
@@ -71,7 +63,7 @@ t:test("a whole-file stage waits its turn in the repository index queue", functi
   action.stage(session)
   t.assert_eq(0, #diffview.index_calls(calls), "whole-file stage waits")
   assert(release)(nil)
-  await_refreshes(refreshes, 1)
+  diffview.await_refreshes(refreshes, 1)
 
   local index = diffview.index_calls(calls)
   t.assert_eq(1, #index, "whole-file stage starts after release")
@@ -88,10 +80,10 @@ t:test("side-by-side stage and unstage transfer the previewed entry", function()
 
   session.state:set_current_entry(assert(session.state:find_entry("a.txt", "unstaged")))
   action.stage(session)
-  await_refreshes(refreshes, 1)
+  diffview.await_refreshes(refreshes, 1)
   session.state:set_current_entry(assert(session.state:find_entry("c.txt", "staged")))
   action.unstage(session)
-  await_refreshes(refreshes, 2)
+  diffview.await_refreshes(refreshes, 2)
 
   local index = diffview.index_calls(calls)
   t.assert_eq(3, #index, "git calls")
@@ -110,7 +102,7 @@ t:test("staging a directory sends every unstaged descendant through stdin", func
     ["src/nested/b.lua"] = { "b" },
   })
   for _, path in ipairs({ "outside.lua", "src/a.lua", "src/already.lua", "src/nested/b.lua" }) do
-    diffview.write(root, path, { "changed" })
+    fs.write(root .. "/" .. path, { "changed" })
   end
   git.run(root, { "add", "src/already.lua" })
   assert(vim.uv.fs_rename(root .. "/legacy.lua", root .. "/src/new.lua"))
@@ -140,7 +132,7 @@ t:test("staging a directory sends every unstaged descendant through stdin", func
   diffview.cursor_on(session, "unstaged", "src")
   action.stage(session)
   restore()
-  await_refreshes(refreshes, 1)
+  diffview.await_refreshes(refreshes, 1)
 
   local call = diffview.index_calls(calls)[1]
   t.assert_eq(4, #call.args, "argv stays fixed as external renames grow")
@@ -170,8 +162,8 @@ t:test("unstaging a directory resets its staged descendants to HEAD", function()
     ["outside.lua"] = { "outside" },
     ["src/a.lua"] = { "a" },
   })
-  diffview.write(root, "src/a.lua", { "A" })
-  diffview.write(root, "outside.lua", { "OUTSIDE" })
+  fs.write(root .. "/src/a.lua", { "A" })
+  fs.write(root .. "/outside.lua", { "OUTSIDE" })
   git.run(root, { "add", "src/a.lua", "outside.lua" })
   git.run(root, { "mv", "legacy.lua", "src/new.lua" })
   local session = diffview.open_workspace(t)
@@ -180,7 +172,7 @@ t:test("unstaging a directory resets its staged descendants to HEAD", function()
 
   diffview.cursor_on(session, "staged", "src")
   action.unstage(session)
-  await_refreshes(refreshes, 1)
+  diffview.await_refreshes(refreshes, 1)
 
   local index = diffview.index_calls(calls)
   t.assert_eq("rev-parse", index[1].args[1], "HEAD probe")
@@ -199,8 +191,8 @@ end)
 
 t:test("unstaging a directory before the first commit removes its descendants from the index", function()
   local root = diffview.workspace(t, git.repo(t))
-  diffview.write(root, "src/new.lua", { "new" })
-  diffview.write(root, "outside.lua", { "outside" })
+  fs.write(root .. "/src/new.lua", { "new" })
+  fs.write(root .. "/outside.lua", { "outside" })
   git.run(root, { "add", "." })
   local session = diffview.open_workspace(t)
   local calls = diffview.record_git(t)
@@ -208,7 +200,7 @@ t:test("unstaging a directory before the first commit removes its descendants fr
 
   diffview.cursor_on(session, "staged", "src")
   action.unstage(session)
-  await_refreshes(refreshes, 1)
+  diffview.await_refreshes(refreshes, 1)
 
   local index = diffview.index_calls(calls)
   t.assert_eq("rev-parse", index[1].args[1], "unborn HEAD probe")

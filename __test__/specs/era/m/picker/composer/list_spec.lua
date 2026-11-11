@@ -1,12 +1,9 @@
+local UI = require("__test__.support.ui")
 local t = require("__test__.support.harness").new()
 
 ---@return __test__.support.UI
 local function session()
-  local ui = require("__test__.support.ui").new()
-  t:defer(function()
-    ui:close()
-  end)
-  ui:start({ width = 100, height = 32, runtime = "ark" })
+  local ui = UI.open(t, { width = 100, height = 32, runtime = "ark" })
   ui:lua([[
     errors = {}
     stl.reporter.error = function(value) errors[#errors + 1] = value end
@@ -45,11 +42,11 @@ local function session()
     picker:reset_data({items=items, uuid_current="one", uuid_present="two"})
     picker:focus()
   ]])
-  ui:wait_until(function()
-    return ui:lua(
-      "return picker._treeview.view and picker._treeview.view:frame() and picker._treeview:linecount() == 3"
-    )
-  end, 5000)
+  ui:wait_lua(
+    "return picker._treeview.view and picker._treeview.view:frame() and picker._treeview:linecount() == 3",
+    5000,
+    "three rows"
+  )
   return ui
 end
 
@@ -75,9 +72,7 @@ t:test("native List preserves callback payload identity, match byte offsets and 
     ]])
   end, 5000)
   ui:lua([[saved_bufnr=picker.result:get_bufnr(); writes=0; picker:hide(); picker:focus()]])
-  ui:wait_until(function()
-    return ui:lua("return picker._treeview.view and not picker._treeview.view:is_suspended()")
-  end, 5000)
+  ui:wait_lua("return picker._treeview.view and not picker._treeview.view:is_suspended()", 5000, "result resumed")
   t.assert_eq(0, ui:lua("return writes"))
   t.assert_true(ui:lua("return saved_bufnr == picker.result:get_bufnr()"))
   t.assert_eq(0, ui:lua("return #errors"))
@@ -96,16 +91,20 @@ t:test("a Visual frame keeps its published payloads while a replacement reorders
     }
     picker:reset_data({items=next_items, uuid_current="two"})
   ]])
-  ui:wait_until(function()
-    return ui:lua([[
+  ui:wait_lua(
+    [[
       return picker._treeview.state:snapshot():header().data_revision ~= old_frame:header().data_revision
-    ]])
-  end, 5000)
+    ]],
+    5000,
+    "replacement prepared"
+  )
   t.assert_true(ui:lua("return picker:retrieve(1) == items[1]"))
   ui:lua([[vim.cmd.normal({args={vim.keycode("<Esc>")}, bang=true})]])
-  ui:wait_until(function()
-    return ui:lua("return picker:retrieve(1) == next_items[1] and picker._treeview:linecount() == 2")
-  end, 5000)
+  ui:wait_lua(
+    "return picker:retrieve(1) == next_items[1] and picker._treeview:linecount() == 2",
+    5000,
+    "replacement published"
+  )
   t.assert_eq(0, ui:lua("return #errors"))
 end)
 
@@ -121,12 +120,14 @@ t:test("equal presentation replaces action payloads through a new revision witho
     picker:reset_data({items=replacement,uuid_current="one"})
     assert(picker:retrieve(1)==items[1],"old frame must keep the original item until publication")
   ]])
-  ui:wait_until(function()
-    return ui:lua([[
+  ui:wait_lua(
+    [[
       return picker:retrieve(1)==replacement[1]
         and picker._treeview:frame():header().data_revision~=previous_revision
-    ]])
-  end, 5000)
+    ]],
+    5000,
+    "replacement published"
+  )
   t.assert_eq(0, ui:lua("return writes"))
 end)
 
@@ -168,13 +169,13 @@ t:test("fuzzy queries rank with smart case and regex queries keep their escapes"
   ---@return string[]
   local function rows(query, count)
     ui:lua("picker.finder:set_content(...)", query)
-    ui:wait_until(function()
-      return ui:lua(
-        "return picker._matched_input == select(1, ...) and picker._treeview:linecount() == select(2, ...)",
-        query,
-        count
-      )
-    end, 5000)
+    ui:wait_lua(
+      "return picker._matched_input == select(1, ...) and picker._treeview:linecount() == select(2, ...)",
+      5000,
+      "rows of " .. query,
+      query,
+      count
+    )
     return ui:lua([[
       local uuids = {}
       for row = 1, picker._treeview:linecount() do uuids[row] = picker:retrieve(row).uuid end
@@ -192,9 +193,11 @@ t:test("an invalid regex lists nothing and says why", function()
   local ui = session()
   ui:lua("controls.flag_regex:next(true)")
   ui:lua("picker.finder:set_content(...)", "(")
-  ui:wait_until(function()
-    return ui:lua("return picker._matched_input == '(' and picker._treeview:linecount() == 0")
-  end, 5000)
+  ui:wait_lua(
+    "return picker._matched_input == '(' and picker._treeview:linecount() == 0",
+    5000,
+    "invalid regex matched"
+  )
   t.assert_eq(1, ui:lua("return #errors"))
   t.assert_true(ui:lua("return errors[1].message:find('Invalid regex pattern', 1, true) ~= nil"))
 end)
@@ -215,9 +218,7 @@ t:test("a newer reset supersedes partially prepared producer records", function(
     latest={uuid="latest",text="latest",text_lower="latest",data=newproxy(false)}
     picker:reset_data({items={latest}})
   ]])
-  ui:wait_until(function()
-    return ui:lua("return picker._treeview:linecount()==1 and picker:retrieve(1)==latest")
-  end, 5000)
+  ui:wait_lua("return picker._treeview:linecount()==1 and picker:retrieve(1)==latest", 5000, "latest reset published")
   t.assert_true(ui:lua("return not picker._treeview:frame():source():id('item:stale-one')"))
   t.assert_eq(0, ui:lua("return #errors"))
 end)
@@ -229,9 +230,7 @@ t:test("Snacks items with equal names retain distinct native rows and action pay
     local data=require("era.m.select.provider-snacks")(choices,{format_item=function(item) return item.text end})
     picker:reset_data(data)
   ]])
-  ui:wait_until(function()
-    return ui:lua("return picker._treeview:linecount()==2 or #errors>0")
-  end, 5000)
+  ui:wait_lua("return picker._treeview:linecount()==2 or #errors>0", 5000, "choices published")
   t.assert_eq(0, ui:lua("return #errors"))
   t.assert_true(ui:lua("return picker:retrieve(1).data.original_item==choices[1]"))
   t.assert_true(ui:lua("return picker:retrieve(2).data.original_item==choices[2]"))
@@ -249,9 +248,7 @@ for _, provider in ipairs({ "fallback", "snacks" }) do
     ]],
       provider
     )
-    ui:wait_until(function()
-      return ui:lua("return picker._treeview:linecount()==2 or #errors>0")
-    end, 5000)
+    ui:wait_lua("return picker._treeview:linecount()==2 or #errors>0", 5000, "choices published")
     t.assert_eq(0, ui:lua("return #errors"))
     t.assert_true(ui:lua("return picker:retrieve(1).data.original_item==choices[1]"))
     t.assert_true(ui:lua("return picker:retrieve(2).data.original_item==choices[2]"))
@@ -274,9 +271,11 @@ t:test("flat replacements keep stable native identities and selection through a 
     replacement[151]={uuid="one",text="changed",text_lower="changed"}
     picker:reset_data({items=replacement})
   ]])
-  ui:wait_until(function()
-    return ui:lua([[return picker._treeview:linecount()==300 and picker:retrieve(151)==replacement[151] ]])
-  end, 5000)
+  ui:wait_lua(
+    [[return picker._treeview:linecount()==300 and picker:retrieve(151)==replacement[151] ]],
+    5000,
+    "replacement published"
+  )
   t.assert_true(ui:lua([[return picker._treeview:frame():source():id("item:one")==before
     and picker._treeview:isselected("item:one")]]))
   ui:lua([[
@@ -286,9 +285,7 @@ t:test("flat replacements keep stable native identities and selection through a 
     end
     picker:reset_data({items=latest})
   ]])
-  ui:wait_until(function()
-    return ui:lua([[return picker:retrieve(151)==latest[151] ]])
-  end, 5000)
+  ui:wait_lua([[return picker:retrieve(151)==latest[151] ]], 5000, "latest published")
   t.assert_true(ui:lua([[return picker._treeview:isselected("item:one")]]))
   t.assert_eq(0, ui:lua("return #errors"))
 end)
@@ -299,18 +296,12 @@ t:test("a rejected flat reset leaves the published payloads and selection intact
     picker._treeview:set_selected("item:one",true)
     picker:reset_data({items={items[1],items[1]}})
   ]])
-  ui:wait_until(function()
-    return ui:lua([[return #errors==1 and picker._treeview:isselected("item:one")]])
-  end, 5000)
+  ui:wait_lua([[return #errors==1 and picker._treeview:isselected("item:one")]], 5000, "rejected reset reported")
   t.assert_true(ui:lua([[return picker:retrieve(1)==items[1] and picker._treeview:linecount()==3]]))
 end)
 
 t:test("a navigation key typed ahead with a query moves over the rows of that query", function()
-  local ui = require("__test__.support.ui").new()
-  t:defer(function()
-    ui:close()
-  end)
-  ui:start({ width = 100, height = 32, runtime = "ark" })
+  local ui = UI.open(t, { width = 100, height = 32, runtime = "ark" })
   ui:lua([[
     confirmed = nil
     picker = era.m.picker.ListComposer.new({
@@ -331,24 +322,16 @@ t:test("a navigation key typed ahead with a query moves over the rows of that qu
     picker:reset_data({ items = items })
     picker:focus()
   ]])
-  ui:wait_until(function()
-    return ui:lua("return picker._treeview:linecount() == 5")
-  end, 5000, "five rows")
+  ui:wait_lua("return picker._treeview:linecount() == 5", 5000, "five rows")
 
   -- "ta" leaves beta, delta and theta; the second of them is delta, where the second of all five rows is beta.
   ui:rpc("nvim_input", "ita<C-j><CR>")
-  ui:wait_until(function()
-    return ui:lua("return confirmed ~= nil")
-  end, 5000, "confirmed")
+  ui:wait_lua("return confirmed ~= nil", 5000, "confirmed")
   t.assert_eq("delta", ui:lua("return confirmed"))
 end)
 
 t:test("a query typed ahead of <CR> confirms from its own results", function()
-  local ui = require("__test__.support.ui").new()
-  t:defer(function()
-    ui:close()
-  end)
-  ui:start({ width = 100, height = 32, runtime = "ark" })
+  local ui = UI.open(t, { width = 100, height = 32, runtime = "ark" })
   ui:lua([[
     confirmed = nil
     picker = era.m.picker.ListComposer.new({
@@ -369,15 +352,11 @@ t:test("a query typed ahead of <CR> confirms from its own results", function()
     } })
     picker:focus()
   ]])
-  ui:wait_until(function()
-    return ui:lua("return picker._treeview:linecount() == 3")
-  end, 5000, "three rows")
+  ui:wait_lua("return picker._treeview:linecount() == 3", 5000, "three rows")
 
   -- One burst, as keys typed faster than the match debounce arrive: <CR> runs before the query is matched.
   ui:rpc("nvim_input", "igam<CR>")
-  ui:wait_until(function()
-    return ui:lua("return confirmed ~= nil")
-  end, 5000, "confirmed")
+  ui:wait_lua("return confirmed ~= nil", 5000, "confirmed")
   t.assert_eq("gamma", ui:lua("return confirmed"))
 end)
 

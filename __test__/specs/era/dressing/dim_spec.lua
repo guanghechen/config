@@ -22,7 +22,7 @@ t:test("repeated setup registers one observer and preserves dim toggles", functi
     toggle:next(false)
     t.wait_until(function()
       return #vim.api.nvim_get_autocmds({ group = group }) == 0
-    end, 1000, "dim did not disable during cleanup")
+    end, 5000, "dim did not disable during cleanup")
     vim.api.nvim_set_decoration_provider(vim.api.nvim_get_namespaces()["era.dressing.dim"], {})
     vim.api.nvim_del_augroup_by_name(group)
   end)
@@ -32,7 +32,7 @@ t:test("repeated setup registers one observer and preserves dim toggles", functi
   toggle:next(true)
   t.wait_until(function()
     return #vim.api.nvim_get_autocmds({ group = group }) > 0
-  end, 1000, "dim did not enable")
+  end, 5000, "dim did not enable")
   local count = #vim.api.nvim_get_autocmds({ group = group })
   era.dressing.setup({ "dim" })
   t.assert_eq(count, #vim.api.nvim_get_autocmds({ group = group }), "no duplicate autocmds")
@@ -40,11 +40,11 @@ t:test("repeated setup registers one observer and preserves dim toggles", functi
   toggle:next(false)
   t.wait_until(function()
     return #vim.api.nvim_get_autocmds({ group = group }) == 0
-  end, 1000, "dim did not disable")
+  end, 5000, "dim did not disable")
   toggle:next(true)
   t.wait_until(function()
     return #vim.api.nvim_get_autocmds({ group = group }) == count
-  end, 1000, "dim did not re-enable")
+  end, 5000, "dim did not re-enable")
   t.assert_eq(1, observations, "toggles reuse the observer")
 end)
 

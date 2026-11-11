@@ -1,6 +1,7 @@
 require("ark.bootstrap").setup()
 local t = require("__test__.support.harness").new()
 local diffview = require("__test__.support.diffview")
+local fs = require("__test__.support.fs")
 local action = require("era.m.diffview.view.workspace.action")
 local workspace_view = require("era.m.diffview.view.workspace.view")
 
@@ -10,7 +11,7 @@ local workspace_view = require("era.m.diffview.view.workspace.view")
 local function open(changed)
   local root = diffview.committed(t, { ["a.lua"] = { "a" }, ["b.lua"] = { "b" }, ["c.lua"] = { "c" } })
   for _, path in ipairs(changed) do
-    diffview.write(root, path, { "changed " .. path })
+    fs.write(root .. "/" .. path, { "changed " .. path })
   end
   return diffview.open_workspace(t)
 end
@@ -90,17 +91,9 @@ end
 ---@param token                         ?stl.c.CancellationToken
 ---@return boolean ok                   Whether applying completed without an error.
 local function apply(session, entries, token)
-  local settled, ok = false, false
-  stl.async
-    .run_future(function()
-      action.apply_entries(session, entries, token)
-    end)
-    :finally(function(resolved)
-      settled, ok = true, resolved
-    end)
-  t.wait_until(function()
-    return settled
-  end, 5000, "applied entries")
+  local ok = t.settle(stl.async.run_future(function()
+    action.apply_entries(session, entries, token)
+  end))
   return ok
 end
 

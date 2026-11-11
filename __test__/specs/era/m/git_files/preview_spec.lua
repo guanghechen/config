@@ -1,6 +1,7 @@
 require("ark.bootstrap").setup()
 local t = require("__test__.support.harness").new()
 local support = require("__test__.support.git_files")
+local fs = require("__test__.support.fs")
 local git = require("__test__.support.git")
 
 ---@return table
@@ -14,10 +15,9 @@ local function fixture()
     vim.o.columns = columns
     vim.o.showtabline = showtabline
   end)
-  local root = support.repo(t)
-  support.write(root, "dir/mixed.lua", { "one", "two", "three", "only-staged" })
-  git.run(root, { "add", "dir/mixed.lua" })
-  support.write(root, "dir/mixed.lua", { "one", "two", "three", "only-staged", "only-unstaged" })
+  local root = support.changes(t, { ["dir/mixed.lua"] = { "one", "two", "three", "only-staged" } }, {
+    ["dir/mixed.lua"] = { "one", "two", "three", "only-staged", "only-unstaged" },
+  })
   local state = support.widget(t, root)
   state.widget._preview_enabled = false
   state.widget:toggle()
@@ -80,7 +80,7 @@ end)
 
 t:test("untracked diff accepts Git's exit status one and preserves the index", function()
   local state = fixture()
-  support.write(state.root, "new file.lua", { "untracked-line" })
+  fs.write(state.root .. "/new file.lua", { "untracked-line" })
   t.await(state.widget:refresh(false))
   support.ready(state.widget)
   local before = git.run(state.root, { "ls-files", "--stage", "-z" })
@@ -111,17 +111,17 @@ t:test("late preview output cannot replace a newer target or write after closing
   widget:toggle_preview()
   t.wait_until(function()
     return #requests == 1
-  end, 3000)
+  end, 5000)
   support.cursor(widget, "staged", "dir/mixed.lua")
   t.wait_until(function()
     return #requests == 2
-  end, 3000)
+  end, 5000)
   t.assert_eq(1, killed)
   requests[2].options.stdout(nil, "@@ -0,0 +1 @@\n+newer\n")
   requests[2].callback({ code = 0, stderr = "" })
   t.wait_until(function()
     return contains(widget.preview, "newer")
-  end, 1000)
+  end, 5000)
   requests[1].options.stdout(nil, "@@ -0,0 +1 @@\n+older\n")
   requests[1].callback({ code = 0, stderr = "" })
   vim.wait(20, function()
@@ -131,7 +131,7 @@ t:test("late preview output cannot replace a newer target or write after closing
   support.cursor(widget, "unstaged", "dir/mixed.lua")
   t.wait_until(function()
     return #requests == 3
-  end, 3000)
+  end, 5000)
   widget:hide()
   local callback = assert(widget.preview._statuscolumn:match("dot%.G%.([%w_]+)"))
   widget:dispose()

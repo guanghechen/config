@@ -1,50 +1,48 @@
+local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
 local module_name = "era.dressing.winline"
 local t = harness.new()
 
+-- Declares the `stl` the winline reads: subscribers are their props and text carries no highlight.
+---@param has_external_winline          fun(filetype: string): boolean
+---@param win                           table The `stl.nvim.win` functions.
+---@param extra                         ?table Further `stl` fields.
+---@return nil
+local function patch_stl(has_external_winline, win, extra)
+  t:patch_global(
+    "stl",
+    vim.tbl_extend("error", {
+      c = { Subscriber = {
+        new = function(props)
+          return props
+        end,
+      } },
+      filetype = { has_external_winline = has_external_winline },
+      nvim = {
+        fn = {
+          txt = function(text)
+            return text
+          end,
+        },
+        win = win,
+      },
+    }, extra or {})
+  )
+end
+
 t:test("diffview winbar renders hunk navigation on the right", function()
   local winnr = vim.api.nvim_get_current_win()
-  local bufnr_previous = vim.api.nvim_win_get_buf(winnr)
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  t:defer(function()
-    vim.api.nvim_win_set_buf(winnr, bufnr_previous)
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
+  t:buffer(nil, { name = "diffview:///repo/index/file.lua", current = true })
   local on_dirty = nil ---@type fun(winnr: integer)|nil
 
-  vim.api.nvim_buf_set_name(bufnr, "diffview:///repo/index/file.lua")
-  vim.api.nvim_win_set_buf(winnr, bufnr)
-
-  t:patch_global("stl", {
-    c = {
-      Subscriber = {
-        new = function(spec)
-          return spec
-        end,
-      },
-    },
-    env = {
-      HOME_NVIM_CONFIG = "/nvim",
-    },
-    filetype = {
-      has_external_winline = function()
-        return false
-      end,
-    },
-    nvim = {
-      fn = {
-        txt = function(text)
-          return text
-        end,
-      },
-      win = {
-        is_valid = function(target_winnr)
-          return target_winnr == winnr
-        end,
-      },
-    },
-  })
+  patch_stl(function()
+    return false
+  end, {
+    is_valid = function(target_winnr)
+      return target_winnr == winnr
+    end,
+  }, { env = { HOME_NVIM_CONFIG = "/nvim" } })
   t:patch_global("dot", {
     state = {
       status = {
@@ -81,44 +79,16 @@ end)
 
 t:test("external winline delegates dirty renders to its owned nvimbar", function()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local bufnr_previous = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  t:defer(function()
-    vim.api.nvim_win_set_buf(winnr, bufnr_previous)
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
+  t:buffer(nil, { filetype = "diffview-commits-test", current = true })
   local on_dirty = nil ---@type fun(winnr: integer)|nil
   local renders = 0
 
-  vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
-  vim.api.nvim_set_option_value("filetype", "diffview-commits-test", { buf = bufnr })
-  vim.api.nvim_win_set_buf(winnr, bufnr)
-
-  t:patch_global("stl", {
-    c = {
-      Subscriber = {
-        new = function(spec)
-          return spec
-        end,
-      },
-    },
-    filetype = {
-      has_external_winline = function(filetype)
-        return filetype == "diffview-commits-test"
-      end,
-    },
-    nvim = {
-      fn = {
-        txt = function(text)
-          return text
-        end,
-      },
-      win = {
-        is_valid = function(target_winnr)
-          return target_winnr == winnr
-        end,
-      },
-    },
+  patch_stl(function(filetype)
+    return filetype == "diffview-commits-test"
+  end, {
+    is_valid = function(target_winnr)
+      return target_winnr == winnr
+    end,
   })
   t:patch_global("dot", {
     state = {
@@ -159,41 +129,13 @@ end)
 
 t:test("dressing subscribes once and routes dirty updates to valid current and previous windows", function()
   local winnr = vim.api.nvim_get_current_win()
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
-  local previous_winnr = vim.api.nvim_open_win(bufnr, false, { split = "right" })
-  t:defer(function()
-    if vim.api.nvim_win_is_valid(previous_winnr) then
-      vim.api.nvim_win_close(previous_winnr, true)
-    end
-  end)
+  local previous_winnr = t:window(t:buffer(), { split = "right" })
 
   local subscribers = {}
   local rendered_winnrs = {}
-  t:patch_global("stl", {
-    c = { Subscriber = {
-      new = function(props)
-        return props
-      end,
-    } },
-    filetype = {
-      has_external_winline = function()
-        return true
-      end,
-    },
-    nvim = {
-      fn = {
-        txt = function(text)
-          return text
-        end,
-      },
-      win = { is_valid = vim.api.nvim_win_is_valid },
-    },
-  })
+  patch_stl(function()
+    return true
+  end, { is_valid = vim.api.nvim_win_is_valid })
   t:patch_global("dot", {
     state = {
       status = {
@@ -243,20 +185,12 @@ end)
 
 t:test("source windows show the confirmed path at once and apply delivered symbols", function()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local bufnr_previous = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  local bufnr = vim.api.nvim_create_buf(true, false) ---@type integer
-  vim.api.nvim_buf_set_name(bufnr, "/tmp/winline-spec-source.lua")
-  vim.api.nvim_win_set_buf(winnr, bufnr)
-  t:defer(function()
-    vim.api.nvim_win_set_buf(winnr, bufnr_previous)
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
+  t:buffer(nil, { name = "/tmp/winline-spec-source.lua", listed = true, current = true })
 
   local on_dirty = nil ---@type fun(winnr: integer)|nil
   local calls = {} ---@type string[]
   local confirmed = nil ---@type dot.t.ILspSymbol[]|nil
   local deliver = nil ---@type fun(winnr: integer, symbols: dot.t.ILspSymbol[])|nil
-  local scheduled = {} ---@type fun()[]
   local metas = {} ---@type table<integer, dot.win.IMeta>
   local bar = { disposed = false, refreshes = 0 }
   function bar:place()
@@ -269,33 +203,14 @@ t:test("source windows show the confirmed path at once and apply delivered symbo
     self.refreshes = self.refreshes + 1
   end
 
-  t:patch_table(vim, "schedule", function(callback)
-    scheduled[#scheduled + 1] = callback
-  end)
-  t:patch_global("stl", {
-    c = { Subscriber = {
-      new = function(spec)
-        return spec
-      end,
-    } },
-    filetype = {
-      has_external_winline = function()
-        return false
-      end,
-    },
-    nvim = {
-      fn = {
-        txt = function(text)
-          return text
-        end,
-      },
-      win = {
-        is_valid = vim.api.nvim_win_is_valid,
-        is_float = function()
-          return false
-        end,
-      },
-    },
+  local scheduled = bootstrap.with_schedule(t).callbacks
+  patch_stl(function()
+    return false
+  end, {
+    is_valid = vim.api.nvim_win_is_valid,
+    is_float = function()
+      return false
+    end,
   })
   t:patch_global("dot", {
     state = {

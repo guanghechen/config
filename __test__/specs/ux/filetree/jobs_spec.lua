@@ -1,6 +1,42 @@
-local fixture = require("__test__.support.filetree").new()
-local t, filetree = fixture.t, fixture.filetree
+local bootstrap = require("__test__.support.bootstrap")
+local t = require("__test__.support.harness").new()
+local fixture = require("__test__.support.filetree").new(t)
+local support = require("__test__.support.treeview")
+local filetree = fixture.filetree
 local await, write = fixture.await, fixture.write
+
+---Selects `node` in `state`, locks the selection and prepares its sources.
+---@param state                         ux.treeview.State
+---@param node                          string
+---@return ux.treeview.Task task
+---@return ux.treeview.IReadyReply ready
+local function prepare_selection(state, node)
+  await(state:select_node({ node }, true))
+  local task = await(state:lock_selection())
+  return task, await(task:prepare_sources())
+end
+
+---Starts a Job that copies the sources `task` prepared, as `ready` describes them, into `target`, cancelled when the
+---case ends.
+---@param data                          ux.filetree.Data
+---@param state                         ux.treeview.State
+---@param task                          ux.treeview.Task
+---@param ready                         ux.treeview.IReadyReply
+---@param target                        yoz.ux.filetree.Resource
+---@return yoz.ux.filetree.Job
+local function start_copy(data, state, task, ready, target)
+  local job = data:start_operation({
+    kind = "copy",
+    source = ready.source,
+    nodes = ready.subtree_roots,
+    target = target,
+    task = { state = state, lock = task.token, cleanup = ready.cleanup },
+  })
+  t:defer(function()
+    job:cancel()
+  end)
+  return job
+end
 
 t:test("an unchanged running Job sleeps and notification failure preserves completion", function()
   local data = await(filetree.open(t:tempdir()))
@@ -30,17 +66,10 @@ t:test("an unchanged running Job sleeps and notification failure preserves compl
   t.wait_until(function()
     return observed ~= nil and not data:native():is_busy()
   end, 5000)
-  local previous, settled = calls, vim.uv.hrtime()
-  t.wait_until(function()
-    if previous ~= calls then
-      previous, settled = calls, vim.uv.hrtime()
-    end
-    return vim.uv.hrtime() - settled >= 100000000
-  end, 10000, "a running Job without changes must stop status polling")
-  local errors = {}
-  t:patch_table(stl.reporter, "error", function(value)
-    errors[#errors + 1] = value.message
-  end)
+  support.wait_steady(function()
+    return calls
+  end, 100, 10000, "a running Job without changes must stop status polling")
+  local errors = bootstrap.with_reporter(t).error
   owner._notification.subscription:close()
   t.wait_until(function()
     return owner._notification_failed
@@ -125,20 +154,9 @@ t:test("native Job confirms one conflict and consumes opaque prepared NodeIds", 
   local source = await(data:resolve(path .. "/source"))
   local target = await(data:resolve(path .. "/dst"))
   local state = await(data:create_state())
-  await(state:select_node({ source:node() }, true))
-  local task = await(state:lock_selection())
-  local ready = await(task:prepare_sources())
+  local task, ready = prepare_selection(state, source:node())
   t.assert_eq("Ready", ready.kind)
-  local job = data:start_operation({
-    kind = "copy",
-    source = ready.source,
-    nodes = ready.subtree_roots,
-    target = target,
-    task = { state = state, lock = task.token, cleanup = ready.cleanup },
-  })
-  t:defer(function()
-    job:cancel()
-  end)
+  local job = start_copy(data, state, task, ready, target)
   t.wait_until(function()
     return job:status().confirmation ~= nil
   end, 10000)
@@ -200,32 +218,18 @@ t:test("a prepared complete directory survives unchanged paged refresh before IO
   local source = await(data:resolve(path .. "/src"))
   local target = await(data:resolve(path .. "/dst"))
   local state = await(data:create_state())
-  local view = filetree.attach(state, { keymaps = false })
-  t:defer(function()
-    view:detach()
-  end)
+  fixture.attach(state, { keymaps = false })
   await(state:set_expanded({ source:node() }, true, false))
   t.wait_until(function()
     return data:native():is_settled() and data:source():node(source:node()).completeness == "complete"
   end, 10000)
-  await(state:select_node({ source:node() }, true))
-  local task = await(state:lock_selection())
-  local ready = await(task:prepare_sources())
+  local task, ready = prepare_selection(state, source:node())
   t.assert_eq("Ready", ready.kind)
   await(data:refresh(state))
   t.wait_until(function()
     return data:native():is_settled()
   end, 10000)
-  local job = data:start_operation({
-    kind = "copy",
-    source = ready.source,
-    nodes = ready.subtree_roots,
-    target = target,
-    task = { state = state, lock = task.token, cleanup = ready.cleanup },
-  })
-  t:defer(function()
-    job:cancel()
-  end)
+  local job = start_copy(data, state, task, ready, target)
   t.wait_until(function()
     return job:status().terminal
   end, 15000)
@@ -251,19 +255,8 @@ t:test("private descendants expose stable Job item IDs without requiring browse 
   local target = await(data:resolve(path .. "/dst"))
   t.assert_eq(0, data:source():node(source:node()).child_count)
   local state = await(data:create_state())
-  await(state:select_node({ source:node() }, true))
-  local task = await(state:lock_selection())
-  local ready = await(task:prepare_sources())
-  local job = data:start_operation({
-    kind = "copy",
-    source = ready.source,
-    nodes = ready.subtree_roots,
-    target = target,
-    task = { state = state, lock = task.token, cleanup = ready.cleanup },
-  })
-  t:defer(function()
-    job:cancel()
-  end)
+  local task, ready = prepare_selection(state, source:node())
+  local job = start_copy(data, state, task, ready, target)
   t.wait_until(function()
     return job:status().confirmation ~= nil
   end, 10000)

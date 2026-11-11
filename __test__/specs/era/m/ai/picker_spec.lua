@@ -1,22 +1,9 @@
 local t = require("__test__.support.harness").new()
 
----@param ui                            __test__.support.UI
----@param expression                    string
----@return nil
-local function wait_for(ui, expression)
-  ui:wait_until(function()
-    return ui:lua("return " .. expression)
-  end, 5000)
-end
-
 ---@param consumer                      "show_send_target"|"show_submit_to"
 ---@return __test__.support.UI
 local function session(consumer)
-  local ui = require("__test__.support.ui").new()
-  t:defer(function()
-    ui:close()
-  end)
-  ui:start({ width = 100, height = 32, runtime = "ark" })
+  local ui = require("__test__.support.ui").open(t, { width = 100, height = 32, runtime = "ark" })
   ui:lua(
     [[
     local consumer = ...
@@ -78,7 +65,11 @@ local function session(consumer)
   ]],
     consumer
   )
-  wait_for(ui, "picker._treeview.view and picker._treeview:retrieve_lnum('item:source-a') ~= nil")
+  ui:wait_lua(
+    "return picker._treeview.view and picker._treeview:retrieve_lnum('item:source-a') ~= nil",
+    5000,
+    "source rows"
+  )
   return ui
 end
 
@@ -86,11 +77,15 @@ for _, consumer in ipairs({ "show_send_target", "show_submit_to" }) do
   t:test(consumer .. " publishes native marks and confirms selected items outside the filter", function()
     local ui = session(consumer)
     ui:lua("focus_item('source-a'); toggle()")
-    wait_for(ui, "marked('source-a') and not picker._treeview:selection_pending()")
+    ui:wait_lua("return marked('source-a') and not picker._treeview:selection_pending()", 5000, "source-a marked")
     ui:lua("picker.finder:set_content('source-b')")
-    wait_for(ui, "picker._treeview:linecount() == 1 and picker:retrieve(1).uuid == 'source-b'")
+    ui:wait_lua(
+      "return picker._treeview:linecount() == 1 and picker:retrieve(1).uuid == 'source-b'",
+      5000,
+      "filtered to source-b"
+    )
     ui:lua("focus_item('source-b'); confirm()")
-    wait_for(ui, "received ~= nil")
+    ui:wait_lua("return received ~= nil", 5000, "confirmed")
     t.assert_eq("source-a", ui:lua("return table.concat(received, ',')"))
     t.assert_eq(0, ui:lua("return #errors"))
   end)
@@ -98,7 +93,7 @@ for _, consumer in ipairs({ "show_send_target", "show_submit_to" }) do
   t:test(consumer .. " waits for a Tab immediately followed by confirmation", function()
     local ui = session(consumer)
     ui:lua("focus_item('source-a'); toggle(); focus_item('source-b'); confirm()")
-    wait_for(ui, "received ~= nil")
+    ui:wait_lua("return received ~= nil", 5000, "confirmed")
     t.assert_eq("source-a", ui:lua("return table.concat(received, ',')"))
     t.assert_eq(1, ui:lua("return confirmations"))
     t.assert_eq(0, ui:lua("return #errors"))
@@ -107,9 +102,9 @@ for _, consumer in ipairs({ "show_send_target", "show_submit_to" }) do
   t:test(consumer .. " uses the captured current item after deselection", function()
     local ui = session(consumer)
     ui:lua("focus_item('source-a'); toggle()")
-    wait_for(ui, "marked('source-a') and not picker._treeview:selection_pending()")
+    ui:wait_lua("return marked('source-a') and not picker._treeview:selection_pending()", 5000, "source-a marked")
     ui:lua("toggle(); focus_item('source-b'); confirm()")
-    wait_for(ui, "received ~= nil")
+    ui:wait_lua("return received ~= nil", 5000, "confirmed")
     t.assert_eq("source-b", ui:lua("return table.concat(received, ',')"))
     t.assert_eq(0, ui:lua("return #errors"))
   end)
@@ -117,7 +112,7 @@ for _, consumer in ipairs({ "show_send_target", "show_submit_to" }) do
   t:test(consumer .. " accepts confirmation once while selection is pending", function()
     local ui = session(consumer)
     ui:lua("focus_item('source-a'); toggle(); confirm(); confirm()")
-    wait_for(ui, "picker:isdisposed()")
+    ui:wait_lua("return picker:isdisposed()", 5000, "picker disposed")
     t.assert_eq(1, ui:lua("return confirmations"))
     t.assert_eq("source-a", ui:lua("return table.concat(received, ',')"))
     t.assert_eq(0, ui:lua("return #errors"))
@@ -126,7 +121,7 @@ for _, consumer in ipairs({ "show_send_target", "show_submit_to" }) do
   t:test(consumer .. " drops a pending confirmation when closed", function()
     local ui = session(consumer)
     ui:lua("focus_item('source-a'); toggle(); confirm(); picker:close()")
-    wait_for(ui, "picker:isdisposed()")
+    ui:wait_lua("return picker:isdisposed()", 5000, "picker disposed")
     ui:lua("vim.wait(50, function() return false end, 5)")
     t.assert_eq(0, ui:lua("return confirmations"))
     t.assert_eq(0, ui:lua("return #errors"))
@@ -138,7 +133,7 @@ t:test("send to all stays an action row and empty selection confirms every sourc
   ui:lua("focus_item('__send_to_all__'); toggle()")
   t.assert_false(ui:lua("return marked('__send_to_all__')"))
   ui:lua("confirm()")
-  wait_for(ui, "received ~= nil")
+  ui:wait_lua("return received ~= nil", 5000, "confirmed")
   t.assert_eq("source-a,source-b", ui:lua("return table.concat(received, ',')"))
   t.assert_eq(0, ui:lua("return #errors"))
 end)

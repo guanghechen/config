@@ -2,11 +2,7 @@ local t = require("__test__.support.harness").new()
 
 for _, consumer in ipairs({ "picker", "searcher", "diffview" }) do
   t:test(consumer .. " draws cached folder icons from each surface's expansion state", function()
-    local ui = require("__test__.support.ui").new()
-    t:defer(function()
-      ui:close()
-    end)
-    ui:start({ width = 120, height = 30, runtime = "ark" })
+    local ui = require("__test__.support.ui").open(t, { width = 120, height = 30, runtime = "ark" })
     local expected = ui:lua(
       [[
       local consumer = ...
@@ -79,9 +75,11 @@ for _, consumer in ipairs({ "picker", "searcher", "diffview" }) do
     ]],
       consumer
     )
-    ui:wait_until(function()
-      return ui:lua("return preview._tree_view ~= nil and preview._tree_view:frame() ~= nil")
-    end, 5000, "the directory preview did not publish a frame")
+    ui:wait_lua(
+      "return preview._tree_view ~= nil and preview._tree_view:frame() ~= nil",
+      5000,
+      "the directory preview did not publish a frame"
+    )
 
     ---@param glyph                     string
     ---@return nil
@@ -140,9 +138,11 @@ for _, consumer in ipairs({ "picker", "searcher", "diffview" }) do
         owner:reset_filepaths("/icons", refreshed_paths, false)
         treeview.publish(owner, {rootuuid=preview_root, foldempty=true})
       ]])
-      ui:wait_until(function()
-        return ui:lua("return lookups.directory.src == 2 and lookups.file.src == 2")
-      end, 5000, "a changed path set must invalidate its viewport icon cache")
+      ui:wait_lua(
+        "return lookups.directory.src == 2 and lookups.file.src == 2",
+        5000,
+        "a changed path set must invalidate its viewport icon cache"
+      )
     end
   end)
 end

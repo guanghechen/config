@@ -94,6 +94,22 @@ function M.new(options)
   return self
 end
 
+---Starts a child that closes when the case (or the suite, outside a case) ends, prepared with `start` when given.
+---@param t                             __test__.support.Harness
+---@param start                         ?__test__.support.ui.IStart
+---@param options                       ?__test__.support.ui.IOptions
+---@return __test__.support.UI
+function M.open(t, start, options)
+  local ui = M.new(options)
+  t:defer(function()
+    ui:close()
+  end)
+  if start then
+    ui:start(start)
+  end
+  return ui
+end
+
 ---@param method                        string
 ---@param ...                           any
 ---@return any
@@ -185,6 +201,19 @@ function M:wait_until(predicate, timeout_ms, msg, interval_ms)
       return self.received ~= seen
     end, 1)
   end
+end
+
+---Waits until the Lua chunk `code`, run in the child with `...`, returns a truthy value, and returns that value.
+---@param code                          string
+---@param timeout_ms                    integer
+---@param msg                           ?string
+---@param ...                           any
+---@return any
+function M:wait_lua(code, timeout_ms, msg, ...)
+  local args = { ... }
+  return self:wait_until(function()
+    return self:lua(code, unpack(args))
+  end, timeout_ms, msg)
 end
 
 ---Stops the child. One that outlives SIGTERM, such as a child stuck at a message prompt after an exit autocommand

@@ -1,26 +1,20 @@
+local dressing = require("__test__.support.dressing")
 local harness = require("__test__.support.harness")
-local nvim_fn = require("stl.nvim.fn")
 local t = harness.new()
 local module_name = "era.dressing.winsep"
 
 local function setup(initially_enabled)
   local runtime = {
-    enabled = initially_enabled,
+    flight = dressing.flight(t, initially_enabled),
+    augroups = dressing.augroups(t),
     fixed_winnr = vim.api.nvim_get_current_win(),
     debounce_calls = 0,
-    observers = {},
-    groups = {},
     shown = {},
     hidden = 0,
   }
-  local observable = {
-    snapshot = function()
-      return runtime.enabled
-    end,
-  }
   t:patch_global("dot", {
     var = { zindex = { WINSEP = 50 } },
-    context = { flight = { dressing_winsep = observable } },
+    context = { flight = { dressing_winsep = runtime.flight } },
     tab = {
       retrieve_winnr_fixed = function(tabnr)
         t.assert_eq(vim.api.nvim_get_current_tabpage(), tabnr, "observed tab")
@@ -37,25 +31,11 @@ local function setup(initially_enabled)
       end,
     },
     fn = {
-      observe = function(observables, callback, ignore_initial)
-        t.assert_eq(observable, observables[1], "observed flight")
-        t.assert_true(ignore_initial, "initial notification ignored")
-        runtime.observers[#runtime.observers + 1] = callback
-        return { unsubscribe = function() end }
-      end,
+      observe = runtime.flight.observe,
     },
     nvim = {
       fn = {
-        augroup = function(name)
-          local group = nvim_fn.augroup(name)
-          if runtime.groups[name] == nil then
-            t:defer(function()
-              vim.api.nvim_del_augroup_by_id(group)
-            end)
-          end
-          runtime.groups[name] = group
-          return group
-        end,
+        augroup = runtime.augroups.augroup,
       },
       win = {
         is_fixed = function(winnr)
@@ -79,31 +59,26 @@ local function setup(initially_enabled)
   t:patch_table(runtime.module.Winsep, "hide", function()
     runtime.hidden = runtime.hidden + 1
   end)
-  runtime.notify = function()
-    for _, observer in ipairs(runtime.observers) do
-      observer()
-    end
-  end
   return runtime
 end
 
 t:test("dressing creates one debounce and observer and preserves window callbacks", function()
   local runtime = setup(true)
   runtime.module.dressing()
-  local resize_group = runtime.groups[module_name .. "_on_resize"]
-  local enter_group = runtime.groups[module_name .. "_on_WinEnter"]
+  local resize_group = runtime.augroups.groups[module_name .. "_on_resize"]
+  local enter_group = runtime.augroups.groups[module_name .. "_on_WinEnter"]
   local resize_events = vim.api.nvim_get_autocmds({ group = resize_group })
   local enter_events = vim.api.nvim_get_autocmds({ group = enter_group })
 
   runtime.module.dressing()
   t.assert_eq(1, runtime.debounce_calls, "debounce allocations")
-  t.assert_eq(1, #runtime.observers, "observer registrations")
+  t.assert_eq(1, #runtime.flight.observers, "observer registrations")
   t.assert_eq(2, #resize_events, "resize events")
   t.assert_eq(1, #enter_events, "window entry event")
   t.assert_same(resize_events, vim.api.nvim_get_autocmds({ group = resize_group }), "resize callbacks preserved")
   t.assert_same(enter_events, vim.api.nvim_get_autocmds({ group = enter_group }), "entry callback preserved")
 
-  runtime.notify()
+  runtime.flight:set(true)
   vim.api.nvim_exec_autocmds("WinResized", { group = resize_group, modeline = false })
   vim.api.nvim_exec_autocmds("WinEnter", { group = enter_group, modeline = false })
   t.assert_same(
@@ -118,22 +93,23 @@ t:test("dressing initializes while disabled and reuses its observer across toggl
   runtime.module.dressing()
   runtime.module.dressing()
   t.assert_eq(1, runtime.debounce_calls, "debounce allocations while disabled")
-  t.assert_eq(1, #runtime.observers, "observer registrations while disabled")
+  t.assert_eq(1, #runtime.flight.observers, "observer registrations while disabled")
 
-  runtime.notify()
+  runtime.flight:set(false)
   t.assert_eq(1, runtime.hidden, "disabled separators hidden")
-  runtime.enabled = true
-  runtime.notify()
+  runtime.flight:set(true)
   t.assert_same({ runtime.fixed_winnr }, runtime.shown, "enabled separators shown")
   runtime.module.dressing()
-  runtime.enabled = false
-  runtime.notify()
+  runtime.flight:set(false)
   t.assert_eq(2, runtime.hidden, "separators hidden again")
-  t.assert_eq(1, #runtime.observers, "observer reused after toggles")
+  t.assert_eq(1, #runtime.flight.observers, "observer reused after toggles")
   t.assert_eq(1, runtime.debounce_calls, "debounce reused after toggles")
 
   runtime.fixed_winnr = nil
-  vim.api.nvim_exec_autocmds("WinEnter", { group = runtime.groups[module_name .. "_on_WinEnter"], modeline = false })
+  vim.api.nvim_exec_autocmds(
+    "WinEnter",
+    { group = runtime.augroups.groups[module_name .. "_on_WinEnter"], modeline = false }
+  )
   t.assert_eq(1, #runtime.shown, "non-fixed window ignored")
   t.assert_eq(2, runtime.hidden, "non-fixed window does not refresh")
 end)

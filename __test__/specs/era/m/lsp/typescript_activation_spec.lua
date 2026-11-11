@@ -1,5 +1,7 @@
 local bootstrap = require("__test__.support.bootstrap")
+local fs = require("__test__.support.fs")
 local harness = require("__test__.support.harness")
+local lsp = require("__test__.support.lsp")
 local t = harness.new()
 
 t:patch_global("yoz", require("yoz"))
@@ -16,27 +18,14 @@ bootstrap.with_global(t, "era", {
   },
 })
 
----@return nil
-local function flush_scheduled()
-  local done = false
-  vim.schedule(function()
-    done = true
-  end)
-  t.wait_until(function()
-    return done
-  end, 1000, "scheduled activation")
-end
-
 ---@return string
 ---@return integer
 local function setup()
   local root = t:tempdir()
-  vim.fn.mkdir(root .. "/node_modules/typescript", "p")
-  vim.fn.mkdir(root .. "/node_modules/.bin", "p")
-  vim.fn.writefile({}, root .. "/pnpm-lock.yaml")
-  vim.fn.writefile({ '{"name":"typescript","version":"7.0.2"}' }, root .. "/node_modules/typescript/package.json")
+  fs.write(root .. "/pnpm-lock.yaml", {})
+  fs.write(root .. "/node_modules/typescript/package.json", { '{"name":"typescript","version":"7.0.2"}' })
   local binpath = root .. "/node_modules/.bin/tsc"
-  vim.fn.writefile({ "#!/bin/sh", "exit 0" }, binpath)
+  fs.write(binpath, { "#!/bin/sh", "exit 0" })
   assert(vim.uv.fs_chmod(binpath, 493))
 
   local native = dofile("lsp/tsc.lua")
@@ -50,24 +39,17 @@ local function setup()
       client:stop(true)
     end
     vim.lsp.enable({ "tsc", "vtsls" }, false)
-    flush_scheduled()
+    t.drain()
   end)
-  flush_scheduled()
+  t.drain()
 
-  local bufnr = vim.api.nvim_create_buf(false, false)
-  t:defer(function()
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
-  vim.api.nvim_buf_set_name(bufnr, root .. "/main.ts")
-  return root, bufnr
+  return root, t:buffer(nil, { name = root .. "/main.ts", scratch = false })
 end
 
 ---@return string[]
 local function capture_starts()
   local starts = {} ---@type string[]
-  t:patch_table(vim.lsp.rpc, "start", function()
-    return {}
-  end)
+  lsp.record_starts(t)
   t:patch_table(vim.lsp, "start", function(config)
     starts[#starts + 1] = config.name
     if type(config.cmd) == "function" then
@@ -89,13 +71,13 @@ t:test("one failed read selects vtsls once and the next activation can select ts
   end)
 
   vim.api.nvim_set_option_value("filetype", "typescript", { buf = bufnr })
-  flush_scheduled()
+  t.drain()
   t.assert_eq(1, #starts, "one startup after failed read")
   t.assert_eq("vtsls", starts[1], "consistent fallback")
   t.assert_eq(1, reads, "one resolution in the first activation")
 
   vim.api.nvim_exec_autocmds("FileType", { buffer = bufnr })
-  flush_scheduled()
+  t.drain()
   t.assert_eq(2, #starts, "one additional startup after recovery")
   t.assert_eq("tsc", starts[2], "native selection after recovery")
   t.assert_eq(2, reads, "one retry in the second activation")
@@ -117,7 +99,7 @@ t:test("native selection and startup do not repeat the metadata stat", function(
   end)
 
   vim.api.nvim_set_option_value("filetype", "typescript", { buf = bufnr })
-  flush_scheduled()
+  t.drain()
   t.assert_eq(1, #starts, "one native startup")
   t.assert_eq("tsc", starts[1], "native client")
   t.assert_eq(1, stats, "no second stat in root callbacks or cmd")
@@ -130,12 +112,11 @@ for _, expected in ipairs({ "tsc", "vtsls" }) do
       local closed = {} ---@type table<string, boolean>
       t:patch_table(vim.lsp.rpc, "start", function(cmd, dispatchers)
         local name = cmd[2] == "--lsp" and "tsc" or "vtsls"
-        local stopped = false
-        return {
-          request = function(method, _, callback)
+        return lsp.server({
+          on_request = function(method, _, respond)
             if method == "initialize" then
               initialize[name] = function()
-                callback(nil, {
+                respond(nil, {
                   capabilities = {
                     textDocumentSync = { openClose = true, change = 1 },
                     semanticTokensProvider = {
@@ -146,24 +127,15 @@ for _, expected in ipairs({ "tsc", "vtsls" }) do
                 })
               end
             else
-              callback(nil, method == "textDocument/semanticTokens/full" and { data = {} } or nil)
+              respond(nil, method == "textDocument/semanticTokens/full" and { data = {} } or nil)
             end
-            return true, 1
           end,
-          notify = function(method)
+          on_notify = function(method)
             if method == "textDocument/didClose" then
               closed[name] = true
             end
-            return true
           end,
-          is_closing = function()
-            return stopped
-          end,
-          terminate = function()
-            stopped = true
-            dispatchers.on_exit(0, 0)
-          end,
-        }
+        })(dispatchers)
       end)
       local root, bufnr = setup()
       vim.lsp.semantic_tokens.enable(true, { bufnr = bufnr })
@@ -185,13 +157,13 @@ for _, expected in ipairs({ "tsc", "vtsls" }) do
       end
       -- Match batched enable(): reactivate before either scheduled startup has run.
       vim.lsp.enable("vtsls")
-      flush_scheduled()
+      t.drain()
       t.assert_eq(2, #vim.lsp.get_clients({ bufnr = bufnr, _uninitialized = true }), "both startups were queued")
       local reads_before_attach = reads
       initialize[first]()
-      flush_scheduled()
+      t.drain()
       initialize[first == "tsc" and "vtsls" or "tsc"]()
-      flush_scheduled()
+      t.drain()
 
       local clients = vim.lsp.get_clients({ bufnr = bufnr, _uninitialized = true })
       t.assert_eq(1, #clients, "only one client remains attached")

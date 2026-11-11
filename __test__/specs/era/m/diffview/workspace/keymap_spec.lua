@@ -18,17 +18,11 @@ end
 ---Both Changes buffers, as the workspace layout holds them; the case deletes them.
 ---@return era.m.diffview.view.workspace.IContext
 local function changes_context()
-  local staged = vim.api.nvim_create_buf(false, true)
-  local unstaged = vim.api.nvim_create_buf(false, true)
-  t:defer(function()
-    vim.api.nvim_buf_delete(staged, { force = true })
-    vim.api.nvim_buf_delete(unstaged, { force = true })
-  end)
   return diffview.workspace_context({
     layout = {
       changes = {
-        staged = { stage_type = "staged", bufnr = staged },
-        unstaged = { stage_type = "unstaged", bufnr = unstaged },
+        staged = { stage_type = "staged", bufnr = t:buffer() },
+        unstaged = { stage_type = "unstaged", bufnr = t:buffer() },
       },
     },
   })
@@ -48,18 +42,6 @@ local function assert_installed(ctx, keys)
       t.assert_true(mapped[key], key .. " installed in " .. pane.stage_type)
     end
   end
-end
-
----@param bufnr                         integer
----@param key                           string
----@return boolean
-local function has_buffer_keymap(bufnr, key)
-  for _, mapping in ipairs(vim.api.nvim_buf_get_keymap(bufnr, "n")) do
-    if mapping.lhs == key then
-      return true
-    end
-  end
-  return false
 end
 
 t:test("side-by-side gs and gu stage and unstage the whole file, and both Changes buffers map them", function()
@@ -128,12 +110,7 @@ t:test("visual ghu exits only after a successful unstage", function()
   local visual =
     assert(find(keymap.gen_sbs(diffview.workspace_context({ layout = {} }), action, diffview.recorder()), "ghu", "x"))
 
-  local test_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  t:defer(function()
-    vim.api.nvim_buf_delete(test_bufnr, { force = true })
-  end)
-  vim.api.nvim_buf_set_lines(test_bufnr, 0, -1, false, { "one", "two" })
-  vim.api.nvim_win_set_buf(0, test_bufnr)
+  local test_bufnr = t:buffer({ "one", "two" }, { current = true })
 
   vim.cmd("normal! V")
   visual.callback()
@@ -201,10 +178,7 @@ t:test("Changes keys scroll the window under the mouse, and side-by-side buffers
   t.assert_nil(find(sbs, "<ScrollWheelUp>"), "side-by-side wheel up")
 
   -- A preview buffer carries the side-by-side keys of every view that shows it.
-  local shared_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  t:defer(function()
-    vim.api.nvim_buf_delete(shared_bufnr, { force = true })
-  end)
+  local shared_bufnr = t:buffer()
   local sbs_keymap = require("era.m.diffview.view.sbs_keymap")
   local commits_keymap = require("era.m.diffview.view.commits.keymap")
   local function unresolved()
@@ -212,7 +186,7 @@ t:test("Changes keys scroll the window under the mouse, and side-by-side buffers
   end
   sbs_keymap.setup(sbs, shared_bufnr, unresolved)
   sbs_keymap.setup(commits_keymap.gen_sbs(diffview.commits_context({}), diffview.recorder()), shared_bufnr, unresolved)
-  t.assert_false(has_buffer_keymap(shared_bufnr, "<ScrollWheelDown>"), "shared side-by-side wheel mapping")
+  t.assert_nil(diffview.mapping(shared_bufnr, "<ScrollWheelDown>"), "shared side-by-side wheel mapping")
 end)
 
 t:test("History keys exclude standalone layout controls", function()
@@ -241,10 +215,7 @@ end)
 
 t:test("shared side-by-side mappings do not retain their installation context", function()
   local sbs_keymap = require("era.m.diffview.view.sbs_keymap")
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  t:defer(function()
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
+  local bufnr = t:buffer()
   local retained = setmetatable({}, { __mode = "v" })
   local function install()
     local ctx = { payload = "installation context" }

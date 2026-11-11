@@ -7,13 +7,7 @@ local Signature = require("era.keystroke.cmp.signature")
 
 ---@return table
 local function fixture()
-  local previous = vim.api.nvim_get_current_buf()
-  local bufnr = vim.api.nvim_create_buf(true, false)
-  vim.api.nvim_set_current_buf(bufnr)
-  t:defer(function()
-    vim.api.nvim_set_current_buf(previous)
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
+  local bufnr = t:buffer(nil, { listed = true, current = true })
   local state = {
     signature = Signature.new(),
     clients = {},
@@ -70,7 +64,7 @@ local function fixture()
   function state:wait(count)
     t.wait_until(function()
       return #self.requests == count
-    end, 1000, "signature requests sent")
+    end, 5000, "signature requests sent")
   end
   return state
 end

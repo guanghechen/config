@@ -1,4 +1,6 @@
 local bootstrap = require("__test__.support.bootstrap")
+local fs = require("__test__.support.fs")
+local git_buffer = require("__test__.support.git_buffer")
 local harness = require("__test__.support.harness")
 local git_exec = require("stl.git.exec")
 
@@ -6,9 +8,7 @@ local t = harness.new()
 local git = require("__test__.support.git")
 local workspace = "" ---@type string
 
-bootstrap.with_global(t, "stl", {
-  c = { CancellationToken = require("stl.c.cancellation_token"), Future = require("stl.c.future") },
-})
+git_buffer.with_futures(t)
 bootstrap.with_runtime(t, {
   stl = {
     async = require("stl.async"),
@@ -37,12 +37,6 @@ bootstrap.with_runtime(t, {
 local status = require("era.m.git.status")
 local reference = assert(loadfile("__test__/fixtures/era/m/git/status_lua_reference.lua"))()
 
----@param cwd                           string
----@return nil
-local function commit(cwd)
-  git.run(cwd, { "commit", "-qm", "fixture" })
-end
-
 ---@param object_format                 ?string
 ---@return string
 local function new_repo(object_format)
@@ -54,12 +48,7 @@ end
 ---@param opts                          ?era.m.git.status.ICollectOpts
 ---@return yoz.git.StatusSnapshot
 local function collect(opts)
-  local future = status.collect(opts)
-  t.wait_until(function()
-    return future:is_done()
-  end, 10000, "Git status did not finish")
-  t.assert_false(future:is_failed(), future:get_error())
-  return assert(future:get_result())
+  return assert(t.await(status.collect(opts)))
 end
 
 ---@param processes                     integer
@@ -69,12 +58,7 @@ local function assert_snapshot_parity(processes, include_untracked)
   local snapshot = collect({ include_untracked = include_untracked })
   t.assert_eq(processes, snapshot:stats(), "default snapshot process count")
   local current = snapshot:export()
-  local future = reference.collect({ include_numstat = true, include_untracked = include_untracked })
-  t.wait_until(function()
-    return future:is_done()
-  end, 10000, "Lua oracle timed out")
-  t.assert_false(future:is_failed(), future:get_error())
-  local raw = future:get_result()
+  local raw = t.await(reference.collect({ include_numstat = true, include_untracked = include_untracked }))
   t.assert_same(raw.status_map, current.status_map, "raw and porcelain status maps differ")
   t.assert_same(raw.status_groups, current.status_groups, "raw and porcelain status groups differ")
   local numbered = collect({ include_numstat = true, include_untracked = include_untracked }):export()
@@ -114,17 +98,16 @@ end
 t:test("ordinary snapshots use one query and preserve mixed changes and deletions", function()
   local root = new_repo()
   for _, name in ipairs({ "mixed", "modified", "deleted", "staged-delete" }) do
-    vim.fn.writefile({ name }, root .. "/" .. name)
+    fs.write(root .. "/" .. name, { name })
   end
-  git.run(root, { "add", "." })
-  commit(root)
+  git.commit(root, "fixture")
   vim.fn.writefile({ "staged" }, root .. "/mixed", "a")
   git.run(root, { "add", "mixed" })
   vim.fn.writefile({ "unstaged" }, root .. "/mixed", "a")
   vim.fn.writefile({ "modified" }, root .. "/modified", "a")
   assert(vim.uv.fs_unlink(root .. "/deleted"))
   git.run(root, { "rm", "staged-delete" })
-  vim.fn.writefile({ "new" }, root .. "/untracked")
+  fs.write(root .. "/untracked", { "new" })
 
   local result = assert_snapshot_parity(1)
   t.assert_eq("mixed", result.status_map[root .. "/mixed"].stage, "mixed change")
@@ -134,9 +117,8 @@ end)
 
 t:test("snapshot preserves full SHA-256 object identities", function()
   local root = new_repo("sha256")
-  vim.fn.writefile({ "base" }, root .. "/file")
-  git.run(root, { "add", "file" })
-  commit(root)
+  fs.write(root .. "/file", { "base" })
+  git.commit(root, "fixture")
   local old_object = git.run(root, { "rev-parse", "HEAD:file" }):gsub("\n$", "")
   vim.fn.writefile({ "staged" }, root .. "/file", "a")
   git.run(root, { "add", "file" })
@@ -157,9 +139,8 @@ t:test("snapshot and Lua exports preserve native pathname bytes", function()
   local directory = root .. "/raw-" .. suffix
   assert(vim.uv.fs_mkdir(directory, 493))
   local path = directory .. "/file-" .. suffix
-  vim.fn.writefile({ "base" }, path)
-  git.run(root, { "add", "." })
-  commit(root)
+  fs.write(path, { "base" })
+  git.commit(root, "fixture")
   vim.fn.writefile({ "changed" }, path, "a")
 
   local result = assert_snapshot_parity(1)
@@ -170,10 +151,9 @@ end)
 t:test("snapshot preserves mixed changes, renames, deletes, and literal pathnames", function()
   local root = new_repo()
   for _, name in ipairs({ "source", "mixed", "deleted", "recreated" }) do
-    vim.fn.writefile({ name }, root .. "/" .. name)
+    fs.write(root .. "/" .. name, { name })
   end
-  git.run(root, { "add", "." })
-  commit(root)
+  git.commit(root, "fixture")
   git.run(root, { "mv", "source", "renamed\tfile" })
   vim.fn.writefile({ "staged" }, root .. "/mixed", "a")
   git.run(root, { "add", "mixed" })
@@ -181,9 +161,9 @@ t:test("snapshot preserves mixed changes, renames, deletes, and literal pathname
   vim.fn.writefile({ "renamed and edited" }, root .. "/renamed\tfile", "a")
   assert(vim.uv.fs_unlink(root .. "/deleted"))
   git.run(root, { "rm", "recreated" })
-  vim.fn.writefile({ "new content" }, root .. "/recreated")
-  vim.fn.writefile({ "fresh" }, root .. "/space name")
-  vim.fn.writefile({ "fresh" }, root .. "/line\nbreak")
+  fs.write(root .. "/recreated", { "new content" })
+  fs.write(root .. "/space name", { "fresh" })
+  fs.write(root .. "/line\nbreak", { "fresh" })
 
   local result = assert_snapshot_parity(3)
   t.assert_eq("mixed", result.status_map[root .. "/mixed"].stage, "mixed state")
@@ -198,10 +178,9 @@ t:test("snapshot preserves copies under the configured diff policy", function()
   local root = new_repo()
   git.run(root, { "config", "diff.renames", "copies" })
   local lines = { "a", "b", "c", "d", "e", "f", "g", "h", "i", "j" }
-  vim.fn.writefile(lines, root .. "/source")
-  git.run(root, { "add", "source" })
-  commit(root)
-  vim.fn.writefile(lines, root .. "/copy")
+  fs.write(root .. "/source", lines)
+  git.commit(root, "fixture")
+  fs.write(root .. "/copy", lines)
   vim.fn.writefile({ "extra" }, root .. "/source", "a")
   git.run(root, { "add", "." })
 
@@ -216,9 +195,8 @@ end)
 t:test("snapshot preserves disabled diff rename detection", function()
   local root = new_repo()
   git.run(root, { "config", "diff.renames", "false" })
-  vim.fn.writefile({ "base" }, root .. "/source")
-  git.run(root, { "add", "source" })
-  commit(root)
+  fs.write(root .. "/source", { "base" })
+  git.commit(root, "fixture")
   git.run(root, { "mv", "source", "destination" })
 
   local result = assert_snapshot_parity(3)
@@ -228,13 +206,13 @@ end)
 
 t:test("snapshot supports unborn HEAD, intent-to-add, and nested untracked repositories", function()
   local root = new_repo()
-  vim.fn.writefile({ "staged" }, root .. "/first")
+  fs.write(root .. "/first", { "staged" })
   git.run(root, { "add", "first" })
-  vim.fn.writefile({ "pending" }, root .. "/intent")
+  fs.write(root .. "/intent", { "pending" })
   git.run(root, { "add", "-N", "intent" })
   vim.fn.mkdir(root .. "/nested", "p")
-  git.run(root .. "/nested", { "init", "-q" })
-  vim.fn.writefile({ "nested" }, root .. "/nested/file")
+  git.init(root .. "/nested")
+  fs.write(root .. "/nested/file", { "nested" })
 
   local result = assert_snapshot_parity(1)
   t.assert_nil(result.status_map[root .. "/first"].staged_old_object_name, "missing HEAD object")
@@ -243,9 +221,8 @@ end)
 
 t:test("conflict snapshots retain raw index-stage semantics", function()
   local root = new_repo()
-  vim.fn.writefile({ "base" }, root .. "/conflict")
-  git.run(root, { "add", "conflict" })
-  commit(root)
+  fs.write(root .. "/conflict", { "base" })
+  git.commit(root, "fixture")
   local base = vim.trim(git.run(root, { "hash-object", "-w", "--stdin" }, "base\n"))
   local ours = vim.trim(git.run(root, { "hash-object", "-w", "--stdin" }, "ours\n"))
   local theirs = vim.trim(git.run(root, { "hash-object", "-w", "--stdin" }, "theirs\n"))
@@ -260,7 +237,7 @@ t:test("conflict snapshots retain raw index-stage semantics", function()
       "",
     }, "\n")
   )
-  vim.fn.writefile({ "resolved but not staged" }, root .. "/conflict")
+  fs.write(root .. "/conflict", { "resolved but not staged" })
 
   local result = assert_snapshot_parity(3)
   t.assert_true(result.status_map[root .. "/conflict"].codes.U, "conflict status")
@@ -270,15 +247,12 @@ t:test("gitlink snapshots retain raw diff identities and dirtiness rules", funct
   local root = new_repo()
   local child = root .. "/child" ---@type string
   vim.fn.mkdir(child, "p")
-  git.run(child, { "init", "-q" })
-  vim.fn.writefile({ "base" }, child .. "/file")
-  git.run(child, { "add", "file" })
-  commit(child)
-  git.run(root, { "add", "child" })
-  commit(root)
+  git.init(child)
+  fs.write(child .. "/file", { "base" })
+  git.commit(child, "fixture")
+  git.commit(root, "fixture")
   vim.fn.writefile({ "second" }, child .. "/file", "a")
-  git.run(child, { "add", "file" })
-  commit(child)
+  git.commit(child, "fixture")
 
   local result = assert_snapshot_parity(3)
   t.assert_eq(
@@ -286,17 +260,15 @@ t:test("gitlink snapshots retain raw diff identities and dirtiness rules", funct
     result.status_map[root .. "/child"].unstaged_old_object_name,
     "index gitlink identity"
   )
-  git.run(root, { "add", "child" })
-  commit(root)
-  vim.fn.writefile({ "untracked inside submodule" }, child .. "/new")
+  git.commit(root, "fixture")
+  fs.write(child .. "/new", { "untracked inside submodule" })
   assert_snapshot_parity(3)
 end)
 
 t:test("background status leaves the real index untouched", function()
   local root = new_repo()
-  vim.fn.writefile({ "base" }, root .. "/file")
-  git.run(root, { "add", "file" })
-  commit(root)
+  fs.write(root .. "/file", { "base" })
+  git.commit(root, "fixture")
   assert(vim.uv.fs_utime(root .. "/file", 0, 0))
   local before = git.run(root, { "hash-object", ".git/index" })
 
@@ -307,7 +279,7 @@ end)
 
 t:test("exported tables cannot mutate the native snapshot", function()
   local root = new_repo()
-  vim.fn.writefile({ "new" }, root .. "/file")
+  fs.write(root .. "/file", { "new" })
   local snapshot = collect()
   local exported = snapshot:entries()
   exported[root .. "/file"].display = "wrong"
@@ -318,11 +290,9 @@ end)
 
 t:test("recreated untracked directory symlinks preserve descendant rendering", function()
   local root = new_repo()
-  vim.fn.mkdir(root .. "/target", "p")
-  vim.fn.writefile({ "target" }, root .. "/target/file")
+  fs.write(root .. "/target/file", { "target" })
   assert(vim.uv.fs_symlink("target", root .. "/link", { dir = true }))
-  git.run(root, { "add", "." })
-  commit(root)
+  git.commit(root, "fixture")
   git.run(root, { "rm", "link" })
   assert(vim.uv.fs_symlink("target", root .. "/link", { dir = true }))
   assert_snapshot_parity(1)
@@ -334,9 +304,7 @@ t:test("cancelled status queries settle without starting fallback queries", func
   local future = status.collect(nil, token)
   token:cancel()
 
-  t.wait_until(function()
-    return future:is_done()
-  end, 3000, "native cancellation not acknowledged")
+  t.settle(future)
   t.assert_true(future:is_done(), "cancelled outer Future settled")
   t.assert_true(future:is_failed(), "cancelled snapshot was not published")
 end)

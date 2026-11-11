@@ -37,28 +37,19 @@ function M.feed(keys)
   vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(keys, true, false, true), "xt", false)
 end
 
+---Shows `lines` in the current window without undo history; the case ends by leaving any pending mode and restoring
+---'selection'.
 ---@param t                             __test__.support.Harness
 ---@param lines                         string[]
 ---@param filetype                      ?string
 ---@return integer
 function M.buffer(t, lines, filetype)
-  local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local previous = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local selection = vim.o.selection ---@type string
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local bufnr = t:buffer(lines, { filetype = filetype or "lua", current = true }) ---@type integer
   t:defer(function()
     M.feed("<Esc>")
     vim.o.selection = selection
-    if vim.api.nvim_buf_is_valid(previous) then
-      vim.api.nvim_win_set_buf(winnr, previous)
-    end
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
   end)
-  vim.api.nvim_win_set_buf(winnr, bufnr)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, lines)
-  vim.api.nvim_set_option_value("filetype", filetype or "lua", { buf = bufnr })
   vim.api.nvim_set_option_value("undolevels", -1, { buf = bufnr })
   vim.api.nvim_set_option_value("undolevels", 1000, { buf = bufnr })
   return bufnr

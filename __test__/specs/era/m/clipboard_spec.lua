@@ -2,17 +2,9 @@ local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
 local t = harness.new()
-local reports = {} ---@type table[]
 
-bootstrap.with_runtime(t, {
-  stl = {
-    reporter = {
-      error = function(report)
-        reports[#reports + 1] = report
-      end,
-    },
-  },
-})
+-- Every case may report errors; the cases that check them record their own.
+bootstrap.with_reporter(t)
 
 local nix = require("era.m.clipboard.nix")
 local osx = require("era.m.clipboard.osx")
@@ -59,7 +51,7 @@ t:test("base64 paste treats empty successful output as no image", function()
 end)
 
 t:test("base64 paste reports a failed clipboard read once and returns nil", function()
-  reports = {}
+  local reports = bootstrap.with_reporter(t)
   local calls = 0 ---@type integer
   t:patch_global("era", { m = { clipboard = osx } })
   t:patch_table(vim, "system", function()
@@ -73,7 +65,7 @@ t:test("base64 paste reports a failed clipboard read once and returns nil", func
 
   t.assert_nil(paste_image_as_base64(), "failed read")
   t.assert_eq(1, calls, "clipboard process count")
-  t.assert_eq(1, #reports, "error count")
+  t.assert_eq(1, #reports.error, "error count")
 end)
 
 t:test("nix: uses argv and keeps the output filepath out of the shell script", function()
@@ -141,16 +133,16 @@ t:test("nix: base64 encoding preserves binary bytes", function()
 end)
 
 t:test("nix: empty image output is reported as failure", function()
-  reports = {}
+  local reports = bootstrap.with_reporter(t)
   capture_commands("")
 
   t.assert_nil(nix.get_image_as_base64(), "base64 output")
-  t.assert_eq(1, #reports, "error count")
-  t.assert_eq("Clipboard image is empty.", reports[1].message, "error message")
+  t.assert_eq(1, #reports.error, "error count")
+  t.assert_eq("Clipboard image is empty.", reports.error[1].message, "error message")
 end)
 
 t:test("nix: non-zero image read returns nil", function()
-  reports = {}
+  local reports = bootstrap.with_reporter(t)
   t:patch_table(vim, "system", function()
     return {
       wait = function()
@@ -160,12 +152,12 @@ t:test("nix: non-zero image read returns nil", function()
   end)
 
   t.assert_nil(nix.get_image_as_base64(), "base64 output")
-  t.assert_eq(1, #reports, "error count")
-  t.assert_eq(1, reports[1].details.exit_code, "exit code")
+  t.assert_eq(1, #reports.error, "error count")
+  t.assert_eq(1, reports.error[1].details.exit_code, "exit code")
 end)
 
 t:test("spawn failure preserves the public return contracts", function()
-  reports = {}
+  local reports = bootstrap.with_reporter(t)
   t:patch_table(vim, "system", function()
     error("spawn failed")
   end)
@@ -173,12 +165,12 @@ t:test("spawn failure preserves the public return contracts", function()
   t.assert_false(nix.has_image(), "image availability")
   t.assert_nil(nix.get_image_as_base64(), "base64 output")
   t.assert_false(nix.paste_image_from_clipboard("/tmp/image.png"), "paste result")
-  t.assert_eq(3, #reports, "error count")
-  t.assert_eq("spawn failed", reports[1].details.error:match("spawn failed"), "reported error")
+  t.assert_eq(3, #reports.error, "error count")
+  t.assert_eq("spawn failed", reports.error[1].details.error:match("spawn failed"), "reported error")
 end)
 
 t:test("non-zero exit preserves the public return contracts", function()
-  reports = {}
+  local reports = bootstrap.with_reporter(t)
   t:patch_table(vim, "system", function()
     return {
       wait = function()
@@ -190,9 +182,9 @@ t:test("non-zero exit preserves the public return contracts", function()
   t.assert_false(win.has_image(), "image availability")
   t.assert_nil(win.get_image_as_base64(), "base64 output")
   t.assert_false(win.paste_image_from_clipboard([[C:\image.png]]), "paste result")
-  t.assert_eq(3, #reports, "error count")
-  t.assert_eq(127, reports[1].details.exit_code, "exit code")
-  t.assert_eq("missing executable", reports[1].details.error, "stderr")
+  t.assert_eq(3, #reports.error, "error count")
+  t.assert_eq(127, reports.error[1].details.exit_code, "exit code")
+  t.assert_eq("missing executable", reports.error[1].details.error, "stderr")
 end)
 
 t:run()

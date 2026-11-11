@@ -131,10 +131,12 @@ end)
 t:test("workspace sidebar winlines own pane labels and search count", function()
   local staged_winnr = vim.api.nvim_get_current_win() ---@type integer
   local previous_winbar = vim.api.nvim_get_option_value("winbar", { win = staged_winnr }) ---@type string
-  vim.cmd("belowright split")
-  local unstaged_winnr = vim.api.nvim_get_current_win() ---@type integer
-  vim.cmd("belowright split")
-  local history_winnr = vim.api.nvim_get_current_win() ---@type integer
+  t:defer(function()
+    vim.api.nvim_set_option_value("winbar", previous_winbar, { win = staged_winnr, scope = "local" })
+  end)
+  local bufnr = vim.api.nvim_win_get_buf(staged_winnr) ---@type integer
+  local unstaged_winnr = t:window(bufnr, { split = "below", win = staged_winnr }, true)
+  local history_winnr = t:window(bufnr, { split = "below", win = unstaged_winnr }, true)
   for _, winnr in ipairs({ staged_winnr, unstaged_winnr, history_winnr }) do
     metas[winnr] = {}
   end
@@ -209,8 +211,7 @@ t:test("workspace sidebar winlines own pane labels and search count", function()
   )
 
   vim.api.nvim_set_current_win(staged_winnr)
-  vim.cmd("belowright split")
-  local fork_winnr = vim.api.nvim_get_current_win() ---@type integer
+  local fork_winnr = t:window(bufnr, { split = "below", win = staged_winnr }, true)
   metas[fork_winnr] = {}
   local staged_winline = assert(metas[staged_winnr].winline)
   local fork_nvimbar = assert(assert(staged_winline.fork)(fork_winnr))
@@ -225,11 +226,6 @@ t:test("workspace sidebar winlines own pane labels and search count", function()
     vim.api.nvim_get_option_value("winbar", { win = fork_winnr }),
     "fork owns its target winbar"
   )
-
-  vim.api.nvim_win_close(fork_winnr, true)
-  vim.api.nvim_win_close(history_winnr, true)
-  vim.api.nvim_win_close(unstaged_winnr, true)
-  vim.api.nvim_set_option_value("winbar", previous_winbar, { win = staged_winnr, scope = "local" })
 end)
 
 t:run()

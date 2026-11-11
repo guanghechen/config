@@ -15,12 +15,7 @@ local function setup(count, selected)
     btn_calls = 0,
   }
   for index = 1, count do
-    local bufnr = vim.api.nvim_create_buf(true, false)
-    t:defer(function()
-      if vim.api.nvim_buf_is_valid(bufnr) then
-        vim.api.nvim_buf_delete(bufnr, { force = true })
-      end
-    end)
+    local bufnr = t:buffer(nil, { listed = true })
     state.bufs[index] = { bufnr = bufnr, pinned = false }
     state.metas[bufnr] = {
       filename = string.format("file%04d.lua", index),
@@ -273,12 +268,7 @@ end)
 
 t:test("snapshots do not copy variables from unrelated modified buffers into Lua", function()
   local component = setup(1)
-  local bufnr = vim.api.nvim_create_buf(true, false)
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
+  local bufnr = t:buffer(nil, { listed = true })
   local payload = {}
   for index = 1, 100000 do
     payload[index] = "cached data"

@@ -1,5 +1,6 @@
-local fixture = require("__test__.support.filetree").new()
-local t, filetree = fixture.t, fixture.filetree
+local t = require("__test__.support.harness").new()
+local fixture = require("__test__.support.filetree").new(t)
+local filetree = fixture.filetree
 local git = require("__test__.support.git")
 local await, write = fixture.await, fixture.write
 local native = fixture.native
@@ -9,7 +10,7 @@ t:test("Git and ignored native snapshots are consumed without exporting their en
   write(path .. "/a")
   write(path .. "/ignored")
   vim.fn.writefile({ "ignored" }, path .. "/.gitignore")
-  git.run(path, { "init", "-q" })
+  git.init(path)
   git.run(path, { "add", "a" })
   local job = native.git.start_status({ cwd = path })
   t:defer(function()

@@ -2,21 +2,6 @@ local harness = require("__test__.support.harness")
 
 local t = harness.new()
 
-local Observable = {}
-Observable.__index = Observable
-
-function Observable.from_value(value)
-  return setmetatable({ value = value }, Observable)
-end
-
-function Observable:snapshot()
-  return self.value
-end
-
-function Observable:next(value)
-  self.value = value
-end
-
 t:test("match limit state is persisted and invalid limits fall back to defaults", function()
   local history = {
     data = { present = 0, stack = {} },
@@ -27,15 +12,11 @@ t:test("match limit state is persisted and invalid limits fall back to defaults"
       self.data = data
     end,
   }
-  t:patch_global("stl", {
-    c = {
-      Observable = Observable,
-      History = {
-        deserialize = function()
-          return history
-        end,
-      },
-    },
+  t:patch_global("stl", require("stl"))
+  t:patch_table(stl.c, "History", {
+    deserialize = function()
+      return history
+    end,
   })
 
   local SearchFile = assert(loadfile("lua/dot/context/workspace/search_file.lua"))()

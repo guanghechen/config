@@ -50,12 +50,7 @@ local function project(files)
   vim.fn.writefile({ "#!/bin/sh", "exit 0" }, root .. "/node_modules/.bin/prettier")
   vim.uv.fs_chmod(root .. "/node_modules/.bin/prettier", 493)
 
-  local bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
-  t:defer(function()
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
-  vim.api.nvim_buf_set_name(bufnr, root .. "/src/main.ts")
-  vim.api.nvim_set_option_value("filetype", "typescript", { buf = bufnr })
+  local bufnr = t:buffer(nil, { name = root .. "/src/main.ts", filetype = "typescript", scratch = false }) ---@type integer
   return root, bufnr
 end
 
@@ -282,12 +277,7 @@ t:test("format on save skips ignored directories, lockfiles and binaries but not
     ["/repo/src/debug/logger.ts"] = true,
     ["/repo/src/rebuild/main.ts"] = true,
   }) do
-    local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-    t:defer(function()
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end)
-    vim.api.nvim_buf_set_name(bufnr, filepath)
-    vim.api.nvim_set_option_value("filetype", "typescript", { buf = bufnr })
+    local bufnr = t:buffer(nil, { name = filepath, filetype = "typescript" }) ---@type integer
     t.assert_eq(expected, plugin.opts.format_on_save(bufnr) ~= nil, filepath)
   end
 end)

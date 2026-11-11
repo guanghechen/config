@@ -1,6 +1,8 @@
 require("ark.bootstrap").setup()
 local t = require("__test__.support.harness").new()
+local bootstrap = require("__test__.support.bootstrap")
 local diffview = require("__test__.support.diffview")
+local fs = require("__test__.support.fs")
 local git = require("__test__.support.git")
 local action = require("era.m.diffview.view.commits.action")
 local commits_view = require("era.m.diffview.view.commits.view")
@@ -102,11 +104,15 @@ t:test("commit details popup opens above a trigger near the bottom", function()
   })
 
   local popup_winnr = vim.api.nvim_get_current_win() ---@type integer
+  t:defer(function()
+    if vim.api.nvim_win_is_valid(popup_winnr) then
+      vim.api.nvim_win_close(popup_winnr, true)
+    end
+  end)
   local config = vim.api.nvim_win_get_config(popup_winnr)
   t.assert_eq("editor", config.relative, "editor-relative captured position")
   t.assert_eq(anchor_row - config.height - 2, config.row, "popup above trigger row")
   t.assert_true(config.row ~= math.floor((vim.o.lines - config.height) / 2), "popup is not centered")
-  vim.api.nvim_win_close(popup_winnr, true)
 end)
 
 t:test("hide_commits keeps a commits-only tab alive", function()
@@ -186,10 +192,7 @@ t:test("search jumps across pages and selects the matching commit", function()
   end)
   local dirty = count_dirty()
   local focus = record_tree_focus(session)
-  local errors = {} ---@type string[]
-  t:patch_table(stl.reporter, "error", function(report)
-    errors[#errors + 1] = report.message
-  end)
+  local errors = bootstrap.with_reporter(t).error
   answer_search({ "  target  " })
 
   action.search_commit(session)
@@ -210,13 +213,7 @@ t:test("search jumps across pages and selects the matching commit", function()
   t.assert_eq(3, state:get_lnum_present(), "present line")
   t.assert_eq("commit:" .. target.hash, focus.key, "cursor identity")
   t.assert_eq(1, dirty.count, "tabline refresh")
-  local settled = false
-  session.state:get_tree("commits"):ready():finally(function()
-    settled = true
-  end)
-  t.wait_until(function()
-    return settled
-  end, 5000, "settled tree changes")
+  t.settle(session.state:get_tree("commits"):ready())
   t.assert_same({}, errors, "no errors")
 end)
 
@@ -241,13 +238,7 @@ t:test("search keeps only the latest overlapping result", function()
   t.wait_until(function()
     return settled == 2 and dirty.count > 0
   end, 10000, "both searches")
-  local flushed = false
-  vim.schedule(function()
-    flushed = true
-  end)
-  t.wait_until(function()
-    return flushed
-  end, 1000, "scheduled work")
+  t.drain()
 
   t.assert_eq("second", session.state:get_current_commit().message, "latest current commit")
   t.assert_eq(2, session.state:get_commits_total(), "latest total")
@@ -258,10 +249,7 @@ t:test("search reports a missing commit without changing pages", function()
   diffview.repository(t)
   local session = diffview.open_log(t, { layout = 4 })
   session.state:request_commits_page(2)
-  local reports = {} ---@type table[]
-  t:patch_table(stl.reporter, "warn", function(report)
-    reports[#reports + 1] = report
-  end)
+  local reports = bootstrap.with_reporter(t).warn
   local fetches = 0
   local fetch_log_page = data.fetch_log_page
   t:patch_table(data, "fetch_log_page", function(...)
@@ -366,20 +354,12 @@ end)
 t:test("restore writes back the bytes of the commit, CRLF and binary content included", function()
   local root = diffview.committed(t, { ["seed.txt"] = { "seed" } })
   local files = { ["crlf.txt"] = "a\r\nb\r\nlast", ["blob.bin"] = "\0\1\r\n\n\255end" } ---@type table<string, string>
-  ---@param path                        string
-  ---@param bytes                       string
-  local function write(path, bytes)
-    local file = assert(io.open(root .. "/" .. path, "wb"))
-    file:write(bytes)
-    file:close()
-  end
   for path, bytes in pairs(files) do
-    write(path, bytes)
+    fs.write(root .. "/" .. path, bytes)
   end
-  git.run(root, { "add", "." })
-  git.run(root, { "commit", "-q", "-m", "bytes" })
+  git.commit(root, "bytes")
   for path in pairs(files) do
-    write(path, "changed\n")
+    fs.write(root .. "/" .. path, "changed\n")
   end
   t:patch_table(vim.ui, "select", function(_, _, on_choice)
     on_choice("Yes")

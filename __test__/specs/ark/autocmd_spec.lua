@@ -1,3 +1,5 @@
+local bootstrap = require("__test__.support.bootstrap")
+local fs = require("__test__.support.fs")
 local harness = require("__test__.support.harness")
 
 local t = harness.new()
@@ -5,7 +7,7 @@ local t = harness.new()
 ---@class ark.autocmd.test.IRuntime
 ---@field autocmds                      table<string, table>
 ---@field autocmd_events                table<string, string|string[]>
----@field scheduled                     fun()[]
+---@field schedule                      __test__.support.bootstrap.ISchedule
 ---@field bufnr                         integer
 ---@field winnr                         integer
 ---@field valid                         boolean
@@ -13,12 +15,28 @@ local t = harness.new()
 ---@field accepted                      integer
 ---@field cursor_error                  boolean
 
+---Records the autocmds created from now on by group in `autocmds`, and their events in `events`, instead of creating
+---them.
+---@param autocmds                      table<string, table>
+---@param events                        table<string, string|string[]>
+---@return nil
+local function record_autocmds(autocmds, events)
+  t:patch_table(vim.api, "nvim_create_augroup", function(name)
+    return name
+  end)
+  t:patch_table(vim.api, "nvim_create_autocmd", function(event, opts)
+    autocmds[opts.group] = opts
+    events[opts.group] = event
+    return 1
+  end)
+end
+
 ---@return ark.autocmd.test.IRuntime
 local function setup()
   local runtime = {
     autocmds = {},
     autocmd_events = {},
-    scheduled = {},
+    schedule = bootstrap.with_schedule(t),
     bufnr = 1,
     winnr = 11,
     valid = true,
@@ -57,18 +75,8 @@ local function setup()
     },
   })
   t:patch_table(vim, "b", { [1] = {} })
-  t:patch_table(vim, "schedule", function(callback)
-    runtime.scheduled[#runtime.scheduled + 1] = callback
-  end)
   t:patch_table(vim.filetype, "add", function() end)
-  t:patch_table(vim.api, "nvim_create_augroup", function(name)
-    return name
-  end)
-  t:patch_table(vim.api, "nvim_create_autocmd", function(events, opts)
-    runtime.autocmds[opts.group] = opts
-    runtime.autocmd_events[opts.group] = events
-    return 1
-  end)
+  record_autocmds(runtime.autocmds, runtime.autocmd_events)
   t:patch_table(vim.api, "nvim_get_current_win", function()
     return runtime.winnr
   end)
@@ -100,14 +108,14 @@ end
 local function schedule_last_location(runtime)
   runtime.autocmds.ark_goto_last_location_read.callback({ buf = 1 })
   runtime.autocmds.ark_goto_last_location.callback({ buf = 1 })
-  t.assert_eq(1, #runtime.scheduled, "scheduled callbacks")
+  t.assert_eq(1, #runtime.schedule.callbacks, "scheduled callbacks")
 end
 
 t:test("accepts the restored cursor position as the scroll baseline", function()
   local runtime = setup()
   schedule_last_location(runtime)
 
-  table.remove(runtime.scheduled, 1)()
+  runtime.schedule.drain()
 
   t.assert_eq(1, runtime.cursor_updates, "cursor updates")
   t.assert_eq(1, runtime.accepted, "accepted views")
@@ -117,7 +125,7 @@ t:test("a window that disappears before restoration does not consume the saved c
   local runtime = setup()
   schedule_last_location(runtime)
   runtime.valid = false
-  table.remove(runtime.scheduled, 1)()
+  runtime.schedule.drain()
   t.assert_eq(0, runtime.accepted, "expired window has no scroll baseline")
   t.assert_false(vim.b[1].eve_last_loc, "saved cursor remains pending")
 
@@ -125,7 +133,7 @@ t:test("a window that disappears before restoration does not consume the saved c
   runtime.winnr = 12
   t.assert_eq("BufWinEnter", runtime.autocmd_events.ark_goto_last_location, "restore on display")
   schedule_last_location(runtime)
-  table.remove(runtime.scheduled, 1)()
+  runtime.schedule.drain()
   t.assert_eq(2, runtime.cursor_updates, "first real display restores the cursor again")
 end)
 
@@ -133,8 +141,8 @@ t:test("repeated entry events restore the saved cursor only once", function()
   local runtime = setup()
   schedule_last_location(runtime)
   runtime.autocmds.ark_goto_last_location.callback({ buf = 1 })
-  t.assert_eq(1, #runtime.scheduled, "one pending restoration")
-  table.remove(runtime.scheduled, 1)()
+  t.assert_eq(1, #runtime.schedule.callbacks, "one pending restoration")
+  runtime.schedule.drain()
   t.assert_eq(1, runtime.cursor_updates, "one cursor restoration")
 end)
 
@@ -143,7 +151,7 @@ t:test("does not commit restoration when the window changes buffers before the s
   schedule_last_location(runtime)
 
   runtime.bufnr = 2
-  table.remove(runtime.scheduled, 1)()
+  runtime.schedule.drain()
 
   t.assert_false(vim.b[1].eve_last_loc, "restoration remains pending after the buffer changed")
   t.assert_nil(vim.b[1].eve_last_loc_winnr, "stale window claim released")
@@ -154,7 +162,7 @@ t:test("does not accept a baseline when restoring the cursor fails", function()
   local runtime = setup()
   runtime.cursor_error = true
   schedule_last_location(runtime)
-  table.remove(runtime.scheduled, 1)()
+  runtime.schedule.drain()
 
   t.assert_eq(0, runtime.cursor_updates, "cursor updates")
   t.assert_eq(0, runtime.accepted, "accepted views")
@@ -177,7 +185,7 @@ for _, filetype in ipairs({ "gitcommit", "gitrebase" }) do
 
     runtime.autocmds.ark_goto_last_location_read.callback({ buf = 1 })
     runtime.autocmds.ark_goto_last_location.callback({ buf = 1 })
-    t.assert_eq(0, #runtime.scheduled, "scheduled restorations")
+    t.assert_eq(0, #runtime.schedule.callbacks, "scheduled restorations")
     t.assert_eq(0, runtime.cursor_updates, "cursor updates")
   end)
 end
@@ -201,13 +209,7 @@ end
 ---@return table<string, table>
 local function load_autocmds()
   local autocmds = {} ---@type table<string, table>
-  t:patch_table(vim.api, "nvim_create_augroup", function(name)
-    return name
-  end)
-  t:patch_table(vim.api, "nvim_create_autocmd", function(_, opts)
-    autocmds[opts.group] = opts
-    return 1
-  end)
+  record_autocmds(autocmds, {})
   assert(loadfile("lua/ark/autocmd.lua"))()
   return autocmds
 end
@@ -243,8 +245,7 @@ t:test("a file over the size limit is a bigfile even where Neovim has a pattern 
 
   for _, name in ipairs({ "hypr/big.conf", "kitty/big.conf", "lxqt/big.conf", "project/.env.big" }) do
     local filepath = vim.fs.joinpath(dir, name)
-    vim.fn.mkdir(vim.fs.dirname(filepath), "p")
-    vim.fn.writefile({ "longer than the size limit" }, filepath)
+    fs.write(filepath, { "longer than the size limit" })
     local bufnr = vim.fn.bufadd(filepath) ---@type integer
     t:defer(function()
       vim.api.nvim_buf_delete(bufnr, { force = true })
@@ -268,15 +269,7 @@ local function keep_reference_jumps()
   end)
   create_autocmd("FileType", { group = group, callback = handler.callback })
   return function(filetype, bufnr)
-    if bufnr == nil then
-      local created = vim.api.nvim_create_buf(true, false) ---@type integer
-      t:defer(function()
-        if vim.api.nvim_buf_is_valid(created) then
-          vim.api.nvim_buf_delete(created, { force = true })
-        end
-      end)
-      bufnr = created
-    end
+    bufnr = bufnr or t:buffer(nil, { listed = true })
     vim.api.nvim_set_option_value("filetype", filetype, { buf = bufnr })
     return bufnr
   end
@@ -322,12 +315,7 @@ t:test("Neovim's filetype plugins give [[ and ]] to the global maps in Normal an
   t.assert_eq("runtime", owner(go, "o", "[["), "go, Operator-pending")
   t.assert_eq("reference", owner(filetype("markdown"), "n", "]]"), "markdown, mapped from Lua")
 
-  local panel = vim.api.nvim_create_buf(false, true)
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(panel) then
-      vim.api.nvim_buf_delete(panel, { force = true })
-    end
-  end)
+  local panel = t:buffer()
   vim.keymap.set("n", "[[", function() end, { buf = panel, desc = "page" })
   t.assert_eq("page", owner(filetype("diffview-commits", panel), "n", "[["), "a map of the configuration's own")
 end)

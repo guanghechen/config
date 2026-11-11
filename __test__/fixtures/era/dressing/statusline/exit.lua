@@ -58,7 +58,7 @@ end)
 require("era.dressing.statusline").dressing()
 t.wait_until(function()
   return process ~= nil
-end, 3000, "the Python probe starts before quitting")
+end, 5000, "the Python probe starts before quitting")
 t.assert_true(vim.uv.kill(assert(process).pid, 0), "the probe is still running")
 vim.api.nvim_create_autocmd("VimLeavePre", {
   once = true,

@@ -2,16 +2,16 @@ require("ark.bootstrap").setup()
 local t = require("__test__.support.harness").new()
 local support = require("__test__.support.git_files")
 local treeview = require("__test__.support.treeview")
+local fs = require("__test__.support.fs")
 local git = require("__test__.support.git")
 local Paths = require("era.view.result_paths")
 
 ---@return table
 local function fixture()
-  local root = support.repo(t)
-  support.write(root, "dir/mixed.lua", { "one", "two", "three", "staged" })
-  git.run(root, { "add", "dir/mixed.lua" })
-  support.write(root, "dir/mixed.lua", { "one", "two", "three", "staged", "unstaged" })
-  support.write(root, "dir/second.lua", { "base", "second" })
+  local root = support.changes(t, { ["dir/mixed.lua"] = { "one", "two", "three", "staged" } }, {
+    ["dir/mixed.lua"] = { "one", "two", "three", "staged", "unstaged" },
+    ["dir/second.lua"] = { "base", "second" },
+  })
   local state = support.widget(t, root)
   state.widget._foldempty = false
   state.widget:toggle()
@@ -167,11 +167,9 @@ end)
 
 t:test("untracked, empty and binary files get honest stats without changing the real index", function()
   local root = support.repo(t)
-  support.write(root, "new.lua", { "one", "two", "three" })
-  support.write(root, "empty.txt", {})
-  local file = assert(io.open(root .. "/binary.dat", "wb"))
-  file:write("a\0b\0c")
-  file:close()
+  fs.write(root .. "/new.lua", { "one", "two", "three" })
+  fs.write(root .. "/empty.txt", {})
+  fs.write(root .. "/binary.dat", "a\0b\0c")
   local before = git.run(root, { "ls-files", "--stage", "-z" })
   local state = support.widget(t, root)
   state.widget:toggle()

@@ -133,6 +133,23 @@ function Harness.assert_nil(actual, msg)
   end
 end
 
+---Calls `callback`, which must raise an error whose message contains `fragment`, and returns that message.
+---@param callback                      fun(): any
+---@param fragment                      string
+---@param msg                           ?string
+---@return string
+function Harness.assert_error(callback, fragment, msg)
+  local ok, err = pcall(callback)
+  if ok then
+    error(string.format("%s: expected an error containing %q", msg or "assertion failed", fragment), 2)
+  end
+  local message = tostring(err) ---@type string
+  if not message:find(fragment, 1, true) then
+    error(string.format("%s: expected an error containing %q, got %q", msg or "assertion failed", fragment, message), 2)
+  end
+  return message
+end
+
 --- Ends the current case as skipped when the environment cannot exercise it.
 ---@param reason                        string
 ---@return nil
@@ -207,26 +224,62 @@ function Harness.wait_until(predicate, timeout_ms, msg)
   end
 end
 
+---Runs the callbacks `vim.schedule` queued before this call.
+---@return nil
+function Harness.drain()
+  local drained = false ---@type boolean
+  vim.schedule(function()
+    drained = true
+  end)
+  if not vim.wait(10000, function()
+    return drained
+  end) then
+    error("scheduled callbacks did not run within 10000 ms", 2)
+  end
+end
+
+---Raises at the caller of the waiting function when `future` does not settle within `timeout_ms`.
+---@param future                        stl.c.Future
+---@param timeout_ms                    integer
+---@return nil
+local function wait_settled(future, timeout_ms)
+  local done = vim.wait(timeout_ms, function()
+    return future:is_done()
+  end, 1)
+  if not done then
+    error(string.format("future did not settle within %d ms", timeout_ms), 3)
+  end
+end
+
 ---Waits for a Future to settle and returns its result; a failed Future fails the case.
 ---@param future                        stl.c.Future
 ---@param timeout_ms                    ?integer
 ---@return any
 function Harness.await(future, timeout_ms)
-  timeout_ms = timeout_ms or 10000
-  local done = vim.wait(timeout_ms, function()
-    return future:is_done()
-  end, 1)
-  if not done then
-    error(string.format("future did not settle within %d ms", timeout_ms), 2)
-  end
+  wait_settled(future, timeout_ms or 10000)
   if future:is_failed() then
     error("future failed: " .. tostring(future:get_error()), 2)
   end
   return future:get_result()
 end
 
--- Support modules await without a suite instance.
+---Waits for a Future to settle, failed or not: returns whether it resolved, and its result or error.
+---@param future                        stl.c.Future
+---@param timeout_ms                    ?integer
+---@return boolean
+---@return any
+function Harness.settle(future, timeout_ms)
+  wait_settled(future, timeout_ms or 10000)
+  if future:is_failed() then
+    return false, future:get_error()
+  end
+  return true, future:get_result()
+end
+
+-- Support modules wait without a suite instance.
+M.wait_until = Harness.wait_until
 M.await = Harness.await
+M.settle = Harness.settle
 
 ---Creates a directory under the system temporary directory, removed when the case (or the suite, outside a
 ---case) ends.
@@ -237,6 +290,69 @@ function Harness:tempdir()
     vim.fn.delete(path, "rf")
   end)
   return assert(vim.uv.fs_realpath(path))
+end
+
+---@class __test__.support.harness.IBufferOptions
+---@field filetype                      ?string
+---@field name                          ?string Buffer name, such as a file path.
+---@field listed                        ?boolean Listed; false by default.
+---@field scratch                       ?boolean A scratch buffer (`buftype=nofile`); by default an unlisted one is.
+---@field current                       ?boolean Shown in the current window, which gets its buffer back first.
+
+---Creates a buffer holding `lines`, deleted when the case (or the suite, outside a case) ends.
+---@param lines                         ?string[]
+---@param options                       ?__test__.support.harness.IBufferOptions
+---@return integer
+function Harness:buffer(lines, options)
+  options = options or {}
+  local listed = options.listed == true ---@type boolean
+  local scratch = options.scratch == nil and not listed or options.scratch == true ---@type boolean
+  local bufnr = vim.api.nvim_create_buf(listed, scratch) ---@type integer
+  self:defer(function()
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
+  end)
+  if options.name then
+    vim.api.nvim_buf_set_name(bufnr, options.name)
+  end
+  if lines then
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, lines)
+  end
+  if options.filetype then
+    vim.api.nvim_set_option_value("filetype", options.filetype, { buf = bufnr })
+  end
+  if options.current then
+    local winnr = vim.api.nvim_get_current_win() ---@type integer
+    local previous = vim.api.nvim_win_get_buf(winnr) ---@type integer
+    self:defer(function()
+      if vim.api.nvim_win_is_valid(winnr) and vim.api.nvim_buf_is_valid(previous) then
+        vim.api.nvim_win_set_buf(winnr, previous)
+      end
+    end)
+    vim.api.nvim_win_set_buf(winnr, bufnr)
+  end
+  return bufnr
+end
+
+---Opens a window on `bufnr` with `nvim_open_win`, closed when the case (or the suite, outside a case) ends. An entered
+---window gives the focus back to the window that had it.
+---@param bufnr                         integer
+---@param config                        vim.api.keyset.win_config
+---@param enter                         ?boolean
+---@return integer
+function Harness:window(bufnr, config, enter)
+  local previous = vim.api.nvim_get_current_win() ---@type integer
+  local winnr = vim.api.nvim_open_win(bufnr, enter == true, config) ---@type integer
+  self:defer(function()
+    if enter and vim.api.nvim_win_is_valid(previous) then
+      vim.api.nvim_set_current_win(previous)
+    end
+    if vim.api.nvim_win_is_valid(winnr) then
+      vim.api.nvim_win_close(winnr, true)
+    end
+  end)
+  return winnr
 end
 
 ---@param opts                          ?{ exit: boolean, quiet: boolean }

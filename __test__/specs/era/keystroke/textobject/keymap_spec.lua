@@ -41,11 +41,7 @@ t:test("diff class motions fall back to native mappings", function()
 end)
 
 t:test("slowly typed custom objects are remapped after the prefix timeout", function()
-  local ui = require("__test__.support.ui").new()
-  t:defer(function()
-    ui:close()
-  end)
-  ui:start({})
+  local ui = require("__test__.support.ui").open(t, {})
   ui:lua([[
     _G.stl = { nvim = { fn = require("stl.nvim.fn") } }
     _G.era = { keystroke = require("era.keystroke"), dressing = { whichkey = { add = function() end } } }

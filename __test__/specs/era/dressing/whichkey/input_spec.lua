@@ -11,21 +11,13 @@ t:patch_table(era.dressing.whichkey, "input", Input)
 
 ---@return integer
 local function new_buffer()
-  local previous_bufnr = vim.api.nvim_get_current_buf()
-  local bufnr = vim.api.nvim_create_buf(false, true)
+  local bufnr = t:buffer(nil, { current = true })
   t:defer(function()
     State.disable()
     Input.detach(bufnr, "n")
     State.buf_trees[bufnr] = nil
     State.suspended[bufnr .. ":n"] = nil
-    if vim.api.nvim_buf_is_valid(previous_bufnr) then
-      vim.api.nvim_set_current_buf(previous_bufnr)
-    end
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
   end)
-  vim.api.nvim_set_current_buf(bufnr)
   return bufnr
 end
 
@@ -106,12 +98,9 @@ t:test("attaching reads each mode's mappings once and leaves mapped keys alone",
 end)
 
 t:test("exact native mapping is resolved after the which-key tree was built", function()
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local bufnr = t:buffer() ---@type integer
   t:defer(function()
     State.buf_trees[bufnr] = nil
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
   end)
   State.__load_keymaps__(bufnr, "n")
   local tree = assert(State.buf_trees[bufnr].n)
@@ -132,12 +121,7 @@ end)
 t:test("exact nowait mapping executes without reading a third key", function()
   local reads = 0
   local executed = nil ---@type {node: era.dressing.whichkey.INode|nil, keys: string}|nil
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
+  local bufnr = t:buffer() ---@type integer
   vim.keymap.set("n", "gs", function() end, {
     buffer = bufnr,
     desc = "diffview: stage",

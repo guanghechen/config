@@ -4,7 +4,6 @@ local treeview = require("__test__.support.treeview")
 local GitFiles = require("era.view.git_files")
 local Paths = require("era.view.result_paths")
 local support = require("__test__.support.git_files")
-local git = require("__test__.support.git")
 
 ---@param tcase                         table
 ---@return era.view.GitFiles
@@ -136,22 +135,20 @@ end)
 t:test("cancelled private preparation leaves the published tree intact", function()
   local staged, _, snapshot = fixture(t)
   local frame, records = staged:frame(), staged.source.records
-  local ok = pcall(function()
+  t.assert_error(function()
     staged:prepare("/git", { "/git/other.lua" }, snapshot, function()
       error("cancelled")
     end)
-  end)
-  t.assert_false(ok)
+  end, "cancelled")
   t.assert_eq(frame:header().data_revision, staged:frame():header().data_revision)
   t.assert_eq(frame:header().row_count, staged:frame():header().row_count)
   t.assert_true(records == staged.source.records)
 end)
 
 t:test("native Git supplies different staged and unstaged counts for a partially staged file", function()
-  local root = support.repo(t)
-  support.write(root, "dir/mixed.lua", { "one", "two", "three", "staged one", "staged two" })
-  git.run(root, { "add", "dir/mixed.lua" })
-  support.write(root, "dir/mixed.lua", { "one", "two", "three", "staged one", "staged two", "unstaged" })
+  local root = support.changes(t, { ["dir/mixed.lua"] = { "one", "two", "three", "staged one", "staged two" } }, {
+    ["dir/mixed.lua"] = { "one", "two", "three", "staged one", "staged two", "unstaged" },
+  })
   local state = support.widget(t, root)
   state.widget:toggle()
   support.ready(state.widget)

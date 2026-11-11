@@ -14,11 +14,7 @@ function M.new(t)
   vim.fn.writefile({ "hello" }, directory .. "/alpha.lua")
   vim.fn.writefile({ "other" }, directory .. "/Alpha-two.txt")
   vim.fn.writefile({ "deep" }, directory .. "/folder/sub/deep.txt")
-  local ui = require("__test__.support.ui").new()
-  t:defer(function()
-    ui:close()
-  end)
-  ui:start({ width = 140, height = 42, runtime = "ark" })
+  local ui = require("__test__.support.ui").open(t, { width = 140, height = 42, runtime = "ark" })
   ui:lua(
     [[
     local path = ...
@@ -35,11 +31,13 @@ function M.new(t)
   ]],
     directory
   )
-  ui:wait_until(function()
-    return ui:lua([[
-      return surface and surface.view and surface.view:frame() and surface.view:frame():header().row_count==4
-    ]])
-  end, 5000)
+  ui:wait_lua(
+    [[
+    return surface and surface.view and surface.view:frame() and surface.view:frame():header().row_count==4
+  ]],
+    5000,
+    "Find Explorer rows"
+  )
   return ui, directory
 end
 

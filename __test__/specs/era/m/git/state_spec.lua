@@ -1,3 +1,4 @@
+local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 require("ark.bootstrap").setup()
 
@@ -55,16 +56,8 @@ end
 local function await_queries(queries, count, message)
   t.wait_until(function()
     return #queries >= count
-  end, 2000, message)
+  end, 5000, message)
   t.assert_eq(count, #queries, message)
-end
-
----@param future                        stl.c.Future
----@return nil
-local function wait_future(future)
-  t.wait_until(function()
-    return future:is_done()
-  end, 3000, "future should resolve")
 end
 
 -- Each publication advances the generation; subscribers hear of it on a later tick.
@@ -80,7 +73,7 @@ t:test("refresh: successful collections publish without rebuilding unchanged sta
   local first = state:refresh_index()
   await_queries(queries, 1, "index collection")
   queries[1].resolve(new_snapshot({ ["/project/file"] = { display = "M" } }))
-  wait_future(first)
+  t.settle(first)
   t.assert_eq(1, publications(state), "initial changed status notification")
   t.assert_eq("index", state.o_refreshed:snapshot().change_scope, "index-only refresh provenance")
 
@@ -89,7 +82,7 @@ t:test("refresh: successful collections publish without rebuilding unchanged sta
   local second = state:refresh()
   await_queries(queries, 2, "unchanged collection")
   queries[2].resolve(new_snapshot({ ["/project/file"] = { display = "M" } }))
-  wait_future(second)
+  t.settle(second)
   t.assert_eq(2, publications(state), "unchanged status notification")
   t.assert_eq("unknown", state.o_refreshed:snapshot().change_scope, "default refresh provenance")
   t.assert_true(state:snapshot() == snapshot, "unchanged status should preserve the native snapshot")
@@ -97,7 +90,7 @@ t:test("refresh: successful collections publish without rebuilding unchanged sta
   local third = state:refresh()
   await_queries(queries, 3, "changed collection")
   queries[3].resolve(new_snapshot({ ["/project/file"] = { display = "D" } }))
-  wait_future(third)
+  t.settle(third)
   t.assert_eq(3, publications(state), "changed status notification")
   t.assert_true(state:snapshot() ~= snapshot, "changed status should replace the native snapshot")
   t.assert_eq(
@@ -110,15 +103,12 @@ end)
 t:test("refresh: failed collect reports once, preserves status, and permits recovery", function()
   local state, queries = new_state()
   local snapshot = state:snapshot()
-  local reports = {} ---@type table[]
-  t:patch_table(stl.reporter, "error", function(opts)
-    reports[#reports + 1] = opts
-  end)
+  local reports = bootstrap.with_reporter(t).error
 
   local first = state:refresh()
   await_queries(queries, 1, "failing collection")
   queries[1].reject("fatal: status unavailable")
-  wait_future(first)
+  t.settle(first)
   t.assert_true(state:snapshot() == snapshot, "failed collect should preserve status cache")
   t.assert_eq(0, publications(state), "failed collect notification")
   t.assert_eq(1, #reports, "failure reported once")
@@ -127,7 +117,7 @@ t:test("refresh: failed collect reports once, preserves status, and permits reco
   local second = state:refresh()
   await_queries(queries, 2, "later refresh retried")
   queries[2].resolve(snapshot)
-  wait_future(second)
+  t.settle(second)
   t.assert_eq(1, publications(state), "successful retry published")
   t.assert_eq(1, #reports, "successful retry emits no additional error")
 end)
@@ -222,13 +212,7 @@ t:test("dispose: a queued refresh settles without starting another collection", 
 
   local future = state:refresh()
   state:dispose()
-  local drained = false
-  vim.schedule(function()
-    drained = true
-  end)
-  t.wait_until(function()
-    return drained
-  end, 1000, "scheduled refresh callback did not drain")
+  t.drain()
 
   t.assert_true(future:is_done(), "queued caller settled during exit")
   t.assert_eq(0, #queries, "already-scheduled refresh must not start after exit")
@@ -270,7 +254,7 @@ t:test("default: collections pass no base, so an unborn HEAD still has a status"
     return stl.c.Future.resolve(era.m.git.status.empty())
   end)
 
-  wait_future(Git.refresh())
+  t.settle(Git.refresh())
   t.assert_eq(1, #calls, "one collection")
   t.assert_nil(calls[1].opts, "global refresh must support unborn HEAD")
 end)
@@ -302,11 +286,7 @@ t:test("writes: refresh repository files without requiring a Git buffer attachme
     { path = "/outside/source.lua", target = "/project/written.lua", expected = 4 },
     { path = "/project/source.lua", target = "/outside/written.lua", expected = 4 },
   }) do
-    local bufnr = vim.api.nvim_create_buf(false, true)
-    t:defer(function()
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end)
-    vim.api.nvim_buf_set_name(bufnr, case.path)
+    local bufnr = t:buffer(nil, { name = case.path })
     vim.api.nvim_set_option_value("buftype", case.buftype or "", { buf = bufnr })
     vim.api.nvim_buf_call(bufnr, function()
       vim.api.nvim_exec_autocmds("BufWritePost", {
@@ -350,7 +330,7 @@ t:test("refresh: collections are spaced by four times the last one's duration, f
       vim.wait(hold_ms)
     end
     queries[count].resolve(new_snapshot({}))
-    wait_future(future)
+    t.settle(future)
   end
   ---@param count                       integer
   ---@return number

@@ -1,22 +1,13 @@
 local harness = require("__test__.support.harness")
-local UI = require("__test__.support.ui")
-local Grid = require("__test__.support.ui_grid")
+local embedded = require("__test__.support.cmp.embedded")
 local t = harness.new()
 
 ---@param options                       table
 ---@return __test__.support.UI
 ---@return table
 local function editor(options)
-  local ui = UI.new()
-  t:defer(function()
-    ui:close()
-  end)
-  local grid = Grid.new(ui)
-  ui:start({ width = 100, height = 35 })
-  ui:lua(
-    [[
-    local options = ...
-    require('__test__.support.cmp.behavior').setup(options)
+  local ui, grid = embedded.behavior_editor(t, options)
+  ui:lua([[
     local deprecated = vim.api.nvim_get_hl(0,{name='CmpLabelDeprecated',link=false})
     assert(deprecated.strikethrough and deprecated.fg == nil and deprecated.bg == nil,'decoration-only fallback')
     local cmp_stl, cmp_dot = stl, dot
@@ -24,23 +15,20 @@ local function editor(options)
     dot.context.theme.apply_theme({theme='vsc-dark-modern',transparency=false})
     stl, dot = cmp_stl, cmp_dot
     vim.o.pumblend = 0
-  ]],
-    options
-  )
+  ]])
   t:defer(function()
     t.assert_eq("", ui:lua([[return vim.v.errmsg]]), "no editor errors")
   end)
   return ui, grid
 end
 
----@param ui                           table
+-- Waits until the Lua chunk `code` holds in the child; a failure shows the buffer and the mode.
+---@param ui                            __test__.support.UI
 ---@param code                          string
 ---@param message                       string
 ---@return nil
 local function wait(ui, code, message)
-  local ok = pcall(ui.wait_until, ui, function()
-    return ui:lua(code)
-  end, 1000)
+  local ok = pcall(ui.wait_lua, ui, code, 5000)
   if not ok then
     message = message
       .. ": "
@@ -49,51 +37,17 @@ local function wait(ui, code, message)
   t.assert_true(ok, message)
 end
 
----@param ui                           table
----@param grid                          table
----@return table[]
-local function matching_cells(ui, grid)
-  local cells = ui:lua([[
-    local geometry, cells = vim.fn.pum_getpos(), {}
-    if vim.fn.pumvisible() == 0 then return cells end
-    for row = math.max(1,geometry.row), math.min(vim.o.lines,geometry.row+geometry.height+3) do
-      for col = math.max(1,geometry.col), math.min(vim.o.columns,geometry.col+geometry.width+4) do
-        local text = vim.fn.screenstring(row,col)
-        if text == 'a' or text == 'p' then
-          cells[#cells+1] = {text=text,row=row,col=col,attribute=vim.fn.screenattr(row,col)}
-        end
-      end
-    end
-    return cells
-  ]])
-  local matches = {}
-  for _, cell in ipairs(cells) do
-    local style = grid.highlights[cell.attribute] or {}
-    if style.foreground == 0xf5a9b8 then
-      cell.style = style
-      matches[#matches + 1] = cell
-    end
-  end
-  return matches
-end
-
----@param ui                           table
+---@param ui                            __test__.support.UI
 ---@param grid                          table
 ---@param selected                      integer
 ---@param deprecated                    ?boolean
 ---@return nil
 local function assert_matches(ui, grid, selected, deprecated)
-  local matches = matching_cells(ui, grid)
+  local matches = embedded.menu(ui, grid).matches
   t.assert_eq(4, #matches, "both displayed candidates highlight their nonadjacent a/p")
-  for index, cell in ipairs(matches) do
-    t.assert_eq(index % 2 == 1 and "a" or "p", cell.text, "matched character")
-    t.assert_true(cell.style.bold and cell.style.italic, "matched character keeps bold and italic")
-    t.assert_eq(
-      math.floor((index - 1) / 2) == selected and 0x0078d4 or 0x1f1f1f,
-      cell.style.background,
-      "selected and unselected menu backgrounds remain intact"
-    )
-    if deprecated then
+  embedded.assert_matches(t, matches, selected)
+  if deprecated then
+    for _, cell in ipairs(matches) do
       t.assert_true(cell.style.strikethrough, "deprecated markers retain their strike-through")
     end
   end

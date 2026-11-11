@@ -7,23 +7,16 @@ t:test("fold badge stays opaque with transparent window backgrounds across theme
   t:patch_global("dot", require("dot"))
   t:patch_global("__test_foldtext", require("era.dressing.foldtext").foldtext)
 
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  t:defer(function()
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
   local lines = { "size = 16" }
   for _ = 1, 20 do
     lines[#lines + 1] = "folded line"
   end
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+  local bufnr = t:buffer(lines)
 
   local winnrs = {}
   for _, split in ipairs({ "right", "below" }) do
-    local winnr = vim.api.nvim_open_win(bufnr, true, { split = split })
+    local winnr = t:window(bufnr, { split = split }, true)
     winnrs[#winnrs + 1] = winnr
-    t:defer(function()
-      vim.api.nvim_win_close(winnr, true)
-    end)
     for name, value in pairs({
       number = false,
       relativenumber = false,

@@ -8,13 +8,8 @@ local quit_keys = { " qq", "<C-a>q", "<D-q>", "<M-q>" } ---@type string[]
 ---@param key                           string
 ---@return table|nil
 local function get_mapping(mode, key)
-  local lhs = vim.keycode(key)
-  for _, mapping in ipairs(vim.api.nvim_get_keymap(mode)) do
-    if vim.keycode(mapping.lhs) == lhs then
-      return mapping
-    end
-  end
-  return nil
+  local mapping = vim.fn.maparg(key, mode, false, true)
+  return next(mapping) ~= nil and mapping or nil
 end
 
 for _, vendor in ipairs({ "common", "neovim", "neovide", "vscode", "yozvim", "yuivim" }) do

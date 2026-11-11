@@ -9,14 +9,7 @@ local Lsp = require("era.keystroke.cmp.source.lsp")
 ---@param lines                         string[]
 ---@return integer
 local function buffer_fixture(lines)
-  local previous = vim.api.nvim_get_current_buf()
-  local bufnr = vim.api.nvim_create_buf(true, false)
-  vim.api.nvim_set_current_buf(bufnr)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
-  t:defer(function()
-    vim.api.nvim_set_current_buf(previous)
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
+  local bufnr = t:buffer(lines, { listed = true, current = true })
   t:patch_table(dot.tab, "resolve", function()
     return { bufs = { { bufnr = bufnr } } }
   end)

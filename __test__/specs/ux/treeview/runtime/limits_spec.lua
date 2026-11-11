@@ -56,9 +56,9 @@ t:test("viewport guide output is bounded without invalidating the immutable fram
     return frame:position(source:id("leaf40")) ~= nil
   end, 5000)
   local first, last = frame:position(source:id("leaf1")), frame:position(source:id("leaf40"))
-  local ok, error = pcall(frame.rows, frame, first, last)
-  t.assert_false(ok)
-  t.assert_true(tostring(error):find("ResourceLimit", 1, true) ~= nil, tostring(error))
+  t.assert_error(function()
+    frame:rows(first, last)
+  end, "ResourceLimit")
   t.assert_eq("leaf", frame:rows(first, first).labels[1])
   t.assert_eq(source:id("leaf40"), frame:node_at(last))
 end)
@@ -139,15 +139,12 @@ t:test("decoration capacity failure preserves the previous publication", functio
   -- Regex ranges list every occurrence; fuzzy ranges are one alignment per label.
   support.applied(state:set_display({ pattern = "a", regex = true }))
   local errors = {}
-  local view = treeview.attach(state, {
+  local view = support.attach(t, state, {
     keymaps = false,
     on_error = function(err)
       errors[#errors + 1] = err
     end,
   })
-  t:defer(function()
-    view:detach()
-  end)
   t.wait_until(function()
     return view:frame() ~= nil
   end, 5000)
@@ -245,9 +242,9 @@ t:test("row key pages resume at the byte boundary while explicit node key reads 
   for index, key in ipairs(rest) do
     t.assert_eq(records[#keys + index].key, key)
   end
-  local ok, error = pcall(frame.node_keys, frame, nodes)
-  t.assert_false(ok)
-  t.assert_true(tostring(error):find("1 MiB", 1, true) ~= nil, tostring(error))
+  t.assert_error(function()
+    frame:node_keys(nodes)
+  end, "1 MiB")
 end)
 
 t:test("Source key and parent reads retain identity after removal without node payloads", function()
@@ -288,9 +285,9 @@ t:test("Source ids take as many keys as a data holds nodes", function()
   for index = 200002, 1000001 do
     keys[index] = "missing"
   end
-  local ok, error = pcall(source.ids, source, keys)
-  t.assert_false(ok)
-  t.assert_true(tostring(error):find("array input capacity exceeded", 1, true) ~= nil)
+  t.assert_error(function()
+    source:ids(keys)
+  end, "array input capacity exceeded")
 end)
 
 t:test("a data reports the native bytes it retains", function()
@@ -339,9 +336,9 @@ t:test("key pages accept the exact byte limit and reject a single oversized iden
   local page = frame:row_keys(2, 3)
   t.assert_eq(1, #page)
   t.assert_eq(exact, page[1])
-  local ok, error = pcall(frame.row_keys, frame, 3, 3)
-  t.assert_false(ok)
-  t.assert_true(tostring(error):find("1 MiB", 1, true) ~= nil, tostring(error))
+  t.assert_error(function()
+    frame:row_keys(3, 3)
+  end, "1 MiB")
 end)
 
 t:run()

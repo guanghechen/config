@@ -12,14 +12,16 @@ t:test("the parent context row displays the parent directory metadata", function
   assert(vim.uv.fs_mkdir(directory .. "/parent/current", 448))
   assert(vim.uv.fs_chmod(directory .. "/parent/current", 448))
   ui:lua([[context_path=...; surface:open(context_path)]], directory .. "/parent/current")
-  ui:wait_until(function()
-    return ui:lua([[
+  ui:wait_lua(
+    [[
       local frame=surface:frame()
       local cache=surface.view._directory_listing
       return frame and frame:header().row_count==1 and cache and cache.entries[frame:node_at(1)]
         and surface.data:inspect(frame:source(),frame:header().root.node):path()==context_path
-    ]])
-  end, 5000)
+    ]],
+    5000,
+    "parent context row"
+  )
   t.assert_eq(
     "drwxr-xr-x",
     ui:lua("return surface.view._directory_listing.entries[surface:frame():node_at(1)].permissions")
@@ -47,12 +49,14 @@ t:test("opening retries a resolve that an overlapping publication made stale", f
   ]],
     directory .. "/folder"
   )
-  ui:wait_until(function()
-    return ui:lua([[
+  ui:wait_lua(
+    [[
       local frame = surface:frame()
       return frame and surface.data:inspect(frame:source(), frame:header().root.node):path() == context_path
-    ]])
-  end, 5000)
+    ]],
+    5000,
+    "the stale resolve retried"
+  )
   t.assert_eq(2, ui:lua("return stale_resolves"))
   t.assert_eq(0, ui:lua("return #errors"))
 end)
@@ -60,9 +64,11 @@ end)
 t:test("a focus whose entry is gone falls back to its row", function()
   local ui, directory = fixture.new(t)
   ui:lua([[surface:focus_path(..., 3)]], directory .. "/removed.lua")
-  ui:wait_until(function()
-    return ui:lua("return surface._focus == nil and picker.result.lnum_current:snapshot() == 3")
-  end, 5000)
+  ui:wait_lua(
+    "return surface._focus == nil and picker.result.lnum_current:snapshot() == 3",
+    5000,
+    "fallback row focused"
+  )
   t.assert_eq(0, ui:lua("return #errors"))
 end)
 
@@ -83,24 +89,26 @@ t:test("Find Explorer uses native resources, bounded traversal and worker filter
     "main result must not recursively scan directories"
   )
   ui:lua([[picker.finder:set_content("alua")]])
-  ui:wait_until(function()
-    return ui:lua([[
+  ui:wait_lua(
+    [[
       local frame=surface:frame()
       return frame:header().row_count==1 and surface:retrieve(1):info().label=="alpha.lua"
-    ]])
-  end, 5000)
+    ]],
+    5000,
+    "alpha.lua matched"
+  )
   ui:lua([[props.flags[3].callback(); picker.finder:set_content("^ALPHA")]])
-  ui:wait_until(function()
-    return ui:lua("return surface:frame():header().row_count==2")
-  end, 5000)
+  ui:wait_lua("return surface:frame():header().row_count==2", 5000, "case-insensitive matches")
   t.assert_eq(0, ui:lua("return #errors"))
   ui:lua([[picker.finder:set_content("^folder/$")]])
-  ui:wait_until(function()
-    return ui:lua([[
+  ui:wait_lua(
+    [[
       local frame=surface:frame()
       return frame:header().row_count==1 and frame:rows(1,1).labels[1]=="folder/"
-    ]])
-  end, 5000)
+    ]],
+    5000,
+    "folder matched"
+  )
 end)
 
 t:test("directory previews share Filetree data and reopening retains the main buffer", function()
@@ -110,16 +118,16 @@ t:test("directory previews share Filetree data and reopening retains the main bu
     picker.result:set_lnum_current(2)
     picker:mark_preview_dirty()
   ]])
-  ui:wait_until(function()
-    return ui:lua([[
+  ui:wait_lua(
+    [[
       return picker.preview._tree_view and picker.preview._tree_view:frame() ~= nil
-    ]])
-  end, 5000, "directory preview frame")
+    ]],
+    5000,
+    "directory preview frame"
+  )
   t.assert_true(ui:lua("return picker.preview._tree_state._data == surface.state._data"))
   ui:lua([[saved=picker.result:get_bufnr(); picker:hide(); picker:focus()]])
-  ui:wait_until(function()
-    return ui:lua("return surface.view and not surface.view:is_suspended()")
-  end, 5000)
+  ui:wait_lua("return surface.view and not surface.view:is_suspended()", 5000, "result resumed")
   t.assert_true(ui:lua("return saved == picker.result:get_bufnr()"))
   t.assert_eq(0, ui:lua("return #errors"))
 end)

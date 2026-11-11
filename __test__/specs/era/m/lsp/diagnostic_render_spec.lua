@@ -19,14 +19,7 @@ end
 ---@param name                          string
 ---@return integer
 local function named_buffer(name)
-  local bufnr = vim.api.nvim_create_buf(true, true)
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
-  vim.api.nvim_buf_set_name(bufnr, name)
-  return bufnr
+  return t:buffer(nil, { name = name, listed = true, scratch = true })
 end
 
 local ns = vim.api.nvim_create_namespace("diagnostic-render-spec") ---@type integer

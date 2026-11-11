@@ -1,4 +1,5 @@
 local bootstrap = require("__test__.support.bootstrap")
+local fs = require("__test__.support.fs")
 local harness = require("__test__.support.harness")
 local t = harness.new()
 
@@ -27,13 +28,8 @@ local config = dofile("lsp/rust_analyzer.lua")
 local function project()
   local root = t:tempdir()
   vim.fn.mkdir(root .. "/src", "p")
-  vim.fn.writefile({ "[package]", 'name = "fixture"', 'version = "0.1.0"' }, root .. "/Cargo.toml")
-  local bufnr = vim.api.nvim_create_buf(false, false)
-  t:defer(function()
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
-  vim.api.nvim_buf_set_name(bufnr, root .. "/src/lib.rs")
-  return root, bufnr
+  fs.write(root .. "/Cargo.toml", { "[package]", 'name = "fixture"', 'version = "0.1.0"' })
+  return root, t:buffer(nil, { name = root .. "/src/lib.rs", scratch = false })
 end
 
 t:test("configured sysroot sources reuse an existing Rust workspace without invoking cargo", function()
@@ -68,15 +64,13 @@ t:test("a Cargo project reports a missing executable without starting metadata",
   t:patch_table(vim, "system", function()
     error("missing cargo must not be spawned")
   end)
-  local warning
-  t:patch_table(stl.reporter, "warn", function(message)
-    warning = message
-  end)
+  local reports = bootstrap.with_reporter(t)
   local resolved = false
   config.root_dir(bufnr, function()
     resolved = true
   end)
   t.assert_false(resolved, "server is not started")
+  local warning = reports.warn[#reports.warn]
   t.assert_eq("root_dir", warning.subject)
   t.assert_eq("cargo executable not found.", warning.message)
 end)

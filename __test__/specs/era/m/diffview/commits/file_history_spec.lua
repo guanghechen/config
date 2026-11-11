@@ -1,6 +1,8 @@
 require("ark.bootstrap").setup()
 local t = require("__test__.support.harness").new()
+local bootstrap = require("__test__.support.bootstrap")
 local diffview = require("__test__.support.diffview")
+local fs = require("__test__.support.fs")
 local git = require("__test__.support.git")
 local action = require("era.m.diffview.view.commits.action")
 local commits_view = require("era.m.diffview.view.commits.view")
@@ -12,16 +14,16 @@ local function rename_history()
   local lines = { "one", "two", "three", "four", "five" }
   local root = diffview.committed(t, { ["old.txt"] = lines, ["other.txt"] = { "other" } })
   lines[2] = "TWO"
-  diffview.write(root, "old.txt", lines)
-  git.run(root, { "commit", "-q", "-am", "edit old.txt" })
+  fs.write(root .. "/old.txt", lines)
+  git.commit(root, "edit old.txt")
   git.run(root, { "mv", "old.txt", "new.txt" })
   lines[3] = "THREE"
-  diffview.write(root, "new.txt", lines)
-  diffview.write(root, "other.txt", { "OTHER" })
-  git.run(root, { "commit", "-q", "-am", "rename old.txt to new.txt" })
+  fs.write(root .. "/new.txt", lines)
+  fs.write(root .. "/other.txt", { "OTHER" })
+  git.commit(root, "rename old.txt to new.txt")
   lines[4] = "FOUR"
-  diffview.write(root, "new.txt", lines)
-  git.run(root, { "commit", "-q", "-am", "edit new.txt" })
+  fs.write(root .. "/new.txt", lines)
+  git.commit(root, "edit new.txt")
 end
 
 ---The name of the buffer side-by-side window `winnr` shows.
@@ -34,10 +36,7 @@ end
 t:test("file history opens each commit at the name the file had in it", function()
   rename_history()
   local session = diffview.open_log(t, { path = "new.txt" })
-  local warnings = {} ---@type string[]
-  t:patch_table(stl.reporter, "warn", function(report)
-    warnings[#warnings + 1] = report.message
-  end)
+  local warnings = bootstrap.with_reporter(t).warn
 
   local opened = {} ---@type string[]
   for _, commit in ipairs(session.state:get_commits()) do

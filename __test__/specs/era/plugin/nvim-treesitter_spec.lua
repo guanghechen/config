@@ -77,12 +77,10 @@ local loading = false ---@type boolean True while the plugin config runs.
 ---@param parser_available             fun(lang: string): boolean|nil
 ---@return table<string, fun(event: { buf: integer })>, integer[], integer[], table<integer, table>, table<string, string>
 local function setup(buffers, windows, winnrs, start, active_languages, parser_available)
-  local callbacks = {} ---@type table<string, fun(event: { buf: integer })>
   local started = {} ---@type integer[]
   local stopped = {} ---@type integer[]
   local active = {} ---@type table<integer, table>
   local registrations = {} ---@type table<string, string>
-  local scheduled = {} ---@type fun()[]
 
   ---@param lang                        string
   ---@return table
@@ -107,13 +105,7 @@ local function setup(buffers, windows, winnrs, start, active_languages, parser_a
     end,
   })
   t:patch_table(vim.api, "nvim_create_user_command", function() end)
-  t:patch_table(vim.api, "nvim_create_autocmd", function(events, opts)
-    events = type(events) == "table" and events or { events }
-    for _, event in ipairs(events) do
-      callbacks[event] = opts.callback
-    end
-    return 1
-  end)
+  local callbacks = bootstrap.with_autocmds(t)
   t:patch_table(vim.api, "nvim_list_wins", function()
     return winnrs
   end)
@@ -186,18 +178,14 @@ local function setup(buffers, windows, winnrs, start, active_languages, parser_a
     stopped[#stopped + 1] = bufnr
     active[bufnr] = nil
   end)
-  t:patch_table(vim, "schedule", function(callback)
-    scheduled[#scheduled + 1] = callback
-  end)
+  local schedule = bootstrap.with_schedule(t)
 
   loading = true
   ---@diagnostic disable-next-line: param-type-mismatch
   Treesitter.spec.config(nil, Treesitter.spec.opts)
   loading = false
   -- Neovim runs scheduled callbacks on a later tick, after the plugin loader has returned.
-  for _, callback in ipairs(scheduled) do
-    callback()
-  end
+  schedule.drain()
   return callbacks, started, stopped, active, registrations
 end
 

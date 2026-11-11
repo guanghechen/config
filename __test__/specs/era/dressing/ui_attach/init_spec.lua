@@ -1,3 +1,5 @@
+local bootstrap = require("__test__.support.bootstrap")
+local dressing = require("__test__.support.dressing")
 local harness = require("__test__.support.harness")
 
 local module_name = "era.dressing.ui_attach"
@@ -21,7 +23,7 @@ local t = harness.new()
 ---@field hunk_nav_clears                integer
 ---@field search_clears                  integer
 ---@field searching                      boolean
----@field timer                          table
+---@field timer                          __test__.support.dressing.Timer
 
 ---@param initially_enabled              ?boolean
 ---@return era.dressing.ui_attach.init.test.IRuntime
@@ -32,21 +34,14 @@ local function setup(initially_enabled)
     keymap_calls = 0,
     timer_calls = 0,
     timer_available = true,
-    errors = {},
-    warnings = {},
     events = {},
     fast = false,
     flush_calls = 0,
     hunk_nav_clears = 0,
     search_clears = 0,
     searching = false,
-    timer = {},
+    timer = dressing.timer(),
   } ---@type era.dressing.ui_attach.init.test.IRuntime
-
-  function runtime.timer:stop() end
-  function runtime.timer:start(_, _, callback)
-    self.callback = callback
-  end
 
   local CircularQueue = require("stl.c.circular_queue")
   t:patch_global("dot", {
@@ -94,15 +89,9 @@ local function setup(initially_enabled)
         end,
       },
     },
-    reporter = {
-      error = function(options)
-        runtime.errors[#runtime.errors + 1] = options
-      end,
-      warn = function(options)
-        runtime.warnings[#runtime.warnings + 1] = options
-      end,
-    },
   })
+  local reports = bootstrap.with_reporter(t)
+  runtime.errors, runtime.warnings = reports.error, reports.warn
 
   local function record(task)
     local id = task.args[6]
@@ -278,15 +267,10 @@ end)
 
 t:test("escape stops an existing native snippet session", function()
   local snippet = require("vim.snippet")
-  local previous = vim.api.nvim_get_current_buf() ---@type integer
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  t:buffer({ "" }, { current = true })
   t:defer(function()
     snippet.stop()
-    vim.api.nvim_set_current_buf(previous)
-    vim.api.nvim_buf_delete(bufnr, { force = true })
   end)
-  vim.api.nvim_set_current_buf(bufnr)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "" })
   snippet.expand("${1:word}$0")
   t.assert_true(snippet.active(), "native snippet session")
 

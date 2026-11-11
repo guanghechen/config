@@ -1,17 +1,10 @@
 require("ark.bootstrap").setup()
 local t = require("__test__.support.harness").new()
+local bootstrap = require("__test__.support.bootstrap")
 local diffview = require("__test__.support.diffview")
+local fs = require("__test__.support.fs")
 local git = require("__test__.support.git")
 local action = require("era.m.diffview.view.workspace.action")
-
----@param refreshes                     { completed: integer }
----@param count                         integer
----@return nil
-local function await_refreshes(refreshes, count)
-  t.wait_until(function()
-    return refreshes.completed >= count
-  end, 10000, "completed refreshes")
-end
 
 ---@param session                       era.m.diffview.WorkspaceSession
 ---@return string|nil
@@ -25,62 +18,52 @@ end
 ---@param stage_type                    "staged"|"unstaged"
 ---@param path                          string
 ---@return nil
-local function select(session, stage_type, path)
+local function select_row(session, stage_type, path)
   session.state:set_current_entry(assert(session.state:find_entry(path, stage_type)))
   diffview.cursor_on(session, stage_type, path)
 end
 
----Captures the errors reported for the rest of the case.
----@return { subject: string, message: string }[]
-local function capture_reports()
-  local reports = {} ---@type { subject: string, message: string }[]
-  t:patch_table(stl.reporter, "error", function(report)
-    reports[#reports + 1] = report
-  end)
-  return reports
-end
-
 t:test("staging a file selects the next unstaged file and keeps the focus in Unstaged", function()
   local root = diffview.committed(t, { ["first.lua"] = { "1" }, ["second.lua"] = { "2" } })
-  diffview.write(root, "first.lua", { "one" })
-  diffview.write(root, "second.lua", { "two" })
+  fs.write(root .. "/first.lua", { "one" })
+  fs.write(root .. "/second.lua", { "two" })
   local session = diffview.open_workspace(t)
   local refreshes = diffview.count_refreshes(t, session.state)
 
-  select(session, "unstaged", "first.lua")
+  select_row(session, "unstaged", "first.lua")
   action.stage(session)
-  await_refreshes(refreshes, 1)
+  diffview.await_refreshes(refreshes, 1)
   t.assert_eq("unstaged:second.lua", current(session), "stage selects the next unstaged entry")
   t.assert_eq(session.layout.changes.unstaged.winnr, vim.api.nvim_get_current_win(), "stage keeps unstaged focus")
 end)
 
 t:test("unstaging a file selects the next staged file and keeps the focus in Staged", function()
   local root = diffview.committed(t, { ["first.lua"] = { "1" }, ["second.lua"] = { "2" }, ["third.lua"] = { "3" } })
-  diffview.write(root, "first.lua", { "one" })
-  diffview.write(root, "second.lua", { "two" })
-  diffview.write(root, "third.lua", { "three" })
+  fs.write(root .. "/first.lua", { "one" })
+  fs.write(root .. "/second.lua", { "two" })
+  fs.write(root .. "/third.lua", { "three" })
   git.run(root, { "add", "first.lua", "third.lua" })
   local session = diffview.open_workspace(t)
   local refreshes = diffview.count_refreshes(t, session.state)
 
-  select(session, "staged", "first.lua")
+  select_row(session, "staged", "first.lua")
   action.unstage(session)
-  await_refreshes(refreshes, 1)
+  diffview.await_refreshes(refreshes, 1)
   t.assert_eq("staged:third.lua", current(session), "unstage selects the next staged entry")
   t.assert_eq(session.layout.changes.staged.winnr, vim.api.nvim_get_current_win(), "unstage keeps staged focus")
 end)
 
 t:test("staging the last unstaged file follows it to Staged", function()
   local root = diffview.committed(t, { ["second.lua"] = { "2" }, ["third.lua"] = { "3" } })
-  diffview.write(root, "second.lua", { "two" })
-  diffview.write(root, "third.lua", { "three" })
+  fs.write(root .. "/second.lua", { "two" })
+  fs.write(root .. "/third.lua", { "three" })
   git.run(root, { "add", "third.lua" })
   local session = diffview.open_workspace(t)
   local refreshes = diffview.count_refreshes(t, session.state)
 
-  select(session, "unstaged", "second.lua")
+  select_row(session, "unstaged", "second.lua")
   action.stage(session)
-  await_refreshes(refreshes, 1)
+  diffview.await_refreshes(refreshes, 1)
   t.assert_eq("staged:second.lua", current(session), "last transfer follows the canonical destination entry")
   t.assert_eq(
     session.layout.changes.staged.winnr,
@@ -92,9 +75,9 @@ end)
 t:test("staging the last visible file follows it to Staged when only collapsed directories remain", function()
   local root =
     diffview.committed(t, { ["root.lua"] = { "r" }, ["hidden/inside.lua"] = { "i" }, ["third.lua"] = { "3" } })
-  diffview.write(root, "root.lua", { "root" })
-  diffview.write(root, "hidden/inside.lua", { "inside" })
-  diffview.write(root, "third.lua", { "three" })
+  fs.write(root .. "/root.lua", { "root" })
+  fs.write(root .. "/hidden/inside.lua", { "inside" })
+  fs.write(root .. "/third.lua", { "three" })
   git.run(root, { "add", "third.lua" })
   local session = diffview.open_workspace(t)
   local refreshes = diffview.count_refreshes(t, session.state)
@@ -104,9 +87,9 @@ t:test("staging the last visible file follows it to Staged when only collapsed d
     return diffview.row(session, "unstaged", "hidden/inside.lua") == nil
   end, 5000, "hidden/ collapsed")
 
-  select(session, "unstaged", "root.lua")
+  select_row(session, "unstaged", "root.lua")
   action.stage(session)
-  await_refreshes(refreshes, 1)
+  diffview.await_refreshes(refreshes, 1)
   t.assert_eq("staged:root.lua", current(session), "hidden source entries follow the canonical destination entry")
   t.assert_eq(
     session.layout.changes.staged.winnr,
@@ -117,9 +100,9 @@ end)
 
 t:test("staging a directory selects the next source file and keeps the focus", function()
   local root = diffview.committed(t, { ["src/a.lua"] = { "a" }, ["remaining.lua"] = { "r" }, ["third.lua"] = { "3" } })
-  diffview.write(root, "src/a.lua", { "A" })
-  diffview.write(root, "remaining.lua", { "remaining" })
-  diffview.write(root, "third.lua", { "three" })
+  fs.write(root .. "/src/a.lua", { "A" })
+  fs.write(root .. "/remaining.lua", { "remaining" })
+  fs.write(root .. "/third.lua", { "three" })
   git.run(root, { "add", "third.lua" })
   local session = diffview.open_workspace(t)
   local refreshes = diffview.count_refreshes(t, session.state)
@@ -127,7 +110,7 @@ t:test("staging a directory selects the next source file and keeps the focus", f
   session.state:set_current_entry(assert(session.state:find_entry("src/a.lua", "unstaged")))
   diffview.cursor_on(session, "unstaged", "src")
   action.stage(session)
-  await_refreshes(refreshes, 1)
+  diffview.await_refreshes(refreshes, 1)
   t.assert_eq("unstaged:remaining.lua", current(session), "directory stage selects the next source entry")
   t.assert_eq(
     session.layout.changes.unstaged.winnr,
@@ -138,7 +121,7 @@ end)
 
 t:test("Git work that completes after the session closes leaves its state alone", function()
   local root = diffview.committed(t, { ["deferred.lua"] = { "d" } })
-  diffview.write(root, "deferred.lua", { "deferred" })
+  fs.write(root .. "/deferred.lua", { "deferred" })
   local session = diffview.open_workspace(t)
   local resolve_git = nil ---@type fun(lines: string[], code: integer, stderr: string)|nil
   t:patch_table(stl.git.exec, "exec_async", function(_, _, callback)
@@ -172,12 +155,12 @@ end)
 
 t:test("stage and unstage report Git failures without refreshing", function()
   local root = diffview.committed(t, { ["locked.txt"] = { "l" }, ["denied.txt"] = { "d" } })
-  diffview.write(root, "locked.txt", { "locked" })
-  diffview.write(root, "denied.txt", { "denied" })
+  fs.write(root .. "/locked.txt", { "locked" })
+  fs.write(root .. "/denied.txt", { "denied" })
   git.run(root, { "add", "denied.txt" })
   local session = diffview.open_workspace(t)
   local refreshes = diffview.count_refreshes(t, session.state)
-  local reports = capture_reports()
+  local reports = bootstrap.with_reporter(t).error
   diffview.record_git(t, function(args)
     if args[2] == "add" then
       return 128, "fatal: Unable to create '.git/index.lock'\n"
@@ -207,15 +190,15 @@ end)
 
 t:test("discarding a tracked file restores it and refreshes", function()
   local root = diffview.committed(t, { ["tracked.txt"] = { "base" } })
-  diffview.write(root, "tracked.txt", { "changed" })
+  fs.write(root .. "/tracked.txt", { "changed" })
   local session = diffview.open_workspace(t)
   local calls = diffview.record_git(t)
   local refreshes = diffview.count_refreshes(t, session.state)
-  local reports = capture_reports()
+  local reports = bootstrap.with_reporter(t).error
 
   diffview.cursor_on(session, "unstaged", "tracked.txt")
   action.reset(session)
-  await_refreshes(refreshes, 1)
+  diffview.await_refreshes(refreshes, 1)
 
   local index = diffview.index_calls(calls)
   t.assert_eq(1, #index, "git calls")
@@ -228,10 +211,10 @@ end)
 
 t:test("discard reports a tracked failure without refreshing", function()
   local root = diffview.committed(t, { ["conflicted.txt"] = { "base" } })
-  diffview.write(root, "conflicted.txt", { "changed" })
+  fs.write(root .. "/conflicted.txt", { "changed" })
   local session = diffview.open_workspace(t)
   local refreshes = diffview.count_refreshes(t, session.state)
-  local reports = capture_reports()
+  local reports = bootstrap.with_reporter(t).error
   diffview.record_git(t, function(args)
     if args[2] == "checkout" then
       return 128, "fatal: checkout failed\n"

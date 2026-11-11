@@ -1,3 +1,4 @@
+local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 local t = harness.new()
 
@@ -36,13 +37,11 @@ end)
 t:test("ordered setup records cold require and synchronous work once", function()
   local dressing = fresh_dressing()
   local clock, requires = 0, 0
-  local calls, scheduled, events = {}, {}, {}
+  local calls, events = {}, {}
   t:patch_table(vim.uv, "hrtime", function()
     return clock
   end)
-  t:patch_table(vim, "schedule", function(callback)
-    scheduled[#scheduled + 1] = callback
-  end)
+  local schedule = bootstrap.with_schedule(t)
   t:patch_table(vim.api, "nvim_exec_autocmds", function(event, options)
     t.assert_eq("User", event, "load event type")
     t.assert_eq("DressingLoad", options.pattern, "load event pattern")
@@ -71,20 +70,17 @@ t:test("ordered setup records cold require and synchronous work once", function(
   t.assert_eq(7, dressing.get_load_times().notifier, "require plus setup in milliseconds")
   t.assert_eq(7, dressing.get_load_times().ui_attach, "independent module duration")
   t.assert_eq(0, #events, "events are deferred")
-  for _, callback in ipairs(scheduled) do
-    callback()
-  end
+  schedule.drain()
   t.assert_eq("notifier,ui_attach", table.concat(events, ","), "one event per recorded module")
   t.assert_eq(7, dressing.get_load_times().notifier, "deferred work excluded")
 
   local snapshot = dressing.get_load_times()
   snapshot.notifier = 999
-  scheduled = {}
   dressing.setup({ "notifier", "ui_attach" })
   t.assert_eq(2, requires, "module cache reused")
   t.assert_eq(4, #calls, "modules still own repeated setup")
   t.assert_eq(7, dressing.get_load_times().notifier, "first timing retained and snapshot isolated")
-  t.assert_eq(2, #scheduled, "repeated setup only schedules the modules' own work")
+  t.assert_eq(2, #schedule.callbacks, "repeated setup only schedules the modules' own work")
 end)
 
 t:test("setup stops on failure and preserves completed timings for an explicit retry", function()

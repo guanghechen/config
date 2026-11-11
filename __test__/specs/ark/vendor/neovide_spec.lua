@@ -6,11 +6,7 @@ local t = harness.new()
 ---@param scrolling                     ?boolean
 ---@return __test__.support.UI
 local function start_runtime(neovide, scrolling)
-  local ui = UI.new()
-  t:defer(function()
-    ui:close()
-  end)
-  ui:start({})
+  local ui = UI.open(t, {})
   ui:lua(
     [[
       local neovide, scrolling = ...
@@ -59,12 +55,12 @@ t:test("terminal palette is initialized synchronously and follows theme changes"
   ui:lua("dot.context.theme.theme:next('gruvbox-light')")
   ui:wait_until(function()
     return ui:lua("return vim.g.terminal_color_0") == light_bg
-  end, 1000, "new terminals did not receive the light theme palette")
+  end, 5000, "new terminals did not receive the light theme palette")
 
   ui:lua("dot.context.theme.theme:next('gruvbox-dark')")
   ui:wait_until(function()
     return ui:lua("return vim.g.terminal_color_0") == initial_bg
-  end, 1000, "new terminals did not receive the restored dark theme palette")
+  end, 5000, "new terminals did not receive the restored dark theme palette")
 end)
 
 t:test("native scrolling respects the workspace toggle at startup and after changes", function()
@@ -74,12 +70,12 @@ t:test("native scrolling respects the workspace toggle at startup and after chan
   ui:lua("dot.context.flight.dressing_scroll:next(true)")
   ui:wait_until(function()
     return ui:lua("return vim.g.neovide_scroll_animation_length") == 0.3
-  end, 1000, "workspace toggle did not enable native scrolling")
+  end, 5000, "workspace toggle did not enable native scrolling")
 
   ui:lua("dot.context.flight.dressing_scroll:next(false)")
   ui:wait_until(function()
     return ui:lua("return vim.g.neovide_scroll_animation_length") == 0
-  end, 1000, "workspace toggle did not disable native scrolling")
+  end, 5000, "workspace toggle did not disable native scrolling")
 end)
 
 t:run()

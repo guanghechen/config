@@ -125,15 +125,7 @@ t:test("command definitions and implementations stay symmetric", function()
   t.assert_eq(1, explorer_reveal_calls, "normal explorer reveal")
   t.assert_eq(2, diffview_reveal_calls, "Diffview navigation reveal")
 
-  local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local previous_bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  local test_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  t:defer(function()
-    vim.api.nvim_win_set_buf(winnr, previous_bufnr)
-    vim.api.nvim_buf_delete(test_bufnr, { force = true })
-  end)
-  vim.api.nvim_buf_set_lines(test_bufnr, 0, -1, false, { "one", "two" })
-  vim.api.nvim_win_set_buf(winnr, test_bufnr)
+  local test_bufnr = t:buffer({ "one", "two" }, { current = true }) ---@type integer
 
   vim.cmd("normal! V")
   Command.definitions.git.hunk_stage_visual:execute()

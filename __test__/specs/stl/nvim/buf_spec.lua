@@ -16,17 +16,25 @@ bootstrap.with_global(t, "yoz", {
 
 local buf = assert(loadfile("lua/stl/nvim/buf.lua"))()
 
+---A buffer as `t:buffer` creates it, whose cached filepath is dropped before the case deletes it.
+---@param lines                         ?string[]
+---@param options                       ?__test__.support.harness.IBufferOptions
 ---@return integer
-local function create_buffer()
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  ---@diagnostic disable-next-line: invisible
+local function create_buffer(lines, options)
+  local bufnr = t:buffer(lines, options)
   t:defer(function()
     buf.on_buf_close(bufnr)
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
   end)
   return bufnr
+end
+
+---Makes the buffer module treat paths as Windows paths until the case ends.
+---@return nil
+local function as_windows()
+  t:patch_table(stl.env, "IS_WIN", true)
+  t:patch_table(yoz.path, "normalize", function(filepath)
+    return filepath:gsub("\\", "/")
+  end)
 end
 
 ---@param filepath                      string
@@ -42,10 +50,7 @@ end
 ---@param new_filepath                  string
 ---@return nil
 local function assert_windows_case_only_rename(old_filepath, new_filepath)
-  t:patch_table(stl.env, "IS_WIN", true)
-  t:patch_table(yoz.path, "normalize", function(filepath)
-    return filepath:gsub("\\", "/")
-  end)
+  as_windows()
 
   local bufnr = create_buffer()
   buf.on_buf_open(bufnr, old_filepath)
@@ -155,10 +160,7 @@ t:test("closing a stale owner preserves a reused filepath", function()
 end)
 
 t:test("Windows case-fold owner survives another buffer rename", function()
-  t:patch_table(stl.env, "IS_WIN", true)
-  t:patch_table(yoz.path, "normalize", function(filepath)
-    return filepath:gsub("\\", "/")
-  end)
+  as_windows()
 
   local renamed_bufnr = create_buffer()
   local reused_bufnr = create_buffer()
@@ -173,18 +175,27 @@ t:test("Windows case-fold owner survives another buffer rename", function()
   t.assert_eq(reused_bufnr, buf.lookup_bufnr(loaded_bufnrs, old_filepath), "reused case-fold filepath")
 end)
 
+---Types `keys` in a new buffer shown in the current window, then `<F2>`, mapped in `modes` to call `read`, then `after`,
+---and returns what `read` returned.
+---@param keys                          string
+---@param modes                         string|string[]
+---@param read                          fun(): any
+---@param after                         string
+---@return any
+local function read_typed(keys, modes, read, after)
+  local bufnr = create_buffer({ "abc中x", "hello world", "second line" }, { current = true })
+  local value ---@type any
+  vim.keymap.set(modes, "<F2>", function()
+    value = read()
+  end, { buffer = bufnr })
+  vim.api.nvim_feedkeys(vim.keycode("<Esc>" .. keys .. "<F2>" .. after), "x", false)
+  return value
+end
+
 ---@param keys                          string Keys that end in Visual mode, where the region is read.
 ---@return stl.nvim.buf.IVisualRegion|nil
 local function visual_region(keys)
-  local bufnr = create_buffer()
-  vim.api.nvim_set_current_buf(bufnr)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "abc中x", "hello world", "second line" })
-  local region ---@type stl.nvim.buf.IVisualRegion|nil
-  vim.keymap.set("x", "<F2>", function()
-    region = buf.retrieve_visual_region()
-  end, { buffer = bufnr })
-  vim.api.nvim_feedkeys(vim.keycode("<Esc>" .. keys .. "<F2><Esc>"), "x", false)
-  return region
+  return read_typed(keys, "x", buf.retrieve_visual_region, "<Esc>")
 end
 
 ---@param expected                      table
@@ -213,9 +224,7 @@ t:test("a Visual region keeps whole characters and follows the Visual mode", fun
 end)
 
 t:test("outside Visual mode only an explicit request reads the last selection", function()
-  local bufnr = create_buffer()
-  vim.api.nvim_set_current_buf(bufnr)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "abc中x", "hello world" })
+  create_buffer({ "abc中x", "hello world" }, { current = true })
   vim.api.nvim_feedkeys(vim.keycode("<Esc>gg0vl<Esc>"), "x", false)
   t.assert_nil(buf.retrieve_visual_region(), "a Normal mode caller has no selection")
   assert_region(
@@ -230,14 +239,7 @@ end)
 ---@return string mode after the read
 ---@return integer[] cursor after the read
 local function selected_text(keys)
-  local bufnr = create_buffer()
-  vim.api.nvim_set_current_buf(bufnr)
-  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "abc中x", "hello world", "second line" })
-  local text ---@type string|nil
-  vim.keymap.set({ "n", "x" }, "<F3>", function()
-    text = buf.retrieve_selected_text()
-  end, { buffer = bufnr })
-  vim.api.nvim_feedkeys(vim.keycode("<Esc>" .. keys .. "<F3>"), "x", false)
+  local text = read_typed(keys, { "n", "x" }, buf.retrieve_selected_text, "")
   return text, vim.fn.mode(), vim.api.nvim_win_get_cursor(0)
 end
 

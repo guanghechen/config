@@ -32,15 +32,15 @@ t:test("marked aggregation validates dense identities and keeps the captured fra
     return state:snapshot():header().data_revision == data:source():revision()
   end, 5000)
   local removed = state:snapshot()
-  local ok, failure = pcall(removed.all_marked, removed, { b, a })
-  t.assert_false(ok)
-  t.assert_true(tostring(failure):find("MissingNode", 1, true) ~= nil, tostring(failure))
+  t.assert_error(function()
+    removed:all_marked({ b, a })
+  end, "MissingNode")
   t.assert_true(selected:all_marked({ a, b }))
   t.assert_true(mixed:all_marked({ a }))
   for _, nodes in ipairs({ false, { [0] = b }, { [100] = b }, { b, "invalid" } }) do
-    ok, failure = pcall(removed.all_marked, removed, nodes)
-    t.assert_false(ok)
-    t.assert_true(tostring(failure):find("InvalidUpdate", 1, true) ~= nil, tostring(failure))
+    t.assert_error(function()
+      removed:all_marked(nodes)
+    end, "InvalidUpdate")
   end
 end)
 
@@ -68,14 +68,14 @@ t:test("marked aggregation accepts ranges larger than an export page within the 
   end
   t.assert_true(frame:all_marked(ids))
   ids[200001] = ids[1]
-  local ok, failure = pcall(frame.all_marked, frame, ids)
-  t.assert_false(ok)
-  t.assert_true(tostring(failure):find("ResourceLimit", 1, true) ~= nil, tostring(failure))
+  t.assert_error(function()
+    frame:all_marked(ids)
+  end, "ResourceLimit")
 end)
 
 t:test("view detach does not cancel an accepted selection command", function()
   local _, state, a = fixture()
-  local view = treeview.attach(state, {
+  local view = support.attach(t, state, {
     keymaps = false,
     on_error = function(error)
       error(error)
@@ -95,7 +95,7 @@ for _, mode in ipairs({ "v", "V", "<C-v>" }) do
     local data, state, a, b = fixture()
     local root = data:source():id("root")
     local errors = {}
-    local view = treeview.attach(state, {
+    local view = support.attach(t, state, {
       keymaps = false,
       on_error = function(value)
         errors[#errors + 1] = value
@@ -103,7 +103,6 @@ for _, mode in ipairs({ "v", "V", "<C-v>" }) do
     })
     t:defer(function()
       vim.cmd.normal({ args = { vim.keycode("<Esc>") }, bang = true })
-      view:detach()
     end)
     t.wait_until(function()
       return view:frame() ~= nil
@@ -153,10 +152,9 @@ t:test("Visual-block preserves virtual columns when metadata outside its range c
     { kind = "insert", key = "c", parent = { id = data:source():id("root") }, label = "gamma" },
   }))
   local c = data:source():id("c")
-  local view = treeview.attach(state, { keymaps = false })
+  local view = support.attach(t, state, { keymaps = false })
   t:defer(function()
     vim.cmd.normal({ args = { vim.keycode("<Esc>") }, bang = true })
-    view:detach()
   end)
   local virtualedit = vim.api.nvim_get_option_value("virtualedit", { win = view.winnr, scope = "local" })
   t:defer(function()

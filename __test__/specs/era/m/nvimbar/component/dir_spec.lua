@@ -1,13 +1,13 @@
 local harness = require("__test__.support.harness")
 local bootstrap = require("__test__.support.bootstrap")
-local clock_fixture = require("__test__.fixtures.era.m.nvimbar.clock")
+local nvimbar = require("__test__.support.nvimbar")
 local nvim_fn = require("stl.nvim.fn")
 local yoz = require("yoz")
 local t = harness.new()
 
 ---@class __test__.nvimbar.dir.IScene
 ---@field public bar                    era.m.nvimbar.Nvimbar
----@field public clock                  __test__.fixtures.nvimbar.IClock
+---@field public clock                  __test__.support.nvimbar.IClock
 ---@field public winnr                  integer
 ---@field public bufnr                  integer
 ---@field public clicked                string[]
@@ -16,17 +16,8 @@ local t = harness.new()
 ---@return __test__.nvimbar.dir.IScene
 local function scene()
   local clicked, callbacks = {}, {}
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  t:defer(function()
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
-  vim.api.nvim_buf_set_name(bufnr, "/project/old/file.lua")
-  local winnr = vim.api.nvim_open_win(bufnr, false, { relative = "editor", row = 0, col = 0, width = 80, height = 3 })
-  t:defer(function()
-    if vim.api.nvim_win_is_valid(winnr) then
-      vim.api.nvim_win_close(winnr, true)
-    end
-  end)
+  local bufnr = t:buffer(nil, { name = "/project/old/file.lua" })
+  local winnr = t:window(bufnr, { relative = "editor", row = 0, col = 0, width = 80, height = 3 })
   bootstrap.with_runtime(t, {
     stl = {
       fn = { noop = function() end },
@@ -88,7 +79,7 @@ local function scene()
     },
     yoz = yoz,
   })
-  local clock = clock_fixture.new(t)
+  local clock = nvimbar.clock(t)
   local bar = clock.Nvimbar.new({
     name = "directory test",
     comp_sep = "",
@@ -175,17 +166,8 @@ end)
 
 t:test("forks sharing a raw definition keep independent button targets", function()
   local current = scene()
-  local bufnr = vim.api.nvim_create_buf(false, true)
-  t:defer(function()
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
-  vim.api.nvim_buf_set_name(bufnr, "/project/peer/file.lua")
-  local winnr = vim.api.nvim_open_win(bufnr, false, { relative = "editor", row = 5, col = 0, width = 80, height = 3 })
-  t:defer(function()
-    if vim.api.nvim_win_is_valid(winnr) then
-      vim.api.nvim_win_close(winnr, true)
-    end
-  end)
+  local bufnr = t:buffer(nil, { name = "/project/peer/file.lua" })
+  local winnr = t:window(bufnr, { relative = "editor", row = 5, col = 0, width = 80, height = 3 })
   local fork = current.bar:fork(winnr)
   fork:refresh()
   current.clock:advance(3)

@@ -1,3 +1,4 @@
+local fs = require("__test__.support.fs")
 local harness = require("__test__.support.harness")
 local t = harness.new()
 
@@ -210,9 +211,7 @@ for _, scenario in ipairs({
 }) do
   t:test("an implementation " .. scenario.name .. " propagates instead of falling back", function()
     local dirpath = t:tempdir()
-    vim.fn.mkdir(dirpath .. "/dot/theme/hlgroup/lsp", "p")
-    local filepath = dirpath .. "/dot/theme/hlgroup/lsp/__test_failure__.lua"
-    vim.fn.writefile({ scenario.source }, filepath)
+    fs.write(dirpath .. "/dot/theme/hlgroup/lsp/__test_failure__.lua", { scenario.source })
     t:patch_table(package, "path", dirpath .. "/?.lua")
     -- A synthetic family keeps runtimepath implementations from shadowing this package.path fixture.
     t:patch_table(package.loaded, "dot.theme.hlgroup.lsp.__test_failure__", nil)
@@ -224,9 +223,9 @@ for _, scenario in ipairs({
     local context = context_for("vsc-dark-modern")
     context.scheme = vim.deepcopy(context.scheme)
     context.scheme.theme = "__test_failure__"
-    local ok, err = pcall(apply_integration, "lsp", context)
-    t.assert_false(ok, scenario.name)
-    t.assert_true(tostring(err):find(scenario.message, 1, true) ~= nil, tostring(err))
+    t.assert_error(function()
+      apply_integration("lsp", context)
+    end, scenario.message, scenario.name)
   end)
 end
 
@@ -237,11 +236,9 @@ t:test("generator failures and incomplete implementations never use unified", fu
       error("highlight generation failed")
     end,
   })
-  local ok, err = pcall(function()
-    return apply_integration("lsp", context)
-  end)
-  t.assert_false(ok)
-  t.assert_true(tostring(err):find("highlight generation failed", 1, true) ~= nil, tostring(err))
+  t.assert_error(function()
+    apply_integration("lsp", context)
+  end, "highlight generation failed")
 
   t:patch_table(package.loaded, "dot.theme.hlgroup.lsp.vsc", {})
   t.assert_false(

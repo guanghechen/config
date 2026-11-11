@@ -1,4 +1,5 @@
 local bootstrap = require("__test__.support.bootstrap")
+local fs = require("__test__.support.fs")
 local harness = require("__test__.support.harness")
 
 local t = harness.new()
@@ -67,9 +68,16 @@ end
 ---@param padding                       ?integer
 ---@return nil
 local function write_png(path, width, height, padding)
-  local fd = assert(io.open(path, "wb"))
-  fd:write("\137PNG\r\n\26\n" .. u32(13) .. "IHDR" .. u32(width) .. u32(height) .. string.rep("\0", padding or 0))
-  fd:close()
+  fs.write(path, "\137PNG\r\n\26\n" .. u32(13) .. "IHDR" .. u32(width) .. u32(height) .. string.rep("\0", padding or 0))
+end
+
+---@param conversion                    era.m.image.Convert
+---@return nil
+local function finish(conversion)
+  conversion:run()
+  t.wait_until(function()
+    return conversion:done()
+  end, 5000, "conversion")
 end
 
 ---@param bufnr                         integer
@@ -111,10 +119,7 @@ t:test("conversion outputs are reused only after a run completed", function()
   vim.fn.writefile({ "partial" }, identify.file)
   t.assert_false(identify.done, "partial output")
 
-  first:run()
-  t.wait_until(function()
-    return first:done()
-  end, 5000, "conversion")
+  finish(first)
 
   t.assert_nil(first:error(), "conversion error")
   t.assert_same({ width = 4, height = 2 }, assert(first.meta.info).size, "identified size")
@@ -180,13 +185,7 @@ end)
 
 t:test("a placement shows an image whose source appears later", function()
   local Placement = require("era.m.image.placement")
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
-  vim.api.nvim_win_set_buf(0, bufnr)
+  local bufnr = t:buffer(nil, { current = true })
   local file = t:tempdir() .. "/later.png" ---@type string
   local placement = Placement.new(bufnr, file, { inline = true, pos = { 1, 0 }, range = { 1, 0, 1, 0 } })
   t:defer(function()
@@ -208,13 +207,8 @@ end)
 
 t:test("a viewer follows its rewritten source and stays unmodified", function()
   local Placement = require("era.m.image.placement")
-  local bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
-  vim.api.nvim_win_set_buf(0, bufnr)
+  -- A file buffer, which tracks `modified`.
+  local bufnr = t:buffer(nil, { scratch = false, current = true })
   local file = t:tempdir() .. "/viewer.png" ---@type string
   write_png(file, 4, 2)
   local placement = Placement.new(bufnr, file, { conceal = true })
@@ -308,10 +302,7 @@ t:test("discarding a conversion deletes only its own files in the cache", functi
   write_png(file, 4, 2)
   vim.fn.writefile({ "keep" }, outside)
   local conversion = convert.convert({ source = convert.source(file) })
-  conversion:run()
-  t.wait_until(function()
-    return conversion:done()
-  end, 5000, "conversion")
+  finish(conversion)
   local output = conversion.steps[1].file ---@type string
   conversion.steps[2] = vim.tbl_extend("force", conversion.steps[1], { file = outside })
 

@@ -40,16 +40,32 @@ function M.run(root, args, input)
   return result.stdout or ""
 end
 
+---Creates a repository at `root`, an existing directory such as one nested in another repository.
+---@param root                          string
+---@param init                          ?string[]
+---@return string
+function M.init(root, init)
+  M.run(root, vim.list_extend({ "init", "-q" }, init or {}))
+  M.run(root, { "config", "core.autocrlf", "false" })
+  M.run(root, { "config", "core.fsmonitor", "false" })
+  return root
+end
+
 ---Creates a repository in a fresh temporary directory that is removed when the case ends.
 ---@param t                             __test__.support.Harness
 ---@param init                          ?string[]
 ---@return string
 function M.repo(t, init)
-  local root = t:tempdir()
-  M.run(root, vim.list_extend({ "init", "-q" }, init or {}))
-  M.run(root, { "config", "core.autocrlf", "false" })
-  M.run(root, { "config", "core.fsmonitor", "false" })
-  return root
+  return M.init(t:tempdir(), init)
+end
+
+---Stages every change under `root` and commits it.
+---@param root                          string
+---@param message                       ?string
+---@return nil
+function M.commit(root, message)
+  M.run(root, { "add", "-A" })
+  M.run(root, { "commit", "-q", "-m", message or "commit" })
 end
 
 return M

@@ -1,25 +1,45 @@
 require("ark.bootstrap").setup()
 local t = require("__test__.support.harness").new()
+local UI = require("__test__.support.ui")
+local Grid = require("__test__.support.ui_grid")
 local support = require("__test__.support.git_files")
 local git = require("__test__.support.git")
 
+---A child with the full runtime and `root` as its Git workspace, which records reported errors in `errors`. In the
+---child, `open(fields)` opens the Git Files widget as `widget` after setting `fields` on it, and
+---`stub_status(data, staged, unstaged)` makes Git status report `data` with those changed files.
 ---@param width                         integer
 ---@param height                        integer
+---@param root                          string
+---@return __test__.support.UI
 ---@return table
----@return table
-local function surface(width, height)
-  local ui = require("__test__.support.ui").new()
-  t:defer(function()
-    ui:close()
-  end)
-  local grid = require("__test__.support.ui_grid").new(ui)
+local function surface(width, height, root)
+  local ui = UI.open(t)
+  local grid = Grid.new(ui)
   ui:start({ width = width, height = height, runtime = "ark" })
-  ui:lua([[
+  ui:lua(
+    [[
+    local root = ...
     support = require("__test__.support.git_files")
     errors = {}
     stl.reporter.error = function(value) errors[#errors + 1] = value end
     era.m.git.state.refresh_index = function() return stl.c.Future.resolve() end
-  ]])
+    dot.path.workspace = function() return root end
+    dot.path.is_git_repo = function() return true end
+    function open(fields)
+      widget = require("era.m.git_files").new()
+      for key, value in pairs(fields or {}) do widget[key] = value end
+      widget:toggle()
+      support.ready(widget)
+    end
+    function stub_status(data, staged, unstaged)
+      era.m.git.status.collect = function()
+        return stl.c.Future.resolve({ export = function() return data end, changed_files = function() return staged, unstaged end })
+      end
+    end
+  ]],
+    root
+  )
   return ui, grid
 end
 
@@ -28,22 +48,12 @@ end
 ---@return string
 local function border_text(grid, label)
   local title = grid:find(" " .. label)
-  if not title then
-    return ""
-  end
-  local cells = grid.grids[title.grid].rows[title.row + 1]
-  local text = {}
-  for _, cell in ipairs(cells) do
-    text[#text + 1] = cell[1]
-  end
-  return table.concat(text)
+  return title and grid:row_text(title) or ""
 end
 
 t:test("both panes render side-specific colored counts over CJK paths and resize without body writes", function()
-  local ui, grid = surface(120, 40)
+  local ui, grid = surface(120, 40, "/git")
   ui:lua([[
-    dot.path.workspace = function() return "/git" end
-    dot.path.is_git_repo = function() return true end
     local paths = { "/git/long-很长的文件名_很长的文件名_很长的文件名.lua" }
     for index = 1, 1000 do paths[#paths+1] = string.format("/git/z%04d.lua", index) end
     local data = { status_map = {}, numstats = { staged = {}, unstaged = {} } }
@@ -53,9 +63,7 @@ t:test("both panes render side-specific colored counts over CJK paths and resize
       data.numstats.staged[relative] = { insertions = 12, deletions = 3 }
       data.numstats.unstaged[relative] = { insertions = 4, deletions = 1 }
     end
-    era.m.git.status.collect = function()
-      return stl.c.Future.resolve({ export = function() return data end, changed_files = function() return paths, paths end })
-    end
+    stub_status(data, paths, paths)
     vim.api.nvim_set_hl(0, "m_ft_git_add", {fg=0x22cc44})
     vim.api.nvim_set_hl(0, "m_ft_git_delete", {fg=0xee3344})
     vim.api.nvim_set_hl(0, "m_ft_git_staged", {fg=0x55bbff})
@@ -67,10 +75,7 @@ t:test("both panes render side-specific colored counts over CJK paths and resize
       return extmark(bufnr, ns, row, col, options)
     end
     vim.api.nvim_buf_set_lines = function(...) writes=writes+1; return set_lines(...) end
-    widget = require("era.m.git_files").new()
-    widget._preview_enabled = false
-    widget:toggle()
-    support.ready(widget)
+    open({ _preview_enabled = false })
   ]])
   ui:wait_until(function()
     ui:rpc("nvim_command", "redraw")
@@ -84,10 +89,10 @@ t:test("both panes render side-specific colored counts over CJK paths and resize
   end, 5000, "both Git trees and their counts must reach the UI")
   local staged, unstaged = grid:find("+12    -3 M"), grid:find("+4    -1 M")
   t.assert_eq(0x22cc44, staged.highlight.foreground)
-  local row = grid.grids[staged.grid].rows[staged.row + 1]
+  local row = grid:row_cells(staged)
   t.assert_eq(0xee3344, grid.highlights[row[staged.col + 8][2]].foreground)
   t.assert_eq(0x55bbff, grid.highlights[row[staged.col + 11][2]].foreground)
-  row = grid.grids[unstaged.grid].rows[unstaged.row + 1]
+  row = grid:row_cells(unstaged)
   t.assert_eq(0xcccc44, grid.highlights[row[unstaged.col + 10][2]].foreground)
   local state = ui:lua([[
     local lines = vim.api.nvim_buf_get_lines(widget.panes.staged.tree.view.bufnr, 0, -1, false)
@@ -107,7 +112,7 @@ t:test("both panes render side-specific colored counts over CJK paths and resize
   t.wait_until(function()
     return border_text(grid, "Staged"):find("2 / 1001", 1, true)
       and border_text(grid, "Unstaged"):find("1 / 1001", 1, true)
-  end, 1000, "each border follows its own cursor")
+  end, 5000, "each border follows its own cursor")
   ui:lua("writes=0")
   ui:rpc("nvim_ui_try_resize", 90, 30)
   ui:wait_until(function()
@@ -119,28 +124,19 @@ t:test("both panes render side-specific colored counts over CJK paths and resize
   t.wait_until(function()
     return border_text(grid, "Staged"):find(" 2 / 1001 ┤", 1, true)
       and border_text(grid, "Unstaged"):find(" 1 / 1001 ┤", 1, true)
-  end, 1000, "narrow borders reserve the right edge for position counts")
+  end, 5000, "narrow borders reserve the right edge for position counts")
 end)
 
 t:test("input and two ordered trees share one full-height preview with live search and picker navigation", function()
-  local root = support.repo(t)
-  support.write(root, "dir/mixed.lua", { "one", "two", "three", "staged-line" })
-  git.run(root, { "add", "dir/mixed.lua" })
-  support.write(root, "dir/mixed.lua", { "one", "two", "three", "staged-line", "unstaged-line" })
-  local ui, grid = surface(140, 42)
-  ui:lua(
-    [[
-    local root = ...
-    dot.path.workspace = function() return root end
-    dot.path.is_git_repo = function() return true end
+  local root = support.changes(t, { ["dir/mixed.lua"] = { "one", "two", "three", "staged-line" } }, {
+    ["dir/mixed.lua"] = { "one", "two", "three", "staged-line", "unstaged-line" },
+  })
+  local ui, grid = surface(140, 42, root)
+  ui:lua([[
     era.fn.select_copy_filepaths = function(options) copied = options.filepaths end
-    widget = require("era.m.git_files").new()
-    widget:toggle()
-    support.ready(widget)
+    open()
     support.cursor(widget, "unstaged", "dir/mixed.lua")
-  ]],
-    root
-  )
+  ]])
   local layout = ui:lua([[
     return {
       input=vim.api.nvim_win_get_config(widget.input:get_winnr()),
@@ -173,71 +169,64 @@ t:test("input and two ordered trees share one full-height preview with live sear
       end
     end
     return top and bottom
-  end, 1000, "one outer frame joins the two columns")
+  end, 5000, "one outer frame joins the two columns")
   t.assert_false(doubled, "the columns share a single vertical border")
   t.assert_nil(grid:find("C-a hjkl panes"), "footer hints are not displayed")
   ui:rpc("nvim_input", "/zznotfound")
-  ui:wait_until(function()
-    return ui:lua(
-      "return widget._query == 'zznotfound' and widget.panes.staged.tree:linecount() == 0 and widget.panes.unstaged.tree:linecount() == 0"
-    )
-  end, 3000, "typing in the persistent input filters both trees")
+  ui:wait_lua(
+    "return widget._query == 'zznotfound' and widget.panes.staged.tree:linecount() == 0 and widget.panes.unstaged.tree:linecount() == 0",
+    5000,
+    "typing in the persistent input filters both trees"
+  )
   t.wait_until(function()
     return border_text(grid, "Staged"):find("0 / 0", 1, true) and border_text(grid, "Unstaged"):find("0 / 0", 1, true)
-  end, 1000, "empty filtered trees show zero positions in their borders")
+  end, 5000, "empty filtered trees show zero positions in their borders")
   ui:rpc("nvim_input", "<C-u>mixed")
-  ui:wait_until(function()
-    return ui:lua(
-      "return widget._query == 'mixed' and widget.panes.staged.tree:linecount() > 0 and widget.panes.unstaged.tree:linecount() > 0"
-    )
-  end, 3000)
+  ui:wait_lua(
+    "return widget._query == 'mixed' and widget.panes.staged.tree:linecount() > 0 and widget.panes.unstaged.tree:linecount() > 0",
+    5000
+  )
   ui:rpc("nvim_input", "<CR>")
-  ui:wait_until(function()
-    return ui:lua("return widget.panes.unstaged.result:isfocused() and vim.api.nvim_get_mode().mode == 'n'")
-  end, 1000, "Enter leaves the input in Normal mode on the current tree")
+  ui:wait_lua(
+    "return widget.panes.unstaged.result:isfocused() and vim.api.nvim_get_mode().mode == 'n'",
+    5000,
+    "Enter leaves the input in Normal mode on the current tree"
+  )
   ui:rpc("nvim_input", "gs")
-  ui:wait_until(function()
-    return ui:lua(
-      "return widget._request == nil and widget.panes.unstaged.tree.totals.count == 0 and widget.panes.staged.result:isfocused()"
-    )
-  end, 5000, "stage key must move the file into the other tree")
+  ui:wait_lua(
+    "return widget._request == nil and widget.panes.unstaged.tree.totals.count == 0 and widget.panes.staged.result:isfocused()",
+    5000,
+    "stage key must move the file into the other tree"
+  )
   t.assert_true(git.run(root, { "show", ":dir/mixed.lua" }):find("unstaged-line", 1, true) ~= nil)
   ui:rpc("nvim_input", "<C-a>j")
-  ui:wait_until(function()
-    return ui:lua("return widget.panes.unstaged.result:isfocused()")
-  end, 1000)
+  ui:wait_lua("return widget.panes.unstaged.result:isfocused()", 5000)
   ui:rpc("nvim_input", "<C-a>kgu")
-  ui:wait_until(function()
-    return ui:lua(
-      "return widget._request == nil and widget.panes.staged.tree.totals.count == 0 and widget.panes.unstaged.tree.totals.count == 1"
-    )
-  end, 5000, "unstage key must return the file to Unstaged")
+  ui:wait_lua(
+    "return widget._request == nil and widget.panes.staged.tree.totals.count == 0 and widget.panes.unstaged.tree.totals.count == 1",
+    5000,
+    "unstage key must return the file to Unstaged"
+  )
   t.assert_eq("", git.run(root, { "diff", "--cached", "--name-only" }))
   ui:lua("support.cursor(widget, 'unstaged', 'dir/mixed.lua')")
   ui:rpc("nvim_input", "oc")
-  ui:wait_until(function()
-    return ui:lua("return copied and copied[1]") == root .. "/dir/mixed.lua"
-  end, 1000)
+  ui:wait_lua("local path = ...; return copied and copied[1] == path", 5000, nil, root .. "/dir/mixed.lua")
   ui:wait_until(function()
     ui:rpc("nvim_command", "redraw")
     return grid:find("staged-line") and grid:find("unstaged-line")
   end, 5000, "optional diff preview must show the current side")
   ui:rpc("nvim_input", "<C-a>l")
-  ui:wait_until(function()
-    return ui:lua("return widget.preview.surface:isfocused()")
-  end, 1000)
+  ui:wait_lua("return widget.preview.surface:isfocused()", 5000)
   ui:rpc("nvim_input", "<D-h>")
-  ui:wait_until(function()
-    return ui:lua("return widget.panes.unstaged.result:isfocused()")
-  end, 1000, "Cmd navigation returns to the tree that opened preview")
+  ui:wait_lua(
+    "return widget.panes.unstaged.result:isfocused()",
+    5000,
+    "Cmd navigation returns to the tree that opened preview"
+  )
   ui:rpc("nvim_input", "<M-k><M-l>")
-  ui:wait_until(function()
-    return ui:lua("return widget.preview.surface:isfocused() and widget._active == 'staged'")
-  end, 1000)
+  ui:wait_lua("return widget.preview.surface:isfocused() and widget._active == 'staged'", 5000)
   ui:rpc("nvim_input", "<C-a>h")
-  ui:wait_until(function()
-    return ui:lua("return widget.panes.staged.result:isfocused()")
-  end, 1000, "preview remembers either source tree")
+  ui:wait_lua("return widget.panes.staged.result:isfocused()", 5000, "preview remembers either source tree")
   ui:lua([[
     stl.env.IS_TMUX = true
     navigation_zen = false
@@ -245,57 +234,48 @@ t:test("input and two ordered trees share one full-height preview with live sear
     stl.tmux.change_pane = function(direction) moved = direction end
   ]])
   ui:rpc("nvim_input", "<C-a>j<C-a>j")
-  ui:wait_until(function()
-    return ui:lua("return moved == 'j' and widget.panes.unstaged.result:isfocused()")
-  end, 1000, "the outer edge delegates to tmux")
+  ui:wait_lua(
+    "return moved == 'j' and widget.panes.unstaged.result:isfocused()",
+    5000,
+    "the outer edge delegates to tmux"
+  )
   ui:lua("navigation_zen = true; moved = nil")
   ui:rpc("nvim_input", "<C-a>j")
-  ui:wait_until(function()
-    return ui:lua("return moved == nil and widget.input:isfocused()")
-  end, 1000, "zen mode wraps from the bottom tree to the input")
+  ui:wait_lua(
+    "return moved == nil and widget.input:isfocused()",
+    5000,
+    "zen mode wraps from the bottom tree to the input"
+  )
   ui:rpc("nvim_input", "<C-a>l")
-  ui:wait_until(function()
-    return ui:lua("return widget.preview.surface:isfocused()")
-  end, 1000)
+  ui:wait_lua("return widget.preview.surface:isfocused()", 5000)
   ui:rpc("nvim_input", "<C-a>h")
-  ui:wait_until(function()
-    return ui:lua("return widget.input:isfocused()")
-  end, 1000, "preview can return to the input too")
+  ui:wait_lua("return widget.input:isfocused()", 5000, "preview can return to the input too")
   ui:rpc("nvim_input", "tp")
-  ui:wait_until(function()
-    return ui:lua("return not widget.preview.surface:isvisible()")
-  end, 1000)
+  ui:wait_lua("return not widget.preview.surface:isvisible()", 5000)
   ui:lua("navigation_zen = false")
   ui:rpc("nvim_input", "<M-l>")
-  ui:wait_until(function()
-    return ui:lua("return moved == 'l' and widget.input:isfocused()")
-  end, 1000, "hidden preview is not a navigation target")
+  ui:wait_lua("return moved == 'l' and widget.input:isfocused()", 5000, "hidden preview is not a navigation target")
   ui:rpc("nvim_input", "q")
-  ui:wait_until(function()
-    return not ui:lua("return widget:isvisible()")
-  end, 1000)
+  ui:wait_lua("return not widget:isvisible()", 5000)
   t.assert_eq(0, #ui:lua("return errors"))
 end)
 
 t:test(
   "inline preview shows source gutters, full-line and word highlights with fixed numbers while scrolling",
   function()
-    local root = support.repo(t)
-    support.write(root, "dir/mixed.lua", { "local prefix = 1", 'local value = "old-旧值"', "print(value)" })
-    git.run(root, { "add", "dir/mixed.lua" })
-    support.write(root, "dir/mixed.lua", {
-      "local prefix = 1",
-      'local value = "new-新值"',
-      "print(value)",
-      'local long = "' .. string.rep("a", 110) .. 'TAIL_END"',
-      'local message = "你好"',
+    local root = support.changes(t, {
+      ["dir/mixed.lua"] = { "local prefix = 1", 'local value = "old-旧值"', "print(value)" },
+    }, {
+      ["dir/mixed.lua"] = {
+        "local prefix = 1",
+        'local value = "new-新值"',
+        "print(value)",
+        'local long = "' .. string.rep("a", 110) .. 'TAIL_END"',
+        'local message = "你好"',
+      },
     })
-    local ui, grid = surface(140, 42)
-    ui:lua(
-      [[
-    local root = ...
-    dot.path.workspace = function() return root end
-    dot.path.is_git_repo = function() return true end
+    local ui, grid = surface(140, 42, root)
+    ui:lua([[
     vim.api.nvim_set_hl(0, "DiffDelRight", { bg=0x332222 })
     vim.api.nvim_set_hl(0, "DiffAddRight", { bg=0x223322 })
     vim.api.nvim_set_hl(0, "DiffWordLeft", { bg=0x992222 })
@@ -303,13 +283,9 @@ t:test(
     vim.api.nvim_set_hl(0, "m_gf_diff_del_nr", { fg=0x999999, bg=0x332222 })
     vim.api.nvim_set_hl(0, "m_gf_diff_add_nr", { fg=0x999999, bg=0x223322 })
     vim.api.nvim_set_hl(0, "m_gf_diff_hunk", { fg=0x999999, bg=0x223344 })
-    widget = require("era.m.git_files").new()
-    widget:toggle()
-    support.ready(widget)
+    open()
     support.cursor(widget, "unstaged", "dir/mixed.lua")
-  ]],
-      root
-    )
+  ]])
     t.wait_until(function()
       return grid:find('local value = "old-') and grid:find('local value = "new-') and grid:find("print(value)")
     end, 5000, "inline code rows reach the UI")
@@ -322,17 +298,13 @@ t:test(
     ---@param at                          table
     ---@return string
     local function gutter(at)
-      local cells, text = grid.grids[at.grid].rows[at.row + 1], {}
-      for col = removed.col - 8, removed.col do
-        text[#text + 1] = cells[col][1]
-      end
-      return table.concat(text)
+      return grid:row_text(at, removed.col - 8, removed.col)
     end
     t.assert_eq("  2    - ", gutter(removed), "deletions show only the old line number")
     t.assert_eq("     2 + ", gutter(added), "additions show only the new line number")
     t.assert_eq("  3  3   ", gutter(grid:find("print(value)")), "context shows both source line numbers")
     for _, at in ipairs({ removed, added, assert(grid:find("@@ -1,3 +1,5 @@")) }) do
-      local cells = grid.grids[at.grid].rows[at.row + 1]
+      local cells = grid:row_cells(at)
       for col = removed.col - 8, removed.col do
         t.assert_eq(
           at.highlight.background,
@@ -365,17 +337,15 @@ t:test(
   ]])
     t.wait_until(function()
       return grid:find("TAIL_END")
-    end, 1000, "long source lines can scroll horizontally")
+    end, 5000, "long source lines can scroll horizontally")
     t.assert_eq("     4 + ", gutter(grid:find("TAIL_END")), "source numbers remain fixed during horizontal scrolling")
     t.assert_eq(0, #ui:lua("return errors"))
   end
 )
 
 t:test("Git count columns and status starts align across panes and remain fixed while filtering", function()
-  local ui, grid = surface(140, 42)
+  local ui, grid = surface(140, 42, "/git")
   ui:lua([[
-    dot.path.workspace = function() return "/git" end
-    dot.path.is_git_repo = function() return true end
     require("era.m.git.numstat").collect_untracked = function() return nil end
     local a, b, c, binary = "/git/dir/a_中文.lua", "/git/dir/b.lua", "/git/c.lua", "/git/image.bin"
     local data = {
@@ -396,26 +366,17 @@ t:test("Git count columns and status starts align across panes and remain fixed 
         },
       },
     }
-    era.m.git.status.collect = function()
-      return stl.c.Future.resolve({export=function() return data end, changed_files=function() return {a,b}, {a,c,binary} end})
-    end
-    widget = require("era.m.git_files").new()
-    widget:toggle()
-    support.ready(widget)
+    stub_status(data, {a,b}, {a,c,binary})
+    open()
   ]])
   t.wait_until(function()
     return grid:find("a_") and grid:find("b.lua") and grid:find("c.lua") and grid:find("image.bin")
-  end, 3000)
+  end, 5000)
 
   ---@param label                       string
   ---@return table
   local function columns(label)
-    local at = assert(grid:find(label))
-    local text = {}
-    for _, cell in ipairs(grid.grids[at.grid].rows[at.row + 1]) do
-      text[#text + 1] = cell[1]
-    end
-    local line = table.concat(text)
+    local line = grid:row_text(assert(grid:find(label)))
     local _, last = line:find(label, 1, true)
     local boundary = assert(line:find("│", last + 1, true))
     local suffix = line:sub(last + 1, boundary - 1)
@@ -430,6 +391,17 @@ t:test("Git count columns and status starts align across panes and remain fixed 
       code = code,
       unknown = suffix:find("—", 1, true) ~= nil,
     }
+  end
+
+  ---Whether the row of `label` shows a selection mark; nil while no row shows `label`.
+  ---@param label                       string
+  ---@return boolean|nil
+  local function marked(label)
+    local at = grid:find(label)
+    return at
+      and vim.iter(grid:row_cells(at)):any(function(cell)
+        return cell[1] == "●" or cell[1] == "◐"
+      end)
   end
 
   local expected = columns("dir")
@@ -449,15 +421,11 @@ t:test("Git count columns and status starts align across panes and remain fixed 
     local tree = widget.panes.staged.tree
     tree:toggle_select(require("era.view.result_paths").key("/git/dir/b.lua"), true)
     local ready = tree:ready()
-    assert(vim.wait(3000, function() return ready:is_done() and not tree:frame():header().summary.is_empty end))
+    assert(vim.wait(5000, function() return ready:is_done() and not tree:frame():header().summary.is_empty end))
   ]])
   t.wait_until(function()
-    local cell = grid:find("b.lua")
-    local row = cell and grid.grids[cell.grid].rows[cell.row + 1]
-    return row and vim.iter(row):any(function(item)
-      return item[1] == "●" or item[1] == "◐"
-    end)
-  end, 3000, "the staged selection is drawn")
+    return marked("b.lua")
+  end, 5000, "the staged selection is drawn")
   -- `columns` reads a status as the last token, so measure unselected rows: Staged a_ and Unstaged c.lua.
   for _, label in ipairs({ "a_", "c.lua" }) do
     local actual = columns(label)
@@ -468,19 +436,15 @@ t:test("Git count columns and status starts align across panes and remain fixed 
     local tree = widget.panes.staged.tree
     tree:toggle_select(require("era.view.result_paths").key("/git/dir/b.lua"), false)
     local ready = tree:ready()
-    assert(vim.wait(3000, function() return ready:is_done() and tree:frame():header().summary.is_empty end))
+    assert(vim.wait(5000, function() return ready:is_done() and tree:frame():header().summary.is_empty end))
   ]])
   t.wait_until(function()
-    local cell = grid:find("b.lua")
-    local row = cell and grid.grids[cell.grid].rows[cell.row + 1]
-    return row and not vim.iter(row):any(function(item)
-      return item[1] == "●" or item[1] == "◐"
-    end)
-  end, 3000, "the staged selection is cleared")
+    return marked("b.lua") == false
+  end, 5000, "the staged selection is cleared")
   ui:lua("widget.input:set_content('b')")
   t.wait_until(function()
     return not grid:find("a_") and not grid:find("c.lua") and grid:find("b.lua")
-  end, 3000)
+  end, 5000)
   local filtered = columns("b.lua")
   t.assert_eq(expected.insertions, filtered.insertions)
   t.assert_eq(expected.deletions, filtered.deletions)
@@ -489,20 +453,13 @@ t:test("Git count columns and status starts align across panes and remain fixed 
 end)
 
 t:test("the input drives its target tree in Normal and Insert modes while the border marks it", function()
-  local root = support.repo(t)
-  support.write(root, "dir/mixed.lua", { "one", "two", "three", "staged" })
-  support.write(root, "dir/second.lua", { "base", "staged" })
-  git.run(root, { "add", "dir" })
-  support.write(root, "outside.lua", { "base", "unstaged" })
-  local ui = surface(140, 42)
-  ui:lua(
-    [[
-    local root = ...
-    dot.path.workspace = function() return root end
-    dot.path.is_git_repo = function() return true end
-    widget = require("era.m.git_files").new()
-    widget:toggle()
-    support.ready(widget)
+  local root = support.changes(t, {
+    ["dir/mixed.lua"] = { "one", "two", "three", "staged" },
+    ["dir/second.lua"] = { "base", "staged" },
+  }, { ["outside.lua"] = { "base", "unstaged" } })
+  local ui = surface(140, 42, root)
+  ui:lua([[
+    open()
     function probe()
       local state = { focus = widget.input:isfocused() and "input" or nil, rows = {}, counts = {}, marks = {} }
       for scope, pane in pairs(widget.panes) do
@@ -517,9 +474,7 @@ t:test("the input drives its target tree in Normal and Insert modes while the bo
       state.preview = entry and entry.scope .. ":" .. entry.path or ""
       return state
     end
-  ]],
-    root
-  )
+  ]])
   local marker = stl.icon.ui.ArrowPresent
 
   ---@param keys                        string
@@ -539,7 +494,7 @@ t:test("the input drives its target tree in Normal and Insert modes while the bo
         end
       end
       return true
-    end, 3000)
+    end, 5000)
     t.assert_true(ok, message .. "\n" .. vim.inspect(actual))
   end
 

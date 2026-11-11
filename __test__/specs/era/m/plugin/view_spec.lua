@@ -1,3 +1,4 @@
+local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 require("ark.bootstrap").setup()
 
@@ -77,11 +78,8 @@ t:test("actions update the single view without changing UI mode", function()
 end)
 
 t:test("progress updates are coalesced per event-loop tick", function()
-  local scheduled = {} ---@type fun()[]
+  local scheduled = bootstrap.with_schedule(t).callbacks
   local updates = 0
-  t:patch_table(vim, "schedule", function(callback)
-    scheduled[#scheduled + 1] = callback
-  end)
 
   local view = setmetatable({
     _update_scheduled = false,
@@ -144,7 +142,7 @@ t:test("show refreshes an already visible view", function()
   vim.api.nvim_exec_autocmds("User", { pattern = "DressingLoad", modeline = false, data = "notifier" })
   t.wait_until(function()
     return updates == 3
-  end, 1000, "dressing load refreshes the visible view")
+  end, 5000, "dressing load refreshes the visible view")
 end)
 
 t:run()

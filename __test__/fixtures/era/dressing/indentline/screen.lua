@@ -7,6 +7,7 @@ package.path = root .. "/?.lua;" .. root .. "/?/init.lua;" .. package.path
 
 local harness = require("__test__.support.harness")
 local bootstrap = require("__test__.support.bootstrap")
+local scenario = require("__test__.fixtures.era.dressing.scenario")
 local t = harness.new()
 t:patch_global("stl", require("stl"))
 require("ark.bootstrap").setup_patches()
@@ -37,15 +38,6 @@ vim.api.nvim_set_decoration_provider(vim.api.nvim_create_namespace(__module_name
     frames = frames + 1
   end,
 })
-
----@return string
-local function screenline()
-  local chars = {}
-  for col = 1, 13 do
-    chars[#chars + 1] = vim.fn.screenstring(2, col)
-  end
-  return table.concat(chars)
-end
 
 local guides_two = "│ │ │ │ child"
 local guides_four = "│   │   child"
@@ -107,10 +99,7 @@ local current
 ---@param timed_out                     boolean
 ---@return nil
 local function finish(timed_out)
-  vim.fn.writefile({
-    vim.json.encode({ samples = samples, current = current, timed_out = timed_out }),
-  }, assert(vim.env.INDENTLINE_TEST_RESULT))
-  vim.cmd("qa!")
+  scenario.finish({ samples = samples, current = current, timed_out = timed_out })
 end
 
 ---@return nil
@@ -131,7 +120,7 @@ local function advance()
   local function check()
     current = {
       name = step.name,
-      screen = screenline(),
+      screen = scenario.screenline(2, 13),
       mode = vim.api.nvim_get_mode().mode,
       frames = frames,
       sync_frames = sync_frames,

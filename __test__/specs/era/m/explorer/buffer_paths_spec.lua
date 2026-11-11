@@ -1,5 +1,6 @@
-local fixture = require("__test__.support.explorer").new()
-local t, await = fixture.t, fixture.await
+local t = require("__test__.support.harness").new()
+local fixture = require("__test__.support.explorer").new(t)
+local await = fixture.await
 local buffers = require("era.m.explorer.buffers")
 
 ---@return string
@@ -15,13 +16,7 @@ local function directory()
     path = t:tempdir()
   end
   path = assert(vim.uv.fs_realpath(path))
-  t:defer(function()
-    for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
-      if vim.api.nvim_buf_get_name(bufnr):sub(1, #path + 1) == path .. "/" then
-        vim.api.nvim_buf_delete(bufnr, { force = true })
-      end
-    end
-  end)
+  fixture.discard_buffers(path)
   return path
 end
 
@@ -40,8 +35,7 @@ end
 ---@param contents                      string
 ---@return integer
 local function edited_buffer(name, contents)
-  local bufnr = vim.fn.bufadd(name)
-  vim.fn.bufload(bufnr)
+  local bufnr = fixture.load_buffer(name)
   vim.api.nvim_set_option_value("buflisted", true, { buf = bufnr })
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { contents })
   return bufnr

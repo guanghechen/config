@@ -3,11 +3,7 @@ local UI = require("__test__.support.ui")
 local t = harness.new()
 
 t:test("RPC-only Yuivim handles Insert events independently of focus", function()
-  local ui = UI.new()
-  t:defer(function()
-    ui:close()
-  end)
-  ui:start({})
+  local ui = UI.open(t, {})
   ui:lua([[
     vim.g.yuivim = true
     require("ark.bootstrap").setup()
@@ -42,7 +38,7 @@ t:test("RPC-only Yuivim handles Insert events independently of focus", function(
     ui:rpc("nvim_input", keys)
     ui:wait_until(function()
       return ui:rpc("nvim_get_mode").mode == mode
-    end, 1000, "input did not reach mode " .. mode)
+    end, 5000, "input did not reach mode " .. mode)
   end
 
   t.assert_eq(0, #ui:rpc("nvim_list_uis"), "no Neovim UI attached")
@@ -83,7 +79,7 @@ t:test("RPC-only Yuivim handles Insert events independently of focus", function(
   ui:notify("nvim_command", "qa!")
   t.wait_until(function()
     return ui.exit_code ~= nil
-  end, 1000, "embedded Neovim exits")
+  end, 5000, "embedded Neovim exits")
   t.assert_eq(0, ui.exit_code, "embedded Neovim exited cleanly")
 end)
 

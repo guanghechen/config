@@ -1,5 +1,7 @@
 local bootstrap = require("__test__.support.bootstrap")
+local fs = require("__test__.support.fs")
 local harness = require("__test__.support.harness")
+local lsp = require("__test__.support.lsp")
 local t = harness.new()
 
 t:patch_global("yoz", require("yoz"))
@@ -23,7 +25,7 @@ local vtsls = dofile("lsp/vtsls.lua")
 ---@return string
 local function project()
   local root = t:tempdir()
-  vim.fn.writefile({}, root .. "/pnpm-lock.yaml")
+  fs.write(root .. "/pnpm-lock.yaml", {})
   return root
 end
 
@@ -32,16 +34,15 @@ end
 ---@return string binpath
 local function install_typescript(root, version)
   vim.fn.mkdir(root .. "/node_modules/typescript/lib", "p")
-  vim.fn.mkdir(root .. "/node_modules/.bin", "p")
-  vim.fn.writefile(
-    { vim.json.encode({ name = "typescript", version = version }) },
-    root .. "/node_modules/typescript/package.json"
+  fs.write(
+    root .. "/node_modules/typescript/package.json",
+    { vim.json.encode({ name = "typescript", version = version }) }
   )
   if tonumber(version:match("^(%d+)")) < 7 then
-    vim.fn.writefile({}, root .. "/node_modules/typescript/lib/tsserver.js")
+    fs.write(root .. "/node_modules/typescript/lib/tsserver.js", {})
   end
   local binpath = root .. "/node_modules/.bin/" .. (stl.env.IS_WIN and "tsc.cmd" or "tsc")
-  vim.fn.writefile({ "#!/bin/sh", "exit 0" }, binpath)
+  fs.write(binpath, { "#!/bin/sh", "exit 0" })
   assert(vim.uv.fs_chmod(binpath, 493))
   return binpath
 end
@@ -51,11 +52,7 @@ end
 ---@param rootdir                       ?string
 ---@return nil
 local function assert_route(filepath, expected, rootdir)
-  local bufnr = vim.api.nvim_create_buf(false, false)
-  t:defer(function()
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
-  vim.api.nvim_buf_set_name(bufnr, filepath)
+  local bufnr = t:buffer(nil, { name = filepath, scratch = false })
   for name, config in pairs({ tsc = native, vtsls = vtsls }) do
     local called = false
     config.root_dir(bufnr, function(dir)
@@ -196,16 +193,12 @@ end)
 t:test("native command has no PATH fallback if the project executable disappears", function()
   local root = project()
   local binpath = install_typescript(root, "7.0.2")
-  local command
-  t:patch_table(vim.lsp.rpc, "start", function(args, _, opts)
-    command = args
-    t.assert_eq(root, opts.cwd, "native cwd")
-    return {}
-  end)
+  local starts = lsp.record_starts(t)
   native.cmd({}, { root_dir = root })
-  t.assert_eq(binpath, command[1], "project executable")
-  t.assert_eq("--lsp", command[2], "native mode")
-  t.assert_eq("--stdio", command[3], "stdio transport")
+  t.assert_eq(root, starts[1].cwd, "native cwd")
+  t.assert_eq(binpath, starts[1].args[1], "project executable")
+  t.assert_eq("--lsp", starts[1].args[2], "native mode")
+  t.assert_eq("--stdio", starts[1].args[3], "stdio transport")
   assert(vim.uv.fs_unlink(binpath))
   t.assert_false(pcall(native.cmd, {}, { root_dir = root }), "no fallback to global executable")
 end)
@@ -247,9 +240,7 @@ t:test("repeated resolution and startup share one metadata read", function()
   t:patch_table(TypeScript, "resolve", function()
     error("startup must not repeat ancestor discovery")
   end)
-  t:patch_table(vim.lsp.rpc, "start", function()
-    return {}
-  end)
+  lsp.record_starts(t)
   native.cmd({}, { root_dir = root })
   local config = vim.deepcopy(vtsls)
   config.root_dir = root
@@ -346,11 +337,7 @@ t:test("root callbacks share one decision in either order and retry next round",
   for _, order in ipairs({ { "tsc", "vtsls" }, { "vtsls", "tsc" } }) do
     local root = project()
     install_typescript(root, "7.0.2")
-    local bufnr = vim.api.nvim_create_buf(false, false)
-    t:defer(function()
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end)
-    vim.api.nvim_buf_set_name(bufnr, root .. "/main.ts")
+    local bufnr = t:buffer(nil, { name = root .. "/main.ts", scratch = false })
     local reads = 0
     local read_json = stl.fs.read_json
     local restore = t:patch_table(stl.fs, "read_json", function(opts)
@@ -376,11 +363,7 @@ end)
 t:test("an unpaired selection expires before a later activation", function()
   local root = project()
   install_typescript(root, "7.0.2")
-  local bufnr = vim.api.nvim_create_buf(false, false)
-  t:defer(function()
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
-  vim.api.nvim_buf_set_name(bufnr, root .. "/main.ts")
+  local bufnr = t:buffer(nil, { name = root .. "/main.ts", scratch = false })
   local reads = 0
   local read_json = stl.fs.read_json
   t:patch_table(stl.fs, "read_json", function(opts)
@@ -388,13 +371,8 @@ t:test("an unpaired selection expires before a later activation", function()
     return reads > 1 and read_json(opts) or nil
   end)
   t.assert_eq("vtsls", TypeScript.select_for_buffer(bufnr, "tsc").server, "temporary fallback")
-  local flushed = false
-  vim.schedule(function()
-    flushed = true
-  end)
-  t.wait_until(function()
-    return flushed
-  end, 1000, "selection expiry")
+  -- The selection expires on the next turn.
+  t.drain()
   t.assert_eq("tsc", TypeScript.select_for_buffer(bufnr, "vtsls").server, "fresh later selection")
   t.assert_eq(2, reads, "later activation retries")
 end)
@@ -402,11 +380,7 @@ end)
 t:test("a changed selection detaches only the other TypeScript client from this buffer", function()
   local root = project()
   install_typescript(root, "7.0.2")
-  local bufnr = vim.api.nvim_create_buf(false, false)
-  t:defer(function()
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end)
-  vim.api.nvim_buf_set_name(bufnr, root .. "/main.ts")
+  local bufnr = t:buffer(nil, { name = root .. "/main.ts", scratch = false })
   t:patch_table(vim.lsp, "get_clients", function(opts)
     t.assert_eq(bufnr, opts.bufnr, "target buffer")
     return { { id = 1, name = "vtsls" }, { id = 2, name = "biome" }, { id = 3, name = "tsc" } }

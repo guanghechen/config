@@ -1,36 +1,9 @@
-local bootstrap = require("__test__.support.bootstrap")
+local dressing = require("__test__.support.dressing")
 local harness = require("__test__.support.harness")
 
 local t = harness.new()
 
-bootstrap.with_runtime(t, {
-  stl = {
-    filetype = require("stl.filetype"),
-    fn = {
-      observe = function()
-        return { unsubscribe = function() end }
-      end,
-    },
-    nvim = {
-      fn = {
-        augroup = function(name)
-          return vim.api.nvim_create_augroup(name, { clear = true })
-        end,
-      },
-    },
-  },
-  dot = {
-    context = {
-      flight = {
-        dressing_indent = {
-          snapshot = function()
-            return true
-          end,
-        },
-      },
-    },
-  },
-})
+dressing.with_indentline(t)
 
 local redraws = {} ---@type vim.api.keyset.redraw[]
 t:patch_table(vim.api, "nvim__redraw", function(options)
@@ -45,14 +18,8 @@ Indentline.dressing()
 -- The windows each coalesced refresh redraws; "all" for every window.
 ---@return string
 local function settle()
-  -- The refresh is scheduled, so it has run once a callback scheduled after it runs.
-  local drained = false ---@type boolean
-  vim.schedule(function()
-    drained = true
-  end)
-  t.wait_until(function()
-    return drained
-  end, 5000, "scheduled refresh")
+  -- The refresh is scheduled.
+  t.drain()
   local targets = {} ---@type string[]
   for _, options in ipairs(redraws) do
     targets[#targets + 1] = options.win and tostring(options.win) or "all"
@@ -66,13 +33,8 @@ settle()
 ---@return integer bufnr
 ---@return integer winnr
 local function open_float()
-  local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  t:defer(function()
-    if vim.api.nvim_buf_is_valid(bufnr) then
-      vim.api.nvim_buf_delete(bufnr, { force = true })
-    end
-  end)
-  local winnr = vim.api.nvim_open_win(bufnr, false, { relative = "editor", row = 1, col = 1, width = 20, height = 2 })
+  local bufnr = t:buffer() ---@type integer
+  local winnr = t:window(bufnr, { relative = "editor", row = 1, col = 1, width = 20, height = 2 }) ---@type integer
   settle()
   return bufnr, winnr
 end

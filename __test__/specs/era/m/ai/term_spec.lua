@@ -1,10 +1,11 @@
+local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 local t = harness.new()
 
 ---@return era.m.ai.term
 ---@return table
 local function setup()
-  local calls = { starts = 0, stops = 0, detached = {}, scheduled = {}, exits = {}, reports = {}, bufnrs = {} }
+  local calls = { starts = 0, stops = 0, detached = {}, exits = {}, bufnrs = {} }
   t:patch_global("stl", {
     filetype = { AI_TERMINAL = "ai-terminal" },
     nvim = {
@@ -18,12 +19,8 @@ local function setup()
         end,
       },
     },
-    reporter = {
-      error = function(report)
-        calls.reports[#calls.reports + 1] = report
-      end,
-    },
   })
+  calls.reports = bootstrap.with_reporter(t)
   t:patch_global("era", {
     m = {
       ai = {
@@ -35,9 +32,7 @@ local function setup()
       },
     },
   })
-  t:patch_table(vim, "schedule", function(callback)
-    calls.scheduled[#calls.scheduled + 1] = callback
-  end)
+  calls.schedule = bootstrap.with_schedule(t)
   t:patch_table(vim.fn, "jobstart", function(_, opts)
     calls.starts = calls.starts + 1
     local bufnr = vim.api.nvim_get_current_buf()
@@ -73,14 +68,6 @@ end
 ---@return era.m.ai.term.IMeta
 local function open(term, uuid)
   return term.open({ uuid = uuid, agent = "claude", cmd = { "mock-agent" }, cwd = vim.fn.getcwd() })
-end
-
----@param calls                         table
----@return nil
-local function drain(calls)
-  while #calls.scheduled > 0 do
-    table.remove(calls.scheduled, 1)()
-  end
 end
 
 t:test("reopening a hidden live session restores its buffer without restarting the job", function()
@@ -135,7 +122,7 @@ t:test("late close callbacks cannot remove a replacement session with the same u
   t.assert_false(term.isvisible(), "closed foreground window")
   local replacement = open(term, "A")
   term.on_closed(first)
-  drain(calls)
+  calls.schedule.drain()
 
   t.assert_true(term.get("A") == replacement, "replacement still registered")
   t.assert_true(term.isvisible(), "replacement window survives stale cleanup")
@@ -149,21 +136,21 @@ t:test("deferred focus does not steal focus after the user switches windows", fu
   local source_winnr = vim.api.nvim_get_current_win()
   open(term, "A")
   vim.api.nvim_set_current_win(source_winnr)
-  drain(calls)
+  calls.schedule.drain()
   t.assert_eq(source_winnr, vim.api.nvim_get_current_win(), "newer user focus wins")
 end)
 
 t:test("focus resets horizontal scroll on the selected terminal", function()
   local term, calls = setup()
   local session = open(term, "A")
-  drain(calls)
+  calls.schedule.drain()
   local winnr = term.get_winnr()
   vim.api.nvim_set_option_value("wrap", false, { win = winnr, scope = "local" })
   vim.api.nvim_chan_send(session.jobid, string.rep("x", 120))
   vim.fn.winrestview({ leftcol = 12 })
   t.assert_eq(12, vim.fn.winsaveview().leftcol, "horizontal scroll set")
   open(term, "A")
-  drain(calls)
+  calls.schedule.drain()
   t.assert_eq(0, vim.fn.winsaveview().leftcol, "terminal starts from its first column")
 end)
 
@@ -173,12 +160,12 @@ t:test("failed startup cleanup does not hide a subsequently opened session", fun
   open(term, "A")
   calls.fail = false
   local second = open(term, "B")
-  drain(calls)
+  calls.schedule.drain()
   t.assert_nil(term.get("A"), "failed session released")
   t.assert_true(term.get("B") == second, "successful session retained")
   t.assert_true(term.isvisible(), "successful session remains visible")
   t.assert_eq("B", term.get_current_uuid(), "successful session remains selected")
-  t.assert_eq(1, #calls.reports, "startup failure reported once")
+  t.assert_eq(1, #calls.reports.error, "startup failure reported once")
 end)
 
 ---@return era.m.ai
@@ -194,10 +181,6 @@ local function setup_actions()
     },
   }
   stl.fn = { observe = function() end }
-  stl.reporter.info = function() end
-  stl.reporter.warn = function(report)
-    calls.reports[#calls.reports + 1] = report
-  end
   t:patch_global("dot", { path = { cwd = vim.fn.getcwd } })
   local ai = era.m.ai
   ai.term = term

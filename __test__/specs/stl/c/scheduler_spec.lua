@@ -1,3 +1,4 @@
+local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
 local t = harness.new()
@@ -18,7 +19,7 @@ t:patch_global("stl", {
 ---@class stl.c.scheduler.test.IRuntime
 ---@field scheduler                     stl.c.Scheduler
 ---@field window                        stl.c.scheduler.test.ITimer
----@field scheduled                     fun()[]
+---@field schedule                      __test__.support.bootstrap.ISchedule
 ---@field runs                          integer
 ---@field settle                        ?fun()
 
@@ -39,16 +40,13 @@ local function setup(async)
     timers[#timers + 1] = timer
     return timer
   end)
-  local runtime = { scheduled = {}, runs = 0 } ---@type stl.c.scheduler.test.IRuntime
-  t:patch_table(vim, "schedule", function(callback)
-    runtime.scheduled[#runtime.scheduled + 1] = callback
-  end)
+  local runtime = { schedule = bootstrap.with_schedule(t), runs = 0 } ---@type stl.c.scheduler.test.IRuntime
   t:patch_table(vim, "schedule_wrap", function(callback)
     return function(...)
       local args = { ... }
-      runtime.scheduled[#runtime.scheduled + 1] = function()
+      vim.schedule(function()
         callback(unpack(args))
-      end
+      end)
     end
   end)
 
@@ -76,29 +74,21 @@ end
 
 ---@param runtime                       stl.c.scheduler.test.IRuntime
 ---@return nil
-local function drain(runtime)
-  while #runtime.scheduled > 0 do
-    table.remove(runtime.scheduled, 1)()
-  end
-end
-
----@param runtime                       stl.c.scheduler.test.IRuntime
----@return nil
 local function close_window(runtime)
   runtime.window.active = false
   assert(runtime.window.callback)()
-  drain(runtime)
+  runtime.schedule.drain()
 end
 
 t:test("throttle runs the first call at once and merges calls within the window", function()
   local runtime = setup(false)
   runtime.scheduler:schedule()
-  drain(runtime)
+  runtime.schedule.drain()
   t.assert_eq(1, runtime.runs, "leading run")
 
   runtime.scheduler:schedule()
   runtime.scheduler:schedule()
-  drain(runtime)
+  runtime.schedule.drain()
   t.assert_eq(1, runtime.runs, "runs within the window")
 
   close_window(runtime)
@@ -108,21 +98,21 @@ end)
 t:test("an idle window does not restart the throttle timer", function()
   local runtime = setup(false)
   runtime.scheduler:schedule()
-  drain(runtime)
+  runtime.schedule.drain()
 
   close_window(runtime)
   t.assert_false(runtime.window.active, "timer after an idle window")
   t.assert_eq(1, runtime.runs, "runs after an idle window")
 
   runtime.scheduler:schedule()
-  drain(runtime)
+  runtime.schedule.drain()
   t.assert_eq(2, runtime.runs, "next call runs at once")
 end)
 
 t:test("a run outliving the window merges calls into one run when it settles", function()
   local runtime = setup(true)
   runtime.scheduler:schedule()
-  drain(runtime)
+  runtime.schedule.drain()
   runtime.scheduler:schedule()
   runtime.scheduler:schedule()
 
@@ -130,16 +120,16 @@ t:test("a run outliving the window merges calls into one run when it settles", f
   t.assert_eq(1, runtime.runs, "runs while the first is in flight")
 
   assert(runtime.settle)()
-  drain(runtime)
+  runtime.schedule.drain()
   t.assert_eq(2, runtime.runs, "trailing run after settling")
 end)
 
 t:test("an immediate call runs at once", function()
   local runtime = setup(false)
   runtime.scheduler:schedule()
-  drain(runtime)
+  runtime.schedule.drain()
   runtime.scheduler:schedule({ immediate = true })
-  drain(runtime)
+  runtime.schedule.drain()
   t.assert_eq(2, runtime.runs, "immediate run")
 
   close_window(runtime)
@@ -151,11 +141,11 @@ t:test("pending lasts until the run settles, or until cancel", function()
   t.assert_false(runtime.scheduler:pending(), "idle")
   runtime.scheduler:schedule()
   t.assert_true(runtime.scheduler:pending(), "scheduled")
-  drain(runtime)
+  runtime.schedule.drain()
   t.assert_eq(1, runtime.runs)
   t.assert_true(runtime.scheduler:pending(), "running")
   assert(runtime.settle)()
-  drain(runtime)
+  runtime.schedule.drain()
   t.assert_false(runtime.scheduler:pending(), "settled")
 
   runtime.scheduler:schedule()
