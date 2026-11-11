@@ -1,16 +1,15 @@
 local t = require("__test__.support.harness").new()
 local explorer = require("__test__.support.explorer")
+local git = require("__test__.support.git")
 
 t:test("cursor movement and unchanged refresh preserve colors without recalculating icons", function()
-  local path = vim.fn.tempname()
-  assert(vim.uv.fs_mkdir(path, 448))
+  local path = t:tempdir()
   for index = 1, 20 do
     vim.fn.writefile({ "return true" }, path .. "/item-" .. string.format("%02d", index) .. ".lua")
   end
   local ui = require("__test__.support.ui").new()
   t:defer(function()
     ui:close()
-    vim.fn.delete(path, "rf")
   end)
   local tracking, faded, missing, observed = false, {}, {}, 0
   local grid = require("__test__.support.ui_grid").new(ui, function(screen)
@@ -89,9 +88,11 @@ t:test("cursor movement and unchanged refresh preserve colors without recalculat
   vim.wait(80, function()
     return false
   end, 1)
+  t.wait_until(function()
+    return observed >= 12
+  end, 10000, "must observe movement flushes")
   tracking = false
   local counts = ui:lua("return counts")
-  t.assert_true(observed >= 12, "must observe movement flushes")
   t.assert_eq(0, #missing, "filenames disappeared during cursor movement")
   t.assert_eq(0, #faded, "filename highlight disappeared during cursor movement: " .. vim.inspect(faded))
   t.assert_eq(0, counts.writes, "cursor movement rewrote the body")
@@ -129,8 +130,7 @@ t:test("cursor movement and unchanged refresh preserve colors without recalculat
 end)
 
 t:test("purpose changes repaint all selection markers even when row data is reusable", function()
-  local path = vim.fn.tempname()
-  assert(vim.uv.fs_mkdir(path, 448))
+  local path = t:tempdir()
   for _, name in ipairs({ "first.lua", "second.lua" }) do
     vim.fn.writefile({ "return true" }, path .. "/" .. name)
   end
@@ -138,7 +138,6 @@ t:test("purpose changes repaint all selection markers even when row data is reus
   local grid = require("__test__.support.ui_grid").new(ui)
   t:defer(function()
     ui:close()
-    vim.fn.delete(path, "rf")
   end)
   explorer.start_ui(ui, { width = 100, height = 30, path = path })
   ui:lua(
@@ -512,17 +511,13 @@ t:test("guides stay visible through Visual selection and clip correctly when scr
 end)
 
 t:test("real UI subscribes to diagnostics and Git ignore with independent name and icon colors", function()
-  local path = vim.fn.tempname()
-  assert(vim.uv.fs_mkdir(path, 448))
+  local path = git.repo(t)
   vim.fn.writefile({ "content" }, path .. "/a.lua")
   vim.fn.writefile({ "content" }, path .. "/b.py")
   vim.fn.writefile({ "b.py" }, path .. "/.gitignore")
-  local initialized = vim.system({ "git", "-C", path, "init", "-q" }, { text = true }):wait()
-  t.assert_eq(0, initialized.code, initialized.stderr)
   local ui = require("__test__.support.ui").new()
   t:defer(function()
     ui:close()
-    vim.fn.delete(path, "rf")
   end)
   explorer.start_ui(ui, { width = 100, height = 30, path = path, git_repo = true })
   ui:lua(

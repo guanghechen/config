@@ -2,9 +2,6 @@ local harness = require("__test__.support.harness")
 
 local t = harness.new()
 
-package.path = "lua/?.lua;lua/?/init.lua;" .. package.path
-package.cpath = "lua/?.so;" .. package.cpath
-
 t:test("theme candidates, registry, and scheme files stay symmetric", function()
   t:patch_global("stl", {
     icon = {

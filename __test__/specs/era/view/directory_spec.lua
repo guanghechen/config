@@ -110,21 +110,11 @@ t:test("directory previews share Filetree data and reopening retains the main bu
     picker.result:set_lnum_current(2)
     picker:mark_preview_dirty()
   ]])
-  local started = vim.uv.hrtime()
   ui:wait_until(function()
-    local ready = ui:lua([[
+    return ui:lua([[
       return picker.preview._tree_view and picker.preview._tree_view:frame() ~= nil
     ]])
-    if vim.uv.hrtime() - started > 5000000000 then
-      error(vim.inspect(ui:lua([[return {
-        row=picker.result.lnum_current:snapshot(), cursor=vim.api.nvim_win_get_cursor(picker.result:get_winnr()),
-        focus=surface._focus, sequence=surface.state:navigation_sequence(), header=vim.inspect(surface:frame():header()),
-        preview=picker.preview:get_winnr(), target=picker.preview._tree_target and picker.preview._tree_target.key,
-        errors=errors,
-      }]])))
-    end
-    return ready
-  end, 5000)
+  end, 5000, "directory preview frame")
   t.assert_true(ui:lua("return picker.preview._tree_state._data == surface.state._data"))
   ui:lua([[saved=picker.result:get_bufnr(); picker:hide(); picker:focus()]])
   ui:wait_until(function()

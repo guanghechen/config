@@ -2,7 +2,6 @@ local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 
 local t = harness.new()
-local reports = {} ---@type table[]
 
 bootstrap.with_runtime(t, {
   dot = {
@@ -14,11 +13,6 @@ bootstrap.with_runtime(t, {
   },
   stl = {
     env = { IS_X64 = true, IS_X86 = false },
-    reporter = {
-      error = function(report)
-        reports[#reports + 1] = report
-      end,
-    },
   },
 })
 
@@ -32,7 +26,7 @@ end
 ---@return table
 local function setup_lifecycle(options)
   options = options or {}
-  reports = {}
+  local reports = {} ---@type table[]
   local callbacks = {} ---@type table<string, fun()>
   local restored_snapshots = {} ---@type era.dressing.im.Snapshot[]
   local current_snapshot = options.initial_snapshot or "source.english" ---@type era.dressing.im.Snapshot

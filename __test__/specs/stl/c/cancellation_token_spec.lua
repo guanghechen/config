@@ -160,10 +160,17 @@ end)
 
 t:test("on_cancel: unsubscribe is idempotent", function()
   local token = CancellationToken.new()
-  local sub = token:on_cancel(function() end)
+  local calls = 0 ---@type integer
+  local function callback()
+    calls = calls + 1
+  end
+  local sub = token:on_cancel(callback)
+  token:on_cancel(callback)
   sub:unsubscribe()
   sub:unsubscribe() -- Should not throw
   sub:unsubscribe()
+  token:cancel()
+  t.assert_eq(1, calls, "repeated unsubscribes remove only their own registration")
 end)
 
 t:test("on_cancel: immediate callback if already cancelled", function()
@@ -181,15 +188,21 @@ t:test("on_cancel: returns noop unsubscribe if already cancelled", function()
   local token = CancellationToken.new()
   token:cancel()
 
-  local sub = token:on_cancel(function() end)
+  local calls = 0 ---@type integer
+  local sub = token:on_cancel(function()
+    calls = calls + 1
+  end)
   -- Should not throw
   sub:unsubscribe()
+  t.assert_eq(1, calls, "only the immediate call runs the callback")
+  t.assert_true(token:is_cancelled(), "the token stays cancelled")
 end)
 
 t:test("throw_if_cancelled: does nothing if not cancelled", function()
   local token = CancellationToken.new()
   -- Should not throw
   token:throw_if_cancelled()
+  t.assert_false(token:is_cancelled(), "the check leaves the token active")
 end)
 
 t:test("throw_if_cancelled: throws if cancelled", function()

@@ -54,7 +54,7 @@ end)
 
 t:test("fetch: applies tracked stats from the shared status snapshot", function()
   local collect_opts = nil ---@type era.m.git.status.ICollectOpts|nil
-  era.m = {
+  t:patch_table(era, "m", {
     git = {
       status = {
         collect = function(opts)
@@ -91,12 +91,12 @@ t:test("fetch: applies tracked stats from the shared status snapshot", function(
         end,
       },
     },
-  }
-  dot.path = {
+  })
+  t:patch_table(dot, "path", {
     workspace = function()
       return "/repo"
     end,
-  }
+  })
 
   local entries = data.fetch_diff_entries()
   local by_stage = {} ---@type table<string, era.m.diffview.IFileEntry>
@@ -167,7 +167,7 @@ end)
 t:test("numstat: batches all untracked files through one isolated index", function()
   local commands = {} ---@type string[][]
   local command_opts = {} ---@type stl.git.exec.IExecOpts[]
-  stl.git = {
+  t:patch_table(stl, "git", {
     exec = {
       exec = function(args, opts)
         commands[#commands + 1] = args
@@ -178,17 +178,17 @@ t:test("numstat: batches all untracked files through one isolated index", functi
         return { code = 0, lines = {}, stderr = "" }
       end,
     },
-  }
-  stl.async = {
+  })
+  t:patch_table(stl, "async", {
     await_all = function(futures)
       return futures
     end,
-  }
-  dot.path = {
+  })
+  t:patch_table(dot, "path", {
     workspace = function()
       return "/repo"
     end,
-  }
+  })
   local entries = {} ---@type era.m.diffview.IFileEntry[]
   for index = 1, 100 do
     entries[index] =
@@ -218,24 +218,24 @@ t:test("numstat: degrades an untracked temporary-index query failure", function(
     { code = 128, lines = {}, stderr = "fatal: cannot hash unreadable.lua\n" },
   }
   local index = 0 ---@type integer
-  stl.git = {
+  t:patch_table(stl, "git", {
     exec = {
       exec = function()
         index = index + 1
         return responses[index]
       end,
     },
-  }
-  stl.async = {
+  })
+  t:patch_table(stl, "async", {
     await_all = function(futures)
       return futures
     end,
-  }
-  dot.path = {
+  })
+  t:patch_table(dot, "path", {
     workspace = function()
       return "/repo"
     end,
-  }
+  })
 
   local staged = { filepath = "staged.lua", stage_type = "staged", status = "M", insertions = 7, deletions = 2 }
   local modified = { filepath = "modified.lua", stage_type = "unstaged", status = "M", insertions = 3, deletions = 1 }
@@ -255,7 +255,7 @@ t:test("numstat: cancellation stops the isolated-index pipeline and removes its 
   local command_count = 0 ---@type integer
   local temp_index = nil ---@type string|nil
   local token = CancellationToken.new()
-  stl.git = {
+  t:patch_table(stl, "git", {
     exec = {
       exec = function(_, opts, exec_token)
         command_count = command_count + 1
@@ -267,17 +267,17 @@ t:test("numstat: cancellation stops the isolated-index pipeline and removes its 
         return { code = 0, lines = {}, stderr = "" }
       end,
     },
-  }
-  stl.async = {
+  })
+  t:patch_table(stl, "async", {
     await_all = function(futures)
       return futures
     end,
-  }
-  dot.path = {
+  })
+  t:patch_table(dot, "path", {
     workspace = function()
       return "/repo"
     end,
-  }
+  })
 
   local ok = pcall(data.__fetch_untracked_numstat__, {
     { filepath = "new.lua", stage_type = "unstaged", status = "?" },
@@ -292,7 +292,7 @@ end)
 t:test("numstat: unexpected temporary-index errors propagate after cleanup", function()
   local command_count = 0 ---@type integer
   local temp_index = nil ---@type string|nil
-  stl.git = {
+  t:patch_table(stl, "git", {
     exec = {
       exec = function(_, opts)
         command_count = command_count + 1
@@ -303,17 +303,17 @@ t:test("numstat: unexpected temporary-index errors propagate after cleanup", fun
         return { code = 0, lines = {}, stderr = "" }
       end,
     },
-  }
-  stl.async = {
+  })
+  t:patch_table(stl, "async", {
     await_all = function(futures)
       return futures
     end,
-  }
-  dot.path = {
+  })
+  t:patch_table(dot, "path", {
     workspace = function()
       return "/repo"
     end,
-  }
+  })
 
   local ok, err = pcall(data.__fetch_untracked_numstat__, {
     { filepath = "new.lua", stage_type = "unstaged", status = "?" },
@@ -433,7 +433,7 @@ t:test("numstat: reads real untracked text while preserving binary and empty sem
   binary:write("before\0after")
   binary:close()
 
-  stl.git = {
+  t:patch_table(stl, "git", {
     exec = {
       exec = function(args, opts)
         local cmd = { "git", "-C", opts.cwd }
@@ -446,17 +446,17 @@ t:test("numstat: reads real untracked text while preserving binary and empty sem
         }
       end,
     },
-  }
-  stl.async = {
+  })
+  t:patch_table(stl, "async", {
     await_all = function(futures)
       return futures
     end,
-  }
-  dot.path = {
+  })
+  t:patch_table(dot, "path", {
     workspace = function()
       return repo
     end,
-  }
+  })
 
   local plain = { filepath = "plain.txt", stage_type = "unstaged", status = "?" }
   local empty = { filepath = "empty.txt", stage_type = "unstaged", status = "?" }
@@ -489,7 +489,7 @@ t:test("numstat: an unreadable untracked file does not block the Changes snapsho
   vim.fn.writefile({ "cannot read this" }, unreadable)
   t.assert_true(vim.uv.fs_chmod(unreadable, 0) == true, "make fixture unreadable")
 
-  stl.git = {
+  t:patch_table(stl, "git", {
     exec = {
       exec = function(args, opts)
         local cmd = { "git", "-C", opts.cwd }
@@ -502,17 +502,17 @@ t:test("numstat: an unreadable untracked file does not block the Changes snapsho
         }
       end,
     },
-  }
-  stl.async = {
+  })
+  t:patch_table(stl, "async", {
     await_all = function(futures)
       return futures
     end,
-  }
-  dot.path = {
+  })
+  t:patch_table(dot, "path", {
     workspace = function()
       return repo
     end,
-  }
+  })
 
   local entry = { filepath = "unreadable.txt", stage_type = "unstaged", status = "?" }
   local result = data.__fetch_untracked_numstat__({ entry })

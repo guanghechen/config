@@ -25,7 +25,7 @@ local servers = {
 local function project()
   local root = t:tempdir()
   vim.fn.mkdir(root .. "/node_modules/.bin", "p")
-  return assert(vim.uv.fs_realpath(root))
+  return root
 end
 
 t:test("server commands select each workspace executable independently of editor cwd", function()

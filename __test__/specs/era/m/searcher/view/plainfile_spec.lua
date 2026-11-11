@@ -48,6 +48,9 @@ local function marks(data)
 end
 
 local view = Plainfile.new({ name = "plainfile-line-breaks" })
+t:defer(function()
+  view:dispose()
+end)
 -- Each line holds "foo" at column 2; the copies differ only in their line breaks.
 local lf = fixture("lf.txt", "a foo\nb foo\nc foo\n")
 local crlf = fixture("crlf.txt", "a foo\r\nb foo\r\nc foo\r\n")

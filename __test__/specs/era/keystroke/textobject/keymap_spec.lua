@@ -7,6 +7,9 @@ for _, key in ipairs({ "an", "in", "ai", "ii" }) do
   local callback = function() end
   owned[key] = callback
   vim.keymap.set({ "x", "o" }, key, callback, { desc = "existing " .. key })
+  t:defer(function()
+    pcall(vim.keymap.del, { "x", "o" }, key)
+  end)
 end
 local Textobject = Runtime.setup(t)
 
@@ -62,7 +65,7 @@ t:test("slowly typed custom objects are remapped after the prefix timeout", func
   ui:rpc("nvim_input", "z")
   ui:wait_until(function()
     return ui:rpc("nvim_eval", "getreg('\"')") == "word"
-  end, 1000, "custom object after timeout")
+  end, 5000, "custom object after timeout")
 end)
 
 t:run()

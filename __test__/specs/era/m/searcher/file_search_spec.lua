@@ -133,6 +133,9 @@ t:test("queued debounce task cannot submit after generation invalidation", funct
       return job({ { "completed", { items = {} }, nil } })
     end,
   })
+  t:defer(function()
+    controller:dispose()
+  end)
   ---@diagnostic disable-next-line: missing-fields -- Scheduler only needs next/snapshot from this test double.
   local scheduler_value = {
     next = function() end,
@@ -156,6 +159,9 @@ t:test("queued debounce task cannot submit after generation invalidation", funct
       end
     end,
   })
+  t:defer(function()
+    scheduler:dispose()
+  end)
 
   local queued_generation = controller:invalidate()
   scheduler:schedule({ immediate = true, context = queued_generation })
@@ -166,8 +172,6 @@ t:test("queued debounce task cannot submit after generation invalidation", funct
     return scheduler._tick_settled == 1
   end, 5000, "queued debounce task should settle")
   local rescheduled_context = scheduler._context
-  scheduler:dispose()
-  controller:dispose()
 
   t.assert_eq(0, starts, "stale queued task must not start a search")
   t.assert_eq(latest_generation, rescheduled_context, "internal reschedule must preserve latest context")

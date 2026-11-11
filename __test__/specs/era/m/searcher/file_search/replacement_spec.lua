@@ -230,6 +230,7 @@ t:test("a query edit still waits for the debounce", function()
   stretch_debounce(composer)
 
   controls.search_pattern:next("a needle")
+  -- A search that skipped the debounce would start within this window.
   vim.wait(300)
   t.assert_eq(1, seen.searches, "the query edit has not searched yet")
   t.assert_false(composer:__is_search_projection_current__(), "the published results are stale until it does")
@@ -625,6 +626,4 @@ t:test("a file changed after the search is left as it is and told", function()
   t.assert_eq(2, #warnings, "told again")
 end)
 
-local test_result = t:run({ exit = false })
-vim.fn.delete(workspace, "rf")
-os.exit(test_result.failed > 0 and 1 or 0)
+t:run()

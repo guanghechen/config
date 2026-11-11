@@ -141,15 +141,12 @@ t:test("watcher follows HEAD when checkout changes the current ref", function()
 end)
 
 t:test("watcher observes commits from a linked worktree", function()
-  local root = t:tempdir()
-  local repo = root .. "/main" ---@type string
-  local worktree = root .. "/worktree" ---@type string
-  vim.fn.mkdir(repo, "p")
+  local repo = git.repo(t)
+  local worktree = t:tempdir() .. "/worktree" ---@type string
   t:defer(function()
     watcher.dispose()
   end)
 
-  git.run(repo, { "init", "-q" })
   vim.fn.writefile({ "base" }, repo .. "/f.txt")
   git.run(repo, { "add", "f.txt" })
   git.run(repo, { "commit", "-qm", "base" })
@@ -168,27 +165,25 @@ t:test("watcher observes commits from a linked worktree", function()
 end)
 
 t:test("commits on branches beside the current one leave the watcher quiet", function()
-  local root = t:tempdir()
-  local repo = root .. "/main" ---@type string
-  vim.fn.mkdir(repo, "p")
+  local repo = git.repo(t)
+  local worktrees = t:tempdir()
   t:defer(function()
     watcher.dispose()
   end)
 
-  git.run(repo, { "init", "-q" })
   git.run(repo, { "commit", "--allow-empty", "-qm", "base" })
   -- Worktrees of one user keep their branches side by side in one ref directory.
-  git.run(repo, { "worktree", "add", "-qb", "user/current", root .. "/current" })
-  git.run(repo, { "worktree", "add", "-qb", "user/sibling", root .. "/sibling" })
+  git.run(repo, { "worktree", "add", "-qb", "user/current", worktrees .. "/current" })
+  git.run(repo, { "worktree", "add", "-qb", "user/sibling", worktrees .. "/sibling" })
 
-  local gitdir = vim.trim(git.run(root .. "/current", { "rev-parse", "--absolute-git-dir" })) ---@type string
+  local gitdir = vim.trim(git.run(worktrees .. "/current", { "rev-parse", "--absolute-git-dir" })) ---@type string
   watcher.update(gitdir, repo .. "/.git")
   await_watch(gitdir)
-  git.run(root .. "/sibling", { "commit", "--allow-empty", "-qm", "sibling" })
+  git.run(worktrees .. "/sibling", { "commit", "--allow-empty", "-qm", "sibling" })
   vim.wait(1000)
   t.assert_eq(0, head_refreshes, "refreshes after a commit on the sibling branch")
 
-  git.run(root .. "/current", { "commit", "--allow-empty", "-qm", "current" })
+  git.run(worktrees .. "/current", { "commit", "--allow-empty", "-qm", "current" })
   t.wait_until(function()
     return head_refreshes > 0
   end, 3000, "a commit on the current branch should refresh HEAD")

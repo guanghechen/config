@@ -119,7 +119,6 @@ t:test("search publication rebuild preserves only-selected projection", function
   local composer = new_composer("selected-publication", 500)
   local view = composer._treeview
   local fileuuid = require("era.view.result_paths").key(fixture_path)
-  local bufnr = vim.api.nvim_create_buf(false, true)
   local ok, err = pcall(function()
     view:reset_filepaths(fixture_dir, { fixture_path })
     treeview.publish(view)
@@ -134,9 +133,6 @@ t:test("search publication rebuild preserves only-selected projection", function
     t.assert_eq(fileuuid, view:retrieve_uuid(view:linecount()), "selected file projection")
   end)
 
-  if vim.api.nvim_buf_is_valid(bufnr) then
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end
   composer:dispose()
   vim.wait(20)
   if not ok then
@@ -144,65 +140,49 @@ t:test("search publication rebuild preserves only-selected projection", function
   end
 end)
 
+---Publishes a native search for "needle" over the fixture through a composer and draws it into a scratch buffer;
+---the published frame must contain every match.
 ---@param flag_replace                  boolean
 ---@param max_matches                   integer
----@return { total: number, poll: number, normalize: number, apply: number, render: number }
-local function benchmark(flag_replace, max_matches)
+---@return nil
+local function assert_publishes_every_match(flag_replace, max_matches)
   local composer, controls =
-    new_composer(string.format("publish-benchmark-%s-%d", tostring(flag_replace), max_matches), max_matches)
+    new_composer(string.format("publication-%s-%d", tostring(flag_replace), max_matches), max_matches)
+  t:defer(function()
+    composer:dispose()
+    vim.wait(20)
+  end)
   controls.search_pattern:next("needle", { silent = true })
   controls.replace_pattern:next("replacement", { silent = true })
   controls.flag_replace:next(flag_replace, { silent = true })
   controls.max_matches:next(max_matches, { silent = true })
 
-  -- Exclude dead owners and frames from earlier cases; allocations during this publication remain timed.
-  collectgarbage("collect")
-
   local request, snapshot_err = composer:__snapshot_search_request__()
   assert(request ~= nil, snapshot_err)
   local search_job = yoz.search.start_search_in_files(request.options)
-  local timing = nil ---@type table|nil
+  t:defer(function()
+    search_job:dispose()
+  end)
 
+  local status, result, err
   t.wait_until(function()
-    local poll_started = vim.uv.hrtime()
-    local status, result, err = search_job:poll()
-    if status == "running" then
-      return false
-    end
-    assert(status == "completed", err and err.error or status)
+    status, result, err = search_job:poll()
+    return status ~= "running"
+  end, 5000, "fixture search did not finish")
+  assert(status == "completed", err and err.error or status)
 
-    local poll_ms = (vim.uv.hrtime() - poll_started) / 1e6
-    local context = request.context
-    local normalize_started = vim.uv.hrtime()
-    ---@diagnostic disable-next-line: param-type-mismatch
-    local normalized = composer._treeview:normalize_search_result(context.params, result)
-    local normalize_ms = (vim.uv.hrtime() - normalize_started) / 1e6
+  local context = request.context
+  ---@diagnostic disable-next-line: param-type-mismatch
+  local normalized = composer._treeview:normalize_search_result(context.params, result)
+  composer:__apply_search_result__(context, normalized)
+  treeview.await(composer.result.draw())
 
-    local apply_started = vim.uv.hrtime()
-    composer:__apply_search_result__(context, normalized)
-    treeview.await(composer.result.draw())
-    local apply_ms = (vim.uv.hrtime() - apply_started) / 1e6
-
-    local bufnr = vim.api.nvim_create_buf(false, true)
-    local render_started = vim.uv.hrtime()
-    treeview.await(composer.result.draw(bufnr))
-    local render_ms = (vim.uv.hrtime() - render_started) / 1e6
-    assert(composer._treeview:linecount() >= max_matches, "native frame must contain every match")
-    timing = {
-      total = poll_ms + normalize_ms + apply_ms + render_ms,
-      poll = poll_ms,
-      normalize = normalize_ms,
-      apply = apply_ms,
-      render = render_ms,
-    }
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  t:defer(function()
     vim.api.nvim_buf_delete(bufnr, { force = true })
-    return true
-  end, 5000, "publish benchmark search did not finish")
-
-  search_job:dispose()
-  composer:dispose()
-  vim.wait(20)
-  return assert(timing)
+  end)
+  treeview.await(composer.result.draw(bufnr))
+  t.assert_true(composer._treeview:linecount() >= max_matches, "native frame must contain every match")
 end
 
 t:test("native search paths cross the OS boundary and publish canonical identities", function()
@@ -325,12 +305,18 @@ end)
 
 t:test("Finder renders a highlighted title accent without changing its plain-title contract", function()
   local input = observable("")
+  t:defer(function()
+    input:dispose()
+  end)
   local finder = era.m.searcher.Finder.new({
     name = "finder-title-accent",
     keymaps = {},
     input = input,
     title = "Search Files",
   })
+  t:defer(function()
+    finder:dispose()
+  end)
   local winnr = finder:create_win({
     border = "single",
     winhighlight = "",
@@ -363,14 +349,14 @@ t:test("Finder renders a highlighted title accent without changing its plain-tit
   t.assert_eq(" Search Files ", title[1][1])
   ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(nil, title[1][2])
-
-  finder:dispose()
-  input:dispose()
 end)
 
 t:test("composer guards the pre-observer stale window and coalesces input bursts", function()
   local composer, controls = new_composer("file-search-integration", 500)
-  vim.wait(20)
+  t:defer(function()
+    composer:dispose()
+    vim.wait(20)
+  end)
   composer.finder:create_buf()
 
   local generation = composer._file_search._generation
@@ -442,16 +428,17 @@ t:test("composer guards the pre-observer stale window and coalesces input bursts
   t.wait_until(function()
     return composer._file_search._generation == generation + 1
   end, 5000, "input burst did not invalidate")
+  -- Observe a window in which a second invalidation of the burst would land.
   vim.wait(20)
   t.assert_eq(generation + 1, composer._file_search._generation, "input burst must invalidate exactly once")
-
-  composer:dispose()
-  vim.wait(20)
 end)
 
 t:test("search indicator follows the logical search lifecycle", function()
   local composer, controls = new_composer("file-search-indicator", 500)
-  vim.wait(20)
+  t:defer(function()
+    composer:dispose()
+    vim.wait(20)
+  end)
   local title = "file-search test (cwd)"
   composer.finder:set_title(title)
   local spinner_frames = { "⡀", "⠄", "⠄" }
@@ -494,19 +481,22 @@ t:test("search indicator follows the logical search lifecycle", function()
   controls.search_pattern:next("another", { silent = true })
   composer:schedule_search()
   t.assert_true(composer._search_indicator_started_at ~= nil)
-  vim.wait(1)
+  -- A request within the same tick would coalesce into the pending one.
+  t.wait_until(function()
+    return not composer._search_schedule_pending
+  end, 5000, "the pending search request did not settle")
   controls.search_pattern:next("", { silent = true })
   composer:schedule_search()
   t.assert_eq(nil, composer._search_indicator_started_at, "empty query must stop the indicator lifecycle")
   t.assert_eq(title, vim.trim(composer.finder.title), "empty query must restore the Finder title")
-
-  composer:dispose()
-  vim.wait(20)
 end)
 
 t:test("match limit status follows the published projection and blocks replace all", function()
   local composer, controls = new_composer("file-search-limit", 500)
-  vim.wait(20)
+  t:defer(function()
+    composer:dispose()
+    vim.wait(20)
+  end)
   controls.search_pattern:next("needle")
 
   t.wait_until(function()
@@ -566,6 +556,9 @@ t:test("match limit status follows the published projection and blocks replace a
     return { locations = {} }, nil
   end)
   local result_bufnr = vim.api.nvim_create_buf(false, true)
+  local delete_result_buf = t:defer(function()
+    vim.api.nvim_buf_delete(result_bufnr, { force = true })
+  end)
   treeview.await(composer.result.draw(result_bufnr))
   local location = assert(leafstate.locations and leafstate.locations[#leafstate.locations])
   local location_lnum = assert(composer._treeview:retrieve_lnum(location.locationuuid))
@@ -586,7 +579,7 @@ t:test("match limit status follows the published projection and blocks replace a
     advance_filepath,
     "single-match replace filesystem boundary"
   )
-  vim.api.nvim_buf_delete(result_bufnr, { force = true })
+  delete_result_buf()
 
   local winnr = composer.result:create_win({
     border = "single",
@@ -625,9 +618,6 @@ t:test("match limit status follows the published projection and blocks replace a
   end, 1000, "exhaustive projection should clear the limit status")
   winbar = vim.api.nvim_get_option_value("winbar", { win = winnr }) ---@type string
   t.assert_true(winbar:find("LIMIT", 1, true) == nil, "exhaustive projection should clear the limit status")
-
-  composer:dispose()
-  vim.wait(20)
 end)
 
 t:test("single-match replacements publish updated offsets without mutating the displayed snapshot", function()
@@ -674,40 +664,12 @@ t:test("single-match replacements publish updated offsets without mutating the d
 end)
 
 t:test("500-result normal and replace-preview publications contain every match", function()
-  local normal = benchmark(false, 500)
-  local replace = benchmark(true, 500)
-  io.stdout:write(
-    string.format(
-      "\nBENCH 500 normal=%.3fms [poll %.3f normalize %.3f apply %.3f render %.3f] "
-        .. "replace=%.3fms [poll %.3f normalize %.3f apply %.3f render %.3f]\n",
-      normal.total,
-      normal.poll,
-      normal.normalize,
-      normal.apply,
-      normal.render,
-      replace.total,
-      replace.poll,
-      replace.normalize,
-      replace.apply,
-      replace.render
-    )
-  )
+  assert_publishes_every_match(false, 500)
+  assert_publishes_every_match(true, 500)
 end)
 
-t:test("5000-result stress publication is recorded without a responsiveness guarantee", function()
-  local stress = benchmark(false, 5000)
-  io.stdout:write(
-    string.format(
-      "\nBENCH 5000 stress=%.3fms [poll %.3f normalize %.3f apply %.3f render %.3f]\n",
-      stress.total,
-      stress.poll,
-      stress.normalize,
-      stress.apply,
-      stress.render
-    )
-  )
+t:test("5000-result publication contains every match", function()
+  assert_publishes_every_match(false, 5000)
 end)
 
-local test_result = t:run({ exit = false })
-vim.fn.delete(fixture_dir, "rf")
-os.exit(test_result.failed > 0 and 1 or 0)
+t:run()

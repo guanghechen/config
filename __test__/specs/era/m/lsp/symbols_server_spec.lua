@@ -19,7 +19,7 @@ end)
 ---@return integer winnr
 local function new_buffer(lines)
   local bufnr = vim.api.nvim_create_buf(true, false)
-  vim.api.nvim_buf_set_name(bufnr, vim.fn.tempname() .. ".lua")
+  vim.api.nvim_buf_set_name(bufnr, vim.fs.joinpath(t:tempdir(), "symbols.lua"))
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
   local winnr = vim.api.nvim_get_current_win()
   local previous_bufnr = vim.api.nvim_win_get_buf(winnr)
@@ -90,12 +90,9 @@ local function start_server(bufnr, symbols)
       client:stop(true)
     end
   end)
-  t.assert_true(
-    vim.wait(1000, function()
-      return vim.lsp.buf_is_attached(bufnr, server.client_id)
-    end),
-    "client attached"
-  )
+  t.wait_until(function()
+    return vim.lsp.buf_is_attached(bufnr, server.client_id)
+  end, 5000, "client attached")
   vim.b[bufnr].support_documentSymbol = 1
   return server
 end
@@ -137,12 +134,9 @@ t:test("utf-16 symbol positions map to the byte columns of multibyte lines", fun
   Symbols.request(winnr, function(_, symbols)
     delivered = describe(symbols)
   end)
-  t.assert_true(
-    vim.wait(1000, function()
-      return delivered ~= nil
-    end),
-    "delivered"
-  )
+  t.wait_until(function()
+    return delivered ~= nil
+  end, 5000, "delivered")
   t.assert_eq("中文@1:1>body@1:10", delivered, "multibyte path")
   t.assert_eq("中文@1:1>body@1:10", describe(Symbols.path(winnr)), "confirmed path")
 end)
@@ -161,33 +155,24 @@ t:test("a client stopped with a request in flight settles silently and the next 
   local Symbols = assert(loadfile("lua/era/m/lsp/symbols.lua"))()
   vim.api.nvim_win_set_cursor(winnr, { 1, 7 })
   Symbols.request(winnr, function() end)
-  t.assert_true(
-    vim.wait(1000, function()
-      return #server.pending == 1
-    end),
-    "request in flight"
-  )
+  t.wait_until(function()
+    return #server.pending == 1
+  end, 5000, "request in flight")
 
   local errors = #reports
   assert(vim.lsp.get_client_by_id(server.client_id)):stop(true)
-  t.assert_true(
-    vim.wait(1000, function()
-      return vim.lsp.get_client_by_id(server.client_id) == nil
-    end),
-    "client stopped"
-  )
+  t.wait_until(function()
+    return vim.lsp.get_client_by_id(server.client_id) == nil
+  end, 5000, "client stopped")
 
   start_server(bufnr, symbols)
   local delivered = nil ---@type string|nil
   Symbols.request(winnr, function(_, result)
     delivered = describe(result)
   end)
-  t.assert_true(
-    vim.wait(1000, function()
-      return delivered ~= nil
-    end),
-    "next request delivered"
-  )
+  t.wait_until(function()
+    return delivered ~= nil
+  end, 5000, "next request delivered")
   t.assert_eq("value@1:7", delivered, "recovered path")
   t.assert_eq(errors, #reports, "no error reported")
 end)
@@ -198,21 +183,21 @@ t:test("wiping the buffer cancels its in-flight request", function()
   server.hold = true
   local Symbols = assert(loadfile("lua/era/m/lsp/symbols.lua"))()
   Symbols.request(winnr, function() end)
-  t.assert_true(
-    vim.wait(1000, function()
-      return #server.pending == 1
-    end),
-    "request in flight"
-  )
+  t.wait_until(function()
+    return #server.pending == 1
+  end, 5000, "request in flight")
 
-  vim.api.nvim_win_set_buf(winnr, vim.api.nvim_create_buf(true, false))
+  local other_bufnr = vim.api.nvim_create_buf(true, false)
+  t:defer(function()
+    if vim.api.nvim_buf_is_valid(other_bufnr) then
+      vim.api.nvim_buf_delete(other_bufnr, { force = true })
+    end
+  end)
+  vim.api.nvim_win_set_buf(winnr, other_bufnr)
   vim.api.nvim_buf_delete(bufnr, { force = true })
-  t.assert_true(
-    vim.wait(1000, function()
-      return server.cancelled == 1
-    end),
-    "cancel sent"
-  )
+  t.wait_until(function()
+    return server.cancelled == 1
+  end, 5000, "cancel sent")
 end)
 
 t:run()

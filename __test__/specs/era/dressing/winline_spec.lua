@@ -7,6 +7,10 @@ t:test("diffview winbar renders hunk navigation on the right", function()
   local winnr = vim.api.nvim_get_current_win()
   local bufnr_previous = vim.api.nvim_win_get_buf(winnr)
   local bufnr = vim.api.nvim_create_buf(false, true)
+  t:defer(function()
+    vim.api.nvim_win_set_buf(winnr, bufnr_previous)
+    vim.api.nvim_buf_delete(bufnr, { force = true })
+  end)
   local on_dirty = nil ---@type fun(winnr: integer)|nil
 
   vim.api.nvim_buf_set_name(bufnr, "diffview:///repo/index/file.lua")
@@ -73,15 +77,16 @@ t:test("diffview winbar renders hunk navigation on the right", function()
 
   local rendered = vim.api.nvim_get_option_value("winbar", { win = winnr }) ---@type string
   t.assert_eq("diffview:///repo/index/file.lua%=G 2/3", rendered, "diffview winbar")
-
-  vim.api.nvim_win_set_buf(winnr, bufnr_previous)
-  vim.api.nvim_buf_delete(bufnr, { force = true })
 end)
 
 t:test("external winline delegates dirty renders to its owned nvimbar", function()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   local bufnr_previous = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  t:defer(function()
+    vim.api.nvim_win_set_buf(winnr, bufnr_previous)
+    vim.api.nvim_buf_delete(bufnr, { force = true })
+  end)
   local on_dirty = nil ---@type fun(winnr: integer)|nil
   local renders = 0
 
@@ -150,9 +155,6 @@ t:test("external winline delegates dirty renders to its owned nvimbar", function
   winline.dressing()
   assert(on_dirty)(winnr)
   t.assert_eq(1, renders, "external nvimbar render")
-
-  vim.api.nvim_win_set_buf(winnr, bufnr_previous)
-  vim.api.nvim_buf_delete(bufnr, { force = true })
 end)
 
 t:test("dressing subscribes once and routes dirty updates to valid current and previous windows", function()

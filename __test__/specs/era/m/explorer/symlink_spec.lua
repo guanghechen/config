@@ -181,20 +181,10 @@ t:test("real UI separates file icons from right-aligned links and preserves Git 
   ]=],
     root
   )
-  local deadline = vim.uv.hrtime() + 10000000000
-  local visible = false
-  repeat
+  ui:wait_until(function()
     ui:rpc("nvim_command", "redraw!")
-    visible =
-      ui:lua("return links['dir-link'] ~= nil and links['file-link.lua'] ~= nil and links['broken-link'] ~= nil")
-    if visible then
-      break
-    end
-    vim.wait(10, function()
-      return false
-    end, 10)
-  until vim.uv.hrtime() >= deadline
-  t.assert_true(visible, "all symlink markers must become visible")
+    return ui:lua("return links['dir-link'] ~= nil and links['file-link.lua'] ~= nil and links['broken-link'] ~= nil")
+  end, 10000, "all symlink markers must become visible")
   t.assert_true(ui:lua("return links['plain.lua'] == nil and links.target == nil"))
   t.assert_true(ui:lua("return icons['file-link.lua'][1] == stl.fileicon.get_file_icon('file-link.lua')"))
   t.assert_false(

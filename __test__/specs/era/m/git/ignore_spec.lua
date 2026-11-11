@@ -232,6 +232,7 @@ t:test("native startup failures reject with diagnostics and missing repositories
   t.assert_false(ignore.is_ignored(workspace .. "/file"), "non-repository lookup")
 end)
 
+-- Exit leaves era.m.job rejecting every later run in this process, so this case must stay last.
 t:test("shared exit lifecycle cancels both status and ignore jobs", function()
   local root = new_repo()
   vim.fn.writefile({ "ignored" }, root .. "/.gitignore")

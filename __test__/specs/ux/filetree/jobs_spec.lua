@@ -90,11 +90,9 @@ t:test("registration observes already finished Jobs and failures without a sourc
   local data = await(filetree.open(path))
   local target = await(data:resolve(path .. "/target"))
   local first = data:native():start_create({ target = target, path = "first", directory = false })
-  local deadline = vim.uv.hrtime() + 5000000000
-  while not first:status().terminal and vim.uv.hrtime() < deadline do
-    vim.uv.sleep(1)
-  end
-  t.assert_true(first:status().terminal)
+  t.wait_until(function()
+    return first:status().terminal
+  end, 5000, "the Job must finish before it is registered")
   local completed, failure = 0, nil
   data:track_job(first, function(status)
     t.assert_true(status.terminal)
@@ -349,9 +347,10 @@ t:test("terminal Job after the event drain still delivers the final RootUnavaila
   local branch = await(data:resolve(path .. "/branch"))
   local state = await(data:create_state({ kind = "children_of", node = branch:node() }))
   local owner, job = data._tree, nil
-  vim.wait(50, function()
-    return false
-  end, 50)
+  -- Let the owner go idle and release its notification, so the watch below starts the drain the hook intercepts.
+  t.wait_until(function()
+    return owner._notification == nil
+  end, 5000, "the owner must go idle after its first publications")
   local native = owner._native
   t:patch_table(
     owner,
@@ -386,7 +385,7 @@ t:test("terminal Job after the event drain still delivers the final RootUnavaila
   require("ux.treeview.async").watch(owner)
   t.wait_until(function()
     return received
-  end, 500, "final native effects must not wait for a future user action")
+  end, 5000, "final native effects must not wait for a future user action")
   t.assert_eq(nil, vim.uv.fs_stat(path .. "/branch"))
   t.assert_true(state:snapshot():header().row_count == 0)
 end)

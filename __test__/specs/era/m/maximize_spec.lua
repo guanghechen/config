@@ -72,7 +72,6 @@ end
 ---@param extra_tabnrs                  ?integer[]
 ---@return nil
 local function register_cleanup(tabnr, winnr, bufnr, created_bufnrs, extra_tabnrs)
-  ---@diagnostic disable-next-line: invisible
   t:defer(function()
     local normal = maximized.get_normal() ---@type dot.state.maximized.INormalContext|nil
     if normal ~= nil then
@@ -221,7 +220,6 @@ t:test("explicit close clears state when TabClosed reports an error after closin
   ---@cast normal dot.state.maximized.INormalContext
 
   local error_group = vim.api.nvim_create_augroup("test_maximize_TabClosed_error", { clear = true }) ---@type integer
-  ---@diagnostic disable-next-line: invisible
   t:defer(function()
     pcall(vim.api.nvim_del_augroup_by_id, error_group)
   end)
@@ -254,7 +252,6 @@ t:test("float maximize reconfigures and restores the original window", function(
     border = "single",
   })
   register_cleanup(tabnr, source_winnr, source_bufnr, { bufnr })
-  ---@diagnostic disable-next-line: invisible
   t:defer(function()
     if vim.api.nvim_win_is_valid(float_winnr) then
       vim.api.nvim_win_close(float_winnr, true)
@@ -297,7 +294,6 @@ local function open_float(border)
     zindex = 50,
   })
   register_cleanup(tabnr, source_winnr, source_bufnr, { bufnr })
-  ---@diagnostic disable-next-line: invisible
   t:defer(function()
     if vim.api.nvim_win_is_valid(float_winnr) then
       vim.api.nvim_win_close(float_winnr, true)

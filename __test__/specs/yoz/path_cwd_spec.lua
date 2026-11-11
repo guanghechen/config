@@ -20,19 +20,31 @@ local function assert_synced(input, label)
   )
 end
 
+---Restores the native CWD, which both setters replace, when the case ends.
+---@return nil
+local function defer_cwd_restore()
+  local cwd = native.path.get_cwd() ---@type string
+  t:defer(function()
+    native.path.set_cwd(cwd)
+  end)
+end
+
 t:test("path setter synchronizes both CWD representations", function()
   local input = native.path.SEP == "\\" and "C:\\workspace\\path-setter" or "/workspace/path-setter" ---@type string
+  defer_cwd_restore()
   native.path.set_cwd(input)
   assert_synced(input, "path setter")
 end)
 
 t:test("canonical setter synchronizes both CWD representations", function()
   local input = native.path.SEP == "\\" and "C:\\workspace\\canonical-setter" or "/workspace/canonical-setter" ---@type string
+  defer_cwd_restore()
   native.canonical_path.set_cwd(input)
   assert_synced(input, "canonical setter")
 end)
 
 t:test("root remains root without a trailing separator", function()
+  defer_cwd_restore()
   native.path.set_cwd(native.path.SEP)
 
   t.assert_eq("/", native.canonical_path.get_cwd(), "canonical root CWD")
@@ -42,6 +54,7 @@ end)
 t:test("mkdirs takes a relative path from the process directory, not the CWD set before", function()
   local root, stale = t:tempdir(), t:tempdir()
   local cwd = vim.uv.cwd()
+  defer_cwd_restore()
   native.path.set_cwd(stale)
   vim.cmd.cd(root)
   t:defer(function()

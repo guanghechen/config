@@ -522,10 +522,7 @@ t:test("writes: a BOM-only concurrent index change is stale", function()
   local stale = index_snapshot(repo, "f.txt")
 
   local bom_bytes = "\239\187\191a\nb\n"
-  local hashed = vim
-    .system({ "git", "-C", repo, "hash-object", "-w", "--stdin" }, { stdin = bom_bytes, text = false })
-    :wait()
-  local hash = assert((hashed.stdout or ""):match("(%x+)"))
+  local hash = assert(git.run(repo, { "hash-object", "-w", "--stdin" }, bom_bytes):match("(%x+)"))
   git.run(repo, { "update-index", "--cacheinfo", "100644," .. hash .. ",f.txt" })
 
   local result = stage(repo, staging.from_text("A\nb\n"), { 1, 1 }, stale)

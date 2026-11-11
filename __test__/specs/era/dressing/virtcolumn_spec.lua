@@ -107,8 +107,6 @@ t:test("an edit redraws only the edited line, which is measured again", function
     drawn = {}
     vim.api.nvim_buf_set_text(0, 0, 5, 0, 5, { ("y"):rep(95) })
     vim.cmd("redraw")
-    vim.wait(100)
-    vim.cmd("redraw")
     return drawn
   ]]
   )
@@ -116,6 +114,9 @@ t:test("an edit redraws only the edited line, which is measured again", function
   t.assert_same({ 0 }, drawn, "rows drawn after the edit")
   t.assert_eq("y", cell(grid, 0, 100), "the lengthened line covers column 100")
   t.assert_eq(GUIDE, cell(grid, 0, 120), "column 120 stays free")
+  -- A deferred refresh would repaint other rows later, once the child is back at its main loop.
+  vim.wait(100)
+  t.assert_same({ 0 }, exec(ui, [[vim.cmd("redraw"); return drawn]]), "rows drawn once the edit settles")
 end)
 
 t:test("tabs and wide characters are measured in display cells", function()

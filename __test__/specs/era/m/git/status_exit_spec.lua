@@ -3,13 +3,12 @@ local t = harness.new()
 local git = require("__test__.support.git")
 
 t:test("Neovim exit waits for native Git cancellation acknowledgement", function()
-  local root = t:tempdir()
+  local root = git.repo(t)
   local marker = root .. "/started"
   local hook = root .. "/monitor"
   vim.fn.writefile({ "#!/bin/sh", "echo started > " .. vim.fn.shellescape(marker), "sleep 30" }, hook)
   assert(vim.uv.fs_chmod(hook, 493))
 
-  git.run(root, { "init", "-q" })
   vim.fn.writefile({ "base" }, root .. "/file")
   git.run(root, { "add", "file" })
   git.run(root, { "config", "core.fsmonitor", hook })

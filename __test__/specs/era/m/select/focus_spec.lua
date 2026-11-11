@@ -68,7 +68,6 @@ local function create_window_pair()
   local origin_winnr = vim.api.nvim_get_current_win() ---@type integer
   vim.cmd("vsplit")
   local other_winnr = vim.api.nvim_get_current_win() ---@type integer
-  ---@diagnostic disable-next-line: invisible
   t:defer(function()
     if vim.api.nvim_win_is_valid(other_winnr) then
       vim.api.nvim_win_close(other_winnr, true)
@@ -125,9 +124,9 @@ t:test("vim.ui.select answers nil once when the picker closes without a choice",
 
   ---@diagnostic disable-next-line: need-check-nil
   picker_props.on_disposed()
-  vim.wait(100, function()
+  t.wait_until(function()
     return #calls > 0
-  end, 5)
+  end, 5000, "on_choice was not called")
   t.assert_eq(1, #calls, "on_choice calls")
   t.assert_nil(calls[1].item, "item")
   t.assert_nil(calls[1].idx, "idx")
@@ -144,6 +143,7 @@ t:test("vim.ui.select answers once when a choice closes the picker", function()
   picker_props.on_confirm(picker, { uuid = "1", data = { original_item = "one" } })
   ---@diagnostic disable-next-line: need-check-nil
   picker_props.on_disposed()
+  -- A second answer would arrive within this window.
   vim.wait(100, function()
     return false
   end, 5)

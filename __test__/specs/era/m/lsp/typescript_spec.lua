@@ -23,10 +23,6 @@ local vtsls = dofile("lsp/vtsls.lua")
 ---@return string
 local function project()
   local root = t:tempdir()
-  root = assert(vim.uv.fs_realpath(root))
-  t:defer(function()
-    vim.fn.delete(root, "rf")
-  end)
   vim.fn.writefile({}, root .. "/pnpm-lock.yaml")
   return root
 end

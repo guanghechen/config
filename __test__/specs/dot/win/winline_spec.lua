@@ -46,6 +46,11 @@ t:test("window metadata forks render and release a target-owned nvimbar", functi
   local source_winnr = vim.api.nvim_get_current_win() ---@type integer
   vim.cmd("vsplit")
   local target_winnr = vim.api.nvim_get_current_win() ---@type integer
+  t:defer(function()
+    if vim.api.nvim_win_is_valid(target_winnr) then
+      vim.api.nvim_win_close(target_winnr, true)
+    end
+  end)
   local Win = assert(loadfile("lua/dot/win.lua"))()
   local source_meta = assert(Win.resolve(source_winnr, true))
   local source_nvimbar = new_nvimbar()
@@ -77,13 +82,17 @@ t:test("window metadata forks render and release a target-owned nvimbar", functi
   t.assert_true(target_nvimbar.disposed, "target nvimbar disposed")
 
   Win.on_close(source_winnr)
-  vim.api.nvim_win_close(target_winnr, true)
 end)
 
 t:test("closing the source detaches but does not dispose a live target owner", function()
   local source_winnr = vim.api.nvim_get_current_win() ---@type integer
   vim.cmd("vsplit")
   local target_winnr = vim.api.nvim_get_current_win() ---@type integer
+  t:defer(function()
+    if vim.api.nvim_win_is_valid(target_winnr) then
+      vim.api.nvim_win_close(target_winnr, true)
+    end
+  end)
   local Win = assert(loadfile("lua/dot/win.lua"))()
   local source_meta = assert(Win.resolve(source_winnr, true))
   local source_nvimbar = new_nvimbar()
@@ -112,7 +121,6 @@ t:test("closing the source detaches but does not dispose a live target owner", f
 
   Win.on_close(target_winnr)
   t.assert_true(target_nvimbar.disposed, "target close disposes its nvimbar")
-  vim.api.nvim_win_close(target_winnr, true)
 end)
 
 t:run()

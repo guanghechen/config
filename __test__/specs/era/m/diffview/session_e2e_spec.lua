@@ -1,8 +1,9 @@
 local t = require("__test__.support.harness").new()
 local git = require("__test__.support.git")
 
--- Diffview end to end in a child with an attached UI, driven only through era.m.diffview.fn and buffer keymaps.
--- It pins the behavior the session refactor must keep, so the refactor's steps leave this file unchanged.
+-- Diffview end to end in a child with an attached UI, driven through era.m.diffview.fn, buffer keymaps, Git state
+-- refreshes and plain window and tab commands. It observes tabs, windows, buffers, keymaps, autocmds, reports and the
+-- index, never session internals.
 
 ---One commit, then a staged addition (c.txt) and an unstaged edit (a.txt).
 ---@return string

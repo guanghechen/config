@@ -54,11 +54,6 @@ t:test("classify: an unparseable frame is unknown", function()
   t.assert_eq("unknown", T.classify("no horizontal rules here", sig, nil), "cannot judge => unknown")
 end)
 
-----------------------------------------------------------------------------------------------------
--- Shipped busy/insert detection against REAL captured Claude footers (R1)
--- Footers below were captured live from a generating Claude pane.
-----------------------------------------------------------------------------------------------------
-
 t:test("shipped busy_pattern: matches the live spinner footer", function()
   t.assert_true(
     T.footer_has("✶ Composing… (3s · thinking with xhigh effort)", CLAUDE.busy_pattern),
@@ -92,13 +87,6 @@ end)
 t:test("shipped insert_pattern: matches the modal INSERT indicator", function()
   t.assert_true(T.footer_has("-- INSERT --", CLAUDE.insert_pattern), "the INSERT modeline must match")
 end)
-
-----------------------------------------------------------------------------------------------------
--- bottom_lines / footer_has: tmux pads the frame with blank rows up to the pane
--- height and the TUI footer is not pinned to the bottom (R2). Early in a conversation
--- the footer sits well above a tall block of blank rows; a naive last-n window skips
--- it, so footer_has silently never matches => "insert unverified" and false-idle.
-----------------------------------------------------------------------------------------------------
 
 t:test("bottom_lines: drops trailing blank rows so the window ends at the last real line", function()
   local padded = "alpha\nbravo\ncharlie" .. string.rep("\n", 12)

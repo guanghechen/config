@@ -166,8 +166,9 @@ t:test("diff navigation preserves empty document byte semantics", function()
   local left_winnr = vim.api.nvim_get_current_win()
   local left_bufnr_previous = vim.api.nvim_win_get_buf(left_winnr)
   local left_bufnr = vim.api.nvim_create_buf(false, true)
-  local newline_path = vim.fn.tempname()
-  local empty_path = vim.fn.tempname()
+  local directory = t:tempdir()
+  local newline_path = directory .. "/newline"
+  local empty_path = directory .. "/empty"
 
   t.assert_eq(0, vim.fn.writefile({ "" }, newline_path), "single-newline fixture")
   t.assert_eq(0, vim.fn.writefile({}, empty_path, "b"), "empty fixture")
@@ -240,8 +241,6 @@ t:test("diff navigation preserves empty document byte semantics", function()
   vim.api.nvim_buf_delete(left_bufnr, { force = true })
   vim.api.nvim_buf_delete(newline_bufnr, { force = true })
   vim.api.nvim_buf_delete(empty_bufnr, { force = true })
-  vim.fn.delete(newline_path)
-  vim.fn.delete(empty_path)
 end)
 
 t:test("diff navigation does not publish boundary no-ops", function()
@@ -335,9 +334,6 @@ t:test("diff navigation counts a one-line EOF filler in both directions", functi
     t.assert_eq(1, index, direction .. " EOF hunk")
     t.assert_eq(1, total, direction .. " EOF total")
 
-    vim.wait(10, function()
-      return false
-    end)
     hunk_nav.clear_nav()
   end
 

@@ -136,7 +136,7 @@ end)
 
 t:test("root scan failures preserve cached rows and shared views report each transition once", function()
   if stl.env.IS_WIN or vim.uv.getuid() == 0 then
-    return
+    t.skip("chmod cannot deny directory reads to root or on Windows")
   end
   local before_tabline = vim.o.showtabline
   vim.o.showtabline = 0
@@ -205,7 +205,7 @@ end)
 
 t:test("root error and retry remain visible after programmatic and native window resize", function()
   if stl.env.IS_WIN or vim.uv.getuid() == 0 then
-    return
+    t.skip("chmod cannot deny directory reads to root or on Windows")
   end
   local path = t:tempdir()
   write(path .. "/file")
@@ -284,7 +284,7 @@ end)
 
 t:test("an empty failed root is distinct from empty success and changing root clears its status", function()
   if stl.env.IS_WIN or vim.uv.getuid() == 0 then
-    return
+    t.skip("chmod cannot deny directory reads to root or on Windows")
   end
   local path = t:tempdir()
   local target = t:tempdir()

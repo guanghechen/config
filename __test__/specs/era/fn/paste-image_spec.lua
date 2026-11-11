@@ -22,7 +22,6 @@ local paste = dofile("lua/era/fn/paste-image.lua")
 ---@return table
 local function prepare(ft)
   local root = t:tempdir()
-  root = assert(vim.uv.fs_realpath(root))
   local bufnr = vim.api.nvim_create_buf(false, false)
   t:defer(function()
     if vim.api.nvim_buf_is_valid(bufnr) then

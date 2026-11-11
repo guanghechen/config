@@ -16,21 +16,32 @@ bootstrap.with_global(t, "dot", {
   },
 })
 
-vim.opt.runtimepath:prepend(vim.fn.stdpath("data") .. "/lazy/conform.nvim")
-local conform = require("conform")
+-- conform.nvim is the locally installed plugin; the cases that select formatters skip without it.
+local CONFORM = vim.fn.stdpath("data") .. "/lazy/conform.nvim" ---@type string
 local plugin = require("era.plugin.conform")
-conform.setup(plugin.opts)
+local conform ---@type table
+
+---Loads conform.nvim with this configuration once, and skips the case when it is not installed.
+---@return nil
+local function load_conform()
+  if conform ~= nil then
+    return
+  end
+  if vim.uv.fs_stat(CONFORM) == nil then
+    t.skip("conform.nvim is not installed: " .. CONFORM)
+  end
+  vim.opt.runtimepath:prepend(CONFORM)
+  conform = require("conform")
+  conform.setup(plugin.opts)
+end
 
 ---@param files                         string[]
 ---@return string
 ---@return integer
 local function project(files)
+  load_conform()
   local root = t:tempdir()
   vim.fn.mkdir(root .. "/src", "p")
-  root = assert(vim.uv.fs_realpath(root))
-  t:defer(function()
-    vim.fn.delete(root, "rf")
-  end)
   for _, name in ipairs(files) do
     vim.fn.mkdir(vim.fs.dirname(root .. "/" .. name), "p")
     vim.fn.writefile({ "{}" }, root .. "/" .. name)

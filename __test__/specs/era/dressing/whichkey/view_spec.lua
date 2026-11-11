@@ -8,7 +8,6 @@ local t = harness.new()
 ---@param bufnr                         integer
 ---@return nil
 local function register_popup(winnr, bufnr)
-  ---@diagnostic disable-next-line: invisible
   t:defer(function()
     if vim.api.nvim_win_is_valid(winnr) then
       vim.api.nvim_win_close(winnr, true)

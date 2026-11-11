@@ -160,6 +160,11 @@ t:test("provider keeps horizontal scroll state window-local", function()
     vim.api.nvim_set_option_value("wrap", false, { win = first_winnr, scope = "local" })
     vim.cmd("vsplit")
     local second_winnr = vim.api.nvim_get_current_win() ---@type integer
+    t:defer(function()
+      if vim.api.nvim_win_is_valid(second_winnr) then
+        vim.api.nvim_win_close(second_winnr, true)
+      end
+    end)
     vim.api.nvim_win_set_buf(second_winnr, bufnr)
     vim.api.nvim_set_option_value("wrap", false, { win = second_winnr, scope = "local" })
     vim.api.nvim_win_call(first_winnr, function()
@@ -171,33 +176,24 @@ t:test("provider keeps horizontal scroll state window-local", function()
       vim.cmd("normal! 10zl")
     end)
 
-    local ok, err = pcall(function()
-      Render.invalidate()
-      local first = Render.build_frame(first_winnr, bufnr, 0, 2)
-      local second = Render.build_frame(second_winnr, bufnr, 0, 2)
-      t.assert_true(first ~= nil, "first frame")
-      t.assert_true(second ~= nil, "second frame")
-      t.assert_false(rawequal(first, second), "window-local frames")
-      t.assert_eq(0, first and first.leftcol, "first leftcol")
-      t.assert_true(second ~= nil and second.leftcol > 0, "second leftcol")
+    Render.invalidate()
+    local first = Render.build_frame(first_winnr, bufnr, 0, 2)
+    local second = Render.build_frame(second_winnr, bufnr, 0, 2)
+    t.assert_true(first ~= nil, "first frame")
+    t.assert_true(second ~= nil, "second frame")
+    t.assert_false(rawequal(first, second), "window-local frames")
+    t.assert_eq(0, first and first.leftcol, "first leftcol")
+    t.assert_true(second ~= nil and second.leftcol > 0, "second leftcol")
 
-      local first_text = first and Render.make_virt_text(first, 0, Indentline.config) or nil
-      local second_text = second and Render.make_virt_text(second, 0, Indentline.config) or nil
-      t.assert_true(first_text ~= nil, "first guides")
-      t.assert_true(second_text ~= nil, "second guides")
-      t.assert_eq(
-        second and second.leftcol,
-        vim.fn.strchars(first_text or "") - vim.fn.strchars(second_text or ""),
-        "horizontal clipping"
-      )
-    end)
-
-    if vim.api.nvim_win_is_valid(second_winnr) then
-      vim.api.nvim_win_close(second_winnr, true)
-    end
-    if not ok then
-      error(err, 0)
-    end
+    local first_text = first and Render.make_virt_text(first, 0, Indentline.config) or nil
+    local second_text = second and Render.make_virt_text(second, 0, Indentline.config) or nil
+    t.assert_true(first_text ~= nil, "first guides")
+    t.assert_true(second_text ~= nil, "second guides")
+    t.assert_eq(
+      second and second.leftcol,
+      vim.fn.strchars(first_text or "") - vim.fn.strchars(second_text or ""),
+      "horizontal clipping"
+    )
   end)
 end)
 

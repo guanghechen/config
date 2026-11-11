@@ -163,7 +163,6 @@ t:test("references: deduplicates overlapping clients and renders unique location
   t.assert_true(cols[4], "second line column")
   t.assert_true(cols[8], "distinct same-line column")
 
-  local bufnr_result = create_buffer("", { "" })
   local view = resolved_picker._treeview
   require("__test__.support.treeview").publish(view, { rootuuid = resolved_picker._uuid_root })
   local rendered_ids = {} ---@type table<string, true>

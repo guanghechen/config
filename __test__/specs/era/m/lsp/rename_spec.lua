@@ -166,13 +166,10 @@ t:test("rename: LSP closes old URI and tracks edits at the new URI", function()
       client:stop(true)
     end
   end)
-  t.assert_true(
-    vim.wait(1000, function()
-      local client = vim.lsp.get_client_by_id(client_id)
-      return client ~= nil and client.initialized and vim.lsp.buf_is_attached(bufnr, client_id)
-    end),
-    "client initialized"
-  )
+  t.wait_until(function()
+    local client = vim.lsp.get_client_by_id(client_id)
+    return client ~= nil and client.initialized and vim.lsp.buf_is_attached(bufnr, client_id)
+  end, 5000, "client initialized")
   notifications = {}
 
   t.assert_true(move(from, to))
@@ -192,17 +189,14 @@ t:test("rename: LSP closes old URI and tracks edits at the new URI", function()
   t.assert_true(close_index ~= nil and open_index ~= nil and close_index < open_index, "close/open order")
   t.assert_true(rename_index ~= nil and open_index < rename_index, "workspace notification after buffer update")
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "next edit" })
-  t.assert_true(
-    vim.wait(1000, function()
-      for _, notification in ipairs(notifications) do
-        if notification.method == "textDocument/didChange" then
-          return notification.params.textDocument.uri == vim.uri_from_fname(to)
-        end
+  t.wait_until(function()
+    for _, notification in ipairs(notifications) do
+      if notification.method == "textDocument/didChange" then
+        return notification.params.textDocument.uri == vim.uri_from_fname(to)
       end
-      return false
-    end),
-    "edits use new URI"
-  )
+    end
+    return false
+  end, 5000, "edits use new URI")
 
   for _, target in ipairs({ to, to .. ".lua" }) do
     if target ~= to then
@@ -281,31 +275,22 @@ t:test("rename: enabled LSP config resolves the new project root", function()
     end
   end)
   vim.lsp.enable(config_name)
-  t.assert_true(
-    vim.wait(1000, function()
-      return #vim.lsp.get_clients({ name = config_name, bufnr = bufnr }) == 1
-    end),
-    "initial project client"
-  )
+  t.wait_until(function()
+    return #vim.lsp.get_clients({ name = config_name, bufnr = bufnr }) == 1
+  end, 5000, "initial project client")
   local old_client = vim.lsp.get_clients({ name = config_name, bufnr = bufnr })[1]
   t.assert_eq(root, old_client.root_dir)
   t.assert_true(move(from, target))
-  t.assert_true(
-    vim.wait(1000, function()
-      local attached = vim.lsp.get_clients({ name = config_name, bufnr = bufnr })
-      return #attached == 1 and attached[1].root_dir == root .. "/other-project"
-    end),
-    "new project client"
-  )
+  t.wait_until(function()
+    local attached = vim.lsp.get_clients({ name = config_name, bufnr = bufnr })
+    return #attached == 1 and attached[1].root_dir == root .. "/other-project"
+  end, 5000, "new project client")
   t.assert_false(vim.lsp.buf_is_attached(bufnr, old_client.id), "old project client stays detached")
   local new_client = vim.lsp.get_clients({ name = config_name, bufnr = bufnr })[1]
   t.assert_true(move(target, target .. ".lua"))
-  t.assert_true(
-    vim.wait(1000, function()
-      return vim.lsp.buf_is_attached(bufnr, new_client.id)
-    end),
-    "same root reuses client"
-  )
+  t.wait_until(function()
+    return vim.lsp.buf_is_attached(bufnr, new_client.id)
+  end, 5000, "same root reuses client")
   t.assert_true(vim.api.nvim_get_option_value("modified", { buf = bufnr }))
 end)
 

@@ -93,6 +93,10 @@ t:test("command definitions and implementations stay symmetric", function()
   t.assert_eq(1, prev_info_calls, "previous info implementation")
 
   local tabnr = vim.api.nvim_get_current_tabpage()
+  local previous_tabtype = vim.t[tabnr].tabtype ---@type string|nil
+  t:defer(function()
+    vim.t[tabnr].tabtype = previous_tabtype
+  end)
   vim.t[tabnr].tabtype = enums.TabTypeEnum.NORMAL
   Command.definitions.explorer.reveal:execute()
   for _, tabtype in ipairs({ enums.TabTypeEnum.DIFFVIEW_WORKSPACE, enums.TabTypeEnum.DIFFVIEW_COMMITS }) do
@@ -121,9 +125,15 @@ t:test("command definitions and implementations stay symmetric", function()
   t.assert_eq(1, explorer_reveal_calls, "normal explorer reveal")
   t.assert_eq(2, diffview_reveal_calls, "Diffview navigation reveal")
 
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local previous_bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local test_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  t:defer(function()
+    vim.api.nvim_win_set_buf(winnr, previous_bufnr)
+    vim.api.nvim_buf_delete(test_bufnr, { force = true })
+  end)
   vim.api.nvim_buf_set_lines(test_bufnr, 0, -1, false, { "one", "two" })
-  vim.api.nvim_win_set_buf(0, test_bufnr)
+  vim.api.nvim_win_set_buf(winnr, test_bufnr)
 
   vim.cmd("normal! V")
   Command.definitions.git.hunk_stage_visual:execute()
@@ -158,7 +168,6 @@ t:test("command definitions and implementations stay symmetric", function()
   t.assert_eq("V", vim.fn.mode(), "older stage keeps newer selection")
   resolve_newer_stage({ ok = true })
   t.assert_eq("n", vim.fn.mode(), "newer stage clears unchanged selection")
-  vim.api.nvim_buf_delete(test_bufnr, { force = true })
 end)
 
 t:run()

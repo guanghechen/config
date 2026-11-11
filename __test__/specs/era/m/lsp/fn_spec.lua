@@ -28,7 +28,7 @@ t:patch_table(package.loaded, "mason", nil)
 local Fn = require("era.m.lsp.fn")
 
 t:test("locate_lsp_root: searches from the target file and accepts directory markers", function()
-  local root = vim.fn.tempname() ---@type string
+  local root = t:tempdir()
   local repo_a = root .. "/repo-a" ---@type string
   local repo_b = root .. "/repo-b" ---@type string
   vim.fn.mkdir(repo_a, "p")
@@ -41,7 +41,6 @@ t:test("locate_lsp_root: searches from the target file and accepts directory mar
 
   t.assert_eq(repo_b, rootdir, "target repo root")
   t.assert_eq(repo_b .. "/.git", marker, "directory marker")
-  vim.fn.delete(root, "rf")
 end)
 
 t:test("locate_lsp_root: preserves the search root for nested markers", function()
@@ -55,11 +54,10 @@ t:test("locate_lsp_root: preserves the search root for nested markers", function
 
   t.assert_eq(root, rootdir, "project root")
   t.assert_eq(root .. "/theme/static_src/tailwind.config.js", marker, "nested marker")
-  vim.fn.delete(root, "rf")
 end)
 
 t:test("locate_js_project_root: keeps Node and Deno roots mutually exclusive", function()
-  local root = vim.fn.tempname() ---@type string
+  local root = t:tempdir()
   local node = root .. "/node" ---@type string
   local deno = root .. "/deno" ---@type string
   local node_outer = root .. "/node-outer" ---@type string
@@ -130,8 +128,6 @@ t:test("locate_js_project_root: keeps Node and Deno roots mutually exclusive", f
   rootdir, project_type = Fn.locate_js_project_root(standalone .. "/src/index.ts")
   t.assert_nil(rootdir, "standalone root")
   t.assert_eq("node", project_type, "standalone project type")
-
-  vim.fn.delete(root, "rf")
 end)
 
 t:test("locate_mason_pkg_path: resolves the conventional path without loading Mason", function()
@@ -142,12 +138,9 @@ t:test("locate_mason_pkg_path: resolves the conventional path without loading Ma
 end)
 
 t:test("locate_js_project_root: preserves nearest-marker and same-directory precedence", function()
-  local root = vim.fn.tempname()
+  local root = t:tempdir()
   local dirs = { root .. "/one", root .. "/one/two", root .. "/one/two/three" }
   vim.fn.mkdir(dirs[3], "p")
-  t:defer(function()
-    vim.fn.delete(root, "rf")
-  end)
   for node_depth = 0, 3 do
     for config_depth = 0, 3 do
       for lock_depth = 0, 3 do

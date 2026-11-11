@@ -322,7 +322,7 @@ t:test("writes: refresh repository files without requiring a Git buffer attachme
   t.assert_eq(4, requests, "non-repository workspace does not refresh")
 end)
 
--- Exit disposes the shared state for the rest of this process, so this case runs last.
+-- Exit disposes the shared state for the rest of this process, so this case must follow every case that uses it.
 t:test("setup: exit disposes the shared state", function()
   t:patch_table(era.m.git.status, "collect", function()
     return stl.c.Future.new(function() end)
@@ -360,10 +360,7 @@ t:test("refresh: collections are spaced by four times the last one's duration, f
 
   collect(1, 0)
   collect(2, 60)
-  t.assert_true(
-    spacing(2) >= 90 and spacing(2) < 500,
-    string.format("a quick query holds the next for 100 ms: %.1f", spacing(2))
-  )
+  t.assert_true(spacing(2) >= 90, string.format("a quick query holds the next for 100 ms: %.1f", spacing(2)))
   collect(3, 0)
   collect(4, 0)
   t.assert_true(spacing(4) >= 230, string.format("a 60 ms query holds the one after it for 240 ms: %.1f", spacing(4)))

@@ -129,7 +129,6 @@ t:test("show refreshes an already visible view", function()
       end,
     }
   end)
-  ---@diagnostic disable-next-line: invisible
   t:defer(function()
     View.close_view()
     vim.wait(10)

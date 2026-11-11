@@ -191,6 +191,9 @@ end)
 
 t:test("keymaps: reconcile dynamic capability changes with bounded writes", function()
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  t:defer(function()
+    delete_buffer(bufnr)
+  end)
   local client = add_client(bufnr, "tailwindcss")
   local keymap_sets = 0 ---@type integer
   local keymap_dels = 0 ---@type integer
@@ -246,12 +249,13 @@ t:test("keymaps: reconcile dynamic capability changes with bounded writes", func
   t.assert_eq(10, keymap_dels, "unregistered mapping deletes")
   t.assert_eq(0, count_desc(bufnr, "lsp: code action"), "code action after unregistration")
   t.assert_eq(0, count_desc(bufnr, "lsp: source action"), "source action after unregistration")
-
-  delete_buffer(bufnr)
 end)
 
 t:test("codelens: the refresh mapping requests lenses afresh even while they are enabled", function()
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  t:defer(function()
+    delete_buffer(bufnr)
+  end)
   local client = add_client(bufnr, "lens", { [Methods.textDocument_codeLens] = true })
   Event.on_attach(client, bufnr)
   local refresh ---@type function|nil
@@ -267,12 +271,13 @@ t:test("codelens: the refresh mapping requests lenses afresh even while they are
 
   assert(refresh, "refresh mapping")()
   t.assert_same({ "false@" .. bufnr, "true@" .. bufnr }, calls, "enable calls")
-
-  delete_buffer(bufnr)
 end)
 
 t:test("keymaps: client-specific mappings win and detach restores fallback", function()
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  t:defer(function()
+    delete_buffer(bufnr)
+  end)
   local vtsls = add_client(bufnr, "vtsls")
   local tailwind = add_client(bufnr, "tailwindcss")
 
@@ -308,8 +313,6 @@ t:test("keymaps: client-specific mappings win and detach restores fallback", fun
   t.assert_nil(map_desc(bufnr, "n", "K"), "last detach hover")
   t.assert_nil(map_desc(bufnr, "n", "gD"), "last detach declaration")
   t.assert_nil(map_desc(bufnr, "n", "gK"), "last detach signature help")
-
-  delete_buffer(bufnr)
 end)
 
 t:test("keymaps: generic and client mappings do not wait for Neovim's default gr* mappings", function()
@@ -338,6 +341,9 @@ end)
 
 t:test("foldexpr: restores visible windows after the last folding client detaches", function()
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  t:defer(function()
+    delete_buffer(bufnr)
+  end)
   local original = vim.api.nvim_get_current_win() ---@type integer
   vim.api.nvim_win_set_buf(original, bufnr)
   vim.api.nvim_set_option_value("foldexpr", "v:lua.vim.treesitter.foldexpr()", { win = original, scope = "local" })
@@ -345,6 +351,9 @@ t:test("foldexpr: restores visible windows after the last folding client detache
   local first = add_client(bufnr, "lua_ls", { ["textDocument/foldingRange"] = true })
   Event.on_attach(first, bufnr)
   local split = vim.api.nvim_open_win(bufnr, false, { split = "below", win = original }) ---@type integer
+  t:defer(function()
+    vim.api.nvim_win_close(split, true)
+  end)
   local second = add_client(bufnr, "vtsls", { ["textDocument/foldingRange"] = true })
   Event.on_attach(second, bufnr)
 
@@ -355,9 +364,6 @@ t:test("foldexpr: restores visible windows after the last folding client detache
 
   local original_foldexpr = vim.api.nvim_get_option_value("foldexpr", { win = original, scope = "local" })
   local split_foldexpr = vim.api.nvim_get_option_value("foldexpr", { win = split, scope = "local" })
-
-  vim.api.nvim_win_close(split, true)
-  delete_buffer(bufnr)
 
   t.assert_eq("v:lua.vim.treesitter.foldexpr()", original_foldexpr, "saved foldexpr")
   t.assert_eq("v:lua.vim.treesitter.foldexpr()", split_foldexpr, "buffer foldexpr fallback")
@@ -401,7 +407,13 @@ end)
 
 t:test("foldexpr: restores a hidden buffer when it re-enters a window", function()
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  t:defer(function()
+    delete_buffer(bufnr)
+  end)
   local other_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  t:defer(function()
+    vim.api.nvim_buf_delete(other_bufnr, { force = true })
+  end)
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   vim.api.nvim_win_set_buf(winnr, bufnr)
   vim.api.nvim_set_option_value("foldexpr", "v:lua.vim.treesitter.foldexpr()", { win = winnr, scope = "local" })
@@ -414,9 +426,6 @@ t:test("foldexpr: restores a hidden buffer when it re-enters a window", function
   client.attached_buffers[bufnr] = nil
   vim.api.nvim_win_set_buf(winnr, bufnr)
   local restored = vim.api.nvim_get_option_value("foldexpr", { win = winnr, scope = "local" })
-
-  vim.api.nvim_buf_delete(other_bufnr, { force = true })
-  delete_buffer(bufnr)
 
   t.assert_eq("v:lua.vim.treesitter.foldexpr()", restored, "hidden buffer foldexpr")
 end)
@@ -696,8 +705,11 @@ t:test("display switches: inlay hints follow the switch without stopping clients
   set_switch("inlay_hints", false)
   set_switch("inlay_hints", true)
   -- Once typing stops, the reconcile resumes `a`.
+  local before = #calls
   vim.api.nvim_exec_autocmds("ModeChanged", { pattern = "i:n", modeline = false })
-  vim.wait(20)
+  t.wait_until(function()
+    return #calls > before
+  end, 5000, "the reconcile did not run once typing stopped")
 
   local expected = {
     "true@a,true@b", -- attach

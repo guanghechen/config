@@ -71,85 +71,33 @@ t:test("run_diff: final-newline-only changes are represented", function()
 end)
 
 t:test("run_diff_future: basic functionality", function()
-  local done = false
-  local result_hunks = nil
-
-  diff.run_diff_future({ "old", "" }, { "new", "" }):finally(function(ok, hunks)
-    t.assert_eq(true, ok, "future resolved")
-    result_hunks = hunks
-    done = true
-  end)
-
-  vim.wait(3000, function()
-    return done
-  end)
-
-  t.assert_eq(true, done, "callback called")
-  t.assert_true(result_hunks ~= nil, "result should not be nil")
-  ---@cast result_hunks era.m.git.Hunk[]
-  t.assert_eq(1, #result_hunks, "hunk count")
-  t.assert_eq("change", result_hunks[1].type, "hunk type")
+  local hunks = t.await(diff.run_diff_future({ "old", "" }, { "new", "" })) ---@type era.m.git.Hunk[]|nil
+  t.assert_true(hunks ~= nil, "result should not be nil")
+  ---@cast hunks era.m.git.Hunk[]
+  t.assert_eq(1, #hunks, "hunk count")
+  t.assert_eq("change", hunks[1].type, "hunk type")
 end)
 
 t:test("run_diff_future: empty files", function()
-  local done = false
-  local result_hunks = nil
-
-  diff.run_diff_future({}, {}):finally(function(ok, hunks)
-    t.assert_eq(true, ok, "future resolved")
-    result_hunks = hunks
-    done = true
-  end)
-
-  vim.wait(3000, function()
-    return done
-  end)
-
-  t.assert_eq(true, done, "callback called")
-  t.assert_eq(0, #result_hunks, "hunk count")
+  local hunks = t.await(diff.run_diff_future({}, {})) ---@type era.m.git.Hunk[]
+  t.assert_eq(0, #hunks, "hunk count")
 end)
 
 t:test("run_diff_future: preserves independent nearby changes", function()
-  local done = false
-  local result_hunks = nil
-
-  -- Gap = 2, should merge
+  -- Changes two unchanged lines apart stay separate hunks.
   local old = { "line1", "line2", "line3", "line4", "" }
   local new = { "modified1", "line2", "line3", "modified4", "" }
 
-  diff.run_diff_future(old, new):finally(function(ok, hunks)
-    t.assert_eq(true, ok, "future resolved")
-    result_hunks = hunks
-    done = true
-  end)
-
-  vim.wait(3000, function()
-    return done
-  end)
-
-  t.assert_eq(true, done, "callback called")
-  t.assert_eq(2, #result_hunks, "hunk count")
+  local hunks = t.await(diff.run_diff_future(old, new)) ---@type era.m.git.Hunk[]
+  t.assert_eq(2, #hunks, "hunk count")
 end)
 
 t:test("run_diff_future: content with special characters", function()
-  local done = false
-  local result_hunks = nil
-
-  diff.run_diff_future({ "a|b;c\td", "" }, { "x|y;z\tw", "" }):finally(function(ok, hunks)
-    t.assert_eq(true, ok, "future resolved")
-    result_hunks = hunks
-    done = true
-  end)
-
-  vim.wait(3000, function()
-    return done
-  end)
-
-  t.assert_eq(true, done, "callback called")
-  t.assert_true(result_hunks ~= nil, "result should not be nil")
-  ---@cast result_hunks era.m.git.Hunk[]
-  t.assert_eq(1, #result_hunks, "hunk count")
-  t.assert_eq("x|y;z\tw", result_hunks[1].added.lines[1], "content preserved")
+  local hunks = t.await(diff.run_diff_future({ "a|b;c\td", "" }, { "x|y;z\tw", "" })) ---@type era.m.git.Hunk[]|nil
+  t.assert_true(hunks ~= nil, "result should not be nil")
+  ---@cast hunks era.m.git.Hunk[]
+  t.assert_eq(1, #hunks, "hunk count")
+  t.assert_eq("x|y;z\tw", hunks[1].added.lines[1], "content preserved")
 end)
 
 t:test("filter_secondary: nil inputs", function()

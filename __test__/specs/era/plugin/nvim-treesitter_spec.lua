@@ -4,7 +4,7 @@ local harness = require("__test__.support.harness")
 local t = harness.new()
 
 -- The installed parsers' directory; its Lua injections, like nvim-treesitter's, inject luadoc.
-local install_dir = vim.fn.tempname() ---@type string
+local install_dir = t:tempdir() ---@type string
 vim.fn.mkdir(install_dir .. "/queries/lua", "p")
 vim.fn.writefile(
   { '(comment content: (_) @injection.content (#set! injection.language "luadoc"))' },

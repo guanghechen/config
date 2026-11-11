@@ -300,8 +300,12 @@ for _, target in ipairs({ "background", "current" }) do
     )
     local current = target == "current"
     t.assert_eq(current and 1 or 0, cancelled, "only edits to the owning buffer cancel acceptance")
+    -- A cancelled acceptance must not apply within the window; a kept one applies its delayed resolve.
     vim.wait(150)
-    t.assert_eq(current and "edited" or "foobar", ui:lua([[return vim.api.nvim_get_current_line()]]), "resolved text")
+    local expected = current and "edited" or "foobar"
+    ui:wait_until(function()
+      return ui:lua([[return vim.api.nvim_get_current_line()]]) == expected
+    end, 5000, "resolved text")
     t.assert_eq(current and 0 or 1, ui:lua([[return #cmp_commands]]), "resolved command ownership")
     if not current then
       ui:rpc("nvim_input", "<Esc>")
@@ -371,9 +375,9 @@ t:test("semantic brackets follow language delimiters and context exclusions afte
     ui:lua([[require('era.keystroke.cmp').show()]])
     wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], case.filetype .. " semantic candidate")
     ui:rpc("nvim_input", "<C-y>")
-    t.wait_until(function()
+    ui:wait_until(function()
       return ui:lua([[return vim.api.nvim_get_current_line()]]) == case.text
-    end, 3000, case.filetype .. " accepted text")
+    end, 5000, case.filetype .. " accepted text")
     ui:lua([[
       vim.schedule(function()
         vim.schedule(function() _G.cmp_accept_drained = true end)
@@ -417,9 +421,9 @@ for _, action in ipairs({ "(", "<C-e>", "<CR>" }) do
     wait(ui, [[return vim.api.nvim_get_current_line() == 'normalize']], "preview inserts only the function name")
     ui:rpc("nvim_input", action)
     local expected = action == "(" and "normalize(" or action == "<C-e>" and "nor" or "normalize(value)"
-    t.wait_until(function()
+    ui:wait_until(function()
       return ui:lua([[return vim.api.nvim_get_current_line()]]) == expected
-    end, 1000, "preview follow-up " .. action)
+    end, 5000, "preview follow-up " .. action)
     t.assert_eq(action == "<CR>", ui:lua([[return vim.snippet.active()]]), "only acceptance starts a snippet")
   end)
 end

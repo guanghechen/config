@@ -212,13 +212,8 @@ t:test("annotations retain validation, byte values and array-prefix semantics", 
 end)
 
 t:test("annotation projection supports 10k distinct commits without exhausting Lua references", function()
-  workspace = vim.fn.tempname()
-  vim.fn.mkdir(workspace, "p")
-  local root = workspace
-  t:defer(function()
-    vim.fn.delete(root, "rf")
-  end)
-  local content = require("__test__.fixtures.era.m.git.blame_history").build(root, 10000, 1)
+  workspace = t:tempdir()
+  local content = require("__test__.fixtures.era.m.git.blame_history").build(workspace, 10000, 1)
   local state, snapshot, err = query("file", content, 20000)
   t.assert_eq("completed", state, err)
   local lines, commits = snapshot:stats()

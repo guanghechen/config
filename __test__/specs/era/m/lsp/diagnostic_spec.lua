@@ -72,13 +72,6 @@ local function count_queries()
   return calls
 end
 
----@param predicate                     fun(): boolean
----@param message                       string
----@return nil
-local function wait(predicate, message)
-  t.assert_true(vim.wait(2000, predicate, 1), message)
-end
-
 t:test("refresh: unchanged counts do not report a change", function()
   local store, state = new_store()
   local bufnr = named_buffer("unchanged.lua")
@@ -90,9 +83,9 @@ t:test("refresh: unchanged counts do not report a change", function()
   local function refresh(changes, message)
     local before = calls[bufnr] or 0 ---@type integer
     store:refresh(bufnr)
-    wait(function()
+    t.wait_until(function()
       return (calls[bufnr] or 0) > before
-    end, "refresh ran: " .. message)
+    end, 5000, "refresh ran: " .. message)
     t.assert_eq(changes, state.changes, message)
   end
 
@@ -120,9 +113,9 @@ t:test("refresh: debounce retains every changed buffer", function()
   t.assert_nil(calls[bufnr1], "queries before debounce flush")
   t.assert_nil(calls[bufnr2], "queries before debounce flush")
 
-  wait(function()
+  t.wait_until(function()
     return state.changes > 0
-  end, "debounced refresh")
+  end, 5000, "debounced refresh")
   t.assert_eq(1, calls[bufnr1], "deduplicated first buffer")
   t.assert_eq(1, calls[bufnr2], "retained second buffer")
   t.assert_eq(1, state.changes, "batched change")
@@ -139,18 +132,18 @@ t:test("refresh: aggregates every diagnostic namespace in the buffer", function(
   set(ns1, bufnr, { ERROR })
   set(ns2, bufnr, { WARN })
   store:refresh(bufnr)
-  wait(function()
+  t.wait_until(function()
     return state.changes == 1
-  end, "initial namespaces")
+  end, 5000, "initial namespaces")
   local data = store:get(bufnr)
   t.assert_eq(1, data.error, "namespace error")
   t.assert_eq(1, data.warn, "namespace warning")
 
   vim.diagnostic.reset(ns1, bufnr)
   store:refresh(bufnr)
-  wait(function()
+  t.wait_until(function()
     return state.changes == 2
-  end, "cleared namespace")
+  end, 5000, "cleared namespace")
   data = store:get(bufnr)
   t.assert_eq(0, data.error, "cleared namespace error")
   t.assert_eq(1, data.warn, "remaining namespace warning")
@@ -175,9 +168,9 @@ t:test("forget: a deleted buffer drops its counts and queued refresh", function(
   -- Queued refreshes run as one batch: once a later one lands, a refresh still queued for the deleted buffer would too.
   set(ns, other, { WARN })
   store:refresh(other)
-  wait(function()
+  t.wait_until(function()
     return state.changes == 3
-  end, "later refresh")
+  end, 5000, "later refresh")
   t.assert_eq(1, store:get(other).warn, "later count")
   t.assert_eq(0, store:get(bufnr).error, "dropped queued refresh")
 end)
@@ -194,9 +187,9 @@ t:test("setup: diagnostic changes and deleted buffers reach the default store", 
   t.assert_eq(1, Diagnostic.get_by_bufnr(bufnr).error, "initial count")
 
   set(ns, bufnr, { WARN, WARN })
-  wait(function()
+  t.wait_until(function()
     return Diagnostic.get_by_bufnr(bufnr).warn == 2
-  end, "DiagnosticChanged refresh")
+  end, 5000, "DiagnosticChanged refresh")
   t.assert_eq(0, Diagnostic.get_by_bufnr(bufnr).error, "replaced count")
   t.assert_eq(
     Diagnostic.format(Diagnostic.get_by_bufnr(bufnr), 0, {}),

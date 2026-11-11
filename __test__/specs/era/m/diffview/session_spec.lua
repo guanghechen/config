@@ -368,6 +368,11 @@ t:test("a working-tree file has the side-by-side mappings only while the cursor 
   local root = diffview.repository(t)
   vim.cmd.edit(vim.fn.fnameescape(root .. "/a.txt"))
   local home, bufnr = vim.api.nvim_get_current_win(), vim.api.nvim_get_current_buf()
+  t:defer(function()
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
+  end)
   local session = diffview.open_workspace(t)
   local right = assert(session.layout.sbs_right_winnr)
 
@@ -392,6 +397,11 @@ t:test("a working-tree file keeps its own mappings through the preview", functio
   local root = diffview.repository(t)
   vim.cmd.edit(vim.fn.fnameescape(root .. "/a.txt"))
   local bufnr = vim.api.nvim_get_current_buf()
+  t:defer(function()
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
+  end)
   vim.keymap.set("n", "<C-j>", "<Nop>", { buf = bufnr, desc = "mine" })
   local session = diffview.open_workspace(t)
 
@@ -408,6 +418,11 @@ t:test("a working-tree file leaves the preview with its own window options", fun
   local root = diffview.repository(t)
   vim.cmd.edit(vim.fn.fnameescape(root .. "/a.txt"))
   local bufnr = vim.api.nvim_get_current_buf()
+  t:defer(function()
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
+  end)
   local own = winopts(vim.api.nvim_get_current_win())
   local session = diffview.open_workspace(t)
 

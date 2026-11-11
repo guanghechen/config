@@ -6,11 +6,8 @@ local root = assert(vim.uv.cwd()) ---@type string
 ---@param callback                      fun(dir: string): nil
 ---@return nil
 local function with_temp_root(callback)
-  local dir = vim.fn.tempname() .. " suite space 中文" ---@type string
+  local dir = vim.fs.joinpath(t:tempdir(), "suite space 中文") ---@type string
   vim.fn.mkdir(dir .. "/nested", "p")
-  t:defer(function()
-    vim.fn.delete(dir, "rf")
-  end)
   callback(dir)
 end
 

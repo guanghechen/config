@@ -2,6 +2,9 @@ local harness = require("__test__.support.harness")
 local t = harness.new()
 
 t:test("Neovim exit acknowledges cancellation of a blocked native blame process", function()
+  if vim.fn.executable("rustc") ~= 1 then
+    t.skip("needs rustc to build the controlled Git process")
+  end
   local root = t:tempdir()
   local marker = root .. "/started"
   local repo = assert(vim.uv.cwd())

@@ -1,11 +1,8 @@
 local t = require("__test__.support.harness").new()
 
 t:test("symbol preview clears its range when the filter or source removes the target", function()
-  local filepath = vim.fn.tempname() .. ".lua"
+  local filepath = vim.fs.joinpath(t:tempdir(), "sample.lua")
   vim.fn.writefile({ "local function sample()", "  return true", "end" }, filepath)
-  t:defer(function()
-    vim.fn.delete(filepath)
-  end)
   local ui = require("__test__.support.ui").new()
   t:defer(function()
     ui:close()

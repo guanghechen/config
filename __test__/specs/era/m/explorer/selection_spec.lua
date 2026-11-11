@@ -56,7 +56,13 @@ t:test("copying paths offers the choices one row below and four columns right of
   local selected = selected_directory()
   local parent = vim.api.nvim_get_current_win() ---@type integer
   -- A float opened with the intended offset from the same cursor gives the expected placement.
-  local reference = vim.api.nvim_open_win(vim.api.nvim_create_buf(false, true), false, {
+  local bufnr = vim.api.nvim_create_buf(false, true)
+  t:defer(function()
+    if vim.api.nvim_buf_is_valid(bufnr) then
+      vim.api.nvim_buf_delete(bufnr, { force = true })
+    end
+  end)
+  local reference = vim.api.nvim_open_win(bufnr, false, {
     relative = "cursor",
     row = 1,
     col = 4,
@@ -189,7 +195,7 @@ end)
 t:test("real directory read failures retry after permissions recover without a separate refresh", function()
   -- chmod cannot deny reads to root or provide the same contract on Windows.
   if stl.env.IS_WIN or vim.uv.getuid() == 0 then
-    return
+    t.skip("chmod cannot deny directory reads to root or on Windows")
   end
   local selected = selected_directory()
   local session, dirpath = selected.session, selected.path .. "/dir"

@@ -554,9 +554,12 @@ t:test("latest Neovim emits block events with one-line append payloads", functio
       events.append[#events.append + 1] = { ... }
     end
   end)
+  local detach = t:defer(function()
+    vim.ui_detach(nsnr)
+  end)
 
   vim.api.nvim_feedkeys(vim.keycode(":function UiAttachProtocolProbe()<CR>echo 'x'<CR>endfunction<CR>"), "xt", false)
-  vim.ui_detach(nsnr)
+  detach()
   vim.cmd("delfunction UiAttachProtocolProbe")
 
   t.assert_eq(1, #events.show, "block show events")

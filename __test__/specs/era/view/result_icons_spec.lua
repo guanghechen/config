@@ -75,17 +75,13 @@ for _, consumer in ipairs({ "picker", "searcher", "diffview" }) do
       })
       preview:create_win({border="none", winhighlight=""}, {row=0, col=60, width=55, height=14})
       preview:mark_content_dirty()
-      assert(vim.wait(5000, function() return preview._tree_view and preview._tree_view:frame() end, 1))
       return {open=stl.icon.filetype.FolderOpen, closed=closed, highlight=highlight, file=file}
     ]],
       consumer
     )
-
-    ---@param code                      string
-    ---@return any
-    local function eval(code)
-      return ui:lua(code)
-    end
+    ui:wait_until(function()
+      return ui:lua("return preview._tree_view ~= nil and preview._tree_view:frame() ~= nil")
+    end, 5000, "the directory preview did not publish a frame")
 
     ---@param glyph                     string
     ---@return nil
@@ -93,7 +89,7 @@ for _, consumer in ipairs({ "picker", "searcher", "diffview" }) do
       local actual
       ui:wait_until(function()
         ui:rpc("nvim_command", "redraw")
-        actual = eval([[
+        actual = ui:lua([[
         local main = owner:frame()
         local other = preview._tree_view:frame()
         local row = main:position(main:source():id(directory_key))
@@ -120,32 +116,32 @@ for _, consumer in ipairs({ "picker", "searcher", "diffview" }) do
     end
 
     check(expected.open)
-    eval([[owner:collapse(directory_key, "collapse", false); treeview.await(owner:ready())]])
+    ui:lua([[owner:collapse(directory_key, "collapse", false); treeview.await(owner:ready())]])
     check(expected.closed)
-    eval([[owner:collapse(directory_key, "expand", false); treeview.await(owner:ready())]])
+    ui:lua([[owner:collapse(directory_key, "expand", false); treeview.await(owner:ready())]])
     check(expected.open)
-    local count = eval("return vim.tbl_count(lookups.directory)")
+    local count = ui:lua("return vim.tbl_count(lookups.directory)")
     t.assert_true(count < 40, "only viewport directory names are resolved: " .. count)
-    t.assert_eq(0, eval("return chevrons[preview:get_bufnr()] or 0"), "preview does not draw a fallback chevron")
-    local main_chevrons = eval("return chevrons[result_bufnr] or 0")
+    t.assert_eq(0, ui:lua("return chevrons[preview:get_bufnr()] or 0"), "preview does not draw a fallback chevron")
+    local main_chevrons = ui:lua("return chevrons[result_bufnr] or 0")
     if consumer == "diffview" then
       t.assert_true(main_chevrons > 0, "commit headers retain their generic expand indicator")
     else
       t.assert_eq(0, main_chevrons, "file results do not draw fallback chevrons")
-      eval([[
+      ui:lua([[
         refreshed_paths = vim.list_slice(owner.source._reset.paths)
         owner:reset_filepaths("/icons", refreshed_paths, false)
         owner:add_location(require("era.view.result_paths").key("/icons/a/src/one.lua"), {lnum=2,col=0})
         treeview.publish(owner, {rootuuid=preview_root, foldempty=true})
       ]])
       check(expected.open)
-      eval([[
+      ui:lua([[
         refreshed_paths[#refreshed_paths+1] = "fresh.lua"
         owner:reset_filepaths("/icons", refreshed_paths, false)
         treeview.publish(owner, {rootuuid=preview_root, foldempty=true})
       ]])
       ui:wait_until(function()
-        return eval("return lookups.directory.src == 2 and lookups.file.src == 2")
+        return ui:lua("return lookups.directory.src == 2 and lookups.file.src == 2")
       end, 5000, "a changed path set must invalidate its viewport icon cache")
     end
   end)

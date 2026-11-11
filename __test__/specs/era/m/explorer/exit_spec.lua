@@ -2,11 +2,10 @@ local t = require("__test__.support.harness").new()
 
 ---@return __test__.support.UI, string
 local function editor()
-  local marker = vim.fn.tempname()
+  local marker = t:tempdir() .. "/marker"
   local ui = require("__test__.support.ui").new()
   t:defer(function()
     ui:close()
-    vim.fn.delete(marker)
   end)
   ui:rpc("nvim_ui_attach", 80, 24, { rgb = true, ext_linegrid = true })
   ui:lua(

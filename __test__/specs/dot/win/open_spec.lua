@@ -29,17 +29,15 @@ require("ark.autocmd")
 ---@return string
 ---@return table<string, integer>
 local function new_file()
-  local filepath = vim.fn.tempname() .. ".lua" ---@type string
+  local filepath = vim.fs.joinpath(t:tempdir(), "file.lua") ---@type string
   t:defer(function()
     for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
       if vim.api.nvim_buf_get_name(bufnr) == filepath then
         vim.api.nvim_buf_delete(bufnr, { force = true })
       end
     end
-    vim.fn.delete(filepath)
   end)
   vim.fn.writefile({ "local value = 1", "", "return value", "" }, filepath)
-  filepath = assert(vim.uv.fs_realpath(filepath))
 
   local counts = { BufReadPost = 0, FileType = 0 } ---@type table<string, integer>
   local group = vim.api.nvim_create_augroup("test_open_" .. filepath, { clear = true })
@@ -68,7 +66,7 @@ local function settle()
   end)
   t.wait_until(function()
     return done
-  end, 1000, "scheduled opening work")
+  end, 5000, "scheduled opening work")
 end
 
 t:test("first display restores the saved cursor without replaying file initialization", function()
@@ -250,7 +248,7 @@ t:test("a batch with no existing files does not move the current cursor", functi
   t.assert_true(Win.open_filepath(winnr, filepath), "opened")
   settle()
 
-  Win.open_filepaths(winnr, { vim.fn.tempname() .. ".missing" }, 1, 0)
+  Win.open_filepaths(winnr, { vim.fs.joinpath(t:tempdir(), "file.missing") }, 1, 0)
   settle()
   t.assert_eq(3, vim.api.nvim_win_get_cursor(winnr)[1], "no file opened, saved cursor retained")
 end)

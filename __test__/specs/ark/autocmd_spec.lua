@@ -268,7 +268,15 @@ local function keep_reference_jumps()
   end)
   create_autocmd("FileType", { group = group, callback = handler.callback })
   return function(filetype, bufnr)
-    bufnr = bufnr or vim.api.nvim_create_buf(true, false)
+    if bufnr == nil then
+      local created = vim.api.nvim_create_buf(true, false) ---@type integer
+      t:defer(function()
+        if vim.api.nvim_buf_is_valid(created) then
+          vim.api.nvim_buf_delete(created, { force = true })
+        end
+      end)
+      bufnr = created
+    end
     vim.api.nvim_set_option_value("filetype", filetype, { buf = bufnr })
     return bufnr
   end
@@ -315,6 +323,11 @@ t:test("Neovim's filetype plugins give [[ and ]] to the global maps in Normal an
   t.assert_eq("reference", owner(filetype("markdown"), "n", "]]"), "markdown, mapped from Lua")
 
   local panel = vim.api.nvim_create_buf(false, true)
+  t:defer(function()
+    if vim.api.nvim_buf_is_valid(panel) then
+      vim.api.nvim_buf_delete(panel, { force = true })
+    end
+  end)
   vim.keymap.set("n", "[[", function() end, { buf = panel, desc = "page" })
   t.assert_eq("page", owner(filetype("diffview-commits", panel), "n", "[["), "a map of the configuration's own")
 end)

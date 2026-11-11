@@ -45,7 +45,14 @@ Indentline.dressing()
 -- The windows each coalesced refresh redraws; "all" for every window.
 ---@return string
 local function settle()
-  vim.wait(20)
+  -- The refresh is scheduled, so it has run once a callback scheduled after it runs.
+  local drained = false ---@type boolean
+  vim.schedule(function()
+    drained = true
+  end)
+  t.wait_until(function()
+    return drained
+  end, 5000, "scheduled refresh")
   local targets = {} ---@type string[]
   for _, options in ipairs(redraws) do
     targets[#targets + 1] = options.win and tostring(options.win) or "all"
@@ -89,6 +96,12 @@ t:test("a buffer option redraws every window on the buffer", function()
   end)
   settle()
 
+  local shiftwidth = vim.api.nvim_get_option_value("shiftwidth", { buf = bufnr }) ---@type integer
+  local tabstop = vim.o.tabstop ---@type integer
+  t:defer(function()
+    vim.api.nvim_set_option_value("shiftwidth", shiftwidth, { buf = bufnr })
+    vim.o.tabstop = tabstop
+  end)
   vim.api.nvim_set_option_value("shiftwidth", 3, { buf = bufnr })
   local expected = { tostring(winnr), tostring(split_winnr) } ---@type string[]
   table.sort(expected)

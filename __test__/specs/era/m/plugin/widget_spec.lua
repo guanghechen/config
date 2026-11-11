@@ -278,7 +278,6 @@ t:test("normalized multiline task errors render successfully", function()
   widget:__trim__()
 
   local bufnr = vim.api.nvim_create_buf(false, true)
-  ---@diagnostic disable-next-line: invisible
   t:defer(function()
     if vim.api.nvim_buf_is_valid(bufnr) then
       vim.api.nvim_buf_delete(bufnr, { force = true })

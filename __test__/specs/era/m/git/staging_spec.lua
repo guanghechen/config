@@ -93,9 +93,10 @@ end)
 
 t:test("replace_buffer_text: write preserves exact final-EOL bytes", function()
   local cases = { "", "\n", "a", "a\n" }
+  local directory = t:tempdir()
 
-  for _, expected in ipairs(cases) do
-    local filepath = vim.fn.tempname() ---@type string
+  for index, expected in ipairs(cases) do
+    local filepath = directory .. "/" .. index ---@type string
     local bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
     vim.api.nvim_buf_set_name(bufnr, filepath)
     staging.replace_buffer_text(bufnr, expected)
@@ -109,7 +110,6 @@ t:test("replace_buffer_text: write preserves exact final-EOL bytes", function()
     t.assert_eq(expected, actual, string.format("bytes for %q", expected))
 
     vim.api.nvim_buf_delete(bufnr, { force = true })
-    vim.fn.delete(filepath)
   end
 end)
 
@@ -136,9 +136,10 @@ t:test("from_buffer: ends with the line break writing the buffer ends with", fun
     { eol = false, fixeol = false, binary = false },
     { eol = false, fixeol = true, binary = true },
   }
+  local directory = t:tempdir()
 
-  for _, case in ipairs(cases) do
-    local filepath = vim.fn.tempname() ---@type string
+  for index, case in ipairs(cases) do
+    local filepath = directory .. "/" .. index ---@type string
     local bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
     vim.api.nvim_buf_set_name(bufnr, filepath)
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, { "a", "b" })
@@ -155,7 +156,6 @@ t:test("from_buffer: ends with the line break writing the buffer ends with", fun
     t.assert_eq(written, staging.from_buffer(bufnr).text, vim.inspect(case))
 
     vim.api.nvim_buf_delete(bufnr, { force = true })
-    vim.fn.delete(filepath)
   end
 end)
 

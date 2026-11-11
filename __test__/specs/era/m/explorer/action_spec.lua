@@ -318,22 +318,18 @@ t:test("completion and confirmation release selection without a recurring progre
   local path = t:tempdir()
   local widget = fixture.widget(path)
   local session, view = widget:context()
-  local callbacks, completed = {}, 0
-  local defer = vim.defer_fn
-  t:patch_table(vim, "defer_fn", function(callback, delay)
-    if callbacks and delay == 40 and debug.getinfo(callback, "S").source:find("era/m/explorer/jobs.lua", 1, true) then
-      callbacks[#callbacks + 1] = callback
-      return
-    end
-    return defer(callback, delay)
-  end)
-  t:defer(function()
-    local held = callbacks
-    callbacks = nil
-    for _, callback in ipairs(held) do
-      callback()
-    end
-  end)
+  local timers, completed = 0, 0
+  -- The Pending poll of source preparation is the only timer jobs.lua may arm. Count, without holding them, the
+  -- timers it arms at any other time, of any delay: they would observe a Job.
+  for _, target in ipairs({ { vim, "defer_fn" }, { vim.uv, "new_timer" } }) do
+    local create = target[1][target[2]]
+    t:patch_table(target[1], target[2], function(...)
+      if not session.preparing and debug.getinfo(2, "S").source:find("era/m/explorer/jobs.lua", 1, true) then
+        timers = timers + 1
+      end
+      return create(...)
+    end)
+  end
 
   for _, name in ipairs({ "first", "second" }) do
     local job = await(session:operate(view, {
@@ -350,7 +346,7 @@ t:test("completion and confirmation release selection without a recurring progre
     end, 10000)
     t.wait_until(function()
       return session.job == nil
-    end, 1000, "completed IO must not wait for the progress timer")
+    end, 10000, "completed IO must release the Job")
     t.assert_true(vim.uv.fs_stat(path .. "/" .. name) ~= nil)
   end
   fixture.cursor(widget, path .. "/first")
@@ -363,10 +359,12 @@ t:test("completion and confirmation release selection without a recurring progre
   local copy = await(session:operate(view, { kind = "copy_to_path", path = path .. "/second" }))
   t.wait_until(function()
     return session.job == nil
-  end, 1000, "a new conflict and its terminal result must not wait for progress refresh")
+  end, 10000, "a new conflict and its terminal result must release the Job")
   t.assert_eq(1, confirmations)
   t.assert_eq("skipped", copy:results(1, 1)[1].status)
-  t.assert_eq(0, #callbacks, "Job observation must not create a recurring progress timer")
+  -- A recurring timer would arm again within this window.
+  vim.wait(200)
+  t.assert_eq(0, timers, "Job observation must not create a recurring progress timer")
   t.assert_eq(2, completed)
   t.assert_false(require("era.m.explorer.jobs").pending())
 end)
@@ -499,7 +497,7 @@ end)
 
 t:test("trash configuration uses the platform tool and tool failure preserves the source", function()
   if not stl.env.IS_OSX and not (stl.env.IS_NIX and not stl.env.IS_WSL) then
-    return
+    t.skip("trash uses a platform tool only on macOS and Linux outside WSL")
   end
   local path = t:tempdir()
   local bin, recycled = path .. "/bin", path .. "/recycled"

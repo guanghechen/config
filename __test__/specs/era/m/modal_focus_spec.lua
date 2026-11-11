@@ -55,7 +55,6 @@ local select_view = assert(loadfile("lua/era/m/select/view.lua"))()
 ---@param winnr                         integer
 ---@return nil
 local function register_window(winnr)
-  ---@diagnostic disable-next-line: invisible
   t:defer(function()
     if vim.api.nvim_win_is_valid(winnr) then
       vim.api.nvim_win_close(winnr, true)
@@ -119,7 +118,6 @@ t:test("input does not restore a cursor into a replacement parent buffer", funct
 
   local input_winnr = input.open({ prompt = "Race", startinsert = false }, function() end)
   local replacement_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  ---@diagnostic disable-next-line: invisible
   t:defer(function()
     if vim.api.nvim_win_is_valid(parent_winnr) and vim.api.nvim_buf_is_valid(parent_bufnr) then
       vim.api.nvim_win_set_buf(parent_winnr, parent_bufnr)

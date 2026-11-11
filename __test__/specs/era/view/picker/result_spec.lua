@@ -68,6 +68,7 @@ for _, kind in ipairs({ "picker", "searcher" }) do
     end)
     owner:toggle_select("root", true, true)
     treeview.await(owner:ready())
+    -- Signs placed per selected row would land within this window.
     vim.wait(100)
     t.assert_true(owner:isselected("512"))
     t.assert_true(calls <= 2, "selection must not place a persistent sign per result")
@@ -96,15 +97,22 @@ t:test("an omitted winbar preserves positions across refresh, resize and reopeni
   value:hide()
   winnr = value:create_win(options, dimension)
   treeview.await(owner:ready())
+  -- The window lets a late winbar appear; the position may publish after it.
   vim.wait(100)
   t.wait_until(function()
     return value.lnum_current:snapshot() == 2
   end, 5000, "position after reopening")
   t.assert_eq(2, value.lnum_current:snapshot())
   t.assert_eq("", vim.api.nvim_get_option_value("winbar", { win = winnr }))
+  local errmsg = vim.v.errmsg
+  t:defer(function()
+    vim.v.errmsg = errmsg
+  end)
   value:set_lnum_current(3)
   value:dispose()
+  -- A callback the cursor change queued would fail after dispose within this window.
   vim.wait(100)
+  t.assert_eq(errmsg, vim.v.errmsg, "a cursor change queued before dispose raises no editor error")
 end)
 
 t:test("status and diagnostic policies survive a failed publication", function()

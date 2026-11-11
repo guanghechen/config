@@ -277,7 +277,7 @@ t:test("add respects count and dot repeat", function()
 end)
 
 t:test("keymaps come back when :bdelete reopens the same buffer number", function()
-  local path = vim.fn.tempname() .. ".lua"
+  local path = t:tempdir() .. "/reopened.lua"
   vim.fn.writefile({ "alpha" }, path)
   local previous_bufnr = vim.api.nvim_get_current_buf() ---@type integer
   local bufnrs = {} ---@type integer[]
@@ -290,7 +290,6 @@ t:test("keymaps come back when :bdelete reopens the same buffer number", functio
         vim.api.nvim_buf_delete(bufnr, { force = true })
       end
     end
-    vim.fn.delete(path)
   end)
   -- Filetype detection is off here; setting it stands in for the detection of a real start.
   local function open()

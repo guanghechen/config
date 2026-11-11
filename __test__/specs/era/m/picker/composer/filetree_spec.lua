@@ -1067,7 +1067,7 @@ end)
 ---@return string root
 local function open_typed_ahead(names)
   names = names or { "alpha.txt", "beta.txt", "gamma.txt" }
-  local root = assert(vim.uv.fs_realpath(t:tempdir()))
+  local root = t:tempdir()
   for _, name in ipairs(names) do
     vim.fn.writefile({ name }, root .. "/" .. name)
   end
@@ -1078,7 +1078,6 @@ local function open_typed_ahead(names)
   ui:start({ width = 100, height = 32, runtime = "ark" })
   ui:lua(
     [[
-    local root = ...
     confirmed, loading, current = nil, nil, nil
     picker = era.m.picker.FiletreeComposer.new({
       name = "typed ahead", title = "typed ahead", permanent = true, preview = false,

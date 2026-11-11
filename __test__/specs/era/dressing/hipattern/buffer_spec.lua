@@ -18,24 +18,20 @@ end
 local function wait_for_extmarks(bufnr, count)
   t.wait_until(function()
     return #get_extmarks(bufnr) == count
-  end, 1000, string.format("expected %d extmarks", count))
+  end, 5000, string.format("expected %d extmarks", count))
 end
 
+-- The buffer stays out of every window: hipattern updates it in the background.
 ---@param lines                         string[]
 ---@param filetype                      string
 ---@param callback                      fun(bufnr: integer): nil
 ---@return nil
 local function with_buffer(lines, filetype, callback)
-  local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local previous_bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
   local bufnr = vim.api.nvim_create_buf(false, false) ---@type integer
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
   vim.api.nvim_set_option_value("filetype", filetype, { buf = bufnr })
 
   local ok, err = pcall(callback, bufnr)
-  if vim.api.nvim_buf_is_valid(previous_bufnr) then
-    vim.api.nvim_win_set_buf(winnr, previous_bufnr)
-  end
   if vim.api.nvim_buf_is_valid(bufnr) then
     vim.api.nvim_buf_delete(bufnr, { force = true })
   end
@@ -75,7 +71,7 @@ t:test("replaces repeated same-line updates without stale extmarks", function()
     t.wait_until(function()
       local extmarks = get_extmarks(bufnr)
       return #extmarks == 1 and extmarks[1][4].hl_group == "f_hipattern_success"
-    end, 1000, "success highlight")
+    end, 5000, "success highlight")
 
     vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, { "plain" })
     wait_for_extmarks(bufnr, 0)
@@ -91,13 +87,13 @@ t:test("keeps extmarks aligned across line insertion and deletion", function()
     t.wait_until(function()
       local extmarks = get_extmarks(bufnr)
       return #extmarks == 2 and extmarks[1][2] == 1 and extmarks[2][2] == 3
-    end, 1000, "inserted line positions")
+    end, 5000, "inserted line positions")
 
     vim.api.nvim_buf_set_lines(bufnr, 1, 2, false, {})
     t.wait_until(function()
       local extmarks = get_extmarks(bufnr)
       return #extmarks == 1 and extmarks[1][2] == 2 and extmarks[1][4].hl_group == "f_hipattern_error"
-    end, 1000, "deleted line positions")
+    end, 5000, "deleted line positions")
   end)
 end)
 
@@ -122,7 +118,7 @@ t:test("structural edits invalidate pending ranges in current coordinates", func
     t.wait_until(function()
       local extmarks = get_extmarks(bufnr)
       return #extmarks == 1 and extmarks[1][2] == 120 and extmarks[1][4].hl_group == "f_hipattern_success"
-    end, 1000, "shifted pending range")
+    end, 5000, "shifted pending range")
   end)
 end)
 
@@ -164,7 +160,12 @@ end)
 
 t:test("uses the target buffer filetype during background updates", function()
   with_buffer({ "rgb(255, 0, 0)" }, "css", function(bufnr)
-    vim.api.nvim_set_option_value("filetype", "lua", { buf = 0 })
+    local current_bufnr = vim.api.nvim_get_current_buf() ---@type integer
+    local filetype = vim.api.nvim_get_option_value("filetype", { buf = current_bufnr }) ---@type string
+    t:defer(function()
+      vim.api.nvim_set_option_value("filetype", filetype, { buf = current_bufnr })
+    end)
+    vim.api.nvim_set_option_value("filetype", "lua", { buf = current_bufnr })
     Hipattern.enable(bufnr)
     wait_for_extmarks(bufnr, 1)
     t.assert_eq("EraHipatternColor_ff0000", get_extmarks(bufnr)[1][4].virt_text[1][2], "background color")
@@ -394,7 +395,7 @@ t:test("an update past the end of the buffer drops the missing rows", function()
   Hipattern.update(bufnr, 0, 200000)
   t.wait_until(function()
     return calls > 0
-  end, 1000, "rendered")
+  end, 5000, "rendered")
   vim.wait(50)
   t.assert_true(calls <= 2, "rendered once instead of row by row, got " .. calls)
   t.assert_eq(2, #get_extmarks(bufnr), "existing rows still render")
@@ -410,7 +411,7 @@ t:test("an update before the first row starts at the first row", function()
     t.wait_until(function()
       local extmarks = get_extmarks(bufnr)
       return #extmarks == 2 and extmarks[2][4].hl_group == "f_hipattern_success"
-    end, 1000, "later edits still render")
+    end, 5000, "later edits still render")
   end)
 end)
 

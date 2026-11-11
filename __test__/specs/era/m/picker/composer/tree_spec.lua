@@ -403,4 +403,3 @@ t:test("keys typed after a deferred <CR> leave its query", function()
 end)
 
 t:run()
-t:run()

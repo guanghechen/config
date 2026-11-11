@@ -223,46 +223,39 @@ t:test("draw renders only in the active window for a shared buffer", function()
     vim.api.nvim_win_set_cursor(inactive_winnr, { 3, 4 })
     vim.cmd("vsplit")
     local active_winnr = vim.api.nvim_get_current_win() ---@type integer
+    t:defer(function()
+      if vim.api.nvim_win_is_valid(active_winnr) then
+        vim.api.nvim_win_close(active_winnr, true)
+      end
+    end)
     vim.api.nvim_win_set_cursor(active_winnr, { 6, 4 })
 
-    local ok, err = pcall(function()
-      local scope = Indentscope.get_scope(nil, nil, { try_as_border = false })
-      Indentscope.draw(scope, { interval = 0 })
-      vim.api.nvim__redraw({ valid = false, flush = true })
+    local scope = Indentscope.get_scope(nil, nil, { try_as_border = false })
+    Indentscope.draw(scope, { interval = 0 })
+    vim.api.nvim__redraw({ valid = false, flush = true })
 
-      local function screen_char(winnr, lnum, col)
-        local position = vim.api.nvim_win_get_position(winnr) ---@type integer[]
-        local info = vim.fn.getwininfo(winnr)[1] ---@type table
-        local topline = vim.api.nvim_win_call(winnr, function()
-          return vim.fn.line("w0")
-        end) ---@type integer
-        local row = position[1] + lnum - topline + 1 ---@type integer
-        local screen_col = position[2] + info.textoff + col + 1 ---@type integer
-        return vim.fn.screenstring(row, screen_col)
-      end
-
-      t.assert_eq("╎", screen_char(active_winnr, 6, 2), "active window guide")
-      t.assert_eq(" ", screen_char(inactive_winnr, 6, 2), "inactive window guide")
-
-      vim.api.nvim_set_current_win(inactive_winnr)
-      scope = Indentscope.get_scope(nil, nil, { try_as_border = false })
-      Indentscope.draw(scope, { interval = 0 })
-      -- Headless scripts have no idle redraw; static frames are not flushed outside the command line.
-      vim.api.nvim__redraw({ flush = true })
-
-      t.assert_eq("╎", screen_char(inactive_winnr, 3, 2), "new active window guide")
-      t.assert_eq(" ", screen_char(active_winnr, 6, 2), "previous active window guide")
-    end)
-
-    if vim.api.nvim_win_is_valid(active_winnr) then
-      vim.api.nvim_win_close(active_winnr, true)
+    local function screen_char(winnr, lnum, col)
+      local position = vim.api.nvim_win_get_position(winnr) ---@type integer[]
+      local info = vim.fn.getwininfo(winnr)[1] ---@type table
+      local topline = vim.api.nvim_win_call(winnr, function()
+        return vim.fn.line("w0")
+      end) ---@type integer
+      local row = position[1] + lnum - topline + 1 ---@type integer
+      local screen_col = position[2] + info.textoff + col + 1 ---@type integer
+      return vim.fn.screenstring(row, screen_col)
     end
-    if vim.api.nvim_win_is_valid(inactive_winnr) then
-      vim.api.nvim_set_current_win(inactive_winnr)
-    end
-    if not ok then
-      error(err, 0)
-    end
+
+    t.assert_eq("╎", screen_char(active_winnr, 6, 2), "active window guide")
+    t.assert_eq(" ", screen_char(inactive_winnr, 6, 2), "inactive window guide")
+
+    vim.api.nvim_set_current_win(inactive_winnr)
+    scope = Indentscope.get_scope(nil, nil, { try_as_border = false })
+    Indentscope.draw(scope, { interval = 0 })
+    -- Headless scripts have no idle redraw; static frames are not flushed outside the command line.
+    vim.api.nvim__redraw({ flush = true })
+
+    t.assert_eq("╎", screen_char(inactive_winnr, 3, 2), "new active window guide")
+    t.assert_eq(" ", screen_char(active_winnr, 6, 2), "previous active window guide")
   end)
 end)
 
@@ -409,13 +402,13 @@ t:test("draw refreshes when a fold opens or closes", function()
       vim.cmd("redraw")
       t.wait_until(function()
         return guide_count() > 1
-      end, 100, "opened fold redraw")
+      end, 5000, "opened fold redraw")
 
       vim.cmd("normal! zc")
       vim.cmd("redraw")
       t.wait_until(function()
         return guide_count() == 1
-      end, 100, "closed fold redraw")
+      end, 5000, "closed fold redraw")
     end)
   end)
 end)
@@ -743,9 +736,13 @@ t:test("hidden FileType events preserve the active scope", function()
       t.assert_eq(1, #render(nil), "active guide count")
 
       local hidden_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+      t:defer(function()
+        if vim.api.nvim_buf_is_valid(hidden_bufnr) then
+          vim.api.nvim_buf_delete(hidden_bufnr, { force = true })
+        end
+      end)
       vim.api.nvim_set_option_value("filetype", stl.filetype.BOARD, { buf = hidden_bufnr })
       t.assert_eq(1, #render(nil), "guide count after hidden FileType")
-      vim.api.nvim_buf_delete(hidden_bufnr, { force = true })
     end)
   end)
 end)

@@ -89,9 +89,9 @@ t:test("plain quoted words retain buffer fallback even when the directory has fi
     ui:lua([[require('era.keystroke.cmp').show()]])
     wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "manual refresh keeps the buffer candidate")
     ui:rpc("nvim_input", "<C-y>")
-    t.wait_until(function()
+    ui:wait_until(function()
       return ui:lua("return vim.api.nvim_get_current_line()") == "local text = " .. quote .. "qzxProjectToken"
-    end, 1000, "acceptance replaces only the quoted prefix")
+    end, 5000, "acceptance replaces only the quoted prefix")
   end
 end)
 
@@ -116,17 +116,14 @@ t:test("long path prefixes remain visible and accept after the fuzzy query limit
   wait(ui, [[return vim.api.nvim_get_current_line():sub(-1) == 'b']], "129th character is processed")
   wait(ui, [[return require('era.keystroke.cmp').is_menu_visible()]], "long prefix retains its candidate")
   ui:rpc("nvim_input", "<C-y>")
-  t.wait_until(function()
+  ui:wait_until(function()
     return ui:lua("return vim.api.nvim_get_current_line()") == 'local file = "./' .. filename
-  end, 1000, "long filename is accepted without changing the path prefix")
+  end, 5000, "long filename is accepted without changing the path prefix")
 end)
 
 t:test("raw bytes in a background file cannot interrupt valid completion", function()
-  local path = vim.fn.tempname() .. ".txt"
+  local path = t:tempdir() .. "/raw_bytes.txt"
   vim.fn.writefile({ "\255broken alpha 中文变量" }, path)
-  t:defer(function()
-    vim.fn.delete(path)
-  end)
   local ui = editor({ "" })
   t.assert_eq(
     255,

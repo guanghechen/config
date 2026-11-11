@@ -41,11 +41,8 @@ end
 t:test("a failed conversion is never ready, even when its source stays readable", function()
   local Image = assert(loadfile("lua/era/m/image/image.lua"))()
   -- A PNG needs no conversion, so a broken one keeps the readable source as its file.
-  local file = vim.fn.tempname() .. ".png" ---@type string
+  local file = vim.fs.joinpath(t:tempdir(), "broken.png") ---@type string
   vim.fn.writefile({ "not a png" }, file)
-  t:defer(function()
-    vim.fn.delete(file)
-  end)
 
   local failed = setmetatable({ file = file, convert = conversion(true, "identify: improper image header") }, Image)
   t.assert_false(failed:ready(), "failed conversion")

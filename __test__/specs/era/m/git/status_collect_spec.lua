@@ -126,6 +126,10 @@ t:test("poll scheduling coalesces while the editor is busy", function()
     queued[#queued + 1] = callback
   end)
   local future = new_status().collect()
+  t.wait_until(function()
+    return #queued > 0
+  end, 5000, "the poll timer must queue a poll callback")
+  -- Later timer ticks within this window must coalesce into the queued callback.
   vim.wait(30, function()
     return false
   end, 1)
@@ -135,6 +139,7 @@ t:test("poll scheduling coalesces while the editor is busy", function()
   t.assert_true(future:is_done(), "queued poll publishes")
 end)
 
+-- Exit leaves era.m.job rejecting every later run in this process, so this case must stay last.
 t:test("exit cancels active jobs and prevents new work", function()
   local job = new_job()
   local status = new_status()

@@ -11,11 +11,7 @@ local paths = require("ux.filetree.path")
 ---@param names                         string[]
 ---@return table
 local function fixture(names)
-  local directory = paths.from_os(vim.fn.tempname())
-  vim.fn.mkdir(directory, "p")
-  t:defer(function()
-    vim.fn.delete(directory, "rf")
-  end)
+  local directory = paths.from_os(t:tempdir())
   t:patch_table(dot.path, "workspace", function()
     return directory
   end)
@@ -194,20 +190,21 @@ t:test("discard does not recursively remove an ordinary directory", function()
   t.assert_eq(0, f.state.refreshed)
 end)
 
-if not stl.env.IS_WIN then
-  t:test("discard removes a directory symlink without following it", function()
-    local f = fixture({ "link" })
-    vim.fn.mkdir(f.directory .. "/target", "p")
-    vim.fn.writefile({ "keep" }, f.directory .. "/target/child.txt")
-    assert(vim.uv.fs_symlink("target", f.path))
-    local ok, result = settle(action.reset(f.context))
-    t.assert_true(ok, result)
-    t.assert_true(result.success, result.error)
-    t.assert_nil(vim.uv.fs_lstat(f.path))
-    t.assert_eq("keep", vim.fn.readfile(f.directory .. "/target/child.txt")[1])
-    t.assert_eq(1, f.state.refreshed)
-  end)
-end
+t:test("discard removes a directory symlink without following it", function()
+  if stl.env.IS_WIN then
+    t.skip("needs Unix directory symlinks")
+  end
+  local f = fixture({ "link" })
+  vim.fn.mkdir(f.directory .. "/target", "p")
+  vim.fn.writefile({ "keep" }, f.directory .. "/target/child.txt")
+  assert(vim.uv.fs_symlink("target", f.path))
+  local ok, result = settle(action.reset(f.context))
+  t.assert_true(ok, result)
+  t.assert_true(result.success, result.error)
+  t.assert_nil(vim.uv.fs_lstat(f.path))
+  t.assert_eq("keep", vim.fn.readfile(f.directory .. "/target/child.txt")[1])
+  t.assert_eq(1, f.state.refreshed)
+end)
 
 t:test("closing the workspace while capture is pending suppresses the late Job", function()
   local f = fixture({ "keep.txt" })

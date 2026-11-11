@@ -15,11 +15,8 @@ local wait = embedded.wait
 ---@param ui                            __test__.support.UI
 ---@return string
 local function reload_target(ui)
-  local path = vim.fn.tempname() .. ".lua"
+  local path = t:tempdir() .. "/reloaded.lua"
   vim.fn.writefile({ "old", "fo" }, path)
-  t:defer(function()
-    vim.fn.delete(path)
-  end)
   ui:lua(
     [[
     vim.cmd.edit({ args = { ... }, bang = true })
@@ -274,12 +271,9 @@ for _, independent in ipairs({ false, true }) do
           or [[return vim.api.nvim_get_current_line() == 'albatross']],
         "acceptance completes and any fresh list uses the accepted input"
       )
-      t.assert_true(
-        vim.wait(3000, function()
-          return ui:lua([[return vim.api.nvim_get_current_line()]]) == (independent and "alpine" or "albatross")
-        end, 5),
-        "acceptance uses an eligible item"
-      )
+      ui:wait_until(function()
+        return ui:lua([[return vim.api.nvim_get_current_line()]]) == (independent and "alpine" or "albatross")
+      end, 5000, "acceptance uses an eligible item")
     end
   )
 end
@@ -676,16 +670,19 @@ t:test("complete LSP lists retain their snapshot while the prefix grows and shri
     { "<BS><BS><BS>d", "abcd" },
   }) do
     ui:rpc("nvim_input", step[1])
-    t.wait_until(function()
+    ui:wait_until(function()
       return ui:lua(
         [[return vim.api.nvim_get_current_line() == ... and require('era.keystroke.cmp').is_menu_visible()]],
         step[2]
       )
-    end, 3000, "filtered list after " .. step[1])
+    end, 5000, "filtered list after " .. step[1])
     vim.wait(30)
     t.assert_eq(created, ui:lua([[return cmp_snapshot_creations]]), "cached native candidate set after " .. step[1])
     if index == 1 then
-      t.assert_eq(updates + 1, ui:lua([[return cmp_menu_updates]]), "unchanged source snapshot is not rendered twice")
+      -- The key's refresh is scheduled; the previous render keeps the menu visible until it runs.
+      ui:wait_until(function()
+        return ui:lua([[return cmp_menu_updates]]) == updates + 1
+      end, 5000, "unchanged source snapshot is not rendered twice")
     end
   end
   t.assert_eq(
@@ -763,7 +760,7 @@ for _, example in ipairs({
         additionalTextEdits={{newText='IMPORT\n',range={start={line=0,character=0},['end']={line=0,character=0}}}},
         command={title='accepted',command='fixture.accepted'}}})
     end]],
-      [[return function(item) return item, 1000 end]]
+      [[return function(item) return item, 300 end]]
     )
     ui:rpc("nvim_input", "i")
     wait(ui, [[return vim.fn.complete_info({'selected'}).selected == 0]], "native selection settled")
@@ -777,7 +774,8 @@ for _, example in ipairs({
       example
     )
     wait(ui, [[return not require('era.keystroke.cmp').is_menu_visible()]], "stale completion dismissed")
-    vim.wait(120)
+    -- The window outlasts the 300 ms resolve, so a late import or command would show.
+    vim.wait(400)
     t.assert_true(
       ui:lua([[return vim.deep_equal({'-- imports',...},vim.api.nvim_buf_get_lines(0,0,-1,false))]], example.expected),
       "external edit remains intact and no import is applied"

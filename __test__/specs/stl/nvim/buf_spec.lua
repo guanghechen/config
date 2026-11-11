@@ -60,16 +60,13 @@ t:test("POSIX lookup keeps literal backslashes distinct from separators", functi
   local prefix = vim.fn.tempname()
   local literal = prefix .. "/back\\slash.lua"
   local nested = prefix .. "/back/slash.lua"
-  local literal_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  local nested_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local literal_bufnr = create_buffer()
+  local nested_bufnr = create_buffer()
   vim.api.nvim_buf_set_name(literal_bufnr, literal)
   vim.api.nvim_buf_set_name(nested_bufnr, nested)
 
   t.assert_eq(literal_bufnr, buf.locate_bufnr(literal), "literal backslash buffer")
   t.assert_eq(nested_bufnr, buf.locate_bufnr(nested), "nested path buffer")
-
-  vim.api.nvim_buf_delete(literal_bufnr, { force = true })
-  vim.api.nvim_buf_delete(nested_bufnr, { force = true })
 end)
 
 t:test("POSIX lookup keeps literal environment variables distinct from expanded paths", function()
@@ -77,16 +74,13 @@ t:test("POSIX lookup keeps literal environment variables distinct from expanded 
   local expanded = vim.fs.normalize(literal)
   t.assert_true(literal ~= expanded, "fixture must exercise environment expansion")
 
-  local literal_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  local expanded_bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+  local literal_bufnr = create_buffer()
+  local expanded_bufnr = create_buffer()
   vim.api.nvim_buf_set_name(literal_bufnr, literal)
   vim.api.nvim_buf_set_name(expanded_bufnr, expanded)
 
   t.assert_eq(literal_bufnr, buf.locate_bufnr(literal), "literal environment variable buffer")
   t.assert_eq(expanded_bufnr, buf.locate_bufnr(expanded), "expanded path buffer")
-
-  vim.api.nvim_buf_delete(literal_bufnr, { force = true })
-  vim.api.nvim_buf_delete(expanded_bufnr, { force = true })
 end)
 
 t:test("refreshing a renamed buffer replaces the cached filepath", function()
@@ -94,6 +88,17 @@ t:test("refreshing a renamed buffer replaces the cached filepath", function()
   local bufnr = create_cached_buffer(prefix .. "-old.lua")
   local old_filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
   vim.api.nvim_buf_set_name(bufnr, prefix .. "-new.lua")
+  -- The rename leaves an unlisted buffer holding the old name.
+  for _, old_bufnr in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_get_name(old_bufnr) == old_filepath then
+      t:defer(function()
+        buf.on_buf_close(old_bufnr)
+        if vim.api.nvim_buf_is_valid(old_bufnr) then
+          vim.api.nvim_buf_delete(old_bufnr, { force = true })
+        end
+      end)
+    end
+  end
   local new_filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
   buf.on_buf_open(bufnr, new_filepath)
 

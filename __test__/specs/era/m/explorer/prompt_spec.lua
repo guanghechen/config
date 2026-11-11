@@ -4,19 +4,6 @@ local t = fixture.t
 local UI = require("__test__.support.ui")
 local Grid = require("__test__.support.ui_grid")
 
----@param predicate                     fun(): boolean
----@param timeout                       integer
----@return nil
-local function wait_for(predicate, timeout)
-  local deadline = vim.uv.hrtime() + timeout * 1000000
-  while not predicate() do
-    t.assert_true(vim.uv.hrtime() < deadline, "UI condition did not complete")
-    vim.wait(5, function()
-      return false
-    end, 5)
-  end
-end
-
 ---@param names                         string[]
 ---@return table
 local function open_ui(names)
@@ -59,7 +46,7 @@ end
 ---@return table
 local function dialog(context)
   local result
-  wait_for(function()
+  context.ui:wait_until(function()
     result = context.ui:lua([[
       local result, floats = nil, 0
       for _, winnr in ipairs(vim.api.nvim_list_wins()) do
@@ -79,7 +66,7 @@ local function dialog(context)
       return result
     ]])
     return result ~= nil
-  end, 10000)
+  end, 10000, "the input dialog must open")
   t.assert_eq(1, result.floats, "confirmation must use one compact surface")
   t.assert_eq("win", result.relative)
   t.assert_true(result.origin, "confirmation must stay anchored to the Explorer window")
@@ -91,9 +78,9 @@ end
 ---@return nil
 local function answer(context, keys)
   context.ui:rpc("nvim_input", keys)
-  wait_for(function()
+  context.ui:wait_until(function()
     return context.ui:lua("return not session:busy() and vim.api.nvim_get_current_win() == view.winnr")
-  end, 10000)
+  end, 10000, "the answer must settle the operation and return to the Explorer")
   local errors = context.ui:lua("return errors")
   t.assert_eq(0, #errors, vim.inspect(errors))
 end
@@ -107,9 +94,9 @@ t:test("single-file deletion uses one input line with y, n, Escape and default N
     t.assert_true(popup.width <= 80)
     t.assert_eq(1, #popup.lines)
     t.assert_eq("? (y/N)  ", popup.lines[1])
-    wait_for(function()
+    context.ui:wait_until(function()
       return context.grid:find('Permanently delete "b.rs"?') ~= nil
-    end, 10000)
+    end, 10000, "the delete confirmation must be drawn")
     answer(context, keys)
     t.assert_eq(keys ~= "y", vim.uv.fs_stat(context.path .. "/b.rs") ~= nil)
   end
@@ -128,7 +115,7 @@ t:test("multiple delete targets stay readable in a content-sized confirmation", 
   for index, name in ipairs(names) do
     t.assert_eq('"' .. name .. '"', popup.lines[index])
   end
-  wait_for(function()
+  context.ui:wait_until(function()
     if not context.grid:find("Permanently delete 3 items?") then
       return false
     end
@@ -138,7 +125,7 @@ t:test("multiple delete targets stay readable in a content-sized confirmation", 
       end
     end
     return true
-  end, 10000)
+  end, 10000, "the confirmation must draw every target")
   answer(context, "<Esc>")
   for _, name in ipairs(names) do
     t.assert_true(vim.uv.fs_stat(context.path .. "/" .. name) ~= nil)
@@ -173,12 +160,12 @@ t:test("overwrite shows source and target without a picker and defaults to Skip"
     t.assert_true(popup.lines[2]:find("a.txt", 1, true) ~= nil)
     answer(context, keys)
     t.assert_eq(keys == "y" and "a.txt" or "b.txt", vim.fn.readfile(context.path .. "/b.txt")[1])
-    wait_for(function()
+    context.ui:wait_until(function()
       return context.ui:lua(
         "return widget:get_cursor_filepath() == ...",
         context.path .. (keys == "y" and "/b.txt" or "/a.txt")
       )
-    end, 10000)
+    end, 10000, "the cursor must follow the overwrite result")
   end
 end)
 
@@ -188,17 +175,17 @@ t:test("real path inputs preserve successful copy and move following across thei
   local popup = dialog(context)
   t.assert_true(popup.lines[1]:find("source-copy.txt", 1, true) ~= nil)
   answer(context, "<CR>")
-  wait_for(function()
+  context.ui:wait_until(function()
     return context.ui:lua("return widget:get_cursor_filepath() == ...", context.path .. "/source-copy.txt")
-  end, 10000)
+  end, 10000, "the cursor must follow the copy")
   local target = t:tempdir() .. "/moved.txt"
   context.ui:rpc("nvim_input", "x")
   dialog(context)
   context.ui:lua("vim.api.nvim_buf_set_lines(vim.api.nvim_get_current_buf(), 0, -1, false, {...})", target)
   answer(context, "<CR>")
-  wait_for(function()
+  context.ui:wait_until(function()
     return context.ui:lua("return widget:get_cursor_filepath() == ...", target)
-  end, 10000)
+  end, 10000, "the cursor must follow the move")
   t.assert_true(vim.uv.fs_stat(target) ~= nil)
   t.assert_eq(nil, vim.uv.fs_stat(context.path .. "/source-copy.txt"))
 end)
@@ -216,12 +203,12 @@ t:test("create input shows the current directory prefix and accepts normal appen
   popup = dialog(context)
   t.assert_eq("folder/", popup.lines[1])
   context.ui:rpc("nvim_input", "Achild.txt<CR>")
-  wait_for(function()
+  context.ui:wait_until(function()
     return context.ui:lua(
       "return not session:busy() and vim.api.nvim_buf_get_name(vim.api.nvim_get_current_buf()) == vim.uv.fs_realpath(...)",
       context.path .. "/folder/child.txt"
     )
-  end, 10000)
+  end, 10000, "the created file must open")
   t.assert_true(vim.uv.fs_stat(context.path .. "/folder/child.txt") ~= nil)
   t.assert_eq(0, context.ui:lua("return #errors"))
 end)
@@ -233,9 +220,9 @@ t:test("a newline in the create parent keeps a usable input and the original dir
   t.assert_eq(1, popup.height)
   t.assert_eq("", popup.lines[1])
   context.ui:rpc("nvim_input", "ichild.txt<CR>")
-  wait_for(function()
+  context.ui:wait_until(function()
     return context.ui:lua("return not session:busy() and vim.uv.fs_stat(...) ~= nil", context.path .. "/a\nb/child.txt")
-  end, 10000)
+  end, 10000, "the file must be created inside the directory with a newline")
   t.assert_true(vim.uv.fs_stat(context.path .. "/a\nb/child.txt") ~= nil)
   t.assert_eq(nil, vim.uv.fs_stat(context.path .. "/child.txt"))
   t.assert_eq(0, context.ui:lua("return #errors"))
@@ -253,9 +240,9 @@ t:test("confirmation descriptions preserve trailing colons and spaces exactly", 
   t.assert_eq("Target: target:", popup.lines[1])
   t.assert_eq("Source: source:  ", popup.lines[2])
   answer(context, "<CR>")
-  wait_for(function()
+  context.ui:wait_until(function()
     return context.ui:lua("return reply ~= false")
-  end, 10000)
+  end, 10000, "the confirmation must reply")
   t.assert_eq("", context.ui:lua("return reply"))
 end)
 

@@ -25,9 +25,9 @@ t:test("Tab fallback preserves queued input and existing mappings", function()
     )
     ui:rpc("nvim_input", "i<Tab>x")
     local expected = mapped and "mappedx" or "\tx"
-    t.wait_until(function()
+    ui:wait_until(function()
       return ui:lua("return vim.api.nvim_get_current_line()") == expected
-    end, 1000, "Tab precedes the next queued character")
+    end, 5000, "Tab precedes the next queued character")
   end
 end)
 
@@ -51,9 +51,9 @@ t:test("disabled completion preserves native keys and existing mappings", functi
       )
       ui:rpc("nvim_input", example.keys)
       local expected = mapped and example.mapped or example.native
-      t.wait_until(function()
+      ui:wait_until(function()
         return vim.deep_equal(expected, ui:lua("return vim.api.nvim_buf_get_lines(0, 0, -1, false)"))
-      end, 1000, example.key .. " preserves queued input")
+      end, 5000, example.key .. " preserves queued input")
       t.assert_false(ui:lua("return require('era.keystroke.cmp').is_menu_visible()"))
     end
   end
@@ -136,11 +136,8 @@ t:test("Tab without a menu or snippet inserts a tab instead of running an Insert
 end)
 
 t:test("insert keys come back when :bdelete reopens the same buffer number", function()
-  local path = vim.fn.tempname() .. ".lua"
+  local path = t:tempdir() .. "/reopened.lua"
   vim.fn.writefile({ "local value = 1" }, path)
-  t:defer(function()
-    vim.fn.delete(path)
-  end)
   local ui = editor({ "" })
   -- Entering Insert mode binds the keys; the buffer number tells whose <CR> map is in place.
   ---@return integer|nil

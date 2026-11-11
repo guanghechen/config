@@ -126,9 +126,9 @@ t:test("result ids filter a treeview in rank order with the nodes shown under ea
     filter = ids,
   }))
   t.assert_eq("table", type(state), vim.inspect(state))
-  vim.wait(5000, function()
+  t.wait_until(function()
     return state:snapshot():header().row_count == 3
-  end)
+  end, 5000, "filtered rows")
   local frame = state:snapshot()
   local rows = frame:row_keys(1, frame:header().row_count)
   t.assert_same({ "item:3", "item:1", "item:1:location" }, rows)

@@ -107,7 +107,6 @@ end)
 
 t:test("exact native mapping is resolved after the which-key tree was built", function()
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  ---@diagnostic disable-next-line: invisible
   t:defer(function()
     State.buf_trees[bufnr] = nil
     if vim.api.nvim_buf_is_valid(bufnr) then
@@ -134,7 +133,6 @@ t:test("exact nowait mapping executes without reading a third key", function()
   local reads = 0
   local executed = nil ---@type {node: era.dressing.whichkey.INode|nil, keys: string}|nil
   local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
-  ---@diagnostic disable-next-line: invisible
   t:defer(function()
     if vim.api.nvim_buf_is_valid(bufnr) then
       vim.api.nvim_buf_delete(bufnr, { force = true })
@@ -318,7 +316,11 @@ t:test("passed-through keys get no register prefix that 'clipboard' does not nam
   t:patch_table(vim.fn, "has", function(feature)
     return feature == "clipboard" and 1 or has(feature)
   end)
-  t:patch_table(vim.o, "clipboard", "")
+  local clipboard = vim.api.nvim_get_option_value("clipboard", {}) ---@type string
+  t:defer(function()
+    vim.api.nvim_set_option_value("clipboard", clipboard, {})
+  end)
+  vim.api.nvim_set_option_value("clipboard", "", {})
   local fed = {} ---@type string[]
   t:patch_table(vim.api, "nvim_feedkeys", function(keys)
     fed[#fed + 1] = keys

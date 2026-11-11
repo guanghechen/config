@@ -21,12 +21,11 @@ local function annotation(widget, name)
 end
 
 t:test("real Git queries and OS watch update staged, modified, untracked and ignored rows", function()
-  local path = t:tempdir()
+  local path = git.repo(t)
   for _, name in ipairs({ "a.lua", "b.lua", "c.lua" }) do
     fixture.write(path .. "/" .. name)
   end
   vim.fn.writefile({ "b.lua" }, path .. "/.gitignore")
-  git.run(path, { "init", "-q" })
   git.run(path, { "add", "a.lua", ".gitignore" })
   t:patch_table(dot.path, "is_git_repo", function()
     return true
@@ -63,8 +62,7 @@ t:test("real Git queries and OS watch update staged, modified, untracked and ign
       and Git.o_refreshed:snapshot().generation > generation
   end, 10000, "external filesystem changes must drive a real Git refresh")
 
-  local staged = vim.system({ "git", "-C", path, "add", "a.lua" }, { text = true }):wait()
-  t.assert_eq(0, staged.code, staged.stderr)
+  git.run(path, { "add", "a.lua" })
   await(Git.refresh_index())
   t.wait_until(function()
     local a = annotation(widget, "a.lua")
@@ -104,12 +102,11 @@ end)
 t:test(
   "expanding directories reads them without a Git refresh, while a file changed on disk still asks for one",
   function()
-    local path = t:tempdir()
+    local path = git.repo(t)
     for _, name in ipairs({ "a", "b", "c" }) do
       assert(vim.uv.fs_mkdir(path .. "/" .. name, 448))
       fixture.write(path .. "/" .. name .. "/file.lua")
     end
-    git.run(path, { "init", "-q" })
     t:patch_table(dot.path, "is_git_repo", function()
       return true
     end)
@@ -119,10 +116,18 @@ t:test(
       return stl.c.Future.resolve()
     end)
     local widget = fixture.widget(path, { o_flag_hidden = stl.c.Observable.from_value(false) })
-    local session = widget:context()
+    local session, view = widget:context()
     t.wait_until(function()
       return session.data:watch_status().directories > 0 and session.data:native():is_settled()
     end, 10000)
+    -- The watch can deliver the fixture's own events after it settles; their activity reaches Git with the next
+    -- listing change. It delivers events in order, so once a directory created now is listed, they are consumed.
+    assert(vim.uv.fs_mkdir(path .. "/sentinel", 448))
+    t.wait_until(function()
+      local frame = view:frame()
+      return vim.list_contains(frame:rows(1, frame:header().row_count).labels, "sentinel")
+        and session.data:native():is_settled()
+    end, 10000, "a directory created on disk must be listed")
     refreshes = 0
 
     for _, name in ipairs({ "a", "b", "c" }) do
