@@ -7,10 +7,12 @@ import { join } from "node:path"
 
 // Claude Code keeps a static terminal title under multiplexers, so a busy pane looks
 // idle. Report activity as an OSC 9;4 progress state instead; tmux captures it as
-// pane_pb_state. Background subagents outlive the turn, so busy means any live subagent
-// or an open turn not waiting on the user, tracked as one marker file each under a
-// per-session directory.
+// pane_pb_state. Background subagents outlive the turn, so busy means an open turn or
+// any live subagent, tracked as one marker file each under a per-session directory.
+// A pending question reports paused and outranks busy: the user is needed even while
+// subagents run.
 const BUSY = "\x1b]9;4;3\x07"
+const WAITING = "\x1b]9;4;4\x07"
 const IDLE = "\x1b]9;4;0\x07"
 
 main()
@@ -21,9 +23,14 @@ function main() {
   const dir = join(tmpdir(), "claude-progress", event.session_id)
   const name = event.hook_event_name
   const marker = join(dir, name.startsWith("Subagent") ? `agent-${event.agent_id}` : "turn")
+  const question = join(dir, "question")
 
   switch (event.tool_name ? `${name}:${event.tool_name}` : name) {
     case "UserPromptSubmit":
+      mkdirSync(dir, { recursive: true })
+      writeFileSync(marker, "")
+      rmSync(question, { force: true })
+      break
     case "SubagentStart":
       mkdirSync(dir, { recursive: true })
       writeFileSync(marker, "")
@@ -32,18 +39,21 @@ function main() {
     case "Stop":
     case "StopFailure":
     case "Notification":
+      rmSync(marker, { force: true })
+      rmSync(question, { force: true })
+      break
     case "SubagentStop":
       rmSync(marker, { force: true })
       break
-    // A question parks the open turn until PostToolUse delivers the answer. The bell alone
-    // cannot mark the wait: tmux records none on a visible window and clears it once
-    // viewed. Declining or "Chat about this" denies the tool, so no PostToolUse follows.
+    // The bell alone cannot mark a pending question: tmux records none on a visible window
+    // and clears it once viewed. Declining or "Chat about this" denies the tool without
+    // PostToolUse, so the turn boundaries above clear the question as well.
     case "PreToolUse:AskUserQuestion":
-      rmSync(marker, { force: true })
+      mkdirSync(dir, { recursive: true })
+      writeFileSync(question, "")
       break
     case "PostToolUse:AskUserQuestion":
-      mkdirSync(dir, { recursive: true })
-      writeFileSync(marker, "")
+      rmSync(question, { force: true })
       break
     // TaskStop kills a subagent without firing SubagentStop; its task_id is the agent_id.
     case "PostToolUse:TaskStop":
@@ -60,7 +70,7 @@ function main() {
   }
 
   const tty = terminalTty()
-  if (tty) tryWrite(tty, isBusy(dir) ? BUSY : IDLE)
+  if (tty) tryWrite(tty, progressOf(dir))
 }
 
 function readEvent() {
@@ -71,12 +81,15 @@ function readEvent() {
   }
 }
 
-function isBusy(dir) {
+function progressOf(dir) {
+  let markers
   try {
-    return readdirSync(dir).length > 0
+    markers = readdirSync(dir)
   } catch {
-    return false
+    return IDLE
   }
+  if (markers.includes("question")) return WAITING
+  return markers.length > 0 ? BUSY : IDLE
 }
 
 // Hook subprocesses have no controlling terminal. Claude Code runs them through a shell,
