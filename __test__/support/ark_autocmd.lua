@@ -5,10 +5,9 @@ local __module_name__ = "__test__.support.ark_autocmd" ---@type string
 
 local M = {}
 
----Records each autocommand created until the case ends in `autocmds` and its event in `events`, both by group, instead
----of creating it. Creating a group meanwhile returns its name.
----Records the autocommands created from now on instead of creating them, until the case ends or the returned function
----stops the recording.
+---Records each autocommand created from now on in `autocmds` and its event in `events`, both by group, instead of
+---creating it, until the case ends or the returned function stops the recording. Creating a group meanwhile returns
+---its name.
 ---@param t                             __test__.support.Harness
 ---@param autocmds                      table<string, table>
 ---@param events                        table<string, string|string[]>
@@ -29,8 +28,8 @@ function M.record(t, autocmds, events)
 end
 
 ---Loads `lua/ark/autocmd.lua` without registering its autocommands, and returns them and their events by group. Only
----the module's own autocommands are recorded: those the runtime creates later in the case, such as `syntaxset` when a
----filetype enables syntax, are created as usual.
+---the module's own autocommands are recorded: those the runtime creates later in the case, such as the `syntaxset`
+---group Treesitter highlighting creates when it loads syntax, are created as usual.
 ---@param t                             __test__.support.Harness
 ---@return table<string, table> autocmds
 ---@return table<string, string|string[]> events
