@@ -173,9 +173,9 @@ t:test("stage and unstage report Git failures without refreshing", function()
   local refreshes = diffview.count_refreshes(t, session.state)
   local reports = bootstrap.with_reporter(t).error
   diffview.record_git(t, function(args)
-    if args[2] == "add" then
+    if args[1] == "add" then
       return 128, "fatal: Unable to create '.git/index.lock'\n"
-    elseif args[2] == "reset" then
+    elseif args[1] == "reset" then
       return 1, ""
     end
   end)
@@ -213,7 +213,7 @@ t:test("discarding a tracked file restores it and refreshes", function()
 
   local index = diffview.index_calls(calls)
   t.assert_eq(1, #index, "git calls")
-  t.assert_same({ "--literal-pathspecs", "checkout", "--", "tracked.txt" }, index[1].args, "checkout")
+  t.assert_same({ "checkout", "--", "tracked.txt" }, index[1].args, "checkout")
   t.assert_eq(root, index[1].opts.cwd, "cwd")
   t.assert_eq("base", vim.fn.readfile(root .. "/tracked.txt")[1], "restored")
   t.assert_eq(1, refreshes.requested, "refresh calls")
@@ -227,7 +227,7 @@ t:test("discard reports a tracked failure without refreshing", function()
   local refreshes = diffview.count_refreshes(t, session.state)
   local reports = bootstrap.with_reporter(t).error
   diffview.record_git(t, function(args)
-    if args[2] == "checkout" then
+    if args[1] == "checkout" then
       return 128, "fatal: checkout failed\n"
     end
   end)

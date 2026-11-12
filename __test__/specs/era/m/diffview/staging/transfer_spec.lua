@@ -11,8 +11,7 @@ local action = require("era.m.diffview.view.workspace.action")
 ---@param expected                      string[]
 ---@return nil
 local function assert_transfer_call(call, command, root, expected)
-  t.assert_eq("--literal-pathspecs", call.args[1], "literal pathspecs")
-  t.assert_eq(command, call.args[2], "git command")
+  t.assert_eq(command, call.args[1], "git command")
   t.assert_eq("--pathspec-from-file=-", call.args[#call.args - 1], "pathspec stdin")
   t.assert_eq("--pathspec-file-nul", call.args[#call.args], "NUL pathspecs")
   t.assert_eq(root, call.opts.cwd, "cwd")
@@ -44,7 +43,7 @@ t:test("Changes rows stage and unstage the entry at the cursor rather than the p
   assert_transfer_call(index[1], "add", root, { "b.txt" })
   t.assert_eq("rev-parse", index[2].args[1], "HEAD probe")
   assert_transfer_call(index[3], "reset", root, { "c.txt" })
-  t.assert_eq("HEAD", index[3].args[3], "reset target")
+  t.assert_eq("HEAD", index[3].args[2], "reset target")
   t.assert_eq(2, refreshes.requested, "refresh calls")
 end)
 
@@ -110,7 +109,7 @@ t:test("staging a directory sends every unstaged descendant through stdin", func
   local session = diffview.open_workspace(t)
   -- Git never sees the generated paths: the add succeeds without it.
   local calls = diffview.record_git(t, function(args)
-    if args[2] == "add" then
+    if args[1] == "add" then
       return 0, ""
     end
   end)
@@ -135,7 +134,7 @@ t:test("staging a directory sends every unstaged descendant through stdin", func
   diffview.await_refreshes(refreshes, 1)
 
   local call = diffview.index_calls(calls)[1]
-  t.assert_eq(4, #call.args, "argv stays fixed as external renames grow")
+  t.assert_eq(3, #call.args, "argv stays fixed as external renames grow")
   local pathspecs = diffview.pathspecs(call)
   t.assert_eq(40004, #pathspecs, "all exact snapshot paths")
   local positions = {} ---@type table<string, integer>
@@ -176,8 +175,8 @@ t:test("unstaging a directory resets its staged descendants to HEAD", function()
 
   local index = diffview.index_calls(calls)
   t.assert_eq("rev-parse", index[1].args[1], "HEAD probe")
-  t.assert_eq("reset", index[2].args[2], "git command")
-  t.assert_eq("HEAD", index[2].args[3], "reset target")
+  t.assert_eq("reset", index[2].args[1], "git command")
+  t.assert_eq("HEAD", index[2].args[2], "reset target")
   local pathspecs = diffview.pathspecs(index[2])
   t.assert_eq(
     "src/new.lua",
@@ -205,8 +204,8 @@ t:test("unstaging a directory before the first commit removes its descendants fr
   local index = diffview.index_calls(calls)
   t.assert_eq("rev-parse", index[1].args[1], "unborn HEAD probe")
   assert_transfer_call(index[2], "rm", root, { "src/new.lua" })
-  t.assert_eq("--cached", index[2].args[3], "cached only")
-  t.assert_eq("-f", index[2].args[4], "force index removal")
+  t.assert_eq("--cached", index[2].args[2], "cached only")
+  t.assert_eq("-f", index[2].args[3], "force index removal")
   t.assert_eq(1, refreshes.requested, "unborn refresh")
 end)
 

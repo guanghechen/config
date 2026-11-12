@@ -77,7 +77,6 @@ function M.collect_untracked(cwd, paths, token)
   local env = { GIT_INDEX_FILE = directory .. "/index" }
   local ok, result = pcall(function()
     local added = execute({
-      "--literal-pathspecs",
       "add",
       "-N",
       "--pathspec-from-file=-",

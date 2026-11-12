@@ -184,18 +184,14 @@ function M:_start()
   self._requested = epoch
   local token = stl.c.CancellationToken.new()
   self._token = token
-  local command = {
-    "git",
-    "-C",
-    yoz.canonical_path.to_os_path(root),
+  local command = stl.git.exec.command({
     "--no-optional-locks",
-    "--literal-pathspecs",
     "diff",
     "--no-ext-diff",
     "--no-textconv",
     "--no-color",
     "--unified=3",
-  }
+  }, root)
   local untracked = entry.status == "?"
   if untracked then
     vim.list_extend(command, { "--no-index", "--", jit.os == "Windows" and "NUL" or "/dev/null", entry.path })

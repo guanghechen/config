@@ -46,7 +46,7 @@ t:test("exec_async forwards Git stderr on failure", function()
     result = { lines = lines, code = code, stderr = stderr }
   end)
 
-  t.assert_eq("git -C /repo add -- file.txt", table.concat(command, " "), "command")
+  t.assert_eq("git -C /repo --literal-pathspecs add -- file.txt", table.concat(command, " "), "command")
   local actual = assert(result, "callback result")
   t.assert_eq(0, #actual.lines, "stdout lines")
   t.assert_eq(128, actual.code, "exit code")
@@ -79,7 +79,37 @@ t:test("exec_async converts only the Git working directory to an OS path", funct
   exec.exec_async({ "add", "--", "lua/era/m/git/status.lua" }, { cwd = "C:/repo" }, function() end)
 
   t.assert_eq([[C:\repo]], command[3], "OS cwd")
-  t.assert_eq("lua/era/m/git/status.lua", command[6], "canonical Git pathspec")
+  t.assert_eq("lua/era/m/git/status.lua", command[7], "canonical Git pathspec")
+end)
+
+t:test("every Git command takes its paths as literal pathspecs", function()
+  t.assert_same(
+    { "git", "-C", "/repo", "--literal-pathspecs", "log", "--", "a[1].txt" },
+    exec.command({ "log", "--", "a[1].txt" }, "/repo"),
+    "in a repository"
+  )
+  t.assert_same(
+    { "git", "--literal-pathspecs", "clone", "https://example.test/repo.git", "/repos/example" },
+    exec.command({ "clone", "https://example.test/repo.git", "/repos/example" }),
+    "without a working directory"
+  )
+end)
+
+t:test("a file's history and latest commit leave out the files its name matches as a glob", function()
+  local repo = git.repo(t)
+  vim.fn.writefile({ "x" }, repo .. "/a[1].txt")
+  git.commit(repo, "add a[1]")
+  vim.fn.writefile({ "y" }, repo .. "/a1.txt")
+  git.commit(repo, "add a1")
+  vim.fn.writefile({ "y2" }, repo .. "/a1.txt")
+  git.commit(repo, "edit a1")
+
+  -- Diffview's file history and the browse permalink ask in these shapes, through exec and exec_sync.
+  local history = assert(t.await(exec.exec({ "log", "--follow", "--format=%s", "--", "a[1].txt" }, { cwd = repo })))
+  t.assert_same({ "add a[1]" }, history.lines, "history")
+  local latest, code = exec.exec_sync({ "log", "-n", "1", "--pretty=format:%s", "--", "a[1].txt" }, { cwd = repo })
+  t.assert_eq(0, code, "latest commit exit code")
+  t.assert_same({ "add a[1]" }, latest, "latest commit")
 end)
 
 t:test("exec_async preserves canonical and native UNC roots", function()

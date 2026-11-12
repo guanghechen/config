@@ -15,7 +15,9 @@
   blame 查询、buffer ownership 与 extmarks；`diff` 封装 Neovim histogram diff 与 native word-diff；`numstat` 为
   Git Files 与 Diffview 提供 untracked 行数统计。
 
-Git 命令执行、repo info 与在浏览器打开 remote URL 由 `stl.git` 提供，不属于 `era.m.git`。
+Git 命令执行、repo info 与在浏览器打开 remote URL 由 `stl.git` 提供，不属于 `era.m.git`。Lua 侧的 Git 命令行统一由
+`stl.git.exec.command` 生成，自行管理进程的调用方也用它；路径一律按字面 pathspec 处理（`--literal-pathspecs`），
+`a[1].txt` 不会作为通配再匹配 `a1.txt`。
 
 Status / ignore / blame、staging 与 word-diff 纯计算位于 `yoz` crate 内的 `rust/yoz/src/git/`，不单独创建 Git crate。
 Status / ignore / blame 查询在 native worker 中执行并发布 immutable snapshot；staging 与 word-diff 在调用线程同步计算。

@@ -50,7 +50,7 @@ t:test("staging a rename adds its source and destination, staging the whole rena
   diffview.await_refreshes(refreshes, 1)
 
   local index = diffview.index_calls(calls)
-  t.assert_eq("add", index[1].args[2], "git command")
+  t.assert_eq("add", index[1].args[1], "git command")
   t.assert_same({ "old.lua", "new.lua" }, diffview.pathspecs(index[1]), "source and destination")
   local cached = git.run(root, { "diff", "--staged", "--name-status", "--" })
   t.assert_true(cached:find("old.lua", 1, true) ~= nil, "source staged")
@@ -72,8 +72,8 @@ t:test("unstaging a rename resets its source and destination, leaving no staged 
 
   local index = diffview.index_calls(calls)
   t.assert_eq("rev-parse", index[1].args[1], "HEAD probe")
-  t.assert_eq("reset", index[2].args[2], "git command")
-  t.assert_eq("HEAD", index[2].args[3], "reset target")
+  t.assert_eq("reset", index[2].args[1], "git command")
+  t.assert_eq("HEAD", index[2].args[2], "reset target")
   t.assert_same({ "old.lua", "new.lua" }, diffview.pathspecs(index[2]), "source and destination")
   t.assert_eq("", staged_names(root), "index has no staged rename residue")
   t.assert_eq(1, refreshes.requested, "refresh calls")

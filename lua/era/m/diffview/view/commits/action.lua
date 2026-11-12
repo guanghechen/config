@@ -688,7 +688,7 @@ function M.restore_file(ctx)
 
     -- Git's own checkout writes the file, so line endings, binary content and filters come out as committed.
     stl.git.exec.exec_async(
-      { "--literal-pathspecs", "restore", "--source=" .. commit.hash, "--worktree", "--", filepath },
+      { "restore", "--source=" .. commit.hash, "--worktree", "--", filepath },
       { cwd = dot.path.workspace() },
       function(_, code, stderr)
         if code ~= 0 then

@@ -12,6 +12,24 @@ local M = {}
 ---@field public code                   integer
 ---@field public stderr                 string
 
+---The command line that runs Git with `args`, in `cwd` when given. Every command takes its paths as literal pathspecs:
+---as a glob, `a[1].txt` would also match `a1.txt`, so a stage, checkout or history of it would take in that file too.
+---@param args                          string[]
+---@param cwd                           string|nil
+---@return string[]
+function M.command(args, cwd)
+  local cmd = { "git" }
+  if cwd then
+    cmd[#cmd + 1] = "-C"
+    cmd[#cmd + 1] = yoz.canonical_path.to_os_path(cwd)
+  end
+  cmd[#cmd + 1] = "--literal-pathspecs"
+  for _, arg in ipairs(args) do
+    cmd[#cmd + 1] = arg
+  end
+  return cmd
+end
+
 ---Execute git command asynchronously (async/await version).
 ---Returns stdout only on success, while always preserving the exit code and stderr.
 ---@param args                          string[]
@@ -25,14 +43,7 @@ function M.exec(args, opts, token)
       return
     end
 
-    local cmd = { "git" }
-    if opts and opts.cwd then
-      cmd[#cmd + 1] = "-C"
-      cmd[#cmd + 1] = yoz.canonical_path.to_os_path(opts.cwd)
-    end
-    for _, arg in ipairs(args) do
-      cmd[#cmd + 1] = arg
-    end
+    local cmd = M.command(args, opts and opts.cwd)
 
     local raw = opts ~= nil and opts.raw == true
     local system_opts = {
@@ -75,14 +86,7 @@ end
 ---@param opts                          { cwd: string|nil, stdin: string|nil }|nil
 ---@param callback                      fun(lines: string[], code: integer, stderr: string): nil
 function M.exec_async(args, opts, callback)
-  local cmd = { "git" }
-  if opts and opts.cwd then
-    cmd[#cmd + 1] = "-C"
-    cmd[#cmd + 1] = yoz.canonical_path.to_os_path(opts.cwd)
-  end
-  for _, arg in ipairs(args) do
-    cmd[#cmd + 1] = arg
-  end
+  local cmd = M.command(args, opts and opts.cwd)
 
   vim.system(cmd, { text = true, stdin = opts and opts.stdin or nil }, function(obj)
     vim.schedule(function()
@@ -104,14 +108,7 @@ end
 ---@return string[]
 ---@return integer
 function M.exec_sync(args, opts)
-  local cmd = { "git" }
-  if opts and opts.cwd then
-    cmd[#cmd + 1] = "-C"
-    cmd[#cmd + 1] = yoz.canonical_path.to_os_path(opts.cwd)
-  end
-  for _, arg in ipairs(args) do
-    cmd[#cmd + 1] = arg
-  end
+  local cmd = M.command(args, opts and opts.cwd)
 
   local obj = vim.system(cmd, { text = true }):wait()
   local lines = {}

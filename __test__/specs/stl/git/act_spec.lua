@@ -1,5 +1,7 @@
 local bootstrap = require("__test__.support.bootstrap")
 local Future = require("stl.c.future")
+local fs = require("__test__.support.fs")
+local git = require("__test__.support.git")
 local harness = require("__test__.support.harness")
 
 local t = harness.new()
@@ -26,7 +28,7 @@ end)
 
 local act = require("stl.git.act")
 
-t:test("actions convert filesystem arguments without changing Git pathspecs", function()
+t:test("actions convert filesystem arguments and pass paths as literal pathspecs", function()
   local commands = {} ---@type string[][]
   t:patch_table(vim, "system", function(command, _, callback)
     commands[#commands + 1] = command
@@ -55,9 +57,33 @@ t:test("actions convert filesystem arguments without changing Git pathspecs", fu
     end
   end
   t.assert_eq("lua/era/m/git/status.lua", commands[1][#commands[1]], "add pathspec")
-  t.assert_eq("lua/era/m/git/status.lua", commands[4][7], "hash-object path")
+  t.assert_eq("lua/era/m/git/status.lua", commands[4][8], "hash-object path")
   t.assert_eq("lua/era/m/git/status.lua", commands[5][#commands[5]], "checkout pathspec")
   t.assert_eq("100644,abc123,lua/era/m/git/status.lua", commands[8][#commands[8]], "cacheinfo path")
+  -- Without it `a[1].txt` also matches `a1.txt`, so checkout would discard that file's changes too.
+  for _, index in ipairs({ 1, 5, 6, 7, 9 }) do
+    t.assert_eq("--literal-pathspecs", commands[index][4], "literal pathspecs " .. index)
+  end
+end)
+
+t:test("a bracketed path restores and stages only itself, not the files its pattern matches", function()
+  t:patch_table(yoz.canonical_path, "to_os_path", function(filepath)
+    return filepath
+  end)
+  local root = git.repo(t)
+  fs.write(root .. "/a[1].txt", { "x" })
+  fs.write(root .. "/a1.txt", { "y" })
+  git.commit(root, "base")
+  fs.write(root .. "/a[1].txt", { "x2" })
+  fs.write(root .. "/a1.txt", { "y2" })
+
+  t.assert_true(t.await(act.reset_file(root, "a[1].txt")), "restored")
+  t.assert_same({ "x" }, vim.fn.readfile(root .. "/a[1].txt"), "the path itself is restored")
+  t.assert_same({ "y2" }, vim.fn.readfile(root .. "/a1.txt"), "the file its pattern matches keeps its change")
+
+  fs.write(root .. "/a[1].txt", { "x3" })
+  t.assert_true(t.await(act.stage_file(root, "a[1].txt")), "staged")
+  t.assert_eq("a[1].txt\n", git.run(root, { "diff", "--cached", "--name-only" }), "only the path itself is staged")
 end)
 
 t:run()

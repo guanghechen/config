@@ -74,7 +74,7 @@ t:test("filesystem and Git boundaries convert canonical roots without changing r
 
   local future = info.get_show_blob("C:/repo", "HEAD:lua/era/m/git/status.lua")
   t.assert_eq([[C:\repo]], requests[1].argv[3], "OS Git cwd")
-  t.assert_eq("HEAD:lua/era/m/git/status.lua", requests[1].argv[6], "canonical revision path")
+  t.assert_eq("HEAD:lua/era/m/git/status.lua", requests[1].argv[7], "canonical revision path")
   requests[1].callback({ code = 0, stdout = "content" })
   t.assert_true(t.await(future).ok, "blob result")
 
@@ -108,7 +108,7 @@ t:test("get_object_name: resolves immutable identity and classifies absence", fu
   local present = info.get_object_name("/work", "HEAD:f.txt")
 
   t.assert_eq(
-    "git -C /work rev-parse --verify --quiet HEAD:f.txt",
+    "git -C /work --literal-pathspecs rev-parse --verify --quiet HEAD:f.txt",
     table.concat(requests[1].argv, " "),
     "resolution command"
   )
@@ -208,7 +208,7 @@ t:test("get_show_blob: treats an unborn revision as missing", function()
     return #requests == 3
   end, 5000, "revision verification should start")
   t.assert_eq(
-    "git -C /work rev-parse --verify --quiet HEAD",
+    "git -C /work --literal-pathspecs rev-parse --verify --quiet HEAD",
     table.concat(requests[3].argv, " "),
     "verification command"
   )
@@ -402,7 +402,7 @@ t:test("get_repo_info: resolves a branch with one process", function()
 
   t.assert_eq(1, #requests, "process count")
   t.assert_eq(
-    "git -C /work rev-parse --show-toplevel --absolute-git-dir --abbrev-ref HEAD",
+    "git -C /work --literal-pathspecs rev-parse --show-toplevel --absolute-git-dir --abbrev-ref HEAD",
     table.concat(requests[1].argv, " "),
     "command"
   )
@@ -424,7 +424,11 @@ t:test("get_repo_info: resolves detached HEAD with one fallback", function()
   t.wait_until(function()
     return #requests == 2
   end, 5000, "short HEAD process should start")
-  t.assert_eq("git -C /repo rev-parse --short HEAD", table.concat(requests[2].argv, " "), "fallback command")
+  t.assert_eq(
+    "git -C /repo --literal-pathspecs rev-parse --short HEAD",
+    table.concat(requests[2].argv, " "),
+    "fallback command"
+  )
 
   requests[2].callback({ code = 0, stdout = "1a2b3c4\n" })
   local result = t.await(future)

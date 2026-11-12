@@ -9,8 +9,16 @@ local git = require("__test__.support.git")
 bootstrap.with_global(t, "stl", { env = { IS_WIN = false } })
 bootstrap.with_global(t, "dot", {})
 bootstrap.with_global(t, "era", {})
+bootstrap.with_global(t, "yoz", {
+  canonical_path = {
+    to_os_path = function(filepath)
+      return filepath
+    end,
+  },
+})
 
 local data = require("era.m.diffview.data")
+local git_command = require("stl.git.exec").command
 
 ---Runs Git commands through `exec`, with awaited futures returned as they are, in the workspace `root` for the rest of
 ---the case.
@@ -31,14 +39,12 @@ local function use_git(exec, root)
   })
 end
 
----Runs a Git command as a real process.
+---Runs a Git command as a real process, with the command line `stl.git.exec` builds.
 ---@param args                          string[]
 ---@param opts                          stl.git.exec.IExecOpts
 ---@return stl.git.exec.IResult
 local function real_exec(args, opts)
-  local cmd = { "git", "-C", opts.cwd }
-  vim.list_extend(cmd, args)
-  local result = vim.system(cmd, { env = opts.env, stdin = opts.stdin, text = false }):wait()
+  local result = vim.system(git_command(args, opts.cwd), { env = opts.env, stdin = opts.stdin, text = false }):wait()
   return {
     code = result.code,
     lines = result.code == 0 and result.stdout ~= "" and { result.stdout } or {},
@@ -108,7 +114,7 @@ t:test("numstat: batches all untracked files through one isolated index", functi
 
   t.assert_eq(2, #commands, "fixed Git process count")
   t.assert_eq(
-    "--literal-pathspecs add -N --pathspec-from-file=- --pathspec-file-nul",
+    "add -N --pathspec-from-file=- --pathspec-file-nul",
     table.concat(commands[1], " "),
     "intent-to-add command"
   )

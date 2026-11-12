@@ -160,9 +160,10 @@ end
 ---@param calls                         T[]
 ---@return T[]
 function M.index_calls(calls)
+  local writes = { add = true, checkout = true, reset = true, restore = true, rm = true }
   return vim.tbl_filter(function(call)
     local args = call.args
-    return args[1] == "--literal-pathspecs" or (args[1] == "rev-parse" and args[#args] == "HEAD^{commit}")
+    return writes[args[1]] == true or (args[1] == "rev-parse" and args[#args] == "HEAD^{commit}")
   end, calls)
 end
 

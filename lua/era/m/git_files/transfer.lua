@@ -29,7 +29,7 @@ local function transfer(root, scope, entries)
   return index.run(root, function(resolve, reject)
     stl.async
       .run_future(function()
-        local args = { "--literal-pathspecs" }
+        local args = {} ---@type string[]
         if scope == "unstaged" then
           args[#args + 1] = "add"
         else

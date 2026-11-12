@@ -1,3 +1,5 @@
+local exec = require("stl.git.exec")
+
 ---@class stl.git.IGitInfo
 ---@field public branch                 ?string
 ---@field public commit                 ?string
@@ -190,8 +192,7 @@ end
 ---@param callback                      fun(abbrev_head: string): nil
 ---@return vim.SystemObj
 local function start_short_head(cwd, token, callback)
-  cwd = yoz.canonical_path.to_os_path(cwd)
-  return vim.system({ "git", "-C", cwd, "rev-parse", "--short", "HEAD" }, { text = true }, function(obj)
+  return vim.system(exec.command({ "rev-parse", "--short", "HEAD" }, cwd), { text = true }, function(obj)
     vim.schedule(function()
       if token and token:is_cancelled() then
         return
@@ -247,8 +248,7 @@ function M.get_object_name(cwd, object, token)
       return
     end
 
-    cwd = yoz.canonical_path.to_os_path(cwd)
-    proc = vim.system({ "git", "-C", cwd, "rev-parse", "--verify", "--quiet", object }, { text = true }, function(obj)
+    proc = vim.system(exec.command({ "rev-parse", "--verify", "--quiet", object }, cwd), { text = true }, function(obj)
       vim.schedule(function()
         if finished then
           return
@@ -317,8 +317,7 @@ function M.get_show_blob(cwd, object, token)
       return
     end
 
-    cwd = yoz.canonical_path.to_os_path(cwd)
-    proc = vim.system({ "git", "-C", cwd, "cat-file", "-p", object }, { text = false }, function(obj)
+    proc = vim.system(exec.command({ "cat-file", "-p", object }, cwd), { text = false }, function(obj)
       vim.schedule(function()
         if finished then
           return
@@ -336,9 +335,9 @@ function M.get_show_blob(cwd, object, token)
         end
 
         if index_path then
-          local inspect_args = index_stage and { "--literal-pathspecs", "ls-files", "--stage", "-z", "--", index_path }
-            or { "--literal-pathspecs", "ls-files", "--error-unmatch", "--", index_path }
-          proc = vim.system(vim.list_extend({ "git", "-C", cwd }, inspect_args), { text = false }, function(index_obj)
+          local inspect_args = index_stage and { "ls-files", "--stage", "-z", "--", index_path }
+            or { "ls-files", "--error-unmatch", "--", index_path }
+          proc = vim.system(exec.command(inspect_args, cwd), { text = false }, function(index_obj)
             vim.schedule(function()
               if finished then
                 return
@@ -379,7 +378,7 @@ function M.get_show_blob(cwd, object, token)
         local revision, relpath = object:match("^([^:]+):(.*)$")
         if revision then
           proc = vim.system(
-            { "git", "-C", cwd, "--literal-pathspecs", "ls-tree", revision, "--", relpath },
+            exec.command({ "ls-tree", revision, "--", relpath }, cwd),
             { text = false },
             function(tree_obj)
               vim.schedule(function()
@@ -389,7 +388,7 @@ function M.get_show_blob(cwd, object, token)
                 if tree_obj.code ~= 0 then
                   local tree_err = git_error("Failed to inspect Git tree " .. revision, tree_obj) ---@type string
                   proc = vim.system(
-                    { "git", "-C", cwd, "rev-parse", "--verify", "--quiet", revision },
+                    exec.command({ "rev-parse", "--verify", "--quiet", revision }, cwd),
                     { text = false },
                     function(revision_obj)
                       vim.schedule(function()
@@ -450,9 +449,8 @@ function M.get_abbrev_head(cwd, token)
       return
     end
 
-    cwd = yoz.canonical_path.to_os_path(cwd)
     local proc ---@type vim.SystemObj|nil
-    proc = vim.system({ "git", "-C", cwd, "rev-parse", "--abbrev-ref", "HEAD" }, { text = true }, function(obj)
+    proc = vim.system(exec.command({ "rev-parse", "--abbrev-ref", "HEAD" }, cwd), { text = true }, function(obj)
       vim.schedule(function()
         if token and token:is_cancelled() then
           return
@@ -511,53 +509,48 @@ function M.get_file_info(cwd, relpath, token)
       return
     end
 
-    cwd = yoz.canonical_path.to_os_path(cwd)
-    proc = vim.system(
-      { "git", "-C", cwd, "--literal-pathspecs", "ls-files", "--stage", "--", relpath },
-      { text = true },
-      function(obj)
-        vim.schedule(function()
-          if finished then
-            return
-          end
-          if obj.code ~= 0 then
-            finish({
-              ok = false,
-              missing = false,
-              err = git_error("Failed to inspect Git index path " .. relpath, obj),
-            })
-            return
-          end
+    proc = vim.system(exec.command({ "ls-files", "--stage", "--", relpath }, cwd), { text = true }, function(obj)
+      vim.schedule(function()
+        if finished then
+          return
+        end
+        if obj.code ~= 0 then
+          finish({
+            ok = false,
+            missing = false,
+            err = git_error("Failed to inspect Git index path " .. relpath, obj),
+          })
+          return
+        end
 
-          ---@type stl.git.IFileInfo
-          local info = {
-            has_conflicts = false,
-            mode_bits = nil,
-            object_name = nil,
-            relpath = relpath,
-          }
+        ---@type stl.git.IFileInfo
+        local info = {
+          has_conflicts = false,
+          mode_bits = nil,
+          object_name = nil,
+          relpath = relpath,
+        }
 
-          local lines = vim.split(obj.stdout or "", "\n", { plain = true })
-          for _, line in ipairs(lines) do
-            local mode, object, stage = line:match("^(%d+)%s+(%x+)%s+(%d)%s+")
-            if mode and object and stage then
-              if stage == "0" then
-                info.mode_bits = mode
-                info.object_name = object
-              else
-                info.has_conflicts = true
-              end
+        local lines = vim.split(obj.stdout or "", "\n", { plain = true })
+        for _, line in ipairs(lines) do
+          local mode, object, stage = line:match("^(%d+)%s+(%x+)%s+(%d)%s+")
+          if mode and object and stage then
+            if stage == "0" then
+              info.mode_bits = mode
+              info.object_name = object
+            else
+              info.has_conflicts = true
             end
           end
+        end
 
-          if not info.object_name and not info.has_conflicts then
-            finish({ ok = false, missing = true })
-          else
-            finish({ ok = true, missing = false, info = info })
-          end
-        end)
-      end
-    )
+        if not info.object_name and not info.has_conflicts then
+          finish({ ok = false, missing = true })
+        else
+          finish({ ok = true, missing = false, info = info })
+        end
+      end)
+    end)
 
     if token then
       cancel_sub = token:on_cancel(function()
@@ -597,50 +590,45 @@ function M.get_head_file_mode(cwd, relpath, token)
       return
     end
 
-    cwd = yoz.canonical_path.to_os_path(cwd)
-    proc = vim.system(
-      { "git", "-C", cwd, "--literal-pathspecs", "ls-tree", "HEAD", "--", relpath },
-      { text = true },
-      function(obj)
-        vim.schedule(function()
-          if finished then
-            return
-          end
-          if obj.code ~= 0 then
-            local tree_err = git_error("Failed to inspect HEAD path " .. relpath, obj) ---@type string
-            proc = vim.system(
-              { "git", "-C", cwd, "rev-parse", "--verify", "--quiet", "HEAD" },
-              { text = false },
-              function(head_obj)
-                vim.schedule(function()
-                  if finished then
-                    return
-                  end
-                  if head_obj.code == 1 then
-                    finish({ ok = false, missing = true })
-                  elseif head_obj.code == 0 then
-                    finish({ ok = false, missing = false, err = tree_err })
-                  else
-                    finish({
-                      ok = false,
-                      missing = false,
-                      err = git_error("Failed to inspect HEAD", head_obj),
-                    })
-                  end
-                end)
-              end
-            )
-            return
-          end
-          local mode_bits = (obj.stdout or ""):match("^(%d+)") ---@type string|nil
-          if mode_bits then
-            finish({ ok = true, missing = false, mode_bits = mode_bits })
-          else
-            finish({ ok = false, missing = true })
-          end
-        end)
-      end
-    )
+    proc = vim.system(exec.command({ "ls-tree", "HEAD", "--", relpath }, cwd), { text = true }, function(obj)
+      vim.schedule(function()
+        if finished then
+          return
+        end
+        if obj.code ~= 0 then
+          local tree_err = git_error("Failed to inspect HEAD path " .. relpath, obj) ---@type string
+          proc = vim.system(
+            exec.command({ "rev-parse", "--verify", "--quiet", "HEAD" }, cwd),
+            { text = false },
+            function(head_obj)
+              vim.schedule(function()
+                if finished then
+                  return
+                end
+                if head_obj.code == 1 then
+                  finish({ ok = false, missing = true })
+                elseif head_obj.code == 0 then
+                  finish({ ok = false, missing = false, err = tree_err })
+                else
+                  finish({
+                    ok = false,
+                    missing = false,
+                    err = git_error("Failed to inspect HEAD", head_obj),
+                  })
+                end
+              end)
+            end
+          )
+          return
+        end
+        local mode_bits = (obj.stdout or ""):match("^(%d+)") ---@type string|nil
+        if mode_bits then
+          finish({ ok = true, missing = false, mode_bits = mode_bits })
+        else
+          finish({ ok = false, missing = true })
+        end
+      end)
+    end)
 
     if token then
       cancel_sub = token:on_cancel(function()
@@ -664,9 +652,8 @@ function M.get_show_text(cwd, object, token)
       return
     end
 
-    cwd = yoz.canonical_path.to_os_path(cwd)
     local proc ---@type vim.SystemObj|nil
-    proc = vim.system({ "git", "-C", cwd, "cat-file", "-p", object }, { text = true }, function(obj)
+    proc = vim.system(exec.command({ "cat-file", "-p", object }, cwd), { text = true }, function(obj)
       vim.schedule(function()
         if token and token:is_cancelled() then
           return
@@ -677,7 +664,7 @@ function M.get_show_text(cwd, object, token)
           -- Keep trailing empty string to preserve no_nl_at_eof information
           resolve(lines)
         else
-          proc = vim.system({ "git", "-C", cwd, "show", object }, { text = true }, function(obj2)
+          proc = vim.system(exec.command({ "show", object }, cwd), { text = true }, function(obj2)
             vim.schedule(function()
               if token and token:is_cancelled() then
                 return
@@ -714,10 +701,9 @@ function M.get_repo_info(cwd, token)
       return
     end
 
-    cwd = yoz.canonical_path.to_os_path(cwd)
     local proc ---@type vim.SystemObj|nil
     proc = vim.system(
-      { "git", "-C", cwd, "rev-parse", "--show-toplevel", "--absolute-git-dir", "--abbrev-ref", "HEAD" },
+      exec.command({ "rev-parse", "--show-toplevel", "--absolute-git-dir", "--abbrev-ref", "HEAD" }, cwd),
       { text = true },
       function(obj)
         vim.schedule(function()

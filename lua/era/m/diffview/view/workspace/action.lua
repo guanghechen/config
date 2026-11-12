@@ -532,7 +532,6 @@ function M.stage(ctx)
 
   ---@type string[]
   local args = {
-    "--literal-pathspecs",
     "add",
     "--pathspec-from-file=-",
     "--pathspec-file-nul",
@@ -590,7 +589,6 @@ function M.unstage(ctx)
           if code == 1 then
             ---@type string[]
             local args = {
-              "--literal-pathspecs",
               "rm",
               "--cached",
               "-f",
@@ -607,7 +605,6 @@ function M.unstage(ctx)
 
           ---@type string[]
           local args = {
-            "--literal-pathspecs",
             "reset",
             "HEAD",
             "--pathspec-from-file=-",
@@ -781,7 +778,7 @@ function M.reset(ctx)
   end
 
   -- Tracked files: git checkout
-  run_index_command({ "--literal-pathspecs", "checkout", "--", entry.filepath }, { cwd = dot.path.workspace() }):finally(
+  run_index_command({ "checkout", "--", entry.filepath }, { cwd = dot.path.workspace() }):finally(
     function(resolved, result)
       if not resolved or type(result) ~= "table" then
         report_git_failure("discard", entry.filepath, -1, tostring(result))
