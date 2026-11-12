@@ -60,6 +60,7 @@ set -g @GHC_PSL_FG_COPY_MODE            "{{vsc.brightYellow}}"
 set -g @GHC_PSL_FG_PANE_ID              "{{vsc.brightAqua}}"
 set -g @GHC_PSL_FG_PANE_INDEX           "{{vsc.brightOrange}}"
 set -g @GHC_PSL_FG_MARKER               "{{vsc.brightPurple}}"
+set -g @GHC_PSL_FG_WAIT                 "{{darken ? '#FFD700' : vsc.accentYellow}}"
 
 ## Statusbar
 
@@ -99,6 +100,7 @@ set -g @GHC_SL_BG_SESSION_ITEM_NUM      "{{(darken ? vsc.menu_border : vsc.badge
 set -g @GHC_SL_FG_SESSION_ITEM_NUM      "{{(darken ? vsc.activityBar_inactiveForeground : vsc.input_placeholderForeground)}}"
 set -g @GHC_SL_FG_SESSION_ITEM_LAST     "{{vsc.brightOrange}}"
 set -g @GHC_SL_FG_SESSION_ITEM_BELL     "{{vsc.brightOrange}}"
+set -g @GHC_SL_FG_SESSION_ITEM_WAIT     "{{darken ? '#FFD700' : vsc.accentYellow}}"
 set -g @GHC_SL_BG_STATUS02_LABEL        "{{(darken ? vsc.subtle : vsc.list_activeSelectionBackground)}}"
 set -g @GHC_SL_FG_STATUS02_LABEL        "{{vsc.accentPink}}"
 set -g @GHC_SL_BG_PILL_USER             "{{darken ? '#DDB2A0' : '#FED7AA'}}"
@@ -124,6 +126,7 @@ set -g @GHC_SL_BG_WIN_NUM               "{{(darken ? vsc.checkbox_border : vsc.e
 set -g @GHC_SL_FG_WIN_NUM               "{{(darken ? vsc.activityBar_inactiveForeground : vsc.input_placeholderForeground)}}"
 set -g @GHC_SL_BG_WIN_ICON_BELL         "{{(darken ? vsc.subtle : vsc.list_activeSelectionBackground)}}"
 set -g @GHC_SL_FG_WIN_ICON_BELL         "{{vsc.brightOrange}}"
+set -g @GHC_SL_FG_WIN_ICON_WAIT         "{{darken ? '#FFD700' : vsc.accentYellow}}"
 set -g @GHC_SL_FG_WIN_ICON_ACTIVITY     "{{vsc.brightYellow}}"
 set -g @GHC_SL_BG_WIN_ICON_LAST         "{{(darken ? vsc.checkbox_border : vsc.editorIndentGuide_background1)}}"
 set -g @GHC_SL_FG_WIN_ICON_LAST         "{{vsc.accentOrange}}"
@@ -139,6 +142,7 @@ set -g @GHC_SL_BG_WIN_ACTIVE_NUM        "{{vsc.accentPink}}"
 set -g @GHC_SL_FG_WIN_ACTIVE_NUM        "{{vsc.editor_background}}"
 set -g @GHC_SL_BG_WIN_ACTIVE_ICON_BELL  "{{vsc.accentPink}}"
 set -g @GHC_SL_FG_WIN_ACTIVE_ICON_BELL  "{{vsc.editor_background}}"
+set -g @GHC_SL_FG_WIN_ACTIVE_ICON_WAIT  "{{vsc.editor_background}}"
 set -g @GHC_SL_BG_WIN_ACTIVE_ICON_ZOOM  "{{vsc.accentPink}}"
 set -g @GHC_SL_FG_WIN_ACTIVE_ICON_ZOOM  "{{vsc.editor_background}}"
 
@@ -148,5 +152,6 @@ set -g @GHC_SL_BG_WIN_LAST_NUM          "{{(darken ? vsc.checkbox_border : vsc.e
 set -g @GHC_SL_FG_WIN_LAST_NUM          "{{vsc.accentOrange}}"
 set -g @GHC_SL_BG_WIN_LAST_ICON_BELL    "{{(darken ? vsc.subtle : vsc.list_activeSelectionBackground)}}"
 set -g @GHC_SL_FG_WIN_LAST_ICON_BELL    "{{vsc.accentOrange}}"
+set -g @GHC_SL_FG_WIN_LAST_ICON_WAIT    "{{darken ? '#FFD700' : vsc.accentYellow}}"
 set -g @GHC_SL_BG_WIN_LAST_ICON_ZOOM    "{{(darken ? vsc.subtle : vsc.list_activeSelectionBackground)}}"
 set -g @GHC_SL_FG_WIN_LAST_ICON_ZOOM    "{{vsc.accentOrange}}"
