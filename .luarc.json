@@ -7,5 +7,5 @@
   "doc.privateName": ["^_"],
   "workspace.checkThirdParty": false,
   "workspace.library": ["$VIMRUNTIME/lua", "${3rd}/luv/library"],
-  "workspace.ignoreDir": ["lua/stl/dict", "__test__"]
+  "workspace.ignoreDir": ["lua/stl/dict", "__test__", "/local"]
 }
