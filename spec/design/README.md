@@ -52,7 +52,6 @@ feature。多文档主题使用独立子目录与 `README.md`，例如 [Treeview
 - [Winline LSP 面包屑](feat/lsp-symbols.md)：documentSymbol 请求合并、新鲜度契约与超大文档节奏。
 - [Notepad](feat/notepad.md)：source、storage engine、便签编辑与导航。
 - [Terminal](feat/term.md)：terminal state、job 生命周期与 termline。
-- [Act Board](feat/act.md)：输入与实时预览组件。
 
 集成：
 

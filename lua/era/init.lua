@@ -167,7 +167,6 @@ local nvim = setmetatable({
 
 ---@class era.view.__mods
 local __view__mods = {
-  Act = "era.view.act",
   Fileinfo = "era.view.fileinfo",
   Keysheet = "era.view.keysheet",
   Plainfile = "era.view.plainfile",
@@ -180,7 +179,6 @@ local __view__mods = {
 
 ---@class era.view
 ---@field public __mods                 era.view.__mods
----@field public Act                    era.view.Act
 ---@field public Fileinfo               era.view.Fileinfo
 ---@field public Keysheet               era.view.Keysheet
 ---@field public Plainfile              era.view.Plainfile

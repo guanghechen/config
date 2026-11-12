@@ -278,29 +278,6 @@ function M.read_json(params)
   return data
 end
 
----@param filepath                      string
----@return nil
-function M.touch(filepath)
-  local stat = vim.uv.fs_stat(filepath)
-  if stat ~= nil and stat.type == "file" then
-    local file = io.open(filepath, "a")
-    if file then
-      file:close() -- Close the file immediately
-      local current_time = vim.uv.hrtime() / 1e9 -- Get current time in seconds
-      vim.uv.fs_utime(filepath, current_time, current_time, function(err)
-        if err then
-          stl.reporter.error({
-            from = __module_name__,
-            subject = "touch",
-            message = "Failed to touch file.",
-            details = { filepath = filepath, err = err },
-          })
-        end
-      end)
-    end
-  end
-end
-
 ---@class stl.t.IWatchFileOptions
 ---@field public filepath               string
 ---@field public on_event               fun(filepath:string, events: any, unwatch:fun():nil):nil

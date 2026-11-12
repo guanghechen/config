@@ -196,46 +196,6 @@ function M:snapshot()
   return self._value:snapshot()
 end
 
----Schedule and return a Future that resolves when the task completes.
----@param opts                          ?stl.c.scheduler.IScheduleOpts
----@param token                         ?stl.c.CancellationToken
----@return stl.c.Future
-function M:schedule_future(opts, token)
-  self:__health__()
-
-  local future = stl.c.Future.new({ token = token or self._token })
-  if token and token:is_cancelled() then
-    return future
-  end
-
-  -- Store original callback context
-  local original_task = self._task
-  local tick_at_schedule = self._tick_pending + 1
-
-  -- Wrap task to capture result for this specific schedule call
-  self._task = function(scheduler, context, callback)
-    local result = original_task(scheduler, context, function(ok, res)
-      callback(ok, res)
-      -- Only resolve if this is the tick we scheduled
-      if scheduler._tick_settled >= tick_at_schedule and not future:is_done() then
-        if ok then
-          future:__resolve__(res) ---@diagnostic disable-line: invisible
-        else
-          future:__reject__(res or "Task failed") ---@diagnostic disable-line: invisible
-        end
-      end
-    end)
-    return result
-  end
-
-  self:schedule(opts)
-
-  -- Restore original task after scheduling
-  self._task = original_task
-
-  return future
-end
-
 ----------------------------------------------------------------------------------------------------
 
 ---@protected
