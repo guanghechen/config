@@ -65,7 +65,8 @@ View 切换 source 前同步当前 buffer 内容并 flush。Action 将保存、�
 `TextChanged`、`TextChangedI`、`TextChangedP` 将内容同步到 source，并避免同步重入。
 View 订阅 source 与 active UUID 变化，更新编辑内容和 winbar。
 
-Nvimbar 使用 `dot.G` click callbacks；名称最多显示 12 个字符，附带 index badge、分隔符与新增按钮。
+Nvimbar 使用 `dot.G` click callbacks；名称超过 20 字节时截为前 17 字节加 `...`，当前项带序号，其余项带与当前项的
+距离角标（如 `₂₊`），另有分隔符与新增按钮。
 空间允许时居中显示当前项，溢出时显示左右导航箭头与隐藏数量；source 组件显示当前 source/engine。
 
 ## 命令与快捷键
