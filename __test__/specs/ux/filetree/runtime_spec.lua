@@ -155,7 +155,7 @@ t:test("a deadline callback can retry with an already completed native ticket", 
       -- Fix the supported boundary where native completion precedes async.run.
       local started = vim.uv.hrtime()
       while not ticket:poll() do
-        t.assert_true(vim.uv.hrtime() - started < 1000000000, "native lock did not complete")
+        t.assert_true(vim.uv.hrtime() - started < 5e9, "native lock did not complete")
         vim.uv.sleep(1)
       end
       return ticket

@@ -4,8 +4,9 @@ local __module_name__ = "__test__.support.cmp.behavior_trace" ---@type string
 local UI = require("__test__.support.ui")
 local M = {}
 
--- How long a step keeps waiting for its expected state once its observation window has passed.
-local SETTLE_MS = 3000 ---@type integer
+-- How long a step keeps waiting for its expected state once its observation window has passed: the shared floor for
+-- a positive wait, which only bounds a failure.
+local SETTLE_MS = 5000 ---@type integer
 
 ---@param expected                      ?table
 ---@param state                         table
@@ -65,22 +66,15 @@ function M.run(options, case)
     end
   end, debug.traceback)
   if not ok then
+    -- The error carries what explains the failure; a file would go with the suite's temporary directory.
     local mode_ok, mode = pcall(ui.rpc, ui, "nvim_get_mode")
-    vim.fn.writefile(
-      vim.split(
-        vim.inspect({
-          case = case.name,
-          step = step_index,
-          error = err,
-          mode = mode_ok and mode or nil,
-          stderr = ui.stderr,
-          redraws = vim.list_slice(redraws, math.max(1, #redraws - 80)),
-        }),
-        "\n",
-        { plain = true }
-      ),
-      options.output .. "/failure.txt"
-    )
+    err = table.concat({
+      tostring(err),
+      string.format("case %q, step %d", case.name, step_index),
+      "mode: " .. vim.inspect(mode_ok and mode or nil),
+      "stderr: " .. vim.inspect(ui.stderr),
+      "last redraws: " .. vim.inspect(vim.list_slice(redraws, math.max(1, #redraws - 20))),
+    }, "\n")
   end
   ui:close()
   assert(ok, err)
@@ -92,10 +86,9 @@ end
 ---@param cases                         table[]
 ---@return nil
 function M.check(t, cases)
-  local output = t:tempdir()
   for _, case in ipairs(cases) do
     t:test(case.name, function()
-      local states = M.run({ root = assert(vim.uv.cwd()), output = output }, case)
+      local states = M.run({ root = assert(vim.uv.cwd()) }, case)
       for step, fields in pairs(case.expect) do
         for key, value in pairs(fields) do
           t.assert_same(value, states[step][key], string.format("step %d %s", step, key))

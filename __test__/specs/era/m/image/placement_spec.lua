@@ -95,10 +95,10 @@ t:test("window events leave a viewer that no window shows alone", function()
   t.assert_eq(0, updates, "hidden viewer")
 
   vim.api.nvim_win_set_buf(0, bufnr)
-  vim.wait(50)
+  t.drain()
   updates = 0
   vim.api.nvim_exec_autocmds("WinResized", {})
-  vim.wait(50)
+  t.drain()
   t.assert_eq(1, updates, "shown viewer")
 end)
 
