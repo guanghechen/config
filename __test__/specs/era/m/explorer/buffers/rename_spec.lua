@@ -66,10 +66,26 @@ t:test("rename: rejects target buffer before filesystem and LSP changes", functi
   local bufnr, from, to = new_buffer()
   local target_bufnr = new_buffer()
   vim.api.nvim_buf_set_name(target_bufnr, to)
+  local requests = 0 ---@type integer
+  local client = {
+    supports_method = function(_, method)
+      return method == "workspace/willRenameFiles"
+    end,
+    request = function()
+      requests = requests + 1
+      return false
+    end,
+  }
   t:patch_table(vim.lsp, "get_clients", function()
-    error("LSP must not be queried after a preflight conflict")
+    return { client }
   end)
+  local reports = bootstrap.with_reporter(t)
+
   t.assert_false(move(from, to))
+  t.assert_eq(0, requests, "no willRenameFiles request")
+  local messages = bootstrap.messages(reports.error) ---@type string[]
+  t.assert_eq(1, #messages, "refusal reported")
+  t.assert_eq(1, messages[1]:find("Move refused; target belongs to another buffer: ", 1, true), messages[1])
   t.assert_true(vim.uv.fs_stat(from) ~= nil)
   t.assert_nil(vim.uv.fs_stat(to))
   t.assert_eq(from, vim.api.nvim_buf_get_name(bufnr))
