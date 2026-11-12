@@ -111,12 +111,13 @@ local function declared_timeout_ms(suite)
   return declared
 end
 
----The environment of suite processes: the runner's own, without tmux. Children inherit it, so a regression in code
----that drives tmux panes cannot reach the user's real session.
+---The environment of suite processes: the runner's own, without tmux or the runner's log file. Children inherit it, so
+---a regression in code that drives tmux panes cannot reach the user's real session, and each suite logs under its own
+---state directory, as Neovim exports `NVIM_LOG_FILE` from `XDG_STATE_HOME` when it is unset.
 ---@return table<string, string>
 local function suite_env()
   local env = vim.fn.environ() ---@type table<string, string>
-  env.TMUX, env.TMUX_PANE = nil, nil
+  env.TMUX, env.TMUX_PANE, env.NVIM_LOG_FILE = nil, nil, nil
   return env
 end
 

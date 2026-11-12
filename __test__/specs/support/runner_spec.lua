@@ -310,17 +310,19 @@ t:test("suite processes do not inherit tmux", function()
   end)
 end)
 
-t:test("suite processes keep their state in a directory of the run", function()
+t:test("suite processes keep their state and log in a directory of the run", function()
   with_temp_root(function(dir)
     local record = dir .. "/state.txt" ---@type string
-    write_spec(string.format("vim.fn.writefile({ vim.fn.stdpath('state') }, %q)", record), dir .. "/state_spec.lua")
+    write_spec(
+      string.format("vim.fn.writefile({ vim.fn.stdpath('state'), vim.env.NVIM_LOG_FILE or '' }, %q)", record),
+      dir .. "/state_spec.lua"
+    )
     local failed, output = run_suites({ root = dir })
     t.assert_eq(0, failed, output)
-    local state = vim.fn.readfile(record)[1] ---@type string
-    t.assert_true(
-      vim.fs.relpath(vim.fn.stdpath("state") --[[@as string]], state) == nil,
-      "not the state of the user: " .. state
-    )
+    local state, log = unpack(vim.fn.readfile(record)) ---@type string, string
+    local user_state = vim.fn.stdpath("state") --[[@as string]]
+    t.assert_true(vim.fs.relpath(user_state, state) == nil, "not the state of the user: " .. state)
+    t.assert_true(vim.fs.relpath(state, log) ~= nil, "log under the suite state: " .. log)
     t.assert_eq(nil, vim.uv.fs_stat(state), "removed after the run")
   end)
 end)
