@@ -255,7 +255,8 @@ Status: Design。本文定义 Explorer 的输入、用途、窗口、编辑器�
   Selection 使用 Nerd Font 勾选框，copy/cut 使用复制页与剪刀图标；self-only 使用半选框区分，
   copy/cut 的 self-only 在动作图标后附加半选框。有选择时各行的标记区按显示宽度固定占位，右侧留空白容纳
   glyph overhang；没有选择时不占位。名称被右侧标记遮挡或超出窗口时以 Treeview 的截断标记结尾。
-- Diagnostics 按 E/W/H/I 显示非零分类，最多两类；Git 用具体变更字符与颜色表达状态，不额外显示 `S/U`。
+- Diagnostics 按 error、warning、hint、info 顺序显示非零分类，最多两类，每类为 `stl.icon.diagnostic` 的 `*_alt`
+  图标加计数，与 nvimbar 一致；Git 用具体变更字符与颜色表达状态，不额外显示 `S/U`。
   纯 staged 的 `A/M/R/C/T` 使用 staged 前景色；含 unstaged 的行按具体变更类型着色，删除与冲突始终保留各自颜色。
   装饰不写正文，不为聚合打开文件。
   Diagnostics 与 Git status 统一靠右显示，Git 名称色与 status 复用 `m_ft_git_*` 前景色，状态区保留当前行背景。

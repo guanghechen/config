@@ -1,6 +1,7 @@
 local t = require("__test__.support.harness").new()
 local explorer = require("__test__.support.explorer")
 local git = require("__test__.support.git")
+local icons = require("stl.icon").diagnostic
 
 t:test("real UI subscribes to diagnostics and Git ignore with independent name and icon colors", function()
   local path = git.repo(t)
@@ -52,10 +53,21 @@ t:test("real UI subscribes to diagnostics and Git ignore with independent name a
   ui:wait_until(function()
     ui:rpc("nvim_command", "redraw")
     return ui:lua(
-      "return colors[1] == 'DiagnosticError' and colors[2] == 'm_ex_ignored' and drawn[' E:1'] and drawn[' W:1']"
+      [=[
+        local error, warn = ...
+        return colors[1] == 'DiagnosticError' and colors[2] == 'm_ex_ignored' and drawn[error] and drawn[warn]
+      ]=],
+      " " .. icons.Error_alt .. " 1",
+      " " .. icons.Warning_alt .. " 1"
     )
   end, 10000)
-  t.assert_false(ui:lua("return drawn[' I:1'] == true or drawn[' H:1'] == true"))
+  t.assert_false(
+    ui:lua(
+      "local info, hint = ...; return drawn[info] == true or drawn[hint] == true",
+      " " .. icons.Information_alt .. " 1",
+      " " .. icons.Hint_alt .. " 1"
+    )
+  )
   t.assert_true(ui:lua("return icons[1] ~= nil and icons[1] ~= colors[1]"))
   t.assert_eq("m_ex_ignored", ui:lua("return icons[2]"))
   t.assert_eq(0, ui:lua("return #errors"))
@@ -67,7 +79,7 @@ t:test("real UI subscribes to diagnostics and Git ignore with independent name a
     drawn = {}
   ]=])
   ui:rpc("nvim_command", "redraw")
-  t.assert_false(ui:lua("return drawn[' E:1'] == true"))
+  t.assert_false(ui:lua("return drawn[...] == true", " " .. icons.Error_alt .. " 1"))
   local source_revision, quiet_since = nil, vim.uv.hrtime()
   ui:wait_until(function()
     local current = ui:lua(

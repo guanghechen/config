@@ -1,3 +1,5 @@
+local env = require("stl.env")
+
 ---@class stl.icon
 local M = {}
 
@@ -191,10 +193,10 @@ M.os = {
   nix = "",
   wsl = "",
   unknown = "",
-  current = (stl.env.IS_NIX and "")
-    or (stl.env.IS_OSX and "")
-    or (stl.env.IS_WIN and "")
-    or (stl.env.IS_WSL and "")
+  current = (env.IS_NIX and "")
+    or (env.IS_OSX and "")
+    or (env.IS_WIN and "")
+    or (env.IS_WSL and "")
     or "",
 }
 

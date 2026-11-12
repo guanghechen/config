@@ -1,5 +1,6 @@
 local t = require("__test__.support.harness").new()
 local explorer = require("__test__.support.explorer")
+local icons = require("stl.icon").diagnostic
 
 t:test("fold keys coexist with which-key and publish names and status together", function()
   local path = t:tempdir()
@@ -9,10 +10,10 @@ t:test("fold keys coexist with which-key and publish names and status together",
   end
   local tracking, failures, observed = false, {}, 0
   local expected = {
-    ["branch"] = { color = 0xFFFF00, status = "W:1" },
-    ["keep-a.lua"] = { color = 0xFF0000, status = "E:1" },
-    ["keep-b.lua"] = { color = 0xFFFF00, status = "W:1" },
-    ["inside.lua"] = { color = 0xFFFF00, status = "W:1", optional = true },
+    ["branch"] = { color = 0xFFFF00, status = icons.Warning_alt .. " 1" },
+    ["keep-a.lua"] = { color = 0xFF0000, status = icons.Error_alt .. " 1" },
+    ["keep-b.lua"] = { color = 0xFFFF00, status = icons.Warning_alt .. " 1" },
+    ["inside.lua"] = { color = 0xFFFF00, status = icons.Warning_alt .. " 1", optional = true },
     ["nested"] = { color = 0x808080, status = "", optional = true },
     ["leaf.lua"] = { color = 0x808080, status = "", optional = true },
   }

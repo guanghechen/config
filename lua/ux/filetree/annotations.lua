@@ -3,6 +3,7 @@ local __module_name__ = "ux.filetree.annotations" ---@type string
 
 local async = require("ux.treeview.async")
 local Future = require("stl.c.future")
+local icon = require("stl.icon")
 local views = setmetatable({}, { __mode = "v" }) ---@type table<integer, ux.filetree.View>
 local M = {}
 
@@ -215,13 +216,13 @@ end
 local function chunks(value)
   local result = {}
   for _, entry in ipairs({
-    { 1, "E", "DiagnosticError" },
-    { 2, "W", "DiagnosticWarn" },
-    { 4, "H", "DiagnosticHint" },
-    { 3, "I", "DiagnosticInfo" },
+    { 1, icon.diagnostic.Error_alt, "DiagnosticError" },
+    { 2, icon.diagnostic.Warning_alt, "DiagnosticWarn" },
+    { 4, icon.diagnostic.Hint_alt, "DiagnosticHint" },
+    { 3, icon.diagnostic.Information_alt, "DiagnosticInfo" },
   }) do
     if value.diagnostics[entry[1]] > 0 then
-      result[#result + 1] = { " " .. entry[2] .. ":" .. value.diagnostics[entry[1]], entry[3] }
+      result[#result + 1] = { " " .. entry[2] .. " " .. value.diagnostics[entry[1]], entry[3] }
       if #result == 2 then
         break
       end

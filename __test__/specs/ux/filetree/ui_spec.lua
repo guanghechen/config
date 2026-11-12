@@ -1,4 +1,5 @@
 local UI = require("__test__.support.ui")
+local icons = require("stl.icon").diagnostic
 local t = require("__test__.support.harness").new()
 
 t:test("attached Filetree renders and withdraws ephemeral status decorations", function()
@@ -29,7 +30,7 @@ t:test("attached Filetree renders and withdraws ephemeral status decorations", f
   )
   ui:wait_until(function()
     ui:rpc("nvim_command", "redraw")
-    return ui:lua("return drawn[' E:2'] == true")
+    return ui:lua("return drawn[...] == true", " " .. icons.Error_alt .. " 2")
   end, 10000)
   t.assert_eq(0, ui:lua("return #reports.error"))
   t.assert_eq(0, ui:lua("return #vim.api.nvim_buf_get_extmarks(view.bufnr, namespace, 0, -1, {})"))
@@ -41,7 +42,7 @@ t:test("attached Filetree renders and withdraws ephemeral status decorations", f
     drawn = {}
   ]=])
   ui:rpc("nvim_command", "redraw")
-  t.assert_eq(false, ui:lua("return drawn[' E:2'] == true"))
+  t.assert_eq(false, ui:lua("return drawn[...] == true", " " .. icons.Error_alt .. " 2"))
   t.assert_eq("  file", ui:lua("return vim.api.nvim_buf_get_lines(view.bufnr, 0, 1, true)[1]"))
   ui:lua("view:detach()")
 end)
