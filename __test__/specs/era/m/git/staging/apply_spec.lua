@@ -64,6 +64,15 @@ t:test("intersect: a deletion is selected whole", function()
   )
 end)
 
+t:test("reset: every touched hunk is removed from the changes reapplied to index", function()
+  local index_document, buffer_document, hunks = documents("b\nd\n", "a\na\na\n")
+  local untouched = vim.tbl_filter(function(hunk)
+    return not staging.touches(hunk, 2, 2)
+  end, hunks)
+
+  t.assert_eq("b\nd\n", staging.apply_line_changes(index_document, buffer_document, untouched), "whole touched hunk")
+end)
+
 t:test("documents: VS Code majority EOL normalization is preserved by encoding", function()
   local document = assert(staging.from_blob("a\r\nb\r\nc\n", "utf-8", "\n"))
   t.assert_eq("\r\n", document.eol, "majority CRLF")

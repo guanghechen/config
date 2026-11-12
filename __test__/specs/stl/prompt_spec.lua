@@ -203,14 +203,19 @@ end
 
 -- Agents other than Codex receive slash commands as written.
 for _, case in ipairs({
-  { agent = "claude", inputs = { "/commit then /review", "/commit and /help" } },
-  { agent = "gemini", inputs = { "/fix-code and /explain", "/chat and /custom" } },
-  { agent = "opencode", inputs = { "/test", "/init and /custom" } },
+  { name = "render: claude keeps slash commands unchanged", agent = "claude", input = "/commit then /review" },
+  { name = "render: gemini keeps slash commands unchanged", agent = "gemini", input = "/fix-code and /explain" },
+  { name = "render: opencode keeps slash commands unchanged", agent = "opencode", input = "/test" },
+  { name = "render: claude preserves all commands (no transformation)", agent = "claude", input = "/commit and /help" },
+  { name = "render: gemini preserves all commands (no transformation)", agent = "gemini", input = "/chat and /custom" },
+  {
+    name = "render: opencode preserves all commands (no transformation)",
+    agent = "opencode",
+    input = "/init and /custom",
+  },
 }) do
-  t:test("render: " .. case.agent .. " keeps slash commands unchanged", function()
-    for _, input in ipairs(case.inputs) do
-      t.assert_eq(input, prompt.render(input, case.agent), input)
-    end
+  t:test(case.name, function()
+    t.assert_eq(case.input, prompt.render(case.input, case.agent))
   end)
 end
 

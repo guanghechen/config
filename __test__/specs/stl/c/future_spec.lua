@@ -114,6 +114,23 @@ t:test("new: executor errors are caught and reject the future", function()
   t.assert_true(err ~= nil and string.find(err, "executor threw") ~= nil, "should have error message")
 end)
 
+t:test("new: second resolve call is ignored", function()
+  local future = Future.new(function(resolve)
+    resolve("first")
+    resolve("second")
+  end)
+  t.assert_eq("first", future:get_result(), "should keep first value")
+end)
+
+t:test("new: reject after resolve is ignored", function()
+  local future = Future.new(function(resolve, reject)
+    resolve("value")
+    reject("error")
+  end)
+  t.assert_true(future:is_resolved(), "should be resolved")
+  t.assert_nil(future:get_error(), "should have no error")
+end)
+
 t:test("token: every future sharing a token is cancelled", function()
   -- Each future unsubscribes itself from the token while the token dispatches, so a token that
   -- mutated its callback array mid-iteration used to cancel only every second future.

@@ -484,6 +484,12 @@ t:test("focus lifecycle: duplicate boundary events are idempotent", function()
   t.assert_eq(2, ctx.get_capture_and_select_count(), "next focus entry")
 end)
 
+t:test("focus lifecycle: headless setup does not touch the source", function()
+  local ctx = setup_lifecycle({ initial_snapshot = "source.non_english.entry", with_ui = false })
+
+  t.assert_eq(0, ctx.get_backend_call_count(), "headless backend calls")
+end)
+
 t:test("mode lifecycle: headless Insert events work without acquiring focus", function()
   local ctx = setup_lifecycle({ initial_snapshot = "source.non_english.editing", with_ui = false })
 

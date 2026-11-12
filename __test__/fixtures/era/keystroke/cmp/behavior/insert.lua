@@ -366,6 +366,18 @@ return {
     expect = { TYPED, TYPED, TYPED },
   },
   {
+    name = "disabled_completion_newline",
+    options = { filetype = "gitcommit", items = {} },
+    steps = { "iabc<C-j>def" },
+    expect = { { menu = false, lines = { "abc", "def" } } },
+  },
+  {
+    name = "disabled_completion_digraph",
+    options = { filetype = "gitcommit", items = {} },
+    steps = { "i<C-k>ae" },
+    expect = { { menu = false, lines = { "æ" } } },
+  },
+  {
     name = "stale_response_on_leave",
     options = { delay_ms = 150 },
     steps = { { keys = "ial", wait_ms = 20 }, { keys = "<Esc>", wait_ms = 250 } },

@@ -86,6 +86,13 @@ for _, case in ipairs({
     offset = 2,
   },
   {
+    name = "native anchor compensates for the concealed command prefix",
+    state = { pos = 5, first = "edit ", second = "", indent = 0, icon = "> ", concealable = true },
+    buffer_col = 3,
+    screenpos = { row = 4, col = 8 },
+    offset = -3,
+  },
+  {
     name = "native anchor omits the concealed command prefix",
     state = { pos = 5, first = "edit ", second = "foo", indent = 0, icon = "> ", concealable = true },
     buffer_col = 3,

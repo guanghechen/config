@@ -7,29 +7,38 @@ local M = {}
 
 ---Records each autocommand created until the case ends in `autocmds` and its event in `events`, both by group, instead
 ---of creating it. Creating a group meanwhile returns its name.
+---Records the autocommands created from now on instead of creating them, until the case ends or the returned function
+---stops the recording.
 ---@param t                             __test__.support.Harness
 ---@param autocmds                      table<string, table>
 ---@param events                        table<string, string|string[]>
----@return nil
+---@return fun()
 function M.record(t, autocmds, events)
-  t:patch_table(vim.api, "nvim_create_augroup", function(name)
+  local restore_augroup = t:patch_table(vim.api, "nvim_create_augroup", function(name)
     return name
   end)
-  t:patch_table(vim.api, "nvim_create_autocmd", function(event, opts)
+  local restore_autocmd = t:patch_table(vim.api, "nvim_create_autocmd", function(event, opts)
     autocmds[opts.group] = opts
     events[opts.group] = event
     return 1
   end)
+  return function()
+    restore_autocmd()
+    restore_augroup()
+  end
 end
 
----Loads `lua/ark/autocmd.lua` without registering its autocommands, and returns them and their events by group.
+---Loads `lua/ark/autocmd.lua` without registering its autocommands, and returns them and their events by group. Only
+---the module's own autocommands are recorded: those the runtime creates later in the case, such as `syntaxset` when a
+---filetype enables syntax, are created as usual.
 ---@param t                             __test__.support.Harness
 ---@return table<string, table> autocmds
 ---@return table<string, string|string[]> events
 function M.load(t)
   local autocmds, events = {}, {} ---@type table<string, table>, table<string, string|string[]>
-  M.record(t, autocmds, events)
+  local stop = M.record(t, autocmds, events)
   assert(loadfile("lua/ark/autocmd.lua"))()
+  stop()
   return autocmds, events
 end
 

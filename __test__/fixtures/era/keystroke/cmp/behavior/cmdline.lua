@@ -55,6 +55,15 @@ local SEARCH_TAB = { cmdline = "alpha", menu = false, selected = false, labels =
 
 return {
   {
+    name = "disabled_expression_keys",
+    options = { items = {} },
+    steps = { "i<C-r>=", "'<C-k>ae'", "<C-j>" },
+    expect = {
+      [2] = { mode = "c", menu = false, cmdline = "'æ'" },
+      [3] = { mode = "i", menu = false, lines = { "æ" }, cursor = { 1, 2 }, cmdline = false, cmdpos = false },
+    },
+  },
+  {
     name = "cmdline_enter",
     steps = { ":", "CmpFixture ", "al" },
     expect = {

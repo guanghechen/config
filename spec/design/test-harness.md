@@ -25,10 +25,13 @@ Lua、Node 测试及跨语言共享 fixture 位于顶层 `__test__/`，与生产
 
 - Spec 路径对应被测模块：`lua/era/m/git/hunk.lua` 的 spec 是 `specs/era/m/git/hunk_spec.lua`；仓库根的
   `init.lua` 与 `lsp/*.lua` 对应 `specs/init_spec.lua` 与 `specs/lsp/`。
-- 一个 spec 覆盖一个生产模块或一个 feature 目录；测试另一模块的 case 放进那个模块的 spec。按契约拆分的大模块
-  使用以模块命名的目录，例如 indentline 的 `parser_spec.lua`、`render_spec.lua`、`frame_spec.lua`、
-  `provider_spec.lua` 与 `setup_spec.lua` 分别覆盖纯计算、buffer/cache、native rendering 和生命周期。
-- 文件与同名目录不并列（不出现 `theme_spec.lua` 与 `theme/` 相邻）。
+- 一个 spec 覆盖一个生产模块或一个 feature 目录；测试另一模块的 case 放进那个模块的 spec。一个模块拆成多个
+  spec 时，放进以模块命名的目录、按契约命名，不使用 `<module>_<contract>_spec.lua` 并列文件，例如
+  `era/m/git/buffer.lua` 的 `git/buffer/{attach,documents,reset,write_index}_spec.lua`；feature 目录同理，indentline
+  的 `parser_spec.lua`、`render_spec.lua`、`frame_spec.lua`、`provider_spec.lua` 与 `setup_spec.lua` 分别覆盖纯计算、
+  buffer/cache、native rendering 和生命周期。
+- Spec 的文件与目录形态跟随生产代码：`x/init.lua` 的 spec 放在 `x/` 内，不并列为 `x_spec.lua`；只有生产代码
+  同时有 `x.lua` 与 `x/` 时（如 `era/plugin.lua` 与 `era/plugin/`），spec 才同时有 `x_spec.lua` 与 `x/`。
 - Spec 目录可以带 `README.md` 说明该 feature 的验证入口；发现只匹配 `*_spec.lua`。
 
 ### Helper 与 fixture

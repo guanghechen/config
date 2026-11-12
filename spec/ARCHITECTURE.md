@@ -115,6 +115,8 @@ Highlights:
 
 Yuivim sets `vim.g.yuivim` before `init.lua`; its entry, options and keymaps live independently under `ark/vendor/yuivim/`.
 Yuivim and Yozvim leave UI, completion, LSP and Python environment management to the host.
+Yuivim synchronously enables IM dressing and schedules splitjoin/surrounds setup; it skips plugin bootstrap,
+commentstring and local plugin/dressing hooks. Yozvim leaves input-method management to the host.
 
 ## Notes
 
