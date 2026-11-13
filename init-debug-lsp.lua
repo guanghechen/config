@@ -269,8 +269,12 @@ local function collect_and_output(state)
     return #results
   end
 
-  if vim.fn.writefile({ json }, state.config.output_file) == -1 then
+  -- `writefile()` raises on an unwritable path, which would leave the process running with nothing written.
+  local ok_write, written = pcall(vim.fn.writefile, { json }, state.config.output_file)
+  if not ok_write or written == -1 then
     log(string.format("[%s] ERROR: Failed to write to %s", __module_name__, state.config.output_file))
+    vim.cmd("cq!")
+    return #results
   end
 
   log(string.format("\n=== Found %d diagnostics ===", #results))
@@ -424,7 +428,13 @@ local function main()
 
   local output_dir = vim.fn.fnamemodify(config.output_file, ":h")
   if vim.fn.isdirectory(output_dir) == 0 then
-    vim.fn.mkdir(output_dir, "p")
+    -- `mkdir()` raises on a directory it cannot create, which would leave the process running.
+    local ok_mkdir, made = pcall(vim.fn.mkdir, output_dir, "p")
+    if not ok_mkdir or made == 0 then
+      log(string.format("[%s] ERROR: Failed to create output directory: %s", __module_name__, output_dir))
+      vim.cmd("cq!")
+      return
+    end
     log(string.format("[%s] Created output directory: %s", __module_name__, output_dir))
   end
 
@@ -465,7 +475,12 @@ local function main()
       },
       diagnostics = {},
     })
-    vim.fn.writefile({ json }, config.output_file)
+    local ok_write, written = pcall(vim.fn.writefile, { json }, config.output_file)
+    if not ok_write or written == -1 then
+      log(string.format("[%s] ERROR: Failed to write to %s", __module_name__, config.output_file))
+      vim.cmd("cq!")
+      return
+    end
     vim.cmd("qa!")
     return
   end

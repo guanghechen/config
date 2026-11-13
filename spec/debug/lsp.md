@@ -180,16 +180,17 @@ JSON output: local/debug/lsp/20240115-103000.json
 | LSP 未启动       | attach 的 buffer 不足 90%                | 持续等待；超过 `timeout_ms` 后输出 `WARNING: Timeout reached!` 并按当前结果退出 |
 | 文件打开失败     | `safe_edit()` 返回 `false`               | 记录到 `failed_files`，继续处理其他文件                                         |
 | JSON 编码失败    | `pcall(vim.fn.json_encode)` 返回 `false` | 输出错误信息，使用 `cq!` 非零退出，不写 JSON                                    |
-| 输出文件写入失败 | `vim.fn.writefile` 抛出错误              | 收集中断：不输出诊断列表，进程不会自行退出                                      |
+| 输出目录创建失败 | `pcall(vim.fn.mkdir)` 失败或返回 0       | 输出错误信息，使用 `cq!` 非零退出，不分析文件                                   |
+| 输出文件写入失败 | `pcall(vim.fn.writefile)` 失败或返回 -1  | 输出错误信息，使用 `cq!` 非零退出，不输出诊断列表                               |
 
 ---
 
 ## Exit Codes
 
-| 退出码 | 含义                                                                        |
-| ------ | --------------------------------------------------------------------------- |
-| 0      | 成功完成，无 diagnostics                                                    |
-| 1      | 成功完成，存在 diagnostics（需要修复）；或缺少 `OUTPUT_FILE`、JSON 编码失败 |
+| 退出码 | 含义                                                                                      |
+| ------ | ----------------------------------------------------------------------------------------- |
+| 0      | 成功完成，无 diagnostics                                                                  |
+| 1      | 成功完成，存在 diagnostics（需要修复）；或缺少 `OUTPUT_FILE`、JSON 编码失败、输出写入失败 |
 
 > **Agent 提示**: 可通过 `$?` 判断是否需要进一步修复。超时同样按当前结果退出：stdout 出现
 > `WARNING: Timeout reached!` 时，`exit 0` 不表示代码已无问题。

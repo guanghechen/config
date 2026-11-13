@@ -8,8 +8,10 @@ require("era.plugin")
 
 local Action = require("era.m.plugin.action")
 Action.install():map(function()
+  -- A plugin that failed to install makes the update exit non-zero, so its caller can tell.
+  local failed = Action.get_progress().error ---@type integer
   local ok, err = pcall(function()
-    vim.cmd("qa!")
+    vim.cmd(failed > 0 and "cquit 1" or "qa!")
   end)
 
   if not ok then
