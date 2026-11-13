@@ -212,7 +212,12 @@ impl LuaRanked {
             }
             members
         });
-        members[index].then_some(index)
+        /* An item appended after the query is past the members taken then, and not among the matches. */
+        members
+            .get(index)
+            .copied()
+            .unwrap_or(false)
+            .then_some(index)
     }
 }
 

@@ -65,6 +65,10 @@ fn search_en(keyword: &str, options: &IDictSearchOptions) -> Vec<SearchResult> {
         return Vec::new();
     }
 
+    /* An English anchor is ASCII letters, so a keyword with a character across its end matches none. */
+    if !keyword_lower.is_char_boundary(en::ANCHOR_LENGTH) {
+        return Vec::new();
+    }
     let (anchor, tail) = keyword_lower.split_at(en::ANCHOR_LENGTH);
     let group = match en::find_group(anchor) {
         Some(value) => value,
@@ -318,6 +322,16 @@ mod tests {
     fn t_shorter_than_anchor_returns_empty() {
         let results = search(&options("wa", DictMatchMode::Prefix, 5));
         assert!(results.is_empty());
+    }
+
+    #[test]
+    fn t_a_character_across_the_anchor_returns_empty() {
+        for keyword in ["señor", "ab中"] {
+            assert!(
+                search(&options(keyword, DictMatchMode::Prefix, 5)).is_empty(),
+                "{keyword}"
+            );
+        }
     }
 
     #[test]

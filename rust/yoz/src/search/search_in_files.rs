@@ -739,13 +739,9 @@ pub(crate) fn search_in_files_cancellable(
         let file = match File::open(&path) {
             Ok(file) => file,
             Err(_) if is_cancelled(cancelled) => return SearchInFilesOutcome::Cancelled,
-            Err(error) => {
-                let display = display_path(&path, &base_dir);
-                return SearchInFilesOutcome::Failed(ISearchFailedResult {
-                    elapsed_time: start.elapsed().as_millis() as u64,
-                    error: format!("Failed to search '{}': {}", display, error),
-                });
-            }
+            /* A file the search cannot open, as one without read permission or removed since the walk listed it, is
+            left out like the entries the walk fails on, so the other files still return their matches. */
+            Err(_) => continue,
         };
 
         /* Taken from the file opened, before reading it: a change during the search shows as one after it. */
@@ -757,6 +753,7 @@ pub(crate) fn search_in_files_cancellable(
             Err(_) => (0, (0, 0)),
         };
 
+        let matches_before = matches_count;
         let mut lines: Vec<LineMatch> = Vec::new();
         let mut sink = FileMatchSink {
             matcher: &matcher,
@@ -772,15 +769,13 @@ pub(crate) fn search_in_files_cancellable(
         if searched.is_ok() && !lines.is_empty() && !reader.eof {
             searched = io::copy(&mut reader, &mut io::sink()).map(drop);
         }
-        if let Err(error) = searched {
+        if searched.is_err() {
             if is_cancelled(cancelled) {
                 return SearchInFilesOutcome::Cancelled;
             }
-            let display = display_path(&path, &base_dir);
-            return SearchInFilesOutcome::Failed(ISearchFailedResult {
-                elapsed_time: start.elapsed().as_millis() as u64,
-                error: format!("Failed to search '{}': {}", display, error),
-            });
+            /* A read that fails part way leaves the file out, with the matches it had already counted. */
+            matches_count = matches_before;
+            continue;
         }
 
         if is_cancelled(cancelled) {
@@ -1194,6 +1189,39 @@ mod tests {
             (item.size, item.mtime_sec, item.mtime_nsec),
             (4, mtime_sec, mtime_nsec)
         );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn t_search_in_files_leaves_out_a_file_it_cannot_open() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let dir = TempDir::new();
+        fs::write(dir.path().join("a.txt"), "foo\n").unwrap();
+        let locked = dir.path().join("b.txt");
+        fs::write(&locked, "foo\n").unwrap();
+        fs::set_permissions(&locked, fs::Permissions::from_mode(0o000)).unwrap();
+        if File::open(&locked).is_ok() {
+            /* Permissions do not bind a privileged user, who has no file the search cannot open. */
+            return;
+        }
+        let options = ISearchInFilesOptions {
+            cwd: Some(dir.path().to_string_lossy().to_string()),
+            flag_case_sensitive: true,
+            flag_gitignore: false,
+            flag_regex: false,
+            max_filesize: None,
+            max_matches: None,
+            search_pattern: "foo".to_string(),
+            search_paths: ".".to_string(),
+            include_patterns: String::new(),
+            exclude_patterns: String::new(),
+            specified_filepath: None,
+        };
+
+        let result = search_in_files(&options).expect("expected successful search");
+        let paths: Vec<&str> = result.items.iter().map(|item| item.p.as_str()).collect();
+        assert_eq!(paths, vec!["a.txt"]);
     }
 
     #[test]

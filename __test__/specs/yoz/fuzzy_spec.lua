@@ -77,6 +77,15 @@ t:test("highlights are byte ranges of the original text, only for matched items"
   t.assert_nil(result:highlight("missing"))
 end)
 
+t:test("an item appended after a query is not among the query's matches", function()
+  local value = corpus({ "foo.lua" })
+  local result = value:query({ pattern = "foo" })
+  t.assert_true(result:has("foo.lua"))
+  value:append({ "foo2.lua" }, { "foo2.lua" })
+  t.assert_false(result:has("foo2.lua"))
+  t.assert_nil(result:highlight("foo2.lua"))
+end)
+
 t:test("each item needs keys; its first key names it", function()
   local value = native.fuzzy.new_corpus({ scheme = "path" })
   t.assert_false(pcall(value.append, value, { "a" }))
