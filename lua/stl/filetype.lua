@@ -322,14 +322,15 @@ end
 ---@param filename                      string
 ---@return boolean
 function M.is_printable_file(filename)
-  filename = filename:lower() ---@type string
-  local extname = filename:match("%.[^.]+$") or ""
+  local name = filename:lower() ---@type string
+  local extname = name:match("%.[^.]+$") or ""
   if extnames.no_printable[extname] then
     return false
   end
 
   if extname == "" then
-    return extnames.printable_without_extname[filename] or false
+    -- A name Neovim gives a filetype, as Makefile or Dockerfile, is text without an extension.
+    return extnames.printable_without_extname[name] == true or vim.filetype.match({ filename = filename }) ~= nil
   end
 
   return true

@@ -27,6 +27,15 @@ t:test("C# uses Neovim's cs filetype", function()
   t.assert_false(Filetype.is_cmp_enabled("csharp"), "nonexistent alias")
 end)
 
+t:test("printable files include text names without an extension but not binary or unknown ones", function()
+  for _, name in ipairs({ "Makefile", "Dockerfile", "Justfile", "LICENSE", "init.lua" }) do
+    t.assert_true(Filetype.is_printable_file(name), name)
+  end
+  for _, name in ipairs({ "image.png", "archive.zip", "blob" }) do
+    t.assert_false(Filetype.is_printable_file(name), name)
+  end
+end)
+
 t:test("picker and searcher finders take no completion", function()
   t.assert_false(Filetype.is_cmp_enabled(Filetype.UX_PICKER_FINDER), "picker finder")
   t.assert_false(Filetype.is_cmp_enabled(Filetype.UX_SEARCHER_FINDER), "searcher finder")
