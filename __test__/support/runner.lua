@@ -6,6 +6,8 @@ local M = {}
 local source = assert(vim.uv.fs_realpath(debug.getinfo(1, "S").source:sub(2))) ---@type string
 local ROOT = vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(source))) ---@type string
 local DEFAULT_TIMEOUT_MS = 30000 ---@type integer
+-- Time a suite gets to exit after its timeout sends TERM, before it is killed.
+local KILL_GRACE_MS = 2000 ---@type integer
 -- Suites run at once by default: half the hardware threads, at most eight. Suites start child processes and native
 -- worker threads of their own, and timing-sensitive cases need headroom.
 local DEFAULT_JOBS = math.max(1, math.min(8, math.floor(vim.uv.available_parallelism() / 2))) ---@type integer
@@ -131,7 +133,8 @@ local function start_suite(suite, timeout_ms, env, on_done)
   local name = display_path(suite) ---@type string
   local suite_timeout_ms = math.max(timeout_ms, declared_timeout_ms(suite) or 0) ---@type integer
   local started_at = vim.uv.hrtime() ---@type number
-  vim.system({
+  local killer = assert(vim.uv.new_timer()) ---@type uv.uv_timer_t
+  local process = vim.system({
     vim.v.progpath,
     "--headless",
     "-u",
@@ -144,6 +147,9 @@ local function start_suite(suite, timeout_ms, env, on_done)
     "--suite",
     suite,
   }, { cwd = ROOT, text = true, timeout = suite_timeout_ms, env = env, clear_env = true }, function(result)
+    if not killer:is_closing() then
+      killer:close()
+    end
     local parts = {} ---@type string[]
     for _, output in ipairs({ result.stdout, result.stderr }) do
       if output ~= nil and output ~= "" then
@@ -166,6 +172,14 @@ local function start_suite(suite, timeout_ms, env, on_done)
       skipped = skipped,
       duration_ms = math.floor((vim.uv.hrtime() - started_at) / 1e6),
     })
+  end)
+  -- The timeout sends TERM, which Neovim handles only on its event loop; a suite busy in Lua or native code is
+  -- killed once the grace has passed, so it cannot hold up the run.
+  killer:start(suite_timeout_ms + KILL_GRACE_MS, 0, function()
+    killer:close()
+    if not process:is_closing() then
+      process:kill("sigkill")
+    end
   end)
 end
 

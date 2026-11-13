@@ -95,7 +95,8 @@ native module。Baseline 比较按同样的路径加载另一个 checkout 中安
   本次运行目录下独立的 `XDG_STATE_HOME`，运行结束后删除，undo 文件等 state 不进入用户目录；环境同时去掉
   `NVIM_LOG_FILE`，Neovim 按该 `XDG_STATE_HOME` 重新导出，日志也落在这个目录。
 - 默认每个 suite 超时 30 秒，可由 CLI 覆盖；超过共享上限的 suite 在开头的注释行声明 `--- Timeout: <ms>`，取两者
-  较大值。失败或超时不阻止其它 suite；不自动重试、安装依赖或编译 native module。
+  较大值。超时先发 TERM；Neovim 只在事件循环中处理 TERM，2 秒后仍未退出的 suite（如忙于 Lua 或原生代码）被 KILL。
+  失败或超时不阻止其它 suite；不自动重试、安装依赖或编译 native module。
 - Suite 与 CLI 以 `:cquit` / `:qall!` 退出：退出码不变，并执行 Neovim 的退出清理，删除各进程的 server socket
   目录。
 
@@ -162,6 +163,6 @@ Node 测试是 `__test__/node/` 下平铺的 `*.test.mjs`，按被测脚本命�
 ## 基础设施验证
 
 `specs/support/` 覆盖 discovery 边界、稳定排序、字面筛选、空选择、子进程状态隔离、含空格与 Unicode 的路径、
-从其他 CWD 执行、加载/case/cleanup 失败、空 spec、遗漏 run、进程失败、超时和 CLI 诊断，并发上限、按发现
-顺序输出、suite 环境不含 tmux 变量、state 与日志位于运行目录、`--jobs` 参数校验、按耗时记录的启动顺序及记录的
-更新、清理和容错，以及 harness、bootstrap、ui、fs、git 原语自身的契约。
+从其他 CWD 执行、加载/case/cleanup 失败、空 spec、遗漏 run、进程失败、超时（含不返回事件循环的 suite）和 CLI
+诊断，并发上限、按发现顺序输出、suite 环境不含 tmux 变量、state 与日志位于运行目录、`--jobs` 参数校验、按耗时
+记录的启动顺序及记录的更新、清理和容错，以及 harness、bootstrap、ui、fs、git 原语自身的契约。

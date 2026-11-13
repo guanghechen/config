@@ -219,6 +219,15 @@ t:test("timeout terminates a suite and allows the following suite to run", funct
   end)
 end)
 
+t:test("a suite that never returns to the event loop is killed after its timeout", function()
+  with_temp_root(function(dir)
+    write_spec("while true do end", dir .. "/busy_spec.lua")
+    local failed, output = run_suites({ root = dir, timeout_ms = 250 })
+    t.assert_eq(1, failed, "killed suite")
+    t.assert_true(output:find("busy_spec.lua: timeout after 250 ms", 1, true) ~= nil, output)
+  end)
+end)
+
 t:test("a leading timeout declaration only raises the limit of its own suite", function()
   with_temp_root(function(dir)
     ---@param header                    string
