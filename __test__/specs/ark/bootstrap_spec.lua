@@ -93,4 +93,22 @@ for _, case in ipairs({
   end)
 end
 
+t:test("the WSL vim.ui.open override returns no error for gx to report", function()
+  t:patch_global("stl", { env = { IS_OSX = false, IS_NIX = false, IS_WSL = true, IS_WIN = false } })
+  local started = {} ---@type string[][]
+  t:patch_table(vim.fn, "jobstart", function(command)
+    started[#started + 1] = command
+    return 1
+  end)
+  -- `setup_shell` replaces it; the case puts the original back.
+  t:patch_table(vim.ui, "open", vim.ui.open)
+  assert(loadfile("lua/ark/bootstrap.lua"))().setup_shell()
+
+  -- Neovim's `gx` notifies the second value it gets back as the error.
+  local cmd, err = vim.ui.open("https://example.com")
+  t.assert_nil(cmd, "no command object")
+  t.assert_nil(err, "no error")
+  t.assert_eq("fish", started[1][1], "opened through fish")
+end)
+
 t:run()

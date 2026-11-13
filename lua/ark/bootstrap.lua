@@ -65,7 +65,8 @@ function M.setup_shell()
     ---@diagnostic disable-next-line: unused-local, duplicate-set-field
     vim.ui.open = function(path, opt)
       vim.fn.jobstart({ "fish", "-c", "open " .. vim.fn.shellescape(path) }, { detach = true })
-      return nil, function() end
+      -- No command object and no error: `gx` notifies the second value as the error message.
+      return nil, nil
     end
   elseif stl.env.IS_WIN then
     vim.o.shell = "pwsh"
