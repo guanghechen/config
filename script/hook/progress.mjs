@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-import { execFileSync } from "node:child_process"
 import { mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import { terminalTty } from "./tty.mjs"
 
 // Claude Code keeps a static terminal title under multiplexers, so a busy pane looks
 // idle. Report activity as an OSC 9;4 progress state instead; tmux captures it as
@@ -118,32 +118,6 @@ function progressOf(dir) {
   }
   if (markers.includes("question")) return WAITING
   return markers.length > 0 ? BUSY : IDLE
-}
-
-// Hook subprocesses have no controlling terminal. Claude Code runs them through a shell,
-// so its tty is at most two parents up. Stop there: walking further would reach an outer
-// session's terminal when this Claude is itself nested in a tool call.
-function terminalTty() {
-  let pid = process.ppid
-  for (let depth = 0; depth < 2 && pid > 1; depth++) {
-    const [ppid, tty] = psRow(pid)
-    if (tty && !/^\?+$/.test(tty)) return `/dev/${tty}`
-    pid = Number(ppid)
-  }
-  return null
-}
-
-// timeout guards against the hook subprocess blocking forever on a stuck ps
-function psRow(pid) {
-  try {
-    const out = execFileSync("ps", ["-o", "ppid=,tty=", "-p", String(pid)], {
-      encoding: "utf-8",
-      timeout: 1000,
-    })
-    return out.trim().split(/\s+/)
-  } catch {
-    return []
-  }
 }
 
 function tryWrite(target, data) {
