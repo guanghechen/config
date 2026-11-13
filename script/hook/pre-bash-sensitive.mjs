@@ -28,9 +28,14 @@ const DANGEROUS_COMMANDS = new Set([
   "vim", "nvim", "vi", "nano", "emacs", "view",
 ])
 
-const PROCESS_WRAPPERS = new Set(["timeout", "time", "nice", "nohup", "stdbuf", "xargs", "sudo", "env"])
+const PROCESS_WRAPPERS = new Set([
+  "timeout", "time", "nice", "nohup", "stdbuf", "xargs", "sudo", "env", "exec", "command", "builtin",
+])
 
 const SHELL_DASH_C = new Set(["bash", "sh", "zsh", "fish", "dash", "ash", "ksh"])
+
+// Commands that join their arguments into a script and run it.
+const SCRIPT_RUNNERS = new Set(["eval", "watch"])
 
 const SEARCH_COMMANDS = new Set(["rg", "grep", "egrep", "fgrep"])
 const SEARCH_VALUE_OPTIONS = new Set([
@@ -44,8 +49,6 @@ const SEARCH_VALUE_OPTIONS = new Set([
   "--include", "--exclude", "--exclude-dir", "--label", "--binary-files",
   "-d", "--directories", "-D", "--devices",
 ])
-
-const SUBCOMMAND_SEPARATORS = /(?:&&|\|\||;|\||\|&|&|\n)/
 
 function looksSensitive(token) {
   let cleaned = token.replace(/^['"]|['"]$/g, "")
@@ -104,15 +107,67 @@ function searchFileArguments(command, args) {
   return files.concat(explicitPattern ? positional : positional.slice(1))
 }
 
-function tokenize(subcommand) {
-  // Light tokenizer: split on whitespace while preserving simple quoted spans.
-  const tokens = []
-  const re = /"([^"]*)"|'([^']*)'|(\S+)/g
-  let m
-  while ((m = re.exec(subcommand)) !== null) {
-    tokens.push(m[1] ?? m[2] ?? m[3])
+// Splits a script into simple commands of words the way the shell reads them: quotes and
+// backslashes keep `|`, `;`, `&` and whitespace inside a word, so quoted patterns and
+// programs such as `rg "a|b"` or `awk '{x; y}'` stay whole.
+function splitCommands(script) {
+  const commands = []
+  let words = []
+  let word = null
+  const endWord = () => {
+    if (word !== null) words.push(word)
+    word = null
   }
-  return tokens
+  const endCommand = () => {
+    endWord()
+    if (words.length > 0) commands.push(words)
+    words = []
+  }
+  for (let i = 0; i < script.length; i++) {
+    const ch = script[i]
+    if (ch === "'") {
+      const end = script.indexOf("'", i + 1)
+      const stop = end === -1 ? script.length : end
+      word = (word ?? "") + script.slice(i + 1, stop)
+      i = stop
+    } else if (ch === '"') {
+      word ??= ""
+      for (i++; i < script.length && script[i] !== '"'; i++) {
+        if (script[i] === "\\" && '$`"\\\n'.includes(script[i + 1] ?? "")) i++
+        word += script[i]
+      }
+    } else if (ch === "\\") {
+      i++
+      if (i < script.length && script[i] !== "\n") word = (word ?? "") + script[i]
+    } else if (ch === "\n" || ch === ";" || ch === "&" || ch === "|") {
+      endCommand()
+    } else if (/\s/.test(ch)) {
+      endWord()
+    } else {
+      word = (word ?? "") + ch
+    }
+  }
+  endCommand()
+  return commands
+}
+
+// Returns the script a shell runs with -c, or null when it runs a file or stays interactive.
+// The c may sit in a cluster such as -lc or -ec, and options may follow it, as in
+// `bash -c -l "..."`, so the script is the first operand after all options.
+function shellScript(args) {
+  let command = false
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i]
+    if (arg === "--") return command ? (args[i + 1] ?? null) : null
+    if (arg.startsWith("--")) continue
+    if (/^[-+][A-Za-z]+$/.test(arg)) {
+      if (arg[0] === "-" && arg.includes("c")) command = true
+      if (/[oO]/.test(arg)) i++ // -o / -O take an option name
+      continue
+    }
+    return command ? arg : null
+  }
+  return null
 }
 
 function isEnvAssignment(tok) {
@@ -126,10 +181,7 @@ function isWrapperArg(tok) {
   return false
 }
 
-function findOffendingCommand(subcommand) {
-  const tokens = tokenize(subcommand)
-  if (tokens.length === 0) return null
-
+function findOffendingCommand(tokens) {
   let i = 0
   // Skip leading `FOO=bar` assignments and process wrappers like `timeout 5`.
   while (i < tokens.length) {
@@ -146,17 +198,16 @@ function findOffendingCommand(subcommand) {
 
   const base = cmd.includes("/") ? cmd.slice(cmd.lastIndexOf("/") + 1) : cmd
 
-  // `bash -c "real command"`: recurse into the quoted script.
+  // `bash -lc "real command"`: recurse into the script the shell runs.
   if (SHELL_DASH_C.has(base)) {
-    const dashC = tokens.indexOf("-c", i + 1)
-    if (dashC !== -1 && tokens[dashC + 1]) {
-      const inner = tokens[dashC + 1]
-      for (const sub of inner.split(SUBCOMMAND_SEPARATORS)) {
-        const hit = findOffendingCommand(sub.trim())
-        if (hit) return hit
-      }
-    }
-    return null
+    const script = shellScript(tokens.slice(i + 1))
+    return script === null ? null : findOffendingInScript(script)
+  }
+
+  if (SCRIPT_RUNNERS.has(base)) {
+    let j = i + 1
+    while (j < tokens.length && isWrapperArg(tokens[j])) j++ // watch -n 2
+    return findOffendingInScript(tokens.slice(j).join(" "))
   }
 
   if (!DANGEROUS_COMMANDS.has(base)) return null
@@ -169,17 +220,20 @@ function findOffendingCommand(subcommand) {
   return null
 }
 
-const input = JSON.parse(readFileSync(0, "utf-8"))
-const command = input.tool_input?.command || ""
-
-for (const sub of command.split(SUBCOMMAND_SEPARATORS)) {
-  const hit = findOffendingCommand(sub.trim())
-  if (hit) {
-    outputHook(
-      "PreToolUse",
-      "deny",
-      `Blocked: "${hit.cmd}" targeting sensitive path "${hit.target}". Ask the user to handle this file.`,
-    )
-    process.exit(0)
+function findOffendingInScript(script) {
+  for (const tokens of splitCommands(script)) {
+    const hit = findOffendingCommand(tokens)
+    if (hit) return hit
   }
+  return null
+}
+
+const input = JSON.parse(readFileSync(0, "utf-8"))
+const hit = findOffendingInScript(input.tool_input?.command || "")
+if (hit) {
+  outputHook(
+    "PreToolUse",
+    "deny",
+    `Blocked: "${hit.cmd}" targeting sensitive path "${hit.target}". Ask the user to handle this file.`,
+  )
 }

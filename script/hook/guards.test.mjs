@@ -144,6 +144,33 @@ test("search file operands and files containing patterns remain protected", () =
   }
 })
 
+test("quoted separators and shell wrappers do not hide sensitive operands", () => {
+  for (const command of [
+    'rg "API_KEY|SECRET" /synthetic/.env.production',
+    "grep -E 'token|secret' /synthetic/.ssh/config",
+    "awk -F= '{print $1; print $2}' /synthetic/.env.production",
+    "sed 's/a/b/; s/c/d/' /synthetic/.env.production",
+    'bash -lc "cat /synthetic/.env.production"',
+    'sh -ec "cat /synthetic/.env.production"',
+    'bash -c -l "cat /synthetic/.env.production"',
+    'bash -eo pipefail -c "cat /synthetic/.env.production"',
+    `bash -lc "rg 'A|B' /synthetic/.env.production"`,
+    'eval "cat /synthetic/.env.production"',
+    "exec cat /synthetic/.env.production",
+    "command cat /synthetic/.env.production",
+    "builtin source /synthetic/.env.production",
+    "watch -n 1 cat /synthetic/.env.production",
+  ]) {
+    assert.equal(runGuard("pre-bash-sensitive.mjs", "Bash", { command }).permissionDecision, "deny", command)
+  }
+  for (const command of [
+    'rg "API_KEY|SECRET" README.md',
+    "awk '{print $1; print $2}' data.txt",
+    'bash -lc "npm test"',
+    "command -v node",
+  ]) assert.equal(runGuard("pre-bash-sensitive.mjs", "Bash", { command }), undefined, command)
+})
+
 test("configured policy launchers use CLAUDE_CONFIG_DIR and block load or input failures", () => {
   const temporaryDir = mkdtempSync(path.join(tmpdir(), "claude hook config "))
   try {
