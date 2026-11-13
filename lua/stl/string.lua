@@ -46,18 +46,25 @@ function M.parse_comma_list(text)
   return vim.split(text, "%s*,%s*", { trimempty = true })
 end
 
+---Splits `path[:lnum[:col[:col_end]]]`. The location is the integer suffix, so a drive letter or a colon in a file
+---name stays in the path.
 ---@param text                          string
 ---@return string
 ---@return integer|nil
 ---@return integer|nil
 ---@return integer|nil
 function M.parse_filepath_with_location(text)
-  local pieces = vim.split(text, ":", { plain = true })
-  local filepath = pieces[1] ---@type string
-  local lnum = pieces[2] ~= nil and tonumber(pieces[2]) or nil ---@type integer|nil
-  local col = pieces[3] ~= nil and tonumber(pieces[3]) or nil ---@type integer|nil
-  local col_end = pieces[4] ~= nil and tonumber(pieces[4]) or nil ---@type integer|nil
-  return filepath, lnum, col, col_end
+  local filepath, lnum, col, col_end = text:match("^(.-):(%-?%d+):(%-?%d+):(%-?%d+)$")
+  if filepath == nil then
+    filepath, lnum, col = text:match("^(.-):(%-?%d+):(%-?%d+)$")
+  end
+  if filepath == nil then
+    filepath, lnum = text:match("^(.-):(%-?%d+)$")
+  end
+  if filepath == nil or filepath == "" then
+    return text, nil, nil, nil
+  end
+  return filepath, tonumber(lnum), tonumber(col), tonumber(col_end)
 end
 
 ---@param text                          string
