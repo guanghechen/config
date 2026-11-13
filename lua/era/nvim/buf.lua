@@ -378,6 +378,17 @@ end
 -- save
 ----------------------------------------------------------------------------------------------------
 
+---The first line of `err`, from its Vim error code when it has one, such as "E13: File exists (add ! to override)".
+---@param err                           any
+---@return string
+local function vim_error(err)
+  local message = tostring(err) ---@type string
+  return message:match("E%d+:[^\n]*") or message:match("^[^\n]*")
+end
+
+---Writes every modified file buffer. Files on disk are written at once; each file not on disk yet is asked for a path,
+---one prompt at a time. A cancelled prompt, a declined overwrite or a failed write leaves only that file unsaved, and
+---the files left unsaved are reported together.
 ---@param args                          ?string
 ---@return nil
 function M.save(args)
@@ -386,7 +397,7 @@ function M.save(args)
   local workspace = dot.path.workspace() ---@type string
 
   local bufnrs = vim.api.nvim_list_bufs() ---@type integer[]
-  local bufnrs_modified = {} ---@type integer[]
+  local bufnrs_on_disk = {} ---@type integer[]
   local bufnrs_new_file = {} ---@type integer[]
 
   for _, bufnr in ipairs(bufnrs) do
@@ -396,121 +407,171 @@ function M.save(args)
     then
       local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
       if #filepath > 0 and yoz.path.is_absolute(filepath) then
-        table.insert(bufnrs_modified, bufnr)
-
-        if not yoz.path.is_exist(filepath) then
+        if yoz.path.is_exist(filepath) then
+          table.insert(bufnrs_on_disk, bufnr)
+        else
           table.insert(bufnrs_new_file, bufnr)
         end
       end
     end
   end
 
-  local count_modified = #bufnrs_modified ---@type integer
-  local count_new_file = #bufnrs_new_file ---@type integer
-  local count_ready = 0 ---@type integer
-
-  if count_modified < 1 then
+  if #bufnrs_on_disk + #bufnrs_new_file < 1 then
     return
   end
 
-  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
-  local winnr_sourcefile = dot.tab.retrieve_winnr_sourcefile(tabnr) or dot.win.pick_sourcefile() ---@type integer|nil
-  if winnr_sourcefile == nil then
-    stl.reporter.error({
-      from = __module_name__,
-      subject = "save",
-      message = "Cannot find a valid sourcefile winnr",
-    })
-    return
+  local unsaved = {} ---@type string[]
+
+  ---Whether `bufnr` still has changes to save: a prompt may outlast the buffer, or another save may write it.
+  ---@param bufnr                       integer
+  ---@return boolean
+  local function pending(bufnr)
+    return vim.api.nvim_buf_is_valid(bufnr) and vim.api.nvim_get_option_value("modified", { buf = bufnr })
   end
 
+  ---@param name                        string
+  ---@param reason                      string
   ---@return nil
-  local function check()
-    if count_ready == count_new_file then
-      for _, bufnr in ipairs(bufnrs_modified) do
-        if vim.api.nvim_buf_is_valid(bufnr) then
-          vim.api.nvim_buf_call(bufnr, function()
-            if noformat then
-              vim.cmd("noautocmd write")
-            else
-              vim.cmd("write")
-            end
-          end)
-        end
-      end
+  local function leave_unsaved(name, reason)
+    table.insert(unsaved, string.format("%s (%s)", name, reason))
+  end
 
-      local winnrs = vim.api.nvim_list_wins() ---@type integer[]
-      for _, winnr in ipairs(winnrs) do
-        dot.state.status.dirty_winline_nr:next(winnr)
-      end
-      dot.state.status.dirtier_statusline:mark_dirty()
-      dot.state.status.dirtier_tabline:mark_dirty()
+  ---@param bufnr                       integer
+  ---@param bang                        boolean
+  ---@return nil
+  local function save(bufnr, bang)
+    local command = (noformat and "noautocmd write" or "write") .. (bang and "!" or "") ---@type string
+    local ok, err = true, nil ---@type boolean, any
+    vim.api.nvim_buf_call(bufnr, function()
+      ok, err = pcall(vim.api.nvim_command, command)
+    end)
+    if vim.api.nvim_get_option_value("modified", { buf = bufnr }) then
+      local name = dot.path.relative(cwd, vim.api.nvim_buf_get_name(bufnr), "/") ---@type string
+      leave_unsaved(name, ok and "not written" or vim_error(err))
+    elseif not ok then
+      -- The file is written, but a hook on the write failed.
+      stl.reporter.error({
+        from = __module_name__,
+        subject = "save",
+        message = vim_error(err),
+        details = { error = tostring(err) },
+      })
     end
   end
 
-  for _, bufnr in ipairs(bufnrs_new_file) do
-    local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
-    ---@type string
-    local initial_text = yoz.path.is_descendant(workspace, filepath) and dot.path.relative(cwd, filepath, "/")
-      or filepath
-    vim.api.nvim_win_set_buf(winnr_sourcefile, bufnr)
+  ---@return nil
+  local function refresh()
+    for _, winnr in ipairs(vim.api.nvim_list_wins()) do
+      dot.state.status.dirty_winline_nr:next(winnr)
+    end
+    dot.state.status.dirtier_statusline:mark_dirty()
+    dot.state.status.dirtier_tabline:mark_dirty()
+  end
 
+  -- Files on disk go first, so no prompt for a new file holds them back.
+  for _, bufnr in ipairs(bufnrs_on_disk) do
+    save(bufnr, false)
+  end
+  if #bufnrs_on_disk > 0 then
+    refresh()
+  end
+
+  local winnr_sourcefile = nil ---@type integer|nil
+  if #bufnrs_new_file > 0 then
+    local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+    winnr_sourcefile = dot.tab.retrieve_winnr_sourcefile(tabnr) or dot.win.pick_sourcefile()
+  end
+
+  ---Asks for the path of the `index`-th new file, and for the next one only once this one is done: a second prompt
+  ---would take the focus from the first, which cancels it.
+  ---@param index                       integer
+  ---@return nil
+  local function ask(index)
+    local bufnr = bufnrs_new_file[index] ---@type integer|nil
+    if bufnr == nil then
+      if #unsaved > 0 then
+        stl.reporter.warn({
+          from = __module_name__,
+          subject = "save",
+          message = "Not saved: " .. table.concat(unsaved, ", "),
+        })
+      end
+      return
+    end
+
+    ---@return nil
+    local function ask_next()
+      -- After the prompt and its windows are gone, so the next prompt keeps the focus.
+      vim.schedule(function()
+        ask(index + 1)
+      end)
+    end
+
+    if not pending(bufnr) then
+      ask_next()
+      return
+    end
+
+    local filepath = vim.api.nvim_buf_get_name(bufnr) ---@type string
+    local name = dot.path.relative(cwd, filepath, "/") ---@type string
+    if winnr_sourcefile ~= nil and vim.api.nvim_win_is_valid(winnr_sourcefile) then
+      vim.api.nvim_win_set_buf(winnr_sourcefile, bufnr)
+    end
     vim.ui.input({
       relative = "editor",
       prompt = "Save file as",
-      default = initial_text,
+      default = yoz.path.is_descendant(workspace, filepath) and name or filepath,
     }, function(text)
+      if not pending(bufnr) then
+        ask_next()
+        return
+      end
       if text == nil then
+        leave_unsaved(name, "cancelled")
+        ask_next()
         return
       end
 
       local next_filepath = dot.path.resolve(cwd, text) ---@type string
-
-      ---@return nil
-      local on_save = function()
-        vim.api.nvim_buf_set_name(bufnr, next_filepath)
-
-        count_ready = count_ready + 1
-        check()
-      end
-
-      if yoz.path.is_exist_file(next_filepath) then
-        vim.ui.select({ "Yes", "No" }, {
-          name = __module_name__,
-          prompt = "The file is already existed, do you want to override it?",
-        }, function(choice)
-          if choice == "Yes" then
-            on_save()
-          end
-        end)
-        return false
-      end
-
       if yoz.path.is_exist_directory(next_filepath) then
-        stl.reporter.error({
-          from = __module_name__,
-          subject = "save",
-          message = "Cannot save a file into a directory.",
-          details = {
-            bufnr = bufnr,
-            text = text,
-            cwd = cwd,
-            workspace = workspace,
-            next_filepath = next_filepath,
-          },
-        })
-
-        count_ready = count_ready + 1
-        check()
-        return false
+        leave_unsaved(name, dot.path.relative(cwd, next_filepath, "/") .. " is a directory")
+        ask_next()
+        return
       end
 
-      vim.schedule(on_save)
-      return true
+      ---@param bang                    boolean
+      ---@return nil
+      local function save_as(bang)
+        local ok, err = pcall(vim.api.nvim_buf_set_name, bufnr, next_filepath)
+        if ok then
+          save(bufnr, bang)
+          refresh()
+        else
+          leave_unsaved(name, vim_error(err))
+        end
+        ask_next()
+      end
+
+      if not yoz.path.is_exist_file(next_filepath) then
+        save_as(false)
+        return
+      end
+      vim.ui.select({ "Yes", "No" }, {
+        name = __module_name__,
+        prompt = "The file is already existed, do you want to override it?",
+      }, function(choice)
+        if choice == "Yes" then
+          -- A renamed buffer writes over an existing file only with `!`.
+          save_as(true)
+        else
+          leave_unsaved(name, "not overwritten")
+          ask_next()
+        end
+      end)
     end)
   end
 
-  check()
+  ask(1)
 end
 
 ----------------------------------------------------------------------------------------------------
