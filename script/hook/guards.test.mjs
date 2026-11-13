@@ -67,6 +67,29 @@ test("plaintext Claude credential store is blocked", () => {
   }
 })
 
+test("registry token files are blocked without catching look-alikes", () => {
+  for (const file of [
+    "/synthetic/home/.npmrc", "/synthetic/project/.npmrc", "~/.npmrc",
+    "/synthetic/home/.config/gh/hosts.yml", "$HOME/.config/gh/hosts.yml",
+    "/synthetic/home/.cargo/credentials.toml", "/synthetic/home/.cargo/credentials",
+  ]) {
+    assert.equal(isSensitiveFile(file), true, file)
+    assert.equal(runGuard("pre-bash-sensitive.mjs", "Bash", { command: `cat ${file}` }).permissionDecision, "deny", file)
+  }
+  assert.equal(isSensitiveFile("C:\\synthetic\\.cargo\\credentials.toml"), true)
+  for (const file of [
+    "/synthetic/home/.config/gh/config.yml", "/synthetic/ansible/hosts.yml",
+    "/synthetic/home/.cargo/config.toml", "/synthetic/project/src/credentials/index.ts",
+  ]) assert.equal(isSensitiveFile(file), false, file)
+  // Claude Code matches `//` rules like gitignore, so `**` also crosses dot directories
+  // such as ~/.config; node's matchesGlob does not, hence the literal rule check.
+  for (const tool of ["Read", "Edit"]) {
+    for (const glob of [".npmrc", "gh/hosts.yml", ".cargo/credentials", "credentials.toml"]) {
+      assert.ok(settings.permissions.deny.includes(`${tool}(//**/${glob})`), `${tool}: ${glob}`)
+    }
+  }
+})
+
 function deniedAnywhere(tool, name) {
   const prefix = `${tool}(//**/`
   return settings.permissions.deny.some(

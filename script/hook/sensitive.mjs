@@ -6,6 +6,9 @@ export const SENSITIVE_PATTERNS = [
   /^\.env/,
   /^\.git-credentials$/,
   /^\.credentials\.json$/,
+  // Package registries keep auth tokens in these.
+  /^\.npmrc$/,
+  /^credentials\.toml$/,
 ]
 
 // Env templates carry placeholders only, so they stay readable outside protected directories.
@@ -16,6 +19,9 @@ export const SENSITIVE_PATHS = [
   /(?:^|[\\/])\.credentials(?:[\\/]|$)/,
   /(?:^|[\\/])local[\\/]config\.(?:fish|ps1)$/,
   /(?:^|[\\/])local[\\/]env\.[^/\\]+$/,
+  // GitHub CLI and legacy Cargo tokens; their file names alone are too generic.
+  /(?:^|[\\/])gh[\\/]hosts\.yml$/,
+  /(?:^|[\\/])\.cargo[\\/]credentials$/,
 ]
 
 export function isSensitiveFile(filepath) {
