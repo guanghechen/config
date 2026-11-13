@@ -259,13 +259,14 @@ end
 ---@param dir                           string
 ---@return boolean
 function M.__rm_recursive__(dir)
-  local ok, err = pcall(vim.fn.delete, dir, "rf")
-  if not ok then
+  -- `delete()` returns -1 rather than raising when it cannot remove the directory.
+  local ok, result = pcall(vim.fn.delete, dir, "rf")
+  if not ok or result ~= 0 then
     stl.reporter.error({
       from = __module_name__,
       subject = "__rm_recursive__",
       message = "Failed to delete directory: " .. dir,
-      details = { error = tostring(err) },
+      details = { error = tostring(result) },
     })
     return false
   end

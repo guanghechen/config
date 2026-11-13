@@ -40,6 +40,7 @@ Source 提供 load/list/retrieve、create/update/rename/remove、activation、hi
 创建同名便签返回已有项；rename 拒绝名称冲突；remove 拒绝删除最后一项。空白名称由 source 的默认名称规则处理。
 `folder` 按文件判断同名：名称经 filesystem-safe 转换后相同，或文件系统不区分大小写，指向同一文件即为同一便签；
 创建遇到索引外的同名文件时收编其内容，rename 拒绝写到其他便签或索引外的文件上。
+rename 与 remove 先移动或删除便签文件，失败时报告错误并保持索引不变。
 
 `state.focus_note(uuid)` 更新当前 source 的 active UUID，并通过 `o_activated_uuid` 通知消费者。
 Source 身份由容器持有，不要求每个 item 增加 `source` 字段。

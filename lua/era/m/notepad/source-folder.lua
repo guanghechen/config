@@ -369,7 +369,6 @@ function M:update(uuid, patch)
 
   local modified = false
   local name_changed = false
-  local old_name = item.name
 
   local normalized_name = era.m.notepad.state.normalize_name(patch.name, self.default_item_name)
   if normalized_name ~= item.name then
@@ -384,6 +383,10 @@ function M:update(uuid, patch)
       return false
     end
 
+    -- The file moves first, so a failed move leaves the name pointing at the content it still has.
+    if not self:__rename_note_file__(item.name, normalized_name) then
+      return false
+    end
     S.state.update_name_index(state.name_to_uuid, item.name, normalized_name, uuid)
     item.name = normalized_name
     name_changed = true
@@ -398,7 +401,6 @@ function M:update(uuid, patch)
   if modified then
     if name_changed then
       self._dirty_names = true
-      self:__rename_note_file__(old_name, item.name)
     end
 
     -- The debounced flush writes the content, as a quit does.
@@ -439,10 +441,12 @@ function M:rename(uuid, new_name)
   end
 
   local old_name = item.name
+  if not self:__rename_note_file__(old_name, normalized_name) then
+    return false
+  end
   era.m.notepad.state.update_name_index(state.name_to_uuid, item.name, normalized_name, uuid)
   item.name = normalized_name
 
-  self:__rename_note_file__(old_name, item.name)
   self._dirty_names = true
   self:__schedule_flush__()
 
@@ -503,7 +507,10 @@ function M:remove(uuid)
     return false
   end
 
-  self:__delete_note_file__(item.name)
+  -- The file goes first, so a failed delete keeps the note listed with the file it still has.
+  if not self:__delete_note_file__(item.name) then
+    return false
+  end
   S.state.remove_from_name_index(state.name_to_uuid, item.name)
   state.items[uuid] = nil
   stl.table.filter_inline(state.orders, function(element)
@@ -649,10 +656,18 @@ end
 ---@return boolean
 function M:__delete_note_file__(name)
   local filepath = self:__get_note_path__(name)
-  local ok = pcall(function()
-    vim.fn.delete(filepath)
-  end)
-  return ok
+  -- `delete()` returns -1 rather than raising, and a note never written has no file to delete.
+  if vim.uv.fs_stat(filepath) == nil or vim.fn.delete(filepath) == 0 then
+    return true
+  end
+
+  stl.reporter.error({
+    from = __module_name__,
+    subject = "Delete Failed",
+    message = "Failed to delete note file",
+    details = { filepath = filepath },
+  })
+  return false
 end
 
 ---@protected
@@ -722,20 +737,18 @@ function M:__rename_note_file__(old_name, new_name)
   local old_path = self:__get_note_path__(old_name)
   local new_path = self:__get_note_path__(new_name)
 
-  local ok = pcall(function()
-    vim.fn.rename(old_path, new_path)
-  end)
-
-  if not ok then
-    stl.reporter.error({
-      from = __module_name__,
-      subject = "Rename Failed",
-      message = "Failed to rename note file",
-      details = { old_path = old_path, new_path = new_path },
-    })
+  -- `rename()` returns non-zero rather than raising, and a note never written has no file to move.
+  if vim.uv.fs_stat(old_path) == nil or vim.fn.rename(old_path, new_path) == 0 then
+    return true
   end
 
-  return ok
+  stl.reporter.error({
+    from = __module_name__,
+    subject = "Rename Failed",
+    message = "Failed to rename note file",
+    details = { old_path = old_path, new_path = new_path },
+  })
+  return false
 end
 
 ---@protected

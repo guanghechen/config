@@ -83,6 +83,46 @@ t:test("quitting right after a rename keeps the note under its new name", functi
   t.assert_eq("Renamed=hello", notes(S.FolderSource.new(config(dirpath))))
 end)
 
+t:test("a rename whose file cannot move keeps the note under its old name", function()
+  local reports = bootstrap.with_reporter(t)
+  local dirpath = t:tempdir()
+  local source = cached_source(dirpath)
+  local uuid = source:load(false).active_uuid
+  source:update(uuid, { name = "Note", content = "hello" })
+  t.assert_true(source:flush(), "flushed")
+  -- A read-only folder refuses to move the note file.
+  vim.uv.fs_chmod(dirpath, tonumber("555", 8))
+  t:defer(function()
+    vim.uv.fs_chmod(dirpath, tonumber("755", 8))
+  end)
+
+  t.assert_false(source:rename(uuid, "Renamed"), "rename refused")
+  t.assert_false(source:update(uuid, { name = "Renamed", content = "hello" }), "renaming update refused")
+
+  t.assert_eq("Note=hello", notes(source))
+  t.assert_same({ "Failed to rename note file", "Failed to rename note file" }, bootstrap.messages(reports.error))
+end)
+
+t:test("a note whose file cannot be deleted stays listed", function()
+  local reports = bootstrap.with_reporter(t)
+  local dirpath = t:tempdir()
+  local source = cached_source(dirpath)
+  source:load(false)
+  local other = source:create("Other", "kept")
+  t.assert_true(source:flush(), "flushed")
+  local listed = notes(source)
+  -- A read-only folder refuses to delete the note file.
+  vim.uv.fs_chmod(dirpath, tonumber("555", 8))
+  t:defer(function()
+    vim.uv.fs_chmod(dirpath, tonumber("755", 8))
+  end)
+
+  t.assert_false(source:remove(other.uuid), "removal refused")
+  t.assert_eq(listed, notes(source), "still listed")
+  t.assert_eq("kept\n", read(vim.fs.joinpath(dirpath, "Other.md")), "the file stays")
+  t.assert_same({ "Failed to delete note file" }, bootstrap.messages(reports.error))
+end)
+
 t:test("a lost or broken index is rebuilt from the note files without writing over them", function()
   bootstrap.with_reporter(t)
   for _, metadata in ipairs({ false, '{"items": [{"uuid": "a", "name": "Note"}' }) do

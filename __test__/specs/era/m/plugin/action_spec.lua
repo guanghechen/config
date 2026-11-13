@@ -123,6 +123,21 @@ t:test("clean reports inline task progress and retains its result", function()
   t.assert_eq(2, progress_count, "clean progress notifications")
 end)
 
+t:test("removing a plugin directory that cannot be deleted reports the failure", function()
+  local reports = bootstrap.with_reporter(t)
+  local dir = t:tempdir() .. "/unused.nvim"
+  vim.fn.mkdir(dir .. "/locked", "p")
+  vim.fn.writefile({ "x" }, dir .. "/locked/file")
+  -- `delete()` cannot remove a file from a read-only directory, and returns -1 rather than raising.
+  vim.uv.fs_chmod(dir .. "/locked", tonumber("555", 8))
+  t:defer(function()
+    vim.uv.fs_chmod(dir .. "/locked", tonumber("755", 8))
+  end)
+
+  t.assert_false(Action.__rm_recursive__(dir), "not removed")
+  t.assert_same({ "Failed to delete directory: " .. dir }, bootstrap.messages(reports.error))
+end)
+
 t:test("non-zero string build preserves the last streamed diagnostic", function()
   reset_action()
   t:patch_table(vim, "system", function(_, opts, callback)
