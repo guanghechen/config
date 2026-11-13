@@ -32,7 +32,9 @@ cache_options = [
 
 
 def normalized(value):
-    return re.sub(r"\d{2}:\d{2}:\d{2}", "<clock>", value)
+    # The clock and the session-age pill advance while a fixture runs.
+    value = re.sub(r"\d{2}:\d{2}:\d{2}", "<clock>", value)
+    return re.sub(r"\b(?:\d+d \d{2}h|\d+h \d{2}m|\d+m)\b", "<age>", value)
 
 
 def verify(names):
