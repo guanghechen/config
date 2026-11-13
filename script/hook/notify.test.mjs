@@ -7,6 +7,8 @@ import test, { after } from "node:test"
 import { fileURLToPath } from "node:url"
 
 const script = fileURLToPath(new URL("notify.mjs", import.meta.url))
+const configDir = fileURLToPath(new URL("../../", import.meta.url))
+const settings = JSON.parse(readFileSync(path.join(configDir, "settings.json"), "utf8"))
 
 // Stub `tmux` and `ps` name `/dev/..` plus the file in $TMUX_TTY or $PS_TTY as the pane tty,
 // so each lookup path rings its own file and no real terminal or tmux server is touched.
@@ -51,4 +53,23 @@ test("inside tmux the bell rings the pane's tty", () => {
 
 test("outside tmux the bell rings the terminal Claude runs in", () => {
   assert.deepEqual(ring({}), { tmux: undefined, ps: "\x07" })
+})
+
+test("the bell rings for notifications that need the user and stays quiet for receipts", () => {
+  const groups = settings.hooks.Notification.filter((group) => group.hooks.some((hook) => hook.command.includes("notify.mjs")))
+  assert.equal(groups.length, 1)
+  const matcher = new RegExp(groups[0].matcher)
+  // Unknown types ring too, so a notification type added by a later Claude Code is heard.
+  const loud = [
+    "permission_prompt", "worker_permission_prompt", "agent_needs_input", "agent_completed",
+    "elicitation_dialog", "elicitation_url_dialog", "push_notification", "auth_storage_failure",
+    "quota_auto_resume_stale", "quota_auto_resume_disabled", "computer_use_enter", "plugin_notification",
+    "model_refusal_fallback", "future_notification",
+  ]
+  const quiet = [
+    "idle_prompt", "auth_success", "elicitation_response", "elicitation_complete", "computer_use_exit",
+    "quota_auto_resume_fired",
+  ]
+  for (const type of loud) assert.ok(matcher.test(type), type)
+  for (const type of quiet) assert.ok(!matcher.test(type), type)
 })

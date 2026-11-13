@@ -91,9 +91,21 @@
         ]
       }
     ],
+    "PostToolBatch": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "set -- \"${TMPDIR:-/tmp}\"/claude-progress/${CLAUDE_CODE_SESSION_ID:-*}/waiting-*; if [ -e \"$1\" ]; then exec node \"$CLAUDE_CONFIG_DIR/script/hook/progress.mjs\"; fi; cat >/dev/null",
+            "async": true,
+            "timeout": 5
+          }
+        ]
+      }
+    ],
     "Notification": [
       {
-        "matcher": "^(?!idle_prompt$).*",
+        "matcher": "^(?!(idle_prompt|auth_success|elicitation_response|elicitation_complete|computer_use_exit|quota_auto_resume_fired)$).*",
         "hooks": [
           {
             "type": "command",
@@ -103,7 +115,29 @@
         ]
       },
       {
-        "matcher": "^idle_prompt$",
+        "matcher": "^(idle_prompt|permission_prompt|quota_auto_resume_(stale|disabled|fired))$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_CONFIG_DIR/script/hook/progress.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Elicitation": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_CONFIG_DIR/script/hook/progress.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "ElicitationResult": [
+      {
         "hooks": [
           {
             "type": "command",

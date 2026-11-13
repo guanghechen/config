@@ -2,15 +2,16 @@
 
 import { mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
-import { join } from "node:path"
+import { dirname, join } from "node:path"
 import { terminalTty } from "./tty.mjs"
 
 // Claude Code keeps a static terminal title under multiplexers, so a busy pane looks
 // idle. Report activity as an OSC 9;4 progress state instead; tmux captures it as
 // pane_pb_state. Background subagents outlive the turn, so busy means an open turn or
 // any live subagent, tracked as one marker file each under a per-session directory.
-// A pending question reports paused and outranks busy: the user is needed even while
-// subagents run.
+// Anything that blocks the session on the user (a question, a permission dialog, an MCP
+// elicitation, an exhausted usage limit) keeps a waiting-* marker, reports paused, and
+// outranks busy: the user is needed even while subagents run.
 const BUSY = "\x1b]9;4;3\x07"
 const WAITING = "\x1b]9;4;4\x07"
 const IDLE = "\x1b]9;4;0\x07"
@@ -23,39 +24,66 @@ function main() {
   const dir = join(tmpdir(), "claude-progress", event.session_id)
   const name = event.hook_event_name
   const marker = join(dir, name.startsWith("Subagent") ? `agent-${event.agent_id}` : "turn")
-  const question = join(dir, "question")
+  const waiting = (kind) => join(dir, `waiting-${kind}`)
+  const topic = event.tool_name ?? event.notification_type
 
-  switch (event.tool_name ? `${name}:${event.tool_name}` : name) {
+  switch (topic ? `${name}:${topic}` : name) {
     case "UserPromptSubmit":
-      mkdirSync(dir, { recursive: true })
-      writeFileSync(marker, "")
-      rmSync(question, { force: true })
+      touch(marker)
+      clearWaits(dir)
       break
     case "SubagentStart":
-      mkdirSync(dir, { recursive: true })
-      writeFileSync(marker, "")
+      touch(marker)
       break
     // Stop is skipped on user interrupt; idle_prompt is the fallback that closes the turn.
     case "Stop":
     case "StopFailure":
-    case "Notification":
+    case "Notification:idle_prompt":
       rmSync(marker, { force: true })
-      rmSync(question, { force: true })
+      clearWaits(dir)
       reapAgents(dir, event.background_tasks)
       break
     case "SubagentStop":
       rmSync(marker, { force: true })
       reapAgents(dir, event.background_tasks)
       break
-    // The bell alone cannot mark a pending question: tmux records none on a visible window
-    // and clears it once viewed. Declining or "Chat about this" denies the tool without
-    // PostToolUse, so the turn boundaries above clear the question as well.
+    // The bell alone cannot mark a wait on the user: tmux records none on a visible window
+    // and clears it once viewed. Each wait therefore keeps a marker until its own end event,
+    // a resolved main-thread tool batch, or a turn boundary clears it.
     case "PreToolUse:AskUserQuestion":
-      mkdirSync(dir, { recursive: true })
-      writeFileSync(question, "")
+      touch(waiting("question"))
       break
     case "PostToolUse:AskUserQuestion":
-      rmSync(question, { force: true })
+      rmSync(waiting("question"), { force: true })
+      break
+    // No event marks the user's decision on a permission dialog, so an approved tool keeps
+    // reporting waiting until its batch resolves.
+    case "Notification:permission_prompt":
+      touch(waiting("permission"))
+      break
+    case "Elicitation":
+      touch(waiting("elicitation"))
+      break
+    case "ElicitationResult":
+      rmSync(waiting("elicitation"), { force: true })
+      break
+    // An exhausted usage limit has already ended the turn. Stale and disabled notices need
+    // the user to continue; the fired notice means Claude resumed the task on its own.
+    case "Notification:quota_auto_resume_stale":
+    case "Notification:quota_auto_resume_disabled":
+      touch(waiting("quota"))
+      break
+    case "Notification:quota_auto_resume_fired":
+      rmSync(waiting("quota"), { force: true })
+      touch(marker)
+      break
+    // A batch resolves only after every dialog it raised, which also covers a denied
+    // question ("Chat about this") that continues the turn. A subagent's batch carries
+    // agent_id and cannot resolve the main thread's dialogs. The hook runs async, so it
+    // spares waits that began after it started.
+    case "PostToolBatch":
+      if (event.agent_id) return
+      clearWaits(dir, performance.timeOrigin)
       break
     // TaskStop kills a subagent without firing SubagentStop; its task_id is the agent_id.
     case "PostToolUse:TaskStop":
@@ -80,6 +108,27 @@ function readEvent() {
     return JSON.parse(readFileSync(0, "utf-8"))
   } catch {
     return null
+  }
+}
+
+function touch(file) {
+  mkdirSync(dirname(file), { recursive: true })
+  writeFileSync(file, "")
+}
+
+function clearWaits(dir, before = Infinity) {
+  let markers
+  try {
+    markers = readdirSync(dir)
+  } catch {
+    return
+  }
+  for (const name of markers) {
+    if (!name.startsWith("waiting-")) continue
+    const file = join(dir, name)
+    try {
+      if (statSync(file).mtimeMs < before) rmSync(file, { force: true })
+    } catch {}
   }
 }
 
@@ -116,7 +165,7 @@ function progressOf(dir) {
   } catch {
     return IDLE
   }
-  if (markers.includes("question")) return WAITING
+  if (markers.some((name) => name.startsWith("waiting-"))) return WAITING
   return markers.length > 0 ? BUSY : IDLE
 }
 
