@@ -687,31 +687,36 @@ function M.restore_file(ctx)
     end
 
     -- Git's own checkout writes the file, so line endings, binary content and filters come out as committed.
-    stl.git.exec.exec_async(
-      { "restore", "--source=" .. commit.hash, "--worktree", "--", filepath },
-      { cwd = dot.path.workspace() },
-      function(_, code, stderr)
-        if code ~= 0 then
-          stl.reporter.warn({
+    -- The restore takes the index lock, so it waits behind the other index writers of the repository.
+    local workspace = dot.path.workspace() ---@type string
+    era.m.git.index.run(workspace, function(resolve)
+      stl.git.exec.exec_async(
+        { "restore", "--source=" .. commit.hash, "--worktree", "--", filepath },
+        { cwd = workspace },
+        function(_, code, stderr)
+          resolve(nil)
+          if code ~= 0 then
+            stl.reporter.warn({
+              from = __module_name__,
+              subject = "restore_file",
+              message = "Failed to restore file from commit",
+              details = { filepath = filepath, stderr = stderr },
+            })
+            return
+          end
+
+          stl.reporter.info({
             from = __module_name__,
             subject = "restore_file",
-            message = "Failed to restore file from commit",
-            details = { filepath = filepath, stderr = stderr },
+            message = string.format("Restored %s to commit %s", filepath, commit.abbrev_hash),
           })
-          return
+          -- Refresh to show changes
+          stl.async.run(function()
+            M.refresh(ctx)
+          end)
         end
-
-        stl.reporter.info({
-          from = __module_name__,
-          subject = "restore_file",
-          message = string.format("Restored %s to commit %s", filepath, commit.abbrev_hash),
-        })
-        -- Refresh to show changes
-        stl.async.run(function()
-          M.refresh(ctx)
-        end)
-      end
-    )
+      )
+    end)
   end)
 end
 

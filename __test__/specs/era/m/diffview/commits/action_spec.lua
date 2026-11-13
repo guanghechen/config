@@ -427,4 +427,33 @@ t:test("restore on a file of the filetree takes the version of the commit it sho
   end, 10000, "a.txt restored")
 end)
 
+t:test("restore waits behind the index writes queued before it", function()
+  t:patch_table(vim.ui, "select", function(_, _, on_choice)
+    on_choice("Yes")
+  end)
+  local session = filetree_at("a.txt")
+  local root = dot.path.workspace()
+  local release = nil ---@type (fun(result: any): nil)|nil
+  era.m.git.index.run(root, function(resolve)
+    release = resolve
+  end)
+  t:defer(function()
+    if release then
+      release(nil)
+    end
+  end)
+
+  action.restore_file(session)
+  -- An observation window: the restore must not reach Git while an earlier writer holds the index.
+  vim.wait(300)
+  t.assert_same({ "one", "TWO", "three" }, vim.fn.readfile(root .. "/a.txt"), "waits for the queued writer")
+
+  local finish = assert(release)
+  release = nil
+  finish(nil)
+  t.wait_until(function()
+    return vim.deep_equal({ "one", "two", "three" }, vim.fn.readfile(root .. "/a.txt"))
+  end, 10000, "restored once the writer finishes")
+end)
+
 t:run()
