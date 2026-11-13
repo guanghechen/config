@@ -3,10 +3,10 @@ set -euo pipefail
 
 repo_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)
 tmp=$(mktemp -d /tmp/ghc-tmux-hook-gates-test.XXXXXX)
-socket="ghc-tmux-hook-gates-test-$$"
+socket="$tmp/tmux.sock"
 
 cleanup() {
-  env -u TMUX tmux -L "$socket" kill-server 2>/dev/null || true
+  env -u TMUX tmux -S "$socket" kill-server 2>/dev/null || true
   rm -rf "$tmp"
 }
 trap cleanup EXIT
@@ -57,7 +57,7 @@ env.pop("TMUX_PANE", None)
 
 
 def tmux(*args):
-    result = subprocess.run(["tmux", "-L", socket, *args], env=env, capture_output=True, text=True, timeout=10)
+    result = subprocess.run(["tmux", "-S", socket, *args], env=env, capture_output=True, text=True, timeout=10)
     if result.returncode:
         raise AssertionError(f"tmux {args!r}: {result.stderr}")
     return result.stdout.strip()
@@ -73,7 +73,7 @@ assert tmux("show", "-sqv", "@GHC_SL_SCHED_ACTIVE") == "1", "loader did not acti
 
 master, slave = pty.openpty()
 fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack("HHHH", 40, 200, 0, 0))
-client = subprocess.Popen(["tmux", "-L", socket, "attach", "-t", "main"], stdin=slave, stdout=slave,
+client = subprocess.Popen(["tmux", "-S", socket, "attach", "-t", "main"], stdin=slave, stdout=slave,
                           stderr=slave, env=env, start_new_session=True)
 os.close(slave)
 

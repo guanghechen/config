@@ -8,11 +8,11 @@ unset TMUX_PANE
 crate_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 repo_dir=$(cd "$crate_dir/../.." && pwd)
 tmp=$(mktemp -d /tmp/ghc-tmux-swap-session-test.XXXXXX)
-socket="ghc-tmux-swap-session-test-$$"
+socket="$tmp/tmux.sock"
 real_tmux=$(command -v tmux)
 
 cleanup() {
-  env -u TMUX "$real_tmux" -L "$socket" kill-server 2>/dev/null || true
+  env -u TMUX "$real_tmux" -S "$socket" kill-server 2>/dev/null || true
   rm -rf "$tmp"
 }
 trap cleanup EXIT
@@ -159,31 +159,31 @@ exec "$GHC_SWAP_REAL_TMUX" "$@"
 EOF
 chmod +x "$runtime_bin/tmux"
 
-pane_id=$(env -u TMUX "$real_tmux" -L "$socket" -f /dev/null \
+pane_id=$(env -u TMUX "$real_tmux" -S "$socket" -f /dev/null \
   new-session -dP -F '#{pane_id}' -s alpha)
-env -u TMUX "$real_tmux" -L "$socket" new-session -d -s beta
-env -u TMUX "$real_tmux" -L "$socket" new-session -d -s gamma
+env -u TMUX "$real_tmux" -S "$socket" new-session -d -s beta
+env -u TMUX "$real_tmux" -S "$socket" new-session -d -s gamma
 
-alpha_id=$(env -u TMUX "$real_tmux" -L "$socket" display-message -p -t alpha:0.0 '#{session_id}')
-beta_id=$(env -u TMUX "$real_tmux" -L "$socket" display-message -p -t beta:0.0 '#{session_id}')
-gamma_id=$(env -u TMUX "$real_tmux" -L "$socket" display-message -p -t gamma:0.0 '#{session_id}')
+alpha_id=$(env -u TMUX "$real_tmux" -S "$socket" display-message -p -t alpha:0.0 '#{session_id}')
+beta_id=$(env -u TMUX "$real_tmux" -S "$socket" display-message -p -t beta:0.0 '#{session_id}')
+gamma_id=$(env -u TMUX "$real_tmux" -S "$socket" display-message -p -t gamma:0.0 '#{session_id}')
 initial_order="$alpha_id"$'\t'"$beta_id"$'\t'"$gamma_id"
 one_gamma_move="$gamma_id"$'\t'"$beta_id"$'\t'"$alpha_id"
 two_gamma_moves="$beta_id"$'\t'"$gamma_id"$'\t'"$alpha_id"
 revision_option='@GHC_SL_SESSION_ORDER_REV'
 operation_option='@GHC_SL_SESSION_ORDER_OP'
 
-env -u TMUX "$real_tmux" -L "$socket" set -g '@GHC_SL_MODE' 02 ';' \
+env -u TMUX "$real_tmux" -S "$socket" set -g '@GHC_SL_MODE' 02 ';' \
   set -s '@GHC_SL_SCHED_ACTIVE' 0 ';' \
   set -s '@GHC_SL_SCHED_GEN' 1
-server_env=$(env -u TMUX "$real_tmux" -L "$socket" display-message -p -t "$pane_id" \
+server_env=$(env -u TMUX "$real_tmux" -S "$socket" display-message -p -t "$pane_id" \
   '#{socket_path},#{pid},0')
 current_session=$(env TMUX="$server_env" "$real_tmux" display-message -p '#{session_name}')
 [ "$current_session" = "gamma" ] \
   || fail "isolated swap context drifted: expected gamma, got $current_session"
 
-env -u TMUX "$real_tmux" -L "$socket" set -gu '@GHC_SL_SESSION_ORDER' 2>/dev/null || true
-env -u TMUX "$real_tmux" -L "$socket" set -su "$revision_option" 2>/dev/null || true
+env -u TMUX "$real_tmux" -S "$socket" set -gu '@GHC_SL_SESSION_ORDER' 2>/dev/null || true
+env -u TMUX "$real_tmux" -S "$socket" set -su "$revision_option" 2>/dev/null || true
 env \
   TMUX="$server_env" \
   PATH="$runtime_bin:$PATH" \
@@ -191,11 +191,11 @@ env \
   GHC_SWAP_TMUX_CALLS="$runtime_tmux_calls" \
   "$binary" session swap next >/dev/null 2>&1 \
   || fail "swap from an unset order failed"
-actual_order=$(env -u TMUX "$real_tmux" -L "$socket" show -gqv '@GHC_SL_SESSION_ORDER')
+actual_order=$(env -u TMUX "$real_tmux" -S "$socket" show -gqv '@GHC_SL_SESSION_ORDER')
 [ "$actual_order" = "$one_gamma_move" ] \
   || fail "swap from an unset order produced $actual_order"
 
-env -u TMUX "$real_tmux" -L "$socket" set -g '@GHC_SL_SESSION_ORDER' "$initial_order" ';' \
+env -u TMUX "$real_tmux" -S "$socket" set -g '@GHC_SL_SESSION_ORDER' "$initial_order" ';' \
   set -s "$revision_option" 10 ';' \
   set -t gamma '@GHC_SL_SESSION_ORDER' "$initial_order" ';' \
   set -t gamma "$revision_option" shadow
@@ -206,14 +206,14 @@ output=$(env \
   GHC_SWAP_REAL_TMUX="$real_tmux" \
   GHC_SWAP_TMUX_CALLS="$runtime_tmux_calls" \
   "$binary" session swap next 2>&1)
-actual_order=$(env -u TMUX "$real_tmux" -L "$socket" show -gqv '@GHC_SL_SESSION_ORDER')
+actual_order=$(env -u TMUX "$real_tmux" -S "$socket" show -gqv '@GHC_SL_SESSION_ORDER')
 [ -z "$output" ] || fail "local order override leaked output: $output"
 [ "$actual_order" = "$one_gamma_move" ] \
   || fail "local order override shadowed the server revision CAS: $actual_order"
-env -u TMUX "$real_tmux" -L "$socket" set -u -t gamma '@GHC_SL_SESSION_ORDER'
-env -u TMUX "$real_tmux" -L "$socket" set -u -t gamma "$revision_option"
+env -u TMUX "$real_tmux" -S "$socket" set -u -t gamma '@GHC_SL_SESSION_ORDER'
+env -u TMUX "$real_tmux" -S "$socket" set -u -t gamma "$revision_option"
 
-env -u TMUX "$real_tmux" -L "$socket" set -g '@GHC_SL_SESSION_ORDER' "$initial_order" ';' \
+env -u TMUX "$real_tmux" -S "$socket" set -g '@GHC_SL_SESSION_ORDER' "$initial_order" ';' \
   set -s "$revision_option" 15 ';' \
   set -su "$operation_option" ';' \
   set -s '@GHC_SL_SCHED_ACTIVE' 0
@@ -232,9 +232,9 @@ output=$(env \
   "$binary" session swap next 2>&1)
 status=$?
 set -e
-actual_order=$(env -u TMUX "$real_tmux" -L "$socket" show -gqv '@GHC_SL_SESSION_ORDER')
-actual_revision=$(env -u TMUX "$real_tmux" -L "$socket" show -sqv "$revision_option")
-actual_operation=$(env -u TMUX "$real_tmux" -L "$socket" show -sqv "$operation_option")
+actual_order=$(env -u TMUX "$real_tmux" -S "$socket" show -gqv '@GHC_SL_SESSION_ORDER')
+actual_revision=$(env -u TMUX "$real_tmux" -S "$socket" show -sqv "$revision_option")
+actual_operation=$(env -u TMUX "$real_tmux" -S "$socket" show -sqv "$operation_option")
 [ "$status" = "0" ] || fail "applied CAS timeout reported failure: $output"
 [ -z "$output" ] || fail "applied CAS timeout leaked output: $output"
 [ "$actual_order" = "$one_gamma_move" ] \
@@ -242,7 +242,7 @@ actual_operation=$(env -u TMUX "$real_tmux" -L "$socket" show -sqv "$operation_o
 [ "$actual_revision" = "16" ] || fail "applied CAS timeout lost revision: $actual_revision"
 [ -n "$actual_operation" ] || fail "applied CAS timeout lost operation token"
 
-env -u TMUX "$real_tmux" -L "$socket" set -g '@GHC_SL_SESSION_ORDER' "$initial_order" ';' \
+env -u TMUX "$real_tmux" -S "$socket" set -g '@GHC_SL_SESSION_ORDER' "$initial_order" ';' \
   set -s "$revision_option" 17 ';' \
   set -s "$operation_option" previous ';' \
   set -s '@GHC_SL_SCHED_ACTIVE' 0
@@ -263,7 +263,7 @@ output=$(env \
   "$binary" session swap next 2>&1)
 status=$?
 set -e
-actual_order=$(env -u TMUX "$real_tmux" -L "$socket" show -gqv '@GHC_SL_SESSION_ORDER')
+actual_order=$(env -u TMUX "$real_tmux" -S "$socket" show -gqv '@GHC_SL_SESSION_ORDER')
 [ "$status" = "0" ] || fail "unknown CAS outcome reported failure: $output"
 [ -z "$output" ] || fail "unknown CAS outcome leaked output: $output"
 [ "$actual_order" = "$initial_order" ] \
@@ -271,7 +271,7 @@ actual_order=$(env -u TMUX "$real_tmux" -L "$socket" show -gqv '@GHC_SL_SESSION_
 rg -Fq 'display-message Session swap outcome unknown; inspect session order' "$runtime_tmux_calls" \
   || fail "unknown CAS outcome did not report inspect-order message"
 
-env -u TMUX "$real_tmux" -L "$socket" set -g '@GHC_SL_SESSION_ORDER' "$initial_order" ';' \
+env -u TMUX "$real_tmux" -S "$socket" set -g '@GHC_SL_SESSION_ORDER' "$initial_order" ';' \
   set -s "$revision_option" 20 ';' \
   set -s '@GHC_SL_SCHED_ACTIVE' 1 ';' \
   set -s '@GHC_SL_SCHED_GEN' invalid
@@ -285,7 +285,7 @@ output=$(env \
   "$binary" session swap next 2>&1)
 status=$?
 set -e
-actual_order=$(env -u TMUX "$real_tmux" -L "$socket" show -gqv '@GHC_SL_SESSION_ORDER')
+actual_order=$(env -u TMUX "$real_tmux" -S "$socket" show -gqv '@GHC_SL_SESSION_ORDER')
 
 [ "$status" = "0" ] || fail "committed swap reported failure: $output"
 [ -z "$output" ] || fail "committed swap leaked render failure: $output"
@@ -294,7 +294,7 @@ actual_order=$(env -u TMUX "$real_tmux" -L "$socket" show -gqv '@GHC_SL_SESSION_
 rg -Fq 'display-message Session order updated; status refresh pending' "$runtime_tmux_calls" \
   || fail "render failure did not report pending refresh"
 
-env -u TMUX "$real_tmux" -L "$socket" set -s '@GHC_SL_SCHED_ACTIVE' 0 ';' \
+env -u TMUX "$real_tmux" -S "$socket" set -s '@GHC_SL_SCHED_ACTIVE' 0 ';' \
   set -s '@GHC_SL_SCHED_GEN' 1 ';' \
   set -s "$revision_option" 30 ';' \
   set -g '@GHC_SL_SESSION_ORDER' "$initial_order"
@@ -323,14 +323,14 @@ env \
 second_pid=$!
 wait "$first_pid" || fail "first barrier-controlled concurrent swap failed"
 wait "$second_pid" || fail "second barrier-controlled concurrent swap failed"
-actual_order=$(env -u TMUX "$real_tmux" -L "$socket" show -gqv '@GHC_SL_SESSION_ORDER')
+actual_order=$(env -u TMUX "$real_tmux" -S "$socket" show -gqv '@GHC_SL_SESSION_ORDER')
 [ "$actual_order" = "$two_gamma_moves" ] \
   || fail "barrier-controlled concurrent swap lost an update: $actual_order"
 navigation_reads=$(rg -c '__GHC_STATUS_NAVIGATION__' "$runtime_tmux_calls")
 [ "$navigation_reads" -ge 3 ] \
   || fail "concurrent CAS did not force a retry: reads=$navigation_reads"
 
-env -u TMUX "$real_tmux" -L "$socket" set -g '@GHC_SL_SESSION_ORDER' "$initial_order" ';' \
+env -u TMUX "$real_tmux" -S "$socket" set -g '@GHC_SL_SESSION_ORDER' "$initial_order" ';' \
   set -s "$revision_option" 40
 : >"$runtime_tmux_calls"
 output=$(env \
@@ -341,7 +341,7 @@ output=$(env \
   GHC_SWAP_REVISION_OPTION="$revision_option" \
   GHC_SWAP_FORCE_CONFLICT=1 \
   "$binary" session swap next 2>&1)
-actual_order=$(env -u TMUX "$real_tmux" -L "$socket" show -gqv '@GHC_SL_SESSION_ORDER')
+actual_order=$(env -u TMUX "$real_tmux" -S "$socket" show -gqv '@GHC_SL_SESSION_ORDER')
 [ -z "$output" ] || fail "retry exhaustion leaked output: $output"
 [ "$actual_order" = "$initial_order" ] \
   || fail "retry exhaustion mutated session order: $actual_order"

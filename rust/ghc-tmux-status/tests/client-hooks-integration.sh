@@ -5,12 +5,12 @@ crate_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 repo_dir=$(cd "$crate_dir/../.." && pwd)
 binary="$crate_dir/target/debug/ghc-tmux-status"
 tmp=$(mktemp -d /tmp/ghc-tmux-client-hooks-test.XXXXXX)
-socket="ghc-tmux-client-hooks-test-$$"
+socket="$tmp/tmux.sock"
 client_pids=()
 started_client_pid=""
 
 cleanup() {
-  env -u TMUX tmux -L "$socket" kill-server 2>/dev/null || true
+  env -u TMUX tmux -S "$socket" kill-server 2>/dev/null || true
   for client_pid in "${client_pids[@]}"; do
     kill "$client_pid" 2>/dev/null || true
     wait "$client_pid" 2>/dev/null || true
@@ -50,7 +50,7 @@ wait_for_process_exit() {
 }
 
 tmux_server() {
-  env -u TMUX tmux -L "$socket" "$@"
+  env -u TMUX tmux -S "$socket" "$@"
 }
 
 if ! command -v script >/dev/null 2>&1; then
@@ -66,7 +66,7 @@ start_client() {
   local label=$1
   local columns=$2
   local session=$3
-  local command="stty cols $columns rows 40; exec env -u TMUX TERM=xterm-256color tmux -L '$socket' attach-session -t '$session'"
+  local command="stty cols $columns rows 40; exec env -u TMUX TERM=xterm-256color tmux -S '$socket' attach-session -t '$session'"
   local log="$tmp/client-$label.log"
 
   case $(uname -s) in

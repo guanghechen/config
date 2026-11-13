@@ -5,8 +5,8 @@ crate_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 repo_dir=$(cd "$crate_dir/../.." && pwd)
 binary="$crate_dir/target/debug/ghc-tmux-status"
 tmp=$(mktemp -d /tmp/ghc-tmux-render-lifecycle-test.XXXXXX)
-socket="ghc-tmux-render-lifecycle-test-$$"
-cold_socket="ghc-tmux-cold-start-test-$$"
+socket="$tmp/tmux.sock"
+cold_socket="$tmp/cold.sock"
 real_tmux=$(command -v tmux)
 refresh_client_a_pid=
 refresh_client_b_pid=
@@ -16,8 +16,8 @@ cleanup() {
   [ -z "$refresh_client_b_pid" ] || kill "$refresh_client_b_pid" 2>/dev/null || true
   exec 9>&- 2>/dev/null || true
   exec 8>&- 2>/dev/null || true
-  env -u TMUX tmux -L "$cold_socket" kill-server 2>/dev/null || true
-  env -u TMUX tmux -L "$socket" kill-server 2>/dev/null || true
+  env -u TMUX tmux -S "$cold_socket" kill-server 2>/dev/null || true
+  env -u TMUX tmux -S "$socket" kill-server 2>/dev/null || true
   rm -rf "$tmp"
 }
 trap cleanup EXIT
@@ -38,7 +38,7 @@ wait_for_client_count() {
   local expected=$1
   local count=0
   for _ in $(seq 1 100); do
-    count=$(env -u TMUX tmux -L "$socket" list-clients | wc -l | tr -d ' ')
+    count=$(env -u TMUX tmux -S "$socket" list-clients | wc -l | tr -d ' ')
     if [ "$count" -eq "$expected" ]; then
       return 0
     fi
@@ -56,7 +56,7 @@ assert_refresh_context_guard() {
     if-shell -F '#{!=:#{client_name},}' \
     'set -g @GHC_TEST_REFRESH_CONTEXT true' \
     'set -g @GHC_TEST_REFRESH_CONTEXT false'
-  actual=$(env -u TMUX tmux -L "$socket" show -gqv @GHC_TEST_REFRESH_CONTEXT)
+  actual=$(env -u TMUX tmux -S "$socket" show -gqv @GHC_TEST_REFRESH_CONTEXT)
   if [ "$actual" != "$expected" ]; then
     echo "$context refresh context guard was $actual, expected $expected" >&2
     exit 1
@@ -65,7 +65,7 @@ assert_refresh_context_guard() {
 
 fence_to_status01() {
   local generation=$1
-  tmux -L "$socket" set -g @GHC_SL_MODE 01 ';' \
+  tmux -S "$socket" set -g @GHC_SL_MODE 01 ';' \
     set -s @GHC_SL_SCHED_ACTIVE 0 ';' \
     set -s @GHC_SL_SCHED_GEN "$generation" ';' \
     set -s @GHC_SL_RENDER_REV "fenced:$generation" ';' \
@@ -76,7 +76,7 @@ fence_to_status01() {
 
 assert_status01_unchanged() {
   local state
-  state=$(tmux -L "$socket" display-message -p \
+  state=$(tmux -S "$socket" display-message -p \
     '#{@GHC_SL_MODE}	#{status-left}	#{status-right}	#{status-interval}')
   if [ "$state" != $'01\tSTATUS01-LEFT\tSTATUS01-RIGHT\t20' ]; then
     echo "stale renderer escaped lifecycle fence: $state" >&2
@@ -87,7 +87,7 @@ assert_status01_unchanged() {
 assert_fallback_status_unchanged() {
   local expected_generation=$1
   local state
-  state=$(tmux -L "$socket" display-message -p \
+  state=$(tmux -S "$socket" display-message -p \
     '#{@GHC_SL_MODE}	#{@GHC_SL_SCHED_ACTIVE}	#{@GHC_SL_SCHED_GEN}	#{status-left}	#{status-right}	#{status-interval}')
   if [ "$state" != "02"$'\t'"0"$'\t'"$expected_generation"$'\t'"STATUS01-LEFT"$'\t'"STATUS01-RIGHT"$'\t'"20" ]; then
     echo "stale bootstrap escaped lifecycle generation: $state" >&2
@@ -96,9 +96,9 @@ assert_fallback_status_unchanged() {
 }
 
 cargo build --quiet --manifest-path "$crate_dir/Cargo.toml"
-env -u TMUX tmux -L "$socket" -f /dev/null new-session -d -s lifecycle -x 120 -y 30
-server_env=$(tmux -L "$socket" display-message -p '#{socket_path},#{pid},0')
-refresh_pane=$(tmux -L "$socket" display-message -p -t lifecycle:0.0 '#{pane_id}')
+env -u TMUX tmux -S "$socket" -f /dev/null new-session -d -s lifecycle -x 120 -y 30
+server_env=$(tmux -S "$socket" display-message -p '#{socket_path},#{pid},0')
+refresh_pane=$(tmux -S "$socket" display-message -p -t lifecycle:0.0 '#{pane_id}')
 
 # A standard apply that already captured status02 must not commit after the loader
 # fences lifecycle and installs status01.
@@ -118,7 +118,7 @@ exec "$GHC_TMUX_REAL_TMUX" "$@"
 EOF
 chmod +x "$tmp/after/bin/tmux"
 
-tmux -L "$socket" set -g @GHC_SL_MODE 02 ';' \
+tmux -S "$socket" set -g @GHC_SL_MODE 02 ';' \
   set -s @GHC_SL_SCHED_ACTIVE 1 ';' \
   set -s @GHC_SL_SCHED_GEN 41 ';' \
   set -g status on
@@ -150,7 +150,7 @@ exec "$GHC_TMUX_REAL_TMUX" "$@"
 EOF
 chmod +x "$tmp/before/bin/tmux"
 
-tmux -L "$socket" set -g @GHC_SL_MODE 02 ';' \
+tmux -S "$socket" set -g @GHC_SL_MODE 02 ';' \
   set -s @GHC_SL_SCHED_ACTIVE 1 ';' \
   set -s @GHC_SL_SCHED_GEN 43 ';' \
   set -g status on
@@ -169,7 +169,7 @@ assert_status01_unchanged
 
 # A stale theme bootstrap must retain the generation passed by its loader. It
 # may not adopt a newer fallback generation merely because lifecycle is inactive.
-tmux -L "$socket" set -g @GHC_SL_MODE 02 ';' \
+tmux -S "$socket" set -g @GHC_SL_MODE 02 ';' \
   set -s @GHC_SL_SCHED_ACTIVE 0 ';' \
   set -s @GHC_SL_SCHED_GEN 45 ';' \
   set -s @GHC_SL_RENDER_REV fenced:45 ';' \
@@ -184,7 +184,7 @@ env \
   >"$tmp/before/bootstrap-stdout" 2>"$tmp/before/bootstrap-stderr" &
 bootstrap_pid=$!
 wait_for_file "$tmp/before/bootstrap-first-ready"
-tmux -L "$socket" set -s @GHC_SL_SCHED_ACTIVE 0 ';' \
+tmux -S "$socket" set -s @GHC_SL_SCHED_ACTIVE 0 ';' \
   set -s @GHC_SL_SCHED_GEN 46 ';' \
   set -s @GHC_SL_RENDER_REV fenced:46 ';' \
   set -g status-left STATUS01-LEFT ';' \
@@ -198,7 +198,7 @@ assert_fallback_status_unchanged 46
 
 # A current-generation bootstrap whose render revision loses after snapshot must
 # observe Skipped, retry from a fresh snapshot, and converge before activation.
-tmux -L "$socket" set -g @GHC_SL_MODE 02 ';' \
+tmux -S "$socket" set -g @GHC_SL_MODE 02 ';' \
   set -s @GHC_SL_SCHED_ACTIVE 0 ';' \
   set -s @GHC_SL_SCHED_GEN 47 ';' \
   set -s @GHC_SL_RENDER_REV fenced:47 ';' \
@@ -218,26 +218,26 @@ env \
   >"$tmp/after/bootstrap-stdout" 2>"$tmp/after/bootstrap-stderr" &
 bootstrap_pid=$!
 wait_for_file "$tmp/after/bootstrap-first-ready"
-tmux -L "$socket" set -s @GHC_SL_RENDER_REV competing-bootstrap
+tmux -S "$socket" set -s @GHC_SL_RENDER_REV competing-bootstrap
 wait "$bootstrap_pid"
-status_left=$(tmux -L "$socket" show -gqv status-left)
+status_left=$(tmux -S "$socket" show -gqv status-left)
 case "$status_left" in
   '#($HOME/.config/tmux/script/status-scheduler.sh)'*) ;;
   *) echo "bootstrap did not recover a skipped commit: $status_left" >&2; exit 1 ;;
 esac
-if [ "$(tmux -L "$socket" show -gqv status-interval)" != "1" ]; then
+if [ "$(tmux -S "$socket" show -gqv status-interval)" != "1" ]; then
   echo "bootstrap retry did not converge status interval" >&2
   exit 1
 fi
 
 # theme-loaded is the sole bootstrap writer while lifecycle is inactive.
-tmux -L "$socket" set -g @GHC_SL_MODE 02 ';' \
+tmux -S "$socket" set -g @GHC_SL_MODE 02 ';' \
   set -s @GHC_SL_SCHED_ACTIVE 0 ';' \
   set -s @GHC_SL_SCHED_GEN 48 ';' \
   set -s @GHC_SL_RENDER_REV fenced:48 ';' \
   set -g status on
 env TMUX="$server_env" "$binary" apply theme-loaded 48
-status_left=$(tmux -L "$socket" show -gqv status-left)
+status_left=$(tmux -S "$socket" show -gqv status-left)
 case "$status_left" in
   '#($HOME/.config/tmux/script/status-scheduler.sh)'*) ;;
   *) echo "bootstrap render did not install the scheduler driver: $status_left" >&2; exit 1 ;;
@@ -266,24 +266,24 @@ cat >"$tmp/cold-start.conf" <<'EOF'
 set-option -s exit-empty off
 run-shell "bash $HOME/.config/tmux/script/load-theme.sh"
 EOF
-env -u TMUX HOME="$loader_home" tmux -L "$cold_socket" \
+env -u TMUX HOME="$loader_home" tmux -S "$cold_socket" \
   -f "$tmp/cold-start.conf" start-server
-cold_initial_state=$(tmux -L "$cold_socket" display-message -p \
+cold_initial_state=$(tmux -S "$cold_socket" display-message -p \
   '#{@GHC_SL_MODE}	#{@GHC_SL_SCHED_ACTIVE}	#{status-interval}')
 if [ "$cold_initial_state" != $'02\t0\t20' ]; then
   echo "cold-start loader did not retain its temporary fallback: $cold_initial_state" >&2
   exit 1
 fi
-cold_initial_hook=$(tmux -L "$cold_socket" show-hooks -g 'session-created[40]')
+cold_initial_hook=$(tmux -S "$cold_socket" show-hooks -g 'session-created[40]')
 if [[ "$cold_initial_hook" != *"load-theme.sh"* ]]; then
   echo "cold-start loader did not register its deferred bootstrap hook: $cold_initial_hook" >&2
   exit 1
 fi
 
-tmux -L "$cold_socket" new-session -d -s cold-start -x 120 -y 30
+tmux -S "$cold_socket" new-session -d -s cold-start -x 120 -y 30
 cold_state=""
 for _ in $(seq 1 100); do
-  cold_state=$(tmux -L "$cold_socket" display-message -p \
+  cold_state=$(tmux -S "$cold_socket" display-message -p \
     '#{@GHC_SL_MODE}	#{@GHC_SL_SCHED_ACTIVE}	#{status-left}	#{status-interval}')
   case "$cold_state" in
     $'02\t1\t#($HOME/.config/tmux/script/status-scheduler.sh)'*$'\t1') break ;;
@@ -294,16 +294,16 @@ case "$cold_state" in
   $'02\t1\t#($HOME/.config/tmux/script/status-scheduler.sh)'*$'\t1') ;;
   *) echo "cold-start status02 did not recover after session creation: $cold_state" >&2; exit 1 ;;
 esac
-cold_active_hook=$(tmux -L "$cold_socket" show-hooks -g 'session-created[40]')
+cold_active_hook=$(tmux -S "$cold_socket" show-hooks -g 'session-created[40]')
 if [[ "$cold_active_hook" == *"load-theme.sh"* \
   || "$cold_active_hook" != *"ghc-tmux-status apply session-created"* ]]; then
   echo "cold-start bootstrap hook did not transition to the renderer hook: $cold_active_hook" >&2
   exit 1
 fi
 
-tmux -L "$socket" set-environment -g HOME "$loader_home"
+tmux -S "$socket" set-environment -g HOME "$loader_home"
 env HOME="$loader_home" TMUX="$server_env" bash "$loader_root/script/load-theme.sh"
-loader_state=$(tmux -L "$socket" display-message -p \
+loader_state=$(tmux -S "$socket" display-message -p \
   '#{@GHC_SL_MODE}	#{@GHC_SL_SCHED_ACTIVE}	#{status-left}	#{status-interval}')
 case "$loader_state" in
   $'02\t1\t#($HOME/.config/tmux/script/status-scheduler.sh)'*$'\t1') ;;
@@ -312,19 +312,19 @@ esac
 
 # A status02 reload keeps a two-row session at `status 2`: undoing and restoring it
 # resizes every pane twice. Only a status01 target undoes the narrow layout.
-tmux -L "$socket" set -t lifecycle status 2
+tmux -S "$socket" set -t lifecycle status 2
 env HOME="$loader_home" TMUX="$server_env" bash "$loader_root/script/load-theme.sh"
-if [ "$(tmux -L "$socket" show -qv -t lifecycle status)" != 2 ]; then
+if [ "$(tmux -S "$socket" show -qv -t lifecycle status)" != 2 ]; then
   echo "status02 reload undid a two-row session layout" >&2
   exit 1
 fi
-tmux -L "$socket" set -g @GHC_SL_MODE 01
+tmux -S "$socket" set -g @GHC_SL_MODE 01
 env HOME="$loader_home" TMUX="$server_env" bash "$loader_root/script/load-theme.sh"
-if [ "$(tmux -L "$socket" show -qv -t lifecycle status)" != on ]; then
+if [ "$(tmux -S "$socket" show -qv -t lifecycle status)" != on ]; then
   echo "status01 reload kept a two-row session layout" >&2
   exit 1
 fi
-tmux -L "$socket" set -g @GHC_SL_MODE 02
+tmux -S "$socket" set -g @GHC_SL_MODE 02
 env HOME="$loader_home" TMUX="$server_env" bash "$loader_root/script/load-theme.sh"
 
 # A renderer deployed for another script/renderer-protocol never drives status02:
@@ -333,7 +333,7 @@ mv "$loader_root/bin/ghc-tmux-status" "$tmp/current-renderer"
 printf '#!/bin/sh\necho 0\n' >"$loader_root/bin/ghc-tmux-status"
 chmod +x "$loader_root/bin/ghc-tmux-status"
 env HOME="$loader_home" TMUX="$server_env" bash "$loader_root/script/load-theme.sh"
-stale_state=$(tmux -L "$socket" display-message -p \
+stale_state=$(tmux -S "$socket" display-message -p \
   '#{@GHC_SL_MODE}	#{@GHC_SL_SCHED_ACTIVE}	#{status-interval}')
 if [ "$stale_state" != $'02\t0\t20' ]; then
   echo "loader ran status02 with a renderer for another protocol: $stale_state" >&2
@@ -397,7 +397,7 @@ assert_folded_call_log() {
 # Without an attached client, the context guard must skip refresh while the
 # mutation and applied marker still complete in the folded queue.
 assert_refresh_context_guard false detached
-tmux -L "$socket" set -g @GHC_SL_MODE 02 ';' \
+tmux -S "$socket" set -g @GHC_SL_MODE 02 ';' \
   set -s @GHC_SL_SCHED_ACTIVE 1 ';' \
   set -s @GHC_SL_SCHED_GEN 49 ';' \
   set -g status on ';' \
@@ -410,7 +410,7 @@ env \
   GHC_TMUX_REAL_TMUX="$real_tmux" \
   "$binary" apply client-resized
 assert_folded_call_log detached
-if [ "$(tmux -L "$socket" show -gqv status-left)" = "STALE-LEFT" ]; then
+if [ "$(tmux -S "$socket" show -gqv status-left)" = "STALE-LEFT" ]; then
   echo "detached standard render did not commit" >&2
   exit 1
 fi
@@ -422,14 +422,14 @@ mkfifo \
   "$tmp/folded-refresh/client-b.in"
 exec 9<>"$tmp/folded-refresh/client-a.in"
 exec 8<>"$tmp/folded-refresh/client-b.in"
-env -u TMUX "$real_tmux" -L "$socket" -C attach-session -t lifecycle \
+env -u TMUX "$real_tmux" -S "$socket" -C attach-session -t lifecycle \
   <&9 >"$tmp/folded-refresh/client-a.out" 2>&1 &
 refresh_client_a_pid=$!
 wait_for_client_count 1
 assert_refresh_context_guard true one-client
 
 : >"$tmp/folded-refresh/calls"
-tmux -L "$socket" set -g status-left STALE-ATTACHED-LEFT
+tmux -S "$socket" set -g status-left STALE-ATTACHED-LEFT
 env \
   HOME="$loader_home" \
   TMUX="$server_env" \
@@ -439,12 +439,12 @@ env \
   GHC_TMUX_REAL_TMUX="$real_tmux" \
   "$binary" apply client-resized
 assert_folded_call_log attached
-if [ "$(tmux -L "$socket" show -gqv status-left)" = "STALE-ATTACHED-LEFT" ]; then
+if [ "$(tmux -S "$socket" show -gqv status-left)" = "STALE-ATTACHED-LEFT" ]; then
   echo "attached standard render did not commit" >&2
   exit 1
 fi
 
-env -u TMUX "$real_tmux" -L "$socket" -C attach-session -t lifecycle \
+env -u TMUX "$real_tmux" -S "$socket" -C attach-session -t lifecycle \
   <&8 >"$tmp/folded-refresh/client-b.out" 2>&1 &
 refresh_client_b_pid=$!
 wait_for_client_count 2
@@ -453,7 +453,7 @@ assert_refresh_context_guard true two-client
 # If the final folded queue fails, the standard path retains its existing
 # per-command retry and follows it with the original best-effort refresh.
 : >"$tmp/folded-refresh/calls"
-tmux -L "$socket" set -g status-left STALE-LEFT-AGAIN
+tmux -S "$socket" set -g status-left STALE-LEFT-AGAIN
 env \
   HOME="$loader_home" \
   TMUX="$server_env" \
@@ -462,7 +462,7 @@ env \
   GHC_TMUX_FAIL_FOLDED_ONCE="$tmp/folded-refresh/failed-once" \
   GHC_TMUX_REAL_TMUX="$real_tmux" \
   "$binary" apply client-resized
-if [ "$(tmux -L "$socket" show -gqv status-left)" = "STALE-LEFT-AGAIN" ]; then
+if [ "$(tmux -S "$socket" show -gqv status-left)" = "STALE-LEFT-AGAIN" ]; then
   echo "standard render did not recover from a folded commit failure" >&2
   exit 1
 fi
@@ -478,7 +478,7 @@ fi
 # local off policy and global off inheritance across either row layout commit.
 for off_scope in local global; do
   for rows in 1 2; do
-    tmux -L "$socket" set -g @GHC_SL_ROWS "$rows" ';' \
+    tmux -S "$socket" set -g @GHC_SL_ROWS "$rows" ';' \
       set -g status on ';' \
       set -u -t "$refresh_pane" status ';' \
       set -t "$refresh_pane" @GHC_SL_LAYOUT stale
@@ -492,20 +492,20 @@ for off_scope in local global; do
       GHC_TMUX_STATUS_OFF_TARGET="$refresh_pane" \
       GHC_TMUX_STATUS_OFF_AFTER_SNAPSHOT="$tmp/folded-refresh/off-snapshot" \
       "$binary" apply client-resized
-    if [ "$(tmux -L "$socket" display-message -p -t "$refresh_pane" '#{status}')" != off ]; then
+    if [ "$(tmux -S "$socket" display-message -p -t "$refresh_pane" '#{status}')" != off ]; then
       echo "row layout $rows overwrote a concurrent $off_scope status off" >&2
       exit 1
     fi
     if [ "$off_scope" = global ]; then
-      if [ -n "$(tmux -L "$socket" show -qv -t "$refresh_pane" status)" ]; then
+      if [ -n "$(tmux -S "$socket" show -qv -t "$refresh_pane" status)" ]; then
         echo "row layout $rows turned inherited off into a local override" >&2
         exit 1
       fi
-      tmux -L "$socket" set -g status on
+      tmux -S "$socket" set -g status on
       env TMUX="$server_env" TMUX_PANE="$refresh_pane" "$binary" apply client-resized
       expected_status=on
       [ "$rows" = 1 ] || expected_status=2
-      if [ "$(tmux -L "$socket" display-message -p -t "$refresh_pane" '#{status}')" != "$expected_status" ]; then
+      if [ "$(tmux -S "$socket" display-message -p -t "$refresh_pane" '#{status}')" != "$expected_status" ]; then
         echo "row layout $rows did not recover after global status on" >&2
         exit 1
       fi
@@ -539,7 +539,7 @@ assert_snapshot_witnesses() {
   fi
 }
 
-witness_session_id=$(tmux -L "$socket" display-message -p -t "$refresh_pane" '#{session_id}')
+witness_session_id=$(tmux -S "$socket" display-message -p -t "$refresh_pane" '#{session_id}')
 style_cache_value=$(awk 'BEGIN { for (i = 0; i < 1000; i++) printf "#[default]" }')
 combining_cache_value=$(awk 'BEGIN { for (i = 0; i < 4096; i++) printf "\314\201" }')
 for witness_case in style combining forged; do
@@ -551,7 +551,7 @@ for witness_case in style combining forged; do
   for cache_option in \
     @GHC_SL_STATUS02_LEFT @GHC_SL_STATUS02_RIGHT \
     @GHC_SL_STATUS02_SESSION_FORMAT @GHC_SL_STATUS02_CURRENT_FORMAT; do
-    tmux -L "$socket" set -t "$refresh_pane" "$cache_option" "$cache_value"
+    tmux -S "$socket" set -t "$refresh_pane" "$cache_option" "$cache_value"
   done
   for expectation in missing valid; do
     env \

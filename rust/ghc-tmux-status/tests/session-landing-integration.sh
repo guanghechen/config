@@ -3,10 +3,10 @@ set -euo pipefail
 
 repo_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)
 tmp=$(mktemp -d /tmp/ghc-tmux-session-landing-test.XXXXXX)
-socket="ghc-tmux-session-landing-test-$$"
+socket="$tmp/tmux.sock"
 
 cleanup() {
-  env -u TMUX tmux -L "$socket" kill-server 2>/dev/null || true
+  env -u TMUX tmux -S "$socket" kill-server 2>/dev/null || true
   rm -rf "$tmp"
 }
 trap cleanup EXIT
@@ -40,7 +40,7 @@ env.update(HOME=str(home), TERM="xterm-256color")
 
 
 def tmux(*args):
-    result = subprocess.run(["tmux", "-L", socket, *args], env=env, capture_output=True, text=True, timeout=10)
+    result = subprocess.run(["tmux", "-S", socket, *args], env=env, capture_output=True, text=True, timeout=10)
     if result.returncode:
         raise AssertionError(f"tmux {args!r}: {result.stderr}")
     return result.stdout.strip()
@@ -67,7 +67,7 @@ def attach(session):
     known = set(tmux("list-clients", "-F", "#{client_name}").split())
     master, slave = pty.openpty()
     fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack("HHHH", 40, 120, 0, 0))
-    subprocess.Popen(["tmux", "-L", socket, "attach", "-t", session], stdin=slave, stdout=slave,
+    subprocess.Popen(["tmux", "-S", socket, "attach", "-t", session], stdin=slave, stdout=slave,
                      stderr=slave, env=env, start_new_session=True)
     os.close(slave)
     masters.append(master)

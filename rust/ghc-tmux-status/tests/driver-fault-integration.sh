@@ -4,7 +4,7 @@ set -euo pipefail
 repo_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)
 driver_source="$repo_dir/script/status-scheduler.sh"
 tmp=$(mktemp -d /tmp/ghc-tmux-driver-test.XXXXXX)
-socket="ghc-tmux-driver-test-$$"
+socket="$tmp/tmux.sock"
 home="$tmp/home"
 lock_tmp="$tmp/locks"
 renderer="$home/.config/tmux/bin/ghc-tmux-status"
@@ -16,7 +16,7 @@ cleanup() {
     kill "$client_holder" 2>/dev/null || true
     wait "$client_holder" 2>/dev/null || true
   fi
-  env -u TMUX tmux -L "$socket" kill-server 2>/dev/null || true
+  env -u TMUX tmux -S "$socket" kill-server 2>/dev/null || true
   rm -rf "$tmp"
 }
 trap cleanup EXIT
@@ -35,15 +35,15 @@ wait_for() {
 }
 
 option_is_inactive() {
-  [ "$(env -u TMUX tmux -L "$socket" show -sqv @GHC_SL_SCHED_ACTIVE 2>/dev/null)" = "0" ]
+  [ "$(env -u TMUX tmux -S "$socket" show -sqv @GHC_SL_SCHED_ACTIVE 2>/dev/null)" = "0" ]
 }
 
 option_is_active() {
-  [ "$(env -u TMUX tmux -L "$socket" show -sqv @GHC_SL_SCHED_ACTIVE 2>/dev/null)" = "1" ]
+  [ "$(env -u TMUX tmux -S "$socket" show -sqv @GHC_SL_SCHED_ACTIVE 2>/dev/null)" = "1" ]
 }
 
 client_is_attached() {
-  [ -n "$(env -u TMUX tmux -L "$socket" list-clients 2>/dev/null)" ]
+  [ -n "$(env -u TMUX tmux -S "$socket" list-clients 2>/dev/null)" ]
 }
 
 file_exists() {
@@ -68,11 +68,11 @@ kill -KILL "\$\$"
 EOF
 chmod +x "$renderer"
 
-env -u TMUX tmux -L "$socket" -f /dev/null new-session -d -s driver -x 80 -y 24
-env -u TMUX tmux -L "$socket" set-environment -g HOME "$home"
-env -u TMUX tmux -L "$socket" set-environment -g TMPDIR "$lock_tmp"
-env -u TMUX tmux -L "$socket" set-environment -g GHC_TMUX_STATUS_DRIVER_DELAY_SECONDS 0.05
-env -u TMUX tmux -L "$socket" set -g status on ';' set -g status-interval 1
+env -u TMUX tmux -S "$socket" -f /dev/null new-session -d -s driver -x 80 -y 24
+env -u TMUX tmux -S "$socket" set-environment -g HOME "$home"
+env -u TMUX tmux -S "$socket" set-environment -g TMPDIR "$lock_tmp"
+env -u TMUX tmux -S "$socket" set-environment -g GHC_TMUX_STATUS_DRIVER_DELAY_SECONDS 0.05
+env -u TMUX tmux -S "$socket" set -g status on ';' set -g status-interval 1
 
 # Hold one real attached client so tmux evaluates status #() jobs.
 python3 - "$socket" >"$tmp/client.log" 2>&1 <<'PY' &
@@ -89,7 +89,7 @@ if pid == 0:
     environment["TERM"] = "xterm-256color"
     os.execvpe(
         "tmux",
-        ["tmux", "-L", socket, "attach-session", "-t", "driver"],
+        ["tmux", "-S", socket, "attach-session", "-t", "driver"],
         environment,
     )
 
@@ -104,12 +104,12 @@ while True:
 PY
 client_holder=$!
 wait_for "attached test client" client_is_attached
-server_env=$(env -u TMUX tmux -L "$socket" display-message -p '#{socket_path},#{pid},0')
-server_pid=$(env -u TMUX tmux -L "$socket" display-message -p '#{pid}')
+server_env=$(env -u TMUX tmux -S "$socket" display-message -p '#{socket_path},#{pid},0')
+server_pid=$(env -u TMUX tmux -S "$socket" display-message -p '#{pid}')
 scheduler_lock="$lock_tmp/ghc-tmux-status-scheduler-${UID}-${server_pid}.lock"
 
 driver_format='#($HOME/.config/tmux/script/status-scheduler.sh)ALIVE'
-env -u TMUX tmux -L "$socket" set -s @GHC_SL_SCHED_GEN 42 ';' \
+env -u TMUX tmux -S "$socket" set -s @GHC_SL_SCHED_GEN 42 ';' \
   set -s @GHC_SL_SCHED_ACTIVE 1 ';' set -g status-left "$driver_format"
 wait_for "crash fence" option_is_inactive
 sleep 1.2
@@ -126,10 +126,10 @@ if [ -n "$(cat "$tmp/crash-renderer-snapshots")" ]; then
   echo "invalid scheduler state leaked a transported snapshot" >&2
   exit 1
 fi
-env -u TMUX tmux -L "$socket" display-message -p '#{pid}:alive' >/dev/null
+env -u TMUX tmux -S "$socket" display-message -p '#{pid}:alive' >/dev/null
 
 # A normal application error must preserve lease-based scheduler recovery.
-env -u TMUX tmux -L "$socket" set -g status-left ALIVE
+env -u TMUX tmux -S "$socket" set -g status-left ALIVE
 # A status job started while status-left still ran the driver may hold the lock
 # through its delay; let it finish so the direct run below owns its tick.
 for _ in $(seq 1 200); do
@@ -160,7 +160,7 @@ exec '$real_unlink' "\$@"
 EOF
 chmod +x "$cleanup_bin/rm" "$cleanup_bin/unlink"
 : >"$cleanup_calls"
-env -u TMUX tmux -L "$socket" set -s @GHC_SL_SCHED_GEN 43 ';' \
+env -u TMUX tmux -S "$socket" set -s @GHC_SL_SCHED_GEN 43 ';' \
   set -s @GHC_SL_SCHED_ACTIVE 1 ';' \
   set -s @GHC_SL_METRIC_SCHED '43:9:9999999999:0' ';' \
   set -s @GHC_SL_HEARTBEAT_SCHED '43:11:9999999999:0'
@@ -194,13 +194,13 @@ sleep 0.3
 kill -KILL "\$\$"
 EOF
 chmod +x "$renderer"
-env -u TMUX tmux -L "$socket" set -s @GHC_SL_SCHED_GEN 44 ';' \
+env -u TMUX tmux -S "$socket" set -s @GHC_SL_SCHED_GEN 44 ';' \
   set -s @GHC_SL_SCHED_ACTIVE 1 ';' set -g status-left "$driver_format"
 wait_for "stale worker start" file_exists "$tmp/stale-started"
-env -u TMUX tmux -L "$socket" set -s @GHC_SL_SCHED_GEN 45 ';' \
+env -u TMUX tmux -S "$socket" set -s @GHC_SL_SCHED_GEN 45 ';' \
   set -s @GHC_SL_SCHED_ACTIVE 1 ';' set -g status-left ALIVE
 sleep 0.5
-if [ "$(env -u TMUX tmux -L "$socket" show -sqv @GHC_SL_SCHED_ACTIVE)" != "1" ]; then
+if [ "$(env -u TMUX tmux -S "$socket" show -sqv @GHC_SL_SCHED_ACTIVE)" != "1" ]; then
   echo "old driver failure fenced a newer generation" >&2
   exit 1
 fi
@@ -212,7 +212,7 @@ cat >"$renderer" <<EOF
 exec python3 -c 'import os, time; f = open("$tmp/hangs", "a"); f.write(f"{os.getpid()}\\n"); f.flush(); time.sleep(30)'
 EOF
 chmod +x "$renderer"
-env -u TMUX tmux -L "$socket" set -s @GHC_SL_SCHED_GEN 46 ';' \
+env -u TMUX tmux -S "$socket" set -s @GHC_SL_SCHED_GEN 46 ';' \
   set -s @GHC_SL_SCHED_ACTIVE 1 ';' set -g status-left "$driver_format"
 wait_for "hung renderer start" file_is_nonempty "$tmp/hangs"
 live_owner_bin="$tmp/live-owner-bin"
@@ -248,7 +248,7 @@ if [ -s "$live_owner_tmux_calls" ]; then
   echo "live scheduler owner contention entered tmux recovery" >&2
   exit 1
 fi
-env -u TMUX tmux -L "$socket" display-message -p '#{pid}:alive' >/dev/null
+env -u TMUX tmux -S "$socket" display-message -p '#{pid}:alive' >/dev/null
 
 hang_pid=$(tail -n 1 "$tmp/hangs")
 if ! kill -0 "$hang_pid" 2>/dev/null; then
@@ -260,7 +260,7 @@ if [ "${lock_owner#*:}" != "$hang_pid" ] || [ ! -f "$scheduler_lock" ]; then
   echo "atomic scheduler lock did not publish driver and renderer ownership" >&2
   exit 1
 fi
-env -u TMUX tmux -L "$socket" set -s @GHC_SL_SCHED_ACTIVE 0 ';' set -g status-left ALIVE
+env -u TMUX tmux -S "$socket" set -s @GHC_SL_SCHED_ACTIVE 0 ';' set -g status-left ALIVE
 kill "$hang_pid" 2>/dev/null || true
 
 # If the driver itself is SIGKILLed after publishing renderer ownership, loader
@@ -274,7 +274,7 @@ cat >"$renderer" <<EOF
 exec python3 -c 'import os, time; f = open("$tmp/orphan-renderers", "a"); f.write(f"{os.getpid()}\\n"); f.flush(); time.sleep(30)'
 EOF
 chmod +x "$renderer"
-env -u TMUX tmux -L "$socket" set -s @GHC_SL_SCHED_GEN 47 ';' \
+env -u TMUX tmux -S "$socket" set -s @GHC_SL_SCHED_GEN 47 ';' \
   set -s @GHC_SL_SCHED_ACTIVE 1
 env HOME="$home" TMPDIR="$lock_tmp" TMUX="$server_env" \
   GHC_TMUX_STATUS_DRIVER_DELAY_SECONDS=0 "$driver" >/dev/null 2>&1 &
@@ -314,7 +314,7 @@ if [ -e "$scheduler_lock" ] || [ -e "$orphan_candidate" ]; then
   echo "cleanup did not reclaim orphaned renderer lock artifacts" >&2
   exit 1
 fi
-env -u TMUX tmux -L "$socket" set -s @GHC_SL_SCHED_ACTIVE 0
+env -u TMUX tmux -S "$socket" set -s @GHC_SL_SCHED_ACTIVE 0
 
 # A contender can observe no lock and still lose the atomic link race. Its
 # post-acquire check must recognize the newly published live owner without
@@ -331,7 +331,7 @@ cat >"$renderer" <<EOF
 EOF
 chmod +x "$renderer"
 : >"$live_owner_tmux_calls"
-env -u TMUX tmux -L "$socket" set -s @GHC_SL_SCHED_GEN 471 ';' \
+env -u TMUX tmux -S "$socket" set -s @GHC_SL_SCHED_GEN 471 ';' \
   set -s @GHC_SL_SCHED_ACTIVE 1
 env PATH="$live_owner_bin:$PATH" HOME="$home" TMPDIR="$lock_tmp" \
   TMUX="$server_env" GHC_TMUX_STATUS_DRIVER_DELAY_SECONDS=0 \
@@ -349,7 +349,7 @@ if [ ! -f "$scheduler_lock" ] || [ "$(cat "$scheduler_lock")" != "$$" ]; then
   exit 1
 fi
 unlink "$scheduler_lock"
-env -u TMUX tmux -L "$socket" set -s @GHC_SL_SCHED_ACTIVE 0
+env -u TMUX tmux -S "$socket" set -s @GHC_SL_SCHED_ACTIVE 0
 
 # Stale scheduler recovery has one elected reclaimer; concurrent status jobs
 # must never overlap renderer executions.
@@ -373,7 +373,7 @@ if [ -e "$stale_lock" ]; then
   exit 1
 fi
 printf '%s\n' 999999 >"$stale_lock"
-env -u TMUX tmux -L "$socket" set -s @GHC_SL_SCHED_GEN 48 ';' \
+env -u TMUX tmux -S "$socket" set -s @GHC_SL_SCHED_GEN 48 ';' \
   set -s @GHC_SL_SCHED_ACTIVE 1
 driver_pids=()
 for _ in $(seq 1 20); do
@@ -392,12 +392,12 @@ if [ ! -s "$tmp/stale-render-invocations" ]; then
   echo "stale scheduler lock was not recovered" >&2
   exit 1
 fi
-env -u TMUX tmux -L "$socket" set -s @GHC_SL_SCHED_ACTIVE 0
+env -u TMUX tmux -S "$socket" set -s @GHC_SL_SCHED_ACTIVE 0
 
 # Loader recovery and normal recovery share one server CAS lease. Concurrent
 # cleanup reclaims a dead lease and removes only a lock with dead owners.
 printf '%s\n' 999999 >"$stale_lock"
-env -u TMUX tmux -L "$socket" set -s @GHC_SL_LOCK_RECOVERY_OWNER 999999
+env -u TMUX tmux -S "$socket" set -s @GHC_SL_LOCK_RECOVERY_OWNER 999999
 driver_pids=()
 for _ in $(seq 1 20); do
   env HOME="$home" TMPDIR="$lock_tmp" TMUX="$server_env" \
@@ -411,7 +411,7 @@ if [ -e "$stale_lock" ]; then
   echo "loader recovery did not remove dead scheduler lock state" >&2
   exit 1
 fi
-if [ -n "$(env -u TMUX tmux -L "$socket" show -sqv @GHC_SL_LOCK_RECOVERY_OWNER)" ]; then
+if [ -n "$(env -u TMUX tmux -S "$socket" show -sqv @GHC_SL_LOCK_RECOVERY_OWNER)" ]; then
   echo "loader recovery lease was not released" >&2
   exit 1
 fi
@@ -435,14 +435,14 @@ EOF
 chmod +x "$renderer"
 printf '%s:%s\n' "$$" "$$" >"$stale_lock"
 python3 -c 'import os, sys, time; t = time.time() - 120; os.utime(sys.argv[1], (t, t))' "$stale_lock"
-env -u TMUX tmux -L "$socket" set -s @GHC_SL_SCHED_ACTIVE 1
+env -u TMUX tmux -S "$socket" set -s @GHC_SL_SCHED_ACTIVE 1
 env HOME="$home" TMPDIR="$lock_tmp" TMUX="$server_env" \
   GHC_TMUX_STATUS_DRIVER_DELAY_SECONDS=0 "$driver" >/dev/null 2>&1
 if [ ! -f "$tmp/expired-owner-renderer-ran" ] || [ -e "$stale_lock" ]; then
   echo "an expired lock with a recycled live owner stalled the scheduler" >&2
   exit 1
 fi
-env -u TMUX tmux -L "$socket" set -s @GHC_SL_SCHED_ACTIVE 0
+env -u TMUX tmux -S "$socket" set -s @GHC_SL_SCHED_ACTIVE 0
 
 # Empty or corrupt lock state is conservatively retained. New lock acquisition
 # cannot publish an empty owner because candidate content is written before link(2).
@@ -474,7 +474,7 @@ exit 0
 EOF
 chmod +x "$renderer"
 printf '%s\n' 999999 >"$stale_lock"
-env -u TMUX tmux -L "$socket" set -s @GHC_SL_LOCK_RECOVERY_OWNER "$$" ';' \
+env -u TMUX tmux -S "$socket" set -s @GHC_SL_LOCK_RECOVERY_OWNER "$$" ';' \
   set -s @GHC_SL_SCHED_GEN 49 ';' set -s @GHC_SL_SCHED_ACTIVE 1
 env PATH="$tmp/fail-bin:/usr/bin:/bin" HOME="$home" TMPDIR="$lock_tmp" \
   TMUX="$server_env" GHC_TMUX_STATUS_DRIVER_DELAY_SECONDS=0 \
@@ -483,7 +483,7 @@ if [ -f "$tmp/ipc-failure-renderer-ran" ] || [ ! -f "$stale_lock" ]; then
   echo "tmux cleanup-lease read failure did not fail closed" >&2
   exit 1
 fi
-env -u TMUX tmux -L "$socket" set -su @GHC_SL_LOCK_RECOVERY_OWNER
+env -u TMUX tmux -S "$socket" set -su @GHC_SL_LOCK_RECOVERY_OWNER
 unlink "$stale_lock"
 
 # Any refresh-client makes tmux SIGTERM the running status job. The driver must
@@ -496,7 +496,7 @@ sleep 0.5
 : >'$tmp/term-renderer-completed'
 EOF
 chmod +x "$renderer"
-env -u TMUX tmux -L "$socket" set -s @GHC_SL_SCHED_GEN 50 ';' \
+env -u TMUX tmux -S "$socket" set -s @GHC_SL_SCHED_GEN 50 ';' \
   set -s @GHC_SL_SCHED_ACTIVE 1
 env HOME="$home" TMPDIR="$lock_tmp" TMUX="$server_env" \
   GHC_TMUX_STATUS_DRIVER_DELAY_SECONDS=0 "$driver" >/dev/null 2>&1 &
@@ -527,8 +527,8 @@ if [ ! -f "$tmp/term-renderer-completed" ]; then
   echo "TERM during the driver delay dropped the scheduler tick" >&2
   exit 1
 fi
-env -u TMUX tmux -L "$socket" set -s @GHC_SL_SCHED_ACTIVE 0
+env -u TMUX tmux -S "$socket" set -s @GHC_SL_SCHED_ACTIVE 0
 
-env -u TMUX tmux -L "$socket" display-message -p '#{pid}:alive' >/dev/null
+env -u TMUX tmux -S "$socket" display-message -p '#{pid}:alive' >/dev/null
 
 printf '%s\n' "driver fault integration: ok"

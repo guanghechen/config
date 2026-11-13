@@ -3,11 +3,11 @@ set -euo pipefail
 
 repo_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)
 crate_dir="$repo_dir/rust/ghc-tmux-status"
-socket="ghc-tmux-running-indicator-test-$$"
 tmp=$(mktemp -d /tmp/ghc-tmux-running-indicator-test.XXXXXX)
+socket="$tmp/tmux.sock"
 
 cleanup() {
-  env -u TMUX tmux -L "$socket" kill-server 2>/dev/null || true
+  env -u TMUX tmux -S "$socket" kill-server 2>/dev/null || true
   rm -rf "$tmp"
 }
 trap cleanup EXIT
@@ -18,7 +18,7 @@ fail() {
 }
 
 tmux_server() {
-  env -u TMUX tmux -L "$socket" "$@"
+  env -u TMUX tmux -S "$socket" "$@"
 }
 
 assert_equal() {
