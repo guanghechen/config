@@ -591,7 +591,7 @@ mod tests {
         assert!(plan.commands.iter().any(|command| matches!(
             command,
             TmuxCommand::SetSessionTarget { target, name, value }
-                if target == "$2" && name == "status-left-length" && value == "76"
+                if target == "$2" && name == "status-left-length" && value == "82"
         )));
     }
 

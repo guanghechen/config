@@ -36,7 +36,7 @@ cache、commit 与降级策略。Session 的分组、排序和导航规则见
 | 持久状态 | tmux options | 无额外文件或服务，且可直接观察 |
 | layout state | session-scoped | 不同 session 可独立持有 rows、lengths 与 formats |
 | metrics | scheduler-owned samples | 避免 widget render 触发外部 IO |
-| running indicator | tmux title-derived state | window live-expand；session lock-owner sampled |
+| running / waiting indicator | pane title 与 OSC 9;4 progress state | window live-expand；session lock-owner sampled |
 | commit | guarded delta plan | 减少 tmux IPC，并阻止 stale writer |
 | fallback | `status01` | Rust 或 scheduler 不可用时保持可用状态栏 |
 | theme | generated `@GHC_*` options | renderer 不硬编码 palette |
@@ -334,51 +334,80 @@ Session list 的 group、order、focus 与 last-session 语义由 `session-navig
 
 - active style 优先于 last-session style；
 - `client_last_session` 仅在当前 group 可见且非 active 时高亮；
-- bell source 为 tmux `session_alerts`，包含 `!` 即表示该 session 有 bell；
-- session item state prefix 可同时包含 running spinner 与 bell，位于 title 前且不改变 slant edge；
+- bell source 为各 window 的 `window_bell_flag`，仅在该 window 没有 waiting 或 spinning pane
+  时计入（见 §8.1）；
+- session item state prefix 可同时包含 running spinner、waiting icon 与 bell，位于 title 前且
+  不改变 slant edge；
 - `literal_text` 必须包含每个可见 icon 的 width placeholder；
 - 超长 session name 在固定 byte budget 内截断；
 - tmux 接受 `new-session -s ''`：空 name 显示为 `@GHC_SYM_SESSION_UNNAMED` + session id
   （status01 session pill 同规则），不参与 last-session 高亮；render / navigation context
   以 `session_id` 判定 session 是否解析成功，不依赖 name。
 
-### 8.1 Running indicator
+### 8.1 Running / waiting indicator
 
 - Source of truth：live pane 的 `pane_title` 以 Braille spinner
   `⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏` 之一开头；`pane_dead=1` 始终视为 idle。
-  Claude Code hooks 上报的 `pane_pb_state=indeterminate` 在 window 无 bell 时显示固定帧 `⠋`。
-- Running 与 bell evidence 按以下定义聚合；window item 与 terminal title 仍按
-  `spinning > bell > idle` 选择单一状态，session item 独立展示两类 evidence：
+  Claude Code hooks 上报 OSC 9;4 progress：`pane_pb_state=indeterminate` 显示固定帧 `⠋`；
+  `paused` 表示等待用户输入，显示 `@GHC_SYM_PANE_WAIT`。Waiting 是独立状态，因此
+  `indeterminate` 不再让位于 bell。
+- 每个 pane 只有一个状态（`waiting > spinning > idle`）。Window item 与 session item 显示其
+  panes 状态的去重集合：spinning、waiting 与 bell；bell 只能按 window 归属，仅在所在 window
+  没有 waiting 或 spinning pane 时成立。Terminal title 按 `waiting > spinning > bell > idle`
+  选择单一状态：
 
   ```text
+  pane_waiting(p)
+    = !pane_dead(p) && pane_pb_state(p) = paused
+
   pane_spinning(p)
     = !pane_dead(p) && pane_title(p) 以 Braille spinner 开头
-      || !pane_dead(p) && pane_pb_state(p) = indeterminate && !window_bell_flag(window(p))
+      || !pane_dead(p) && pane_pb_state(p) = indeterminate
+
+  window_waiting(w)
+    = 存在 p ∈ panes(w): pane_waiting(p)
 
   window_spinning(w)
     = 存在 p ∈ panes(w): pane_spinning(p)
 
   window_bell(w)
-    = window_bell_flag(w) && !window_spinning(w)
+    = window_bell_flag(w) && !window_waiting(w) && !window_spinning(w)
+
+  session_waiting(s)
+    = 存在 w ∈ windows(s): window_waiting(w)
 
   session_spinning(s)
     = 存在 w ∈ windows(s): window_spinning(w)
 
   session_bell(s)
-    = session_alerts(s) 包含 "!"
+    = 存在 w ∈ windows(s): window_bell(w)
   ```
 
   tmux 不提供持久的 pane-level bell；`window_bell_flag` 已表示该 window 下任意 pane 触发的
-  bell。
-- `@GHC_WINDOW_PREFIX_FMT` 用 native `P:` 动态聚合 live frame，并在同一个两列 state slot
-  中以 bell 作为 fallback；因此 spinner 与 bell 不会同时显示，也不需要第二次 pane traversal。
-  Zoom 是独立 decorator，显示顺序为 state、zoom、title。
-- Terminal title 使用 session scope：scheduler active 时读取同一份 sampled running/bell
+  bell。因此同一 window 内另一 pane 的 bell 会并入该 window 的 waiting 或 spinning；session
+  item 的 bell 与 window list 中显示 bell 的 window 一致。
+- `@GHC_WINDOW_PREFIX_FMT` 依次输出 live frame（pane 顺序中首个 spinning pane 的帧，无样式、
+  沿用 title style）、waiting icon 与 bell；bell 由 `@GHC_WINDOW_BELL_FMT` 判定。Live frame
+  只来自 spinning pane，因此 waiting 需要一次额外的 `P:` traversal（`@GHC_WINDOW_WAITING_FMT`）；
+  每个 window 的 pane 很少，接受该开销（见 `status-performance.md` §4.7）。Zoom 是独立
+  decorator，显示顺序为 states、zoom、title。
+- Pane border 在 title 前显示 hook 上报的 pane state（`@GHC_PANE_BORDER_STATE_FMT`）：
+  `paused` 显示 waiting icon，`indeterminate` 显示 `⠋`，字重随 border style。应用自带的
+  spinner 已在 `pane_title` 中，不重复绘制。
+- Waiting icon 的背景沿用所在 window item、session item 或 pane border 的背景，theme 只设计
+  前景色：window prefix 为 `@GHC_SL_FG_WIN{,_ACTIVE,_LAST}_ICON_WAIT`，其中当前 window 用
+  pill 文字色以保证对比度；inactive session item 为 `@GHC_SL_FG_SESSION_ITEM_WAIT`，pane
+  border 为 `@GHC_PSL_FG_WAIT`。
+- Terminal title 使用 session scope：scheduler active 时读取同一份 sampled waiting/running/bell
   membership，否则用 live `W/P` aggregation 保持 status01/fallback 可用；两条路径均按
-  `spinning > bell > idle` 选择，最后显示 `session:window`。Terminal title 不反写 `pane_title`。
-- 每个持锁 scheduler tick 尝试一次发布
-  `@GHC_SL_SESSION_STATES = <sample-token><|R$session_id|...><|B$session_id|...>`；`R`/`B`
-  分别表示 running/bell evidence，contender 不采样。Driver 以版本化 env 请求 renderer
+  `waiting > spinning > bell > idle` 选择，最后显示 `session:window`。Terminal title 不反写
+  `pane_title`。
+- 每个持锁 scheduler tick 尝试一次发布 `@GHC_SL_SESSION_STATES`：
+  `<sample-token><|W$session_id||R$session_id||B$session_id||2$session_id|...>`；`W`/`R`/`B`
+  分别表示 waiting/running/bell evidence，彼此独立；有两个或三个状态的 session 另发布
+  `|2$session_id|` 或 `|3$session_id|`，供 renderer 的 responsive guard 计算额外宽度。采样
+  按真值表组织，每个 session 的三类 traversal 各求值一次；contender 不采样。
+  Driver 以版本化 env 请求 renderer
   接管发布；renderer 校验请求后先向 stdout 写出并 flush 固定 ack 行，成功后才进入任何
   发布路径，写失败则放弃整个 tick。接管后，renderer 将发布置于该 tick 首个 mutation queue
   的 guard 之前（metrics completion，否则 heartbeat claim），与该 queue 共享一次 client
@@ -392,29 +421,38 @@ Session list 的 group、order、focus 与 last-session 语义由 `session-navig
   ack 无法打开或未能读到完整行（unknown），以及 renderer 异常退出（保留 generation fencing）
   时都不补发。发布在执行时采样当前 formats 与 live state，不受 task generation
   guard 约束。
-- Session item 检查 lifecycle active 与 exact typed session-id membership；`R` 与 `B`
-  分别匹配并按 spinner、bell 顺序拼接，因此两类 evidence 可同时显示。Sample 默认由 tmux
-  server 在 12 秒后以 token prefix CAS 清理；正常 freshness 约为 4–5 秒。发布在 driver
-  delay 之后执行，driver 首次启动或 reload 后约一个 tick 才出现首个 sample。
+- Session item 检查 lifecycle active 与 exact typed session-id membership；`R`、`W`、`B`
+  独立匹配，按 spinner、waiting icon、bell 顺序拼接：无样式的 spinner 在前以沿用 item 颜色，
+  带样式的 icon 在后。Inactive item 的 waiting 与 bell prefix 引用共享的
+  `@GHC_SESSION_WAIT_PREFIX_FMT` 与 `@GHC_SESSION_BELL_PREFIX_FMT`，不在每个 cached item 中
+  重复样式；active item 以自身颜色绘制 plain symbol。Sample 默认由 tmux server 在 12 秒后以
+  token prefix CAS 清理；正常 freshness 约为 4–5 秒。发布在 driver delay 之后执行，driver
+  首次启动或 reload 后约一个 tick 才出现首个 sample。
 - Session item 命中 membership 后，从现有 `status-interval=1` clock 以 `%S mod 2` 派生
   `⠋/⠴`；所有 session 共享 phase，不追踪 pane 的真实 frame。Clock format 缺失或
   malformed 时不显示 marker。
-- Session spinner 与 bell 各使用 2 列 title prefix（左侧 gap + marker）；同时存在时共占 4 列，
-  idle 不绘制 padding、保持 baseline layout。Bell 从 index 后移到 title prefix，glyph count
-  不变。Session-list `literal_text` 保留单 prefix baseline，避免 idle/单状态下提前隐藏
-  metrics；双状态时 responsive guard 动态增加第二个 prefix 的预算。
-  `status-left-length` 另按每个 group session 增加 2 列静态上界，容纳可能出现的第二个
-  prefix。接受状态 transition 引起的 session-list reflow；可隐藏的 metrics 优先让出空间。
-- Window live frame 仅在 running 时增加 2 列，idle 不预留 frame、保持 baseline layout；
-  接受由此产生的 window-list reflow tradeoff。Bell 与 zoom 从 index 后移到 title prefix，
-  各自的 glyph count 和 palette 不变。
-- Sampled `R/B` values 与 frame 不进入 Rust snapshot、render key 或 session cache；cache 中
-  仅保存按可见 session IDs 生成的动态表达式；状态变化不触发 renderer apply/commit。
+- Session spinner、waiting icon 与 bell 各使用 2 列 title prefix（左侧 gap + marker），三者
+  同时存在时共占 6 列；idle 不绘制 padding、保持 baseline layout。Bell 从 index 后移到
+  title prefix，glyph count 不变。Session-list `literal_text` 保留单 prefix baseline，避免
+  idle/单状态下提前隐藏 metrics；多状态时 responsive guard 读取 count token，`|2$id|` 增加
+  2 列、`|3$id|` 增加 4 列。Guard expression 在每个 metric 中重复，而含 time expansion 的
+  format 由 tmux 以 8 KiB strftime buffer 展开、超长即整行为空，因此每个 session 的 guard
+  不得变长。`status-left-length` 另按每个 group session 增加 4 列静态上界，容纳可能出现的
+  另外两个 prefix。接受状态 transition 引起的 session-list reflow；可隐藏的 metrics 优先让出
+  空间。
+- Window state 在存在 spinning、waiting 或 bell 时各增加 2 列；spinning 与 waiting 可同时
+  出现，bell 只在二者都不存在时出现，因此最多 4 列。Idle 不预留、保持 baseline layout；接受
+  由此产生的 window-list reflow tradeoff。Bell 与 zoom 从 index 后移到 title prefix，各自的
+  glyph count 和 palette 不变。
+- Sampled `W/R/B` values、count token 与 frame 不进入 Rust snapshot、render key 或 session
+  cache；cache 中仅保存按可见 session IDs 生成的动态表达式；状态变化不触发 renderer
+  apply/commit。Bell 改用共享 prefix 后，waiting branch 使每个 item 的 rich text 只增加约
+  13 bytes；以短名 fixture 测得的可见 item 数与变更前一致。
 - Session item 与 active-scheduler terminal title 是上述 session 定义的 freshness-bounded
   projection：sample 更新前可能暂时保留上一状态，且 consumer 不额外执行 `S/W/P` traversal。
   Scheduler inactive 时 terminal title 改用 live aggregation。Lifecycle fence 清空 sampled
-  state；session item 的 running 与 bell branch 独立 degrade，terminal title 仍按单一状态
-  priority degrade。
+  state；session item 的 waiting、running 与 bell branch 独立 degrade，terminal title 仍按
+  单一状态 priority degrade。
 
 ## 9. Length 与 cache contract
 
@@ -424,7 +462,7 @@ Session list 的 group、order、focus 与 last-session 语义由 `session-navig
 left floor  = 64
 right floor = 84
 padding     = 2
-left reserve = 2 * session_group_count
+left reserve = 4 * session_group_count
 left desired = max(left floor, display_width(literal_text) + left reserve + padding)
 right desired = max(right floor, display_width(literal_text) + padding)
 result      = min(desired, max(client_width, floor))
@@ -546,8 +584,8 @@ Plan 在 32 KiB command budget 内分 chunk：
 | snapshot read/parse failure | abort | 保留旧 status |
 | widget/composition failure | abort | 保留旧 status |
 | metric unsupported/failure | degrade | hidden 或 last-known value |
-| running membership expansion failure | degrade | marker absent；下一位 lock owner 重试 |
-| running producer missing/hung | expire | active fence 立即隐藏，否则 last sample 最多保留 12 s |
+| session state membership expansion failure | degrade | marker absent；下一位 lock owner 重试 |
+| session state producer missing/hung | expire | active fence 立即隐藏，否则 last sample 最多保留 12 s |
 | guarded commit skipped | retry later | 新er writer 胜出 |
 | tmux commit failure | retry later | guards 允许的旧状态保持可见 |
 | renderer/driver unavailable on load | fallback | 使用 `status01` |

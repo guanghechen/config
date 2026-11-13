@@ -66,13 +66,13 @@ assert_spinner_prefix() {
   esac
 }
 
-assert_spinner_bell_prefix() {
+assert_spinner_then() {
   local value=$1
-  local bell=$2
+  local rest=$2
   local context=$3
   case "$value" in
-    " ⠋ $bell" | " ⠴ $bell") ;;
-    *) fail "$context: expected a padded session spinner and bell, got '$value'" ;;
+    " ⠋ $rest" | " ⠴ $rest") ;;
+    *) fail "$context: expected a padded session spinner before '$rest', got '$value'" ;;
   esac
 }
 
@@ -101,6 +101,33 @@ wait_for_dead_pane() {
     sleep 0.02
   done
   fail "pane $target did not become dead"
+}
+
+wait_for_pb_state() {
+  local target=$1
+  local expected=$2
+  local state
+  for _ in $(seq 1 100); do
+    state=$(tmux_server display-message -p -t "$target" '#{pane_pb_state}')
+    if [ "$state" = "$expected" ]; then
+      return 0
+    fi
+    sleep 0.02
+  done
+  fail "pane $target did not report progress state $expected"
+}
+
+wait_for_window_bell() {
+  local target=$1
+  local flag
+  for _ in $(seq 1 20); do
+    flag=$(tmux_server display-message -p -t "$target" '#{window_bell_flag}')
+    if [ "$flag" = "1" ]; then
+      return 0
+    fi
+    sleep 0.1
+  done
+  fail "window $target did not record a bell"
 }
 
 publish_session_states() {
@@ -141,7 +168,9 @@ alpha_running_membership_format="#{m:*|R${alpha_id}|*,#{@GHC_SL_SESSION_STATES}}
 alpha_running_format="#{&&:#{==:#{@GHC_SL_SCHED_ACTIVE},1},${alpha_running_membership_format}}"
 alpha_running_prefix="#{?${alpha_running_format},${session_running_prefix},}"
 beta_running_membership_format="#{m:*|R${beta_id}|*,#{@GHC_SL_SESSION_STATES}}"
+beta_waiting_membership_format="#{m:*|W${beta_id}|*,#{@GHC_SL_SESSION_STATES}}"
 beta_bell_membership_format="#{m:*|B${beta_id}|*,#{@GHC_SL_SESSION_STATES}}"
+wait_symbol=$(tmux_server show-option -gqv @GHC_SYM_PANE_WAIT)
 
 publish_session_states
 assert_format "" alpha:main '#{E:@GHC_WINDOW_PREFIX_FMT}' "idle window"
@@ -200,13 +229,20 @@ assert_format "" alpha:worker '#{E:@GHC_WINDOW_PREFIX_FMT}' "settled worker wind
 assert_format "0" alpha "$alpha_running_format" "settled session"
 assert_format "" alpha "$alpha_running_prefix" "settled session prefix"
 
-# remain-on-exit panes retain their last title; pane_dead must suppress stale spinners.
-dead_pane=$(tmux_server new-window -dP -F '#{pane_id}' -t alpha -n dead 'sleep 1')
+# remain-on-exit panes retain their last title and progress state; pane_dead must
+# suppress stale spinners and waits.
+dead_pane=$(
+  tmux_server new-window -dP -F '#{pane_id}' -t alpha -n dead \
+    "printf '\\033]9;4;4\\007'; sleep 1"
+)
 tmux_server set-option -w -t alpha:dead remain-on-exit on
 tmux_server select-pane -t "$dead_pane" -T '⠋ stale'
 wait_for_dead_pane "$dead_pane"
 publish_session_states
+assert_format "paused" "$dead_pane" '#{pane_pb_state}' "dead pane keeps its progress state"
 assert_format "" "$dead_pane" '#{E:@GHC_PANE_RUNNING_FMT}' "dead pane frame"
+assert_format "" "$dead_pane" '#{E:@GHC_PANE_WAITING_FMT}' "dead pane wait"
+assert_format "" "$dead_pane" '#{E:@GHC_PANE_BORDER_STATE_FMT}' "dead pane border state"
 assert_format "" alpha:dead '#{E:@GHC_WINDOW_PREFIX_FMT}' "dead pane window"
 
 # The configured current-window item preserves the original idle layout and
@@ -253,17 +289,7 @@ alert_pane=$(tmux_server display-message -p -t beta:alert '#{pane_id}')
 tmux_server select-pane -t "$alert_pane" -T 'idle alert'
 tmux_server split-window -d -t beta:alert 'sleep 10'
 tmux_server resize-pane -Z -t "$alert_pane"
-window_bell_flag=0
-for _ in $(seq 1 20); do
-  window_bell_flag=$(
-    tmux_server display-message -p -t beta:alert '#{window_bell_flag}'
-  )
-  if [ "$window_bell_flag" = "1" ]; then
-    break
-  fi
-  sleep 0.1
-done
-assert_equal "1" "$window_bell_flag" "alert window bell flag"
+wait_for_window_bell beta:alert
 bell_symbol=$(tmux_server show-option -gqv @GHC_SYM_WIN_BELL)
 zoom_symbol=$(tmux_server show-option -gqv @GHC_SYM_WIN_ZOOM)
 publish_session_states
@@ -271,11 +297,11 @@ assert_format "1" beta "$beta_running_membership_format" \
   "sample contains running beta session"
 assert_format "1" beta "$beta_bell_membership_format" \
   "sample contains belling beta session"
-beta_session_item_prefix="#{?#{==:#{@GHC_SL_SCHED_ACTIVE},1},#{?${beta_running_membership_format},${session_running_prefix},}#{?${beta_bell_membership_format}, ${bell_symbol},},}"
+beta_session_item_prefix="#{?#{==:#{@GHC_SL_SCHED_ACTIVE},1},#{?${beta_running_membership_format},${session_running_prefix},}#{?${beta_waiting_membership_format}, ${wait_symbol},}#{?${beta_bell_membership_format}, ${bell_symbol},},}"
 session_item_prefix=$(
   tmux_server display-message -p -t beta:alert "$beta_session_item_prefix"
 )
-assert_spinner_bell_prefix "$session_item_prefix" "$bell_symbol" \
+assert_spinner_then "$session_item_prefix" "$bell_symbol" \
   "session item shows running and bell states"
 assert_format "4" beta:alert "#{w:${beta_session_item_prefix}}" \
   "combined session item prefix width"
@@ -324,6 +350,9 @@ assert_contains "$decorated_window_item" \
   "window spinner wins over bell before zoom and title"
 assert_not_contains "$decorated_window_item" "$bell_symbol" \
   "running window omits lower-priority bell"
+publish_session_states
+assert_format "0" beta "$beta_bell_membership_format" \
+  "a bell folds into running in its own window"
 
 tmux_server select-pane -t beta:main -T 'idle'
 tmux_server select-pane -t "$alert_pane" -T 'idle'
@@ -373,6 +402,132 @@ last_zoom_style=$(
 )
 assert_contains "$last_window_item_raw" "$last_zoom_style" \
   "last-window zoom swaps colors with reverse"
+
+# Window and session items show the set of their panes' states, while the
+# terminal title keeps one. A bell counts only in a window that neither waits nor
+# runs. Pane borders mark only hook-reported progress.
+tmux_server source-file "$repo_dir/conf/theme/panestatus02.tmux.conf"
+spinner_pane=$(tmux_server new-window -dP -F '#{pane_id}' -t beta -n wait 'sleep 30')
+tmux_server select-pane -t "$spinner_pane" -T '⠋ worker'
+waiting_pane=$(
+  tmux_server split-window -dP -F '#{pane_id}' -t "$spinner_pane" \
+    "printf '\\033]9;4;4\\007'; sleep 0.3; printf '\\007'; sleep 30"
+)
+wait_for_pb_state "$waiting_pane" paused
+wait_for_window_bell beta:wait
+waiting_window_item=$(
+  tmux_server display-message -p -t beta:wait \
+    '#{T:window-status-format}' | strip_styles
+)
+assert_contains "$waiting_window_item" "⠋ $wait_symbol wait" \
+  "window shows its running and waiting panes"
+assert_not_contains "$waiting_window_item" "$bell_symbol" \
+  "a bell folds into the window's wait"
+wait_style=$(
+  tmux_server display-message -p -t beta:wait \
+    '#[fg=#{@GHC_SL_BG_WIN_NAME},bg=#{@GHC_SL_FG_WIN_ICON_WAIT},reverse,bold]#{@GHC_SYM_PANE_WAIT}'
+)
+assert_contains \
+  "$(tmux_server display-message -p -t beta:wait '#{T:window-status-format}')" \
+  "$wait_style" "inactive wait keeps the window background"
+assert_contains \
+  "$(tmux_server display-message -p -t "$waiting_pane" '#{T:pane-border-format}' | strip_styles)" \
+  "/2 $wait_symbol " "pane border marks the wait before the title"
+assert_format "" "$spinner_pane" '#{E:@GHC_PANE_BORDER_STATE_FMT}' \
+  "pane border leaves an application spinner to pane_title"
+publish_session_states
+assert_format "1" beta "$beta_waiting_membership_format" \
+  "sample contains waiting beta session"
+assert_format "1" beta "$beta_running_membership_format" \
+  "sample keeps the running pane beside the wait"
+assert_format "0" beta "$beta_bell_membership_format" \
+  "a bell folds into the wait in its own window"
+assert_spinner_then \
+  "$(tmux_server display-message -p -t beta:wait "$beta_session_item_prefix")" \
+  "$wait_symbol" "session item shows running and the wait"
+assert_format "4" beta:wait "#{w:${beta_session_item_prefix}}" \
+  "running and wait session item prefix width"
+assert_contains "$(tmux_server show-option -sqv @GHC_SL_SESSION_STATES)" "|2${beta_id}|" \
+  "sampler publishes two states for the width guards"
+ring_pane=$(
+  tmux_server new-window -dP -F '#{pane_id}' -t beta -n ring \
+    "sleep 0.3; printf '\\007'; sleep 30"
+)
+wait_for_window_bell beta:ring
+publish_session_states
+assert_format "1" beta "$beta_bell_membership_format" \
+  "a bell in another window adds its own state"
+assert_spinner_then \
+  "$(tmux_server display-message -p -t beta:wait "$beta_session_item_prefix")" \
+  "$wait_symbol $bell_symbol" "session item shows all three states"
+assert_format "6" beta:wait "#{w:${beta_session_item_prefix}}" \
+  "three-state session item prefix width"
+assert_contains "$(tmux_server show-option -sqv @GHC_SL_SESSION_STATES)" "|3${beta_id}|" \
+  "sampler publishes three states for the width guards"
+# Inactive session items share these styled prefixes; each keeps its theme colour.
+for state in WAIT BELL; do
+  shared_prefix=$(tmux_server display-message -p "#{E:@GHC_SESSION_${state}_PREFIX_FMT}")
+  assert_contains "$shared_prefix" \
+    "bg=$(tmux_server show-option -gqv "@GHC_SL_FG_SESSION_ITEM_${state}")" \
+    "shared $state prefix colour"
+done
+assert_equal " $wait_symbol $bell_symbol" \
+  "$(tmux_server display-message -p '#{E:@GHC_SESSION_WAIT_PREFIX_FMT}#{E:@GHC_SESSION_BELL_PREFIX_FMT}' | strip_styles)" \
+  "shared prefixes draw their symbols"
+tmux_server kill-pane -t "$ring_pane"
+assert_format "$wait_symbol beta:wait" beta:wait '#{T:set-titles-string}' \
+  "sampled terminal title shows the wait alone"
+tmux_server set-option -s @GHC_SL_SCHED_ACTIVE 0
+assert_format "$wait_symbol beta:wait" beta:wait '#{T:set-titles-string}' \
+  "live terminal title shows the wait alone"
+tmux_server set-option -s @GHC_SL_SCHED_ACTIVE 1
+
+# Every window variant keeps its own background behind the wait.
+tmux_server select-window -t beta:wait
+active_wait_style=$(
+  tmux_server display-message -p -t beta:wait \
+    '#[fg=#{@GHC_SL_BG_WIN_ACTIVE_NAME},bg=#{@GHC_SL_FG_WIN_ACTIVE_ICON_WAIT},reverse,bold]#{@GHC_SYM_PANE_WAIT}'
+)
+assert_contains \
+  "$(tmux_server display-message -p -t beta:wait '#{T:window-status-current-format}')" \
+  "$active_wait_style" "active wait keeps the window background"
+tmux_server select-window -t beta:main
+assert_format "1" beta:wait '#{window_last_flag}' "waiting window is last"
+last_wait_style=$(
+  tmux_server display-message -p -t beta:wait \
+    '#[fg=#{@GHC_SL_BG_WIN_LAST_NAME},bg=#{@GHC_SL_FG_WIN_LAST_ICON_WAIT},reverse,bold]#{@GHC_SYM_PANE_WAIT}'
+)
+assert_contains \
+  "$(tmux_server display-message -p -t beta:wait '#{T:window-status-format}')" \
+  "$last_wait_style" "last-window wait keeps the window background"
+
+# A finished wait leaves the running pane's state.
+tmux_server kill-pane -t "$waiting_pane"
+assert_contains \
+  "$(tmux_server display-message -p -t beta:wait '#{T:window-status-format}' | strip_styles)" \
+  "⠋ wait" "window keeps running after the wait"
+publish_session_states
+assert_format "0" beta "$beta_waiting_membership_format" \
+  "finished wait leaves the sample"
+assert_format "1" beta "$beta_running_membership_format" \
+  "running returns to the sample"
+tmux_server kill-window -t beta:wait
+
+# Reported progress no longer yields to bell: a wait has its own state.
+busy_pane=$(
+  tmux_server new-window -dP -F '#{pane_id}' -t beta -n busy \
+    "printf '\\033]9;4;3\\007'; sleep 0.3; printf '\\007'; sleep 30"
+)
+wait_for_pb_state "$busy_pane" indeterminate
+wait_for_window_bell beta:busy
+busy_window_item=$(
+  tmux_server display-message -p -t beta:busy \
+    '#{T:window-status-format}' | strip_styles
+)
+assert_contains "$busy_window_item" "⠋ busy" "reported progress wins over bell"
+assert_not_contains "$busy_window_item" "$bell_symbol" \
+  "busy window omits lower-priority bell"
+tmux_server kill-window -t beta:busy
 
 # A delayed expiry may clear only its own sample, never a newer refresh.
 tmux_server select-pane -t alpha:main -T '⠴ expiring'

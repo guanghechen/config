@@ -5,10 +5,11 @@ const DEFAULT_STATUS_LEFT_LENGTH: usize = 64;
 const DEFAULT_STATUS_RIGHT_LENGTH: usize = 84;
 const STATUS_LENGTH_PADDING: usize = 2;
 /*
- * The session-list shadow budgets one prefix; status-left-length reserves the
- * second independently of the live responsive guards used by the metric block.
+ * The session-list shadow budgets one state prefix; a session shows up to three
+ * (running, wait, bell), so status-left-length reserves the other two
+ * independently of the live responsive guards used by the metric block.
  */
-const COMBINED_SESSION_STATE_EXTRA_WIDTH: usize = 2;
+const COMBINED_SESSION_STATE_EXTRA_WIDTH: usize = 4;
 
 pub fn status_left_length(
     status: &RenderedStatus,
@@ -83,9 +84,9 @@ mod tests {
     }
 
     #[test]
-    fn left_length_reserves_a_second_state_prefix_per_session() {
+    fn left_length_reserves_two_extra_state_prefixes_per_session() {
         let status = rendered_status(&"x".repeat(68), "short");
-        assert_eq!(status_left_length(&status, 200, 3), "76");
+        assert_eq!(status_left_length(&status, 200, 3), "82");
         assert_eq!(status_left_length(&status, 200, 0), "70");
     }
 

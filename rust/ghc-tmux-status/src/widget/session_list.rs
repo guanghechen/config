@@ -14,7 +14,14 @@ const INACTIVE_NAME_FG: &str = "#{@GHC_SL_FG_SESSION_ITEM_NAME}";
 const INACTIVE_NUM_BG: &str = "#{@GHC_SL_BG_SESSION_ITEM_NUM}";
 const INACTIVE_NUM_FG: &str = "#{@GHC_SL_FG_SESSION_ITEM_NUM}";
 const LAST_FG: &str = "#{@GHC_SL_FG_SESSION_ITEM_LAST}";
-const INACTIVE_BELL_FG: &str = "#{@GHC_SL_FG_SESSION_ITEM_BELL}";
+/*
+ * Inactive items reference shared, styled state prefixes instead of repeating the
+ * styles in every cached item; the active item draws plain symbols in its colours.
+ */
+const INACTIVE_WAIT_PREFIX: &str = "#{E:@GHC_SESSION_WAIT_PREFIX_FMT}";
+const INACTIVE_BELL_PREFIX: &str = "#{E:@GHC_SESSION_BELL_PREFIX_FMT}";
+const ACTIVE_WAIT_PREFIX: &str = " #{@GHC_SYM_PANE_WAIT}";
+const ACTIVE_BELL_PREFIX: &str = " #{@GHC_SYM_WIN_BELL}";
 const UNNAMED_SYMBOL: &str = "#{@GHC_SYM_SESSION_UNNAMED}";
 const RANGE_CLOSE: &str = "#[norange]#[default]";
 /*
@@ -342,7 +349,7 @@ fn render_item_body_literal(title: &str, index: usize, is_active: bool) -> Strin
     /*
      * Keep one state slot in the responsive-layout shadow so idle/single-state
      * metric thresholds remain stable. status-left-length separately reserves
-     * the possible second slot when running and bell coexist. The active body
+     * the two further slots a session may show. The active body
      * separates title and index with " | ", one column wider than inactive.
      */
     let separator = if is_active { " | " } else { "  " };
@@ -366,7 +373,7 @@ fn render_item_body_with_last_focus(
 }
 
 fn active_item_body(title: &str, session_id: &str, index: usize) -> String {
-    let state_prefix = session_state_prefix(session_id, " #{@GHC_SYM_WIN_BELL}");
+    let state_prefix = session_state_prefix(session_id, ACTIVE_WAIT_PREFIX, ACTIVE_BELL_PREFIX);
 
     // Reverse cells stay opaque in Ghostty; swapping colors preserves the theme.
     format!(
@@ -388,13 +395,11 @@ fn inactive_item_body_with_last_focus(
         || INACTIVE_NUM_FG.to_string(),
         |name| last_focus_fg(name, INACTIVE_NUM_FG),
     );
-    let bell_prefix =
-        format!(" #[fg={INACTIVE_NAME_BG}#,bg={INACTIVE_BELL_FG}#,bold]#{{@GHC_SYM_WIN_BELL}}");
-    let state_prefix = session_state_prefix(session_id, &bell_prefix);
+    let state_prefix = session_state_prefix(session_id, INACTIVE_WAIT_PREFIX, INACTIVE_BELL_PREFIX);
 
     /*
      * The title style resumes after the space that follows the prefix: Ghostty draws a
-     * Nerd Font icon across a following space in that cell's colour, so a bell coloured
+     * Nerd Font icon across a following space in that cell's colour, so an icon coloured
      * only in its own cell renders half in the title colour.
      */
     format!(
@@ -403,18 +408,19 @@ fn inactive_item_body_with_last_focus(
 }
 
 /**
- * Renders each sampled state independently before the title, so running and
- * bell evidence remain visible when both memberships are present.
+ * Renders the set of sampled states before the title. The unstyled spinner leads
+ * so it keeps the item colours; the wait and bell prefixes carry their own styles.
  */
-fn session_state_prefix(session_id: &str, bell_prefix: &str) -> String {
+fn session_state_prefix(session_id: &str, wait_prefix: &str, bell_prefix: &str) -> String {
     format!(
-        "#{{?#{{==:#{{@GHC_SL_SCHED_ACTIVE}},1}},#{{?#{{m:*|R{session_id}|*,#{{@GHC_SL_SESSION_STATES}}}},#{{=2:#{{E:@GHC_SESSION_RUNNING_PREFIX_FMT}}}},}}#{{?#{{m:*|B{session_id}|*,#{{@GHC_SL_SESSION_STATES}}}},{bell_prefix},}},}}"
+        "#{{?#{{==:#{{@GHC_SL_SCHED_ACTIVE}},1}},#{{?#{{m:*|R{session_id}|*,#{{@GHC_SL_SESSION_STATES}}}},#{{=2:#{{E:@GHC_SESSION_RUNNING_PREFIX_FMT}}}},}}#{{?#{{m:*|W{session_id}|*,#{{@GHC_SL_SESSION_STATES}}}},{wait_prefix},}}#{{?#{{m:*|B{session_id}|*,#{{@GHC_SL_SESSION_STATES}}}},{bell_prefix},}},}}"
     )
 }
 
 #[cfg(test)]
 mod tests {
     use super::{
+        ACTIVE_BELL_PREFIX, ACTIVE_WAIT_PREFIX, INACTIVE_BELL_PREFIX, INACTIVE_WAIT_PREFIX,
         MAX_SESSION_LIST_RICH_BYTES, MAX_SESSION_NAME_FORMAT_BYTES, RenderedSegment,
         active_item_body, bounded_session_name, compare_literal, display_literal,
         inactive_item_body_with_last_focus, render_item_body_with_last_focus,
@@ -447,7 +453,7 @@ mod tests {
     #[test]
     fn active_branch_places_state_prefix_before_title() {
         let active = active_item_body(&display_literal("tmux"), "$2", 2);
-        let state_prefix = session_state_prefix("$2", " #{@GHC_SYM_WIN_BELL}");
+        let state_prefix = active_state_prefix("$2");
         assert_eq!(
             active,
             format!(
@@ -462,8 +468,7 @@ mod tests {
         let inactive =
             inactive_item_body_with_last_focus(&display_literal("dev"), "$2", 2, Some("dev"));
         let name_fg = "#{?#{==:#{client_last_session},#{l:dev}},#{@GHC_SL_FG_SESSION_ITEM_LAST},#{@GHC_SL_FG_SESSION_ITEM_NAME}}";
-        let bell_prefix = " #[fg=#{@GHC_SL_BG_SESSION_ITEM_NAME}#,bg=#{@GHC_SL_FG_SESSION_ITEM_BELL}#,bold]#{@GHC_SYM_WIN_BELL}";
-        let state_prefix = session_state_prefix("$2", bell_prefix);
+        let state_prefix = session_state_prefix("$2", INACTIVE_WAIT_PREFIX, INACTIVE_BELL_PREFIX);
         assert_eq!(
             inactive,
             format!(
@@ -473,10 +478,10 @@ mod tests {
     }
 
     #[test]
-    fn state_prefix_renders_running_and_bell_memberships_independently() {
+    fn state_prefix_renders_every_sampled_state_independently() {
         assert_eq!(
-            session_state_prefix("$2", " #{@GHC_SYM_WIN_BELL}"),
-            "#{?#{==:#{@GHC_SL_SCHED_ACTIVE},1},#{?#{m:*|R$2|*,#{@GHC_SL_SESSION_STATES}},#{=2:#{E:@GHC_SESSION_RUNNING_PREFIX_FMT}},}#{?#{m:*|B$2|*,#{@GHC_SL_SESSION_STATES}}, #{@GHC_SYM_WIN_BELL},},}"
+            active_state_prefix("$2"),
+            "#{?#{==:#{@GHC_SL_SCHED_ACTIVE},1},#{?#{m:*|R$2|*,#{@GHC_SL_SESSION_STATES}},#{=2:#{E:@GHC_SESSION_RUNNING_PREFIX_FMT}},}#{?#{m:*|W$2|*,#{@GHC_SL_SESSION_STATES}}, #{@GHC_SYM_PANE_WAIT},}#{?#{m:*|B$2|*,#{@GHC_SL_SESSION_STATES}}, #{@GHC_SYM_WIN_BELL},},}"
         );
     }
 
@@ -616,16 +621,8 @@ mod tests {
             display_width(&on_yui.literal_text)
         );
         assert_ne!(on_dev.rich_text, on_yui.rich_text);
-        assert!(
-            on_dev
-                .rich_text
-                .contains(&session_state_prefix("$1", " #{@GHC_SYM_WIN_BELL}"))
-        );
-        assert!(
-            on_yui
-                .rich_text
-                .contains(&session_state_prefix("$2", " #{@GHC_SYM_WIN_BELL}"))
-        );
+        assert!(on_dev.rich_text.contains(&active_state_prefix("$1")));
+        assert!(on_yui.rich_text.contains(&active_state_prefix("$2")));
     }
 
     #[test]
@@ -671,6 +668,11 @@ mod tests {
 
         assert!(segment.rich_text.contains("@GHC_SYM_WIN_BELL"));
         assert!(segment.rich_text.contains("|B$2|"));
+        assert!(segment.rich_text.contains("|W$2|"));
+        // Inactive items reference the shared styled prefixes instead of inlining them.
+        assert!(segment.rich_text.contains("@GHC_SESSION_WAIT_PREFIX_FMT"));
+        assert!(segment.rich_text.contains("@GHC_SESSION_BELL_PREFIX_FMT"));
+        assert!(!segment.rich_text.contains("@GHC_SL_FG_SESSION_ITEM_BELL"));
         assert!(segment.rich_text.contains("#[range=session|$2]"));
         assert_eq!(
             segment.literal_text,
@@ -693,11 +695,7 @@ mod tests {
             segment.rich_text.len()
         );
         assert!(segment.rich_text.contains("#{l:s20}"));
-        assert!(
-            segment
-                .rich_text
-                .contains(&session_state_prefix("$20", " #{@GHC_SYM_WIN_BELL}"))
-        );
+        assert!(segment.rich_text.contains(&active_state_prefix("$20")));
         assert!(segment.literal_text.starts_with("\u{e0b0} … "));
         assert!(segment.literal_text.contains("… \u{e0b0} "));
     }
@@ -711,15 +709,8 @@ mod tests {
         let first = render_session_list(&context_with_session_infos("s01", sessions.clone()));
         let last = render_session_list(&context_with_session_infos("s40", sessions));
 
-        assert!(
-            first
-                .rich_text
-                .contains(&session_state_prefix("$1", " #{@GHC_SYM_WIN_BELL}"))
-        );
-        assert!(
-            last.rich_text
-                .contains(&session_state_prefix("$40", " #{@GHC_SYM_WIN_BELL}"))
-        );
+        assert!(first.rich_text.contains(&active_state_prefix("$1")));
+        assert!(last.rich_text.contains(&active_state_prefix("$40")));
         assert!(first.rich_text.len() <= MAX_SESSION_LIST_RICH_BYTES);
         assert!(last.rich_text.len() <= MAX_SESSION_LIST_RICH_BYTES);
     }
@@ -794,6 +785,10 @@ mod tests {
 
     fn render_session_list(context: &RenderContext) -> RenderedSegment {
         session_list(context).0
+    }
+
+    fn active_state_prefix(session_id: &str) -> String {
+        session_state_prefix(session_id, ACTIVE_WAIT_PREFIX, ACTIVE_BELL_PREFIX)
     }
 
     fn context_with_sessions<const N: usize>(

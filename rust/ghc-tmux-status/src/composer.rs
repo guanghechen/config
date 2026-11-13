@@ -51,7 +51,7 @@ pub fn render_status02(context: &RenderContext, metrics_supported: bool) -> Rend
     ]);
     /*
      * The baseline reserves host, visible sessions with one state prefix each,
-     * and the client-prefix indicator. Guards add the live second-prefix width
+     * and the client-prefix indicator. Guards add the live extra-prefix width
      * without making idle or single-state sessions drop metrics earlier.
      * The wide row still leaves native window-list overflow to tmux truncation.
      */
@@ -124,8 +124,12 @@ fn concat_segments(segments: &[&RenderedSegment]) -> RenderedSegment {
 
 /**
  * A metric's baseline threshold reserves all higher-priority metrics. Each
- * visible session with both sampled states adds one two-column prefix, without
- * reading those states into Rust or changing the cache when they change.
+ * visible session adds one two-column prefix per sampled state beyond its first,
+ * without reading those states into Rust or changing the cache when they change.
+ * The sampler publishes each session's state count as `|N$id|`, so the guard
+ * matches a count rather than recombining memberships. The expression repeats in
+ * every guarded metric, and formats with time expansion must stay under tmux's
+ * 8 KiB limit, so it must not grow per session.
  *
  * Widths below the baseline or above the maximum reserve need no membership
  * checks. Only the interval between those bounds evaluates the live extra width.
@@ -140,12 +144,12 @@ fn responsive_metric_segment(
     base: usize,
     visible_sessions: &[SessionInfo],
 ) -> RenderedSegment {
-    let maximum_extra_width = 2 * visible_sessions.len();
+    let maximum_extra_width = 4 * visible_sessions.len();
     let mut extra_width = "0".to_string();
     for session in visible_sessions {
-        let running = format!("#{{m:*|R{}|*,#{{@GHC_SL_SESSION_STATES}}}}", session.id);
-        let bell = format!("#{{m:*|B{}|*,#{{@GHC_SL_SESSION_STATES}}}}", session.id);
-        extra_width = format!("#{{e|+:{extra_width},#{{?#{{&&:{running},{bell}}},2,0}}}}");
+        let three = format!("#{{m:*|3{}|*,#{{@GHC_SL_SESSION_STATES}}}}", session.id);
+        let two = format!("#{{m:*|2{}|*,#{{@GHC_SL_SESSION_STATES}}}}", session.id);
+        extra_width = format!("#{{e|+:{extra_width},#{{?{three},4,#{{?{two},2,0}}}}}}");
     }
     let extra_width = format!("#{{?#{{==:#{{@GHC_SL_SCHED_ACTIVE}},1}},{extra_width},0}}");
     let max_rank = metrics.iter().map(|(_, rank)| *rank).max().unwrap_or(0);

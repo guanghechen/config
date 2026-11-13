@@ -72,9 +72,14 @@ def verify(names):
         def cached():
             return [tmux("show-options", "-qv", "-t", owner, option) for option in cache_options]
 
-        def sample(running, bell):
-            value = "sample:" + "".join(f"|R{item}|" for item in running)
-            value += "".join(f"|B{item}|" for item in bell)
+        def sample(running, bell, waiting=()):
+            # Like the sampler: memberships, plus |2$id| or |3$id| for two or three states.
+            groups = {"W": set(waiting), "R": set(running), "B": set(bell)}
+            value = "sample:"
+            for item in sorted(set().union(*groups.values())):
+                kinds = [kind for kind in "WRB" if item in groups[kind]]
+                value += "".join(f"|{kind}{item}|" for kind in kinds)
+                value += f"|{len(kinds)}{item}|" if len(kinds) >= 2 else ""
             tmux("set-option", "-s", "@GHC_SL_SESSION_STATES", value)
 
         try:
@@ -118,6 +123,9 @@ def verify(names):
                 apply()
                 snapshot = cached()
                 assert all(snapshot), "guarded apply did not publish every cache"
+                # tmux time-expands these formats into an 8 KiB buffer and drops longer ones.
+                for cache in snapshot[1:3]:
+                    assert len(cache.encode()) < 8192, f"time-expanded cache is {len(cache.encode())} bytes"
                 apply()
                 assert cached() == snapshot, "settled apply changed the rendered cache"
                 visible = re.findall(r"(?<!#)#\[range=session\|(\$\d+)\]", snapshot[0])
@@ -128,22 +136,32 @@ def verify(names):
                 thresholds = set(map(int, re.findall(r"#\{e\|>=:#\{client_width\},(\d+)\}", snapshot[2])))
                 assert thresholds
                 scenarios = [
-                    ("running", visible, [], True),
-                    ("bell", [], visible, True),
-                    ("both", visible, visible, True),
-                    ("mixed", visible[::2], visible[::3], True),
-                    ("hidden", hidden, hidden, True),
-                    ("inactive", visible, visible, False),
+                    ("running", [], visible, [], True),
+                    ("bell", [], [], visible, True),
+                    ("both", [], visible, visible, True),
+                    ("mixed", [], visible[::2], visible[::3], True),
+                    ("waiting", visible, [], visible, True),
+                    ("all", visible, visible, visible, True),
+                    ("overlap", visible[::2], visible[::3], visible[::4], True),
+                    ("hidden", [], hidden, hidden, True),
+                    ("inactive", [], visible, visible, False),
                 ]
+
+                # Each sampled state beyond a session's first adds one prefix.
+                def extra_width(waiting, running, bell, active):
+                    if not active:
+                        return 0
+                    groups = [set(waiting), set(running), set(bell)]
+                    return sum(2 * max(0, sum(item in group for group in groups) - 1) for item in visible)
                 widths = {1, 800}
-                for _, running, bell, active in scenarios:
-                    extra = 2 * len(set(visible) & set(running) & set(bell)) if active else 0
+                for _, waiting, running, bell, active in scenarios:
+                    extra = extra_width(waiting, running, bell, active)
                     for threshold in thresholds:
                         widths.update(max(1, threshold + offset + delta)
                                       for offset in [0, extra] for delta in [-1, 0, 1])
                 lookup_widths = set(widths)
-                for _, running, bell, active in scenarios:
-                    extra = 2 * len(set(visible) & set(running) & set(bell)) if active else 0
+                for _, waiting, running, bell, active in scenarios:
+                    extra = extra_width(waiting, running, bell, active)
                     lookup_widths.update(max(1, width - extra) for width in widths)
                 baseline = {}
                 for width in sorted(lookup_widths):
@@ -157,17 +175,17 @@ def verify(names):
                 revision = tmux("show-options", "-sqv", "@GHC_SL_RENDER_REV")
                 assert revision, "guarded apply did not publish a server render revision"
 
-                for label, running, bell, active in scenarios:
-                    sample(running, bell)
+                for label, waiting, running, bell, active in scenarios:
+                    sample(running, bell, waiting)
                     tmux("set-option", "-s", "@GHC_SL_SCHED_ACTIVE", "1" if active else "0")
-                    extra = 2 * len(set(visible) & set(running) & set(bell)) if active else 0
+                    extra = extra_width(waiting, running, bell, active)
                     for width in sorted(widths):
                         resize(width)
                         observed = right()
                         expected = baseline[max(1, width - extra)]
                         assert observed == expected, (
                             f"rows={rows} state={label} width={width} extra={extra}: "
-                            "metrics did not follow the visible second-prefix budget"
+                            "metrics did not follow the visible extra-prefix budget"
                         )
                         if rows == "2":
                             left_width = int(expand("#{w:#{E:@GHC_SL_STATUS02_LEFT}}"))

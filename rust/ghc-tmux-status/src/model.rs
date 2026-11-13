@@ -249,7 +249,7 @@ pub struct SessionRenderedStatus {
     pub session_layout: SessionLayout,
     /**
      * Group cardinality used by the static status-length ceiling. Responsive
-     * metric guards separately account for visible sessions' live second prefix.
+     * metric guards separately account for visible sessions' live extra prefixes.
      */
     pub session_group_count: usize,
     pub render_key: String,

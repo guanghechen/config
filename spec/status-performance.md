@@ -126,9 +126,10 @@ total median  37.385 -> 25.930 ms
 
 每个 visible session item 重复执行 `S/W/P` traversal，在 4/10/20 items 下的 isolated
 median 增量为 `+0.756 / +1.541 / +5.121 ms`，因此拒绝该方案。最终由 scheduler
-single-flight owner 每 tick 聚合一次 running 与 bell evidence；session item 做 typed token
-membership 并从现有 1 Hz status clock 派生 animation phase，window item 保持 native live
-expansion。Bell evidence 读取同一 `S:` pass 的 `session_alerts`，不增加 `W/P` traversal。
+single-flight owner 每 tick 聚合一次 waiting、running 与 bell evidence；session item 做
+typed token membership 并从现有 1 Hz status clock 派生 animation phase，window item 保持
+native live expansion。Waiting evidence 需要一次额外的 `W/P` traversal；bell 按 window
+归属，在同一 `W:` pass 中只对有 bell 的 window 检查其 panes，成本见本节末尾。
 
 2026-08-12，tmux 3.7b，20 sessions、1 attached client、300 paired runs。Baseline 与
 sample 使用相同的 publish、delayed-CAS queue；baseline 发布 literal token set，sample
@@ -195,9 +196,42 @@ windows       panes/window   median delta   p95 delta
 成本随 window/pane 数和实际 redraw 次数增长；多 client 各自展开，但 running-session publish
 仍由 single-flight lock 去重。
 
+Waiting 需要一次额外的 `P:` traversal，因为 live frame 只来自 spinning pane。2026-11-12，
+macOS、tmux next-3.9，300 paired runs。前三行由两个 isolated server 分别加载变更前后的
+formats，fixture 相同；session list 一行在同一 fixture 上比较变更前后 renderer 的 20 个
+inactive item format。所有 pane 均 spinning、没有 waiting 与 bell，即额外 traversal 全程
+落空的常态：
+
+```text
+expansion                                 median delta   p95 delta
+window prefix, 1 pane                        +0.008 ms   +0.018 ms
+window prefix, 4 panes                       +0.021 ms   +0.030 ms
+session sample, 22 sessions / 25 panes       +0.311 ms   +0.398 ms
+session list, 20 running items               +0.042 ms   +0.126 ms
+```
+
+Window prefix 在每次 redraw 时按 window 展开；session sample 由 single-flight owner 约每
+4 秒执行一次，按真值表让每个 session 的 waiting、running 与 bell traversal 各求值一次；
+session list 的增量来自每个 item 多一次 `W` membership match。均为 per-expansion
+directional evidence，不含 CLI startup 与 terminal drawing。
+
+Inactive item 的 waiting 与 bell prefix 引用共享 format 后，每个 item 的 rich text 约增加
+13 bytes，10–40 sessions 的 group 可见 item 数与变更前一致。同日以变更前后 release
+renderer、1 个 800 列 control client、40 组随机顺序配对测量 guarded cache 重发：4 sessions
+的 payload 增加 96 bytes，40 sessions 增加 167 bytes。4 sessions 下变更前的第 2 个分块
+已贴近 8 KiB 预算（以实际 session 名测量亦然），增量使分块由 2 增至 3、tmux 调用由 3 增至
+4，重发 median `23.47 -> 29.82 ms`；40 sessions 调用数不变，重发与 settled apply 均持平。
+重发只在 render key 变化时发生，不在 1 Hz redraw 或 scheduler tick 中发生；消除该台阶需
+调整分块策略，不属于本变更。
+
 ### 4.8 Combined-state responsive budget
 
-双状态 prefix 的额外宽度按可见 session 的 sampled `R/B` membership 计算；每个 metric
+多状态 prefix 的额外宽度按可见 session 的 sampled count token 计算：每个 session 先匹配
+`|3$id|`、未命中再匹配 `|2$id|`，match 次数与 expression 长度均与变更前相同。Guard
+expression 在每个 metric 中重复；含 time expansion 的 format 由 tmux 以 8 KiB strftime
+buffer 展开，超长即整行为空。40 sessions、11 visible 时 RIGHT 与 SESSION_FORMAT 约为
+7.5–7.9 KiB，因此 guard 不得随 session 变长；status-width integration 断言这两个 cache
+小于 8 KiB。每个 metric
 先检查静态上下界，只在临界宽度区间展开该计算。Metric body 保持原 conditional depth，
 idle/单状态 baseline、隐藏优先级与 time fallback 均保留。
 
