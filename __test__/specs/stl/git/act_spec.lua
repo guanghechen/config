@@ -86,4 +86,17 @@ t:test("a bracketed path restores and stages only itself, not the files its patt
   t.assert_eq("a[1].txt\n", git.run(root, { "diff", "--cached", "--name-only" }), "only the path itself is staged")
 end)
 
+t:test("hash and index writes killed by a signal fail and are reported", function()
+  local reports = bootstrap.with_reporter(t)
+  -- A process killed by a signal exits with code 0 and no output.
+  t:patch_table(vim, "system", function(_, _, callback)
+    callback({ code = 0, signal = 9, stdout = "", stderr = "" })
+    return { kill = function() end }
+  end)
+
+  t.assert_nil(t.await(act.hash_object("/repo", "f.txt", "content")), "no object name")
+  t.assert_false(t.await(act.update_index("/repo", "100644", "abc123", "f.txt")), "index not updated")
+  t.assert_same({ "Failed to hash object", "Failed to update index" }, bootstrap.messages(reports.warn))
+end)
+
 t:run()

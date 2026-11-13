@@ -692,9 +692,16 @@ function M.unstage_hunk(ctx, range)
     toplevel = dot.path.workspace(),
   })
   future:finally(function(resolved, result)
-    if not resolved or type(result) ~= "table" or not result.ok then
-      local reason = type(result) == "table" and result.err or result ---@type string|nil
-      stl.reporter.warn({ from = __module_name__, subject = "unstage_hunk", message = reason or "Failed to unstage" })
+    if not resolved or type(result) ~= "table" then
+      local reason = type(result) == "string" and result or "Failed to unstage" ---@type string
+      stl.reporter.warn({ from = __module_name__, subject = "unstage_hunk", message = reason })
+      return
+    end
+    if not result.ok then
+      -- A failure without `err` was reported with its stderr by the Git command that failed.
+      if result.err then
+        stl.reporter.warn({ from = __module_name__, subject = "unstage_hunk", message = result.err })
+      end
       return
     end
     ctx.state:request_refresh()

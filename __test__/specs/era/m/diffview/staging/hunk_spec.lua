@@ -9,7 +9,11 @@ local staging = require("era.m.git.staging")
 local util = require("era.m.diffview.util")
 local workspace_view = require("era.m.diffview.view.workspace.view")
 
-t:test("workspace action forwards the right-buffer index snapshot", function()
+---Opens the workspace on f.txt with a staged edit and focuses its index preview, the right-hand window.
+---@return table session
+---@return string root
+---@return integer right_winnr
+local function focus_index_preview()
   local root = diffview.committed(t, { ["f.txt"] = { "one", "two", "three", "four" } })
   fs.write(root .. "/f.txt", { "one", "INDEX2", "INDEX3", "four" })
   git.run(root, { "add", "f.txt" })
@@ -19,7 +23,12 @@ t:test("workspace action forwards the right-buffer index snapshot", function()
     local bufnr = vim.api.nvim_win_get_buf(right_winnr)
     return vim.api.nvim_buf_get_name(bufnr) == util.gen_index_bufname("f.txt") and vim.b[bufnr].git_object_name ~= nil
   end, 10000, "the index preview")
+  vim.api.nvim_set_current_win(right_winnr)
+  return session, root, right_winnr
+end
 
+t:test("workspace action forwards the right-buffer index snapshot", function()
+  local session, root, right_winnr = focus_index_preview()
   local reports = bootstrap.with_reporter(t)
   local captured = nil ---@type table|nil
   t:patch_table(era.m.git.buffer, "unstage_range", function(opts)
@@ -33,7 +42,6 @@ t:test("workspace action forwards the right-buffer index snapshot", function()
   t:patch_table(workspace_view, "open_entry", function()
     opened = true
   end)
-  vim.api.nvim_set_current_win(right_winnr)
 
   local future = action.unstage_hunk(session, { 2, 3 })
 
@@ -55,6 +63,30 @@ t:test("workspace action forwards the right-buffer index snapshot", function()
   t.assert_true(refreshed, "view refreshed")
   t.assert_false(opened, "refresh owns reopening")
   t.assert_eq(0, #reports.warn + #reports.error, "no errors")
+end)
+
+t:test("an unstage refusal is reported once, and a Git failure that reported itself is not reported again", function()
+  local session = focus_index_preview()
+  local reports = bootstrap.with_reporter(t)
+  local results =
+    { { ok = false, err = "The index changed since the staged diff was drawn; try again" }, { ok = false } }
+  t:patch_table(era.m.git.buffer, "unstage_range", function()
+    return stl.c.Future.resolve(table.remove(results, 1))
+  end)
+  local refreshes = 0 ---@type integer
+  t:patch_table(session.state, "request_refresh", function()
+    refreshes = refreshes + 1
+  end)
+
+  action.unstage_hunk(session, { 2, 3 })
+  action.unstage_hunk(session, { 2, 3 })
+
+  t.assert_same(
+    { "The index changed since the staged diff was drawn; try again" },
+    bootstrap.messages(reports.warn),
+    "one report"
+  )
+  t.assert_eq(0, refreshes, "a failed unstage does not refresh")
 end)
 
 t:run()

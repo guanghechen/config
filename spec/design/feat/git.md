@@ -132,7 +132,10 @@ Sign 通过 `nvim_set_decoration_provider` 渲染，范围规则见[设计边界
 
 `hunk` 提供 hunk 查询，hunk / selection 的 stage、unstage、reset，以及整个文件的 stage、reset。
 Stage 与 unstage 异步写入 index 并返回 Future，reset 直接改写 buffer。
-Hunk preview 以浮窗显示光标所在的 unstaged hunk（没有时取 staged hunk）及 word-level 高亮，再次调用关闭。
+Hunk stage、unstage、reset 未生效时，由 `hunk` 以 warn 提示一次原因，例如光标处没有 hunk、绘制后 index 已变化；
+写 index 的 Git 命令自身失败时由 `stl.git.act` 带 stderr 提示，结果的 `err` 为空，调用方不再重复提示。
+Hunk preview 以浮窗显示光标所在的 unstaged hunk（没有时取 staged hunk）及 word-level 高亮，再次调用关闭；
+从浮窗 stage 或 reset 只额外提示成功。
 
 `ih`/`ah` 以 linewise Visual mode 选择当前或下一个 unstaged hunk；可用 `vihghs` 在 stage 前确认完整范围。
 纯删除没有 modified-side 行，因此选择其 sign 所在的 anchor line，以保持 `ghs` 等 hunk 操作可用。

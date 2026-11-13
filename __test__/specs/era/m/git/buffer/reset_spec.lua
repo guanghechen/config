@@ -95,6 +95,22 @@ for _, case in ipairs({
   end)
 end
 
+t:test("reset_hunk: a refusal says where it found nothing to reset", function()
+  local bufnr = setup("a\nb\n", "a\nb\n")
+  local reasons = {} ---@type string[]
+  for _, call in ipairs({ { t:buffer() }, { bufnr }, { bufnr, { 1, 2 } } }) do
+    local ok, reason = buffer.reset_hunk(call[1], call[2])
+    t.assert_false(ok, "refused")
+    reasons[#reasons + 1] = reason
+  end
+
+  t.assert_same({
+    "Not a Git-tracked buffer, or its Git state is still loading",
+    "No hunk at cursor",
+    "No unstaged change in the selection",
+  }, reasons)
+end)
+
 t:test("reset_buffer: index document is the baseline without a sentinel line", function()
   local bufnr = setup("one\ntwo\n", "ONE\ntwo\n")
   t.assert_true(buffer.reset_buffer(bufnr), "reset")

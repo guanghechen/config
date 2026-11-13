@@ -903,12 +903,14 @@ local function load_head_document(toplevel, relpath, template)
   end)
 end
 
+---Writes `document` as the index entry of `relpath`. A failure carries `err` unless the Git command that failed has
+---reported it with its stderr already, so callers report each failure once.
 ---@param toplevel                      string
 ---@param relpath                       string
 ---@param document                      era.m.git.Document
 ---@param mode_bits                     string
 ---@param add                           boolean
----@return stl.c.Future
+---@return stl.c.Future                 Resolves with { ok: boolean, err: string|nil }
 local function write_index_document(toplevel, relpath, document, mode_bits, add)
   return stl.c.Future.new(function(resolve)
     local finished = false ---@type boolean
@@ -933,8 +935,13 @@ local function write_index_document(toplevel, relpath, document, mode_bits, add)
       end
 
       stl.git.act.hash_object(toplevel, relpath, bytes):finally(protected_callback(fail, function(hash_resolved, hash)
-        if not hash_resolved or not hash then
+        if not hash_resolved then
           finish({ ok = false, err = "Failed to hash document" })
+          return
+        end
+        if not hash then
+          -- `hash_object` reported the Git failure.
+          finish({ ok = false, err = nil })
           return
         end
         stl.git.act
@@ -942,6 +949,9 @@ local function write_index_document(toplevel, relpath, document, mode_bits, add)
           :finally(protected_callback(fail, function(updated, updated_ok)
             if updated and updated_ok then
               finish({ ok = true, err = nil })
+            elseif updated then
+              -- `update_index` reported the Git failure.
+              finish({ ok = false, err = nil })
             else
               finish({ ok = false, err = "Failed to update index" })
             end
@@ -991,6 +1001,9 @@ function M.reset_buffer(bufnr)
   return true
 end
 
+-- Why a hunk action refuses a buffer without Git state: one outside Git, a special buffer, or one still attaching.
+local NO_GIT_STATE = "Not a Git-tracked buffer, or its Git state is still loading" ---@type string
+
 ---@param bufnr                         integer
 ---@param range                         ?{ [1]: integer, [2]: integer }
 ---@return boolean
@@ -998,7 +1011,7 @@ end
 function M.reset_hunk(bufnr, range)
   local buf_cache = cache[bufnr]
   if not buf_cache or not buf_cache.index_document then
-    return false, "Buffer not attached"
+    return false, NO_GIT_STATE
   end
   if buf_cache.untracked then
     return false, "Untracked files have no index content to restore"
@@ -1007,6 +1020,7 @@ function M.reset_hunk(bufnr, range)
   local buffer_document = era.m.git.staging.from_buffer(bufnr) ---@type era.m.git.Document
   local index_document = buf_cache.index_document ---@type era.m.git.Document
   local hunks = era.m.git.diff.run_diff(index_document.lines, buffer_document.lines) ---@type era.m.git.Hunk[]
+  local selected = range ~= nil ---@type boolean
   if not range then
     local lnum = vim.api.nvim_win_get_cursor(vim.api.nvim_get_current_win())[1] ---@type integer
     range = { lnum, lnum }
@@ -1014,7 +1028,7 @@ function M.reset_hunk(bufnr, range)
 
   local text = era.m.git.staging.apply_selection(index_document, buffer_document, hunks, range[1], range[2], "reset")
   if text == nil then
-    return false, "No hunk at cursor"
+    return false, selected and "No unstaged change in the selection" or "No hunk at cursor"
   end
 
   era.m.git.staging.replace_buffer_text(bufnr, text)
@@ -1084,7 +1098,8 @@ function M.stage_range(opts)
         opts.partial and "stage_partial" or "stage"
       )
       if text == nil then
-        finish({ ok = false, err = "The selection range does not contain any changes" })
+        -- Only a Visual stage passes a selection; the cursor's stage looks for a hunk on its line.
+        finish({ ok = false, err = opts.partial and "No unstaged change in the selection" or "No hunk at cursor" })
         return
       end
 
@@ -1110,7 +1125,7 @@ end
 function M.stage_hunk(bufnr, range)
   local buf_cache = cache[bufnr]
   if not buf_cache or not buf_cache.index_document then
-    return stl.c.Future.resolve({ ok = false, err = "Buffer not attached" })
+    return stl.c.Future.resolve({ ok = false, err = NO_GIT_STATE })
   end
 
   local partial = range ~= nil ---@type boolean

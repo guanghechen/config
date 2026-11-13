@@ -143,18 +143,17 @@ function M.hash_object(cwd, file, content, token)
       { stdin = content, text = false },
       function(obj)
         vim.schedule(function()
-          if obj.code ~= 0 then
+          -- A process killed by a signal exits with code 0, and leaves no object name to read.
+          local hash = obj.code == 0 and obj.signal == 0 and (obj.stdout or ""):match("^([0-9a-fA-F]+)") or nil
+          if not hash then
             stl.reporter.warn({
               from = __module_name__,
               subject = "hash_object",
               message = "Failed to hash object",
-              details = { file = file, code = obj.code, stderr = obj.stderr },
+              details = { file = file, code = obj.code, signal = obj.signal, stderr = obj.stderr },
             })
-            resolve(nil)
-          else
-            local hash = (obj.stdout or ""):match("^([0-9a-fA-F]+)") or ""
-            resolve(hash ~= "" and hash or nil)
           end
+          resolve(hash)
         end)
       end
     )
@@ -288,15 +287,17 @@ function M.update_index(cwd, mode_bits, object_name, relpath, token, add)
     vim.list_extend(args, { "--cacheinfo", cacheinfo })
     local proc = vim.system(exec.command(args, cwd), { text = true }, function(obj)
       vim.schedule(function()
-        if obj.code ~= 0 then
+        -- A process killed by a signal exits with code 0 without having written the index.
+        local updated = obj.code == 0 and obj.signal == 0 ---@type boolean
+        if not updated then
           stl.reporter.warn({
             from = __module_name__,
             subject = "update_index",
             message = "Failed to update index",
-            details = { relpath = relpath, code = obj.code },
+            details = { relpath = relpath, code = obj.code, signal = obj.signal, stderr = obj.stderr },
           })
         end
-        resolve(obj.code == 0)
+        resolve(updated)
       end)
     end)
 

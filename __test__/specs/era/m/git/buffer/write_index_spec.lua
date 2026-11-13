@@ -1,3 +1,4 @@
+local bootstrap = require("__test__.support.bootstrap")
 local fs = require("__test__.support.fs")
 local git = require("__test__.support.git")
 local git_buffer = require("__test__.support.git_buffer")
@@ -72,6 +73,25 @@ t:test("stage/unstage: empty output is a valid change, not a missing selection",
   t.assert_eq("", index_bytes(repo, "f.txt"), "empty blob")
   t.assert_true(unstage(repo, { 1, 1 }).ok, "entire deletion unstaged")
   t.assert_eq("a\n", index_bytes(repo, "f.txt"), "HEAD restored")
+end)
+
+t:test("stage: nothing to stage is refused at the cursor or in the selection, as the caller asked", function()
+  local repo = committed_repo("a\nb\n")
+  local reasons = {} ---@type string[]
+  for _, partial in ipairs({ false, true }) do
+    local result = git_buffer.outcome(buffer.stage_range({
+      buffer_document = staging.from_text("a\nb\n"),
+      expected_index = index_snapshot(repo, "f.txt"),
+      partial = partial,
+      range = { 1, 1 },
+      relpath = "f.txt",
+      toplevel = repo,
+    }))
+    t.assert_false(result.ok, "refused")
+    reasons[#reasons + 1] = result.err
+  end
+
+  t.assert_same({ "No hunk at cursor", "No unstaged change in the selection" }, reasons)
 end)
 
 -- Each failure is injected into one write, which must leave the index as it was and let the next write proceed.
@@ -173,7 +193,8 @@ t:test("stage: a missing index entry reuses the executable mode from HEAD", func
   t.assert_eq("100755", index_mode(repo, "f.txt"), "HEAD mode")
 end)
 
-t:test("stage: safecrlf rejection leaves the index unchanged", function()
+t:test("stage: safecrlf rejection leaves the index unchanged and is reported once", function()
+  local reports = bootstrap.with_reporter(t)
   local repo = make_repo("true")
   git.run(repo, { "config", "core.safecrlf", "true" })
   fs.write(repo .. "/f.txt", "aa\r\nbb\r\ncc\r\n")
@@ -182,6 +203,22 @@ t:test("stage: safecrlf rejection leaves the index unchanged", function()
 
   local result = stage(repo, staging.from_text("AA\r\nbb\r\nCC\r\n"), { 1, 1 })
   t.assert_false(result.ok, "Git rejected mixed document text")
+  t.assert_nil(result.err, "the failing Git command reported it")
+  t.assert_same({ "Failed to hash object" }, bootstrap.messages(reports.warn), "one report")
+  t.assert_eq(before, index_bytes(repo, "f.txt"), "index unchanged")
+end)
+
+t:test("stage: a locked index leaves the index unchanged and is reported once", function()
+  local reports = bootstrap.with_reporter(t)
+  local repo = committed_repo("a\nb\n")
+  local before = index_bytes(repo, "f.txt")
+  fs.write(repo .. "/.git/index.lock", "")
+
+  local result = stage(repo, staging.from_text("A\nb\n"), { 1, 1 })
+  t.assert_false(result.ok, "Git refused the locked index")
+  t.assert_nil(result.err, "the failing Git command reported it")
+  t.assert_same({ "Failed to update index" }, bootstrap.messages(reports.warn), "one report")
+  t.assert_true(reports.warn[1].details.stderr:find("index.lock", 1, true) ~= nil, "Git's reason")
   t.assert_eq(before, index_bytes(repo, "f.txt"), "index unchanged")
 end)
 

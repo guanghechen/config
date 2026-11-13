@@ -1,3 +1,6 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "era.m.git.hunk" ---@type string
+
 ---@class era.m.git.hunk
 local M = {}
 
@@ -274,6 +277,23 @@ end
 -- User actions
 ----------------------------------------------------------------------------------------------------
 
+---Warns once that a hunk action did not apply. A result without `err` failed in a Git command that reported it with
+---its stderr already, so it is not reported twice.
+---@param resolved                      boolean
+---@param result                        any { ok: boolean, err: string|nil }, or the rejection.
+---@return nil
+local function warn_refused(resolved, result)
+  local reason = nil ---@type string|nil
+  if not resolved then
+    reason = tostring(result)
+  elseif type(result) == "table" and not result.ok then
+    reason = result.err
+  end
+  if reason then
+    stl.reporter.warn({ from = __module_name__, subject = "Git Hunk", message = reason })
+  end
+end
+
 ---@param range                         { [1]: integer, [2]: integer }|nil
 ---@return stl.c.Future                 Resolves with { ok: boolean, err: string|nil }
 function M.stage(range)
@@ -281,7 +301,9 @@ function M.stage(range)
   if not era.m.git.buffer.is_attached(bufnr) then
     era.m.git.buffer.attach(bufnr)
   end
-  return era.m.git.buffer.stage_hunk(bufnr, range)
+  local future = era.m.git.buffer.stage_hunk(bufnr, range)
+  future:finally(warn_refused)
+  return future
 end
 
 ---@param range                         { [1]: integer, [2]: integer }|nil
@@ -291,7 +313,9 @@ function M.unstage(range)
   if not era.m.git.buffer.is_attached(bufnr) then
     era.m.git.buffer.attach(bufnr)
   end
-  return era.m.git.buffer.unstage_hunk(bufnr, range)
+  local future = era.m.git.buffer.unstage_hunk(bufnr, range)
+  future:finally(warn_refused)
+  return future
 end
 
 ---@param range                         { [1]: integer, [2]: integer }|nil
@@ -302,7 +326,9 @@ function M.reset(range)
   if not era.m.git.buffer.is_attached(bufnr) then
     era.m.git.buffer.attach(bufnr)
   end
-  return era.m.git.buffer.reset_hunk(bufnr, range)
+  local ok, err = era.m.git.buffer.reset_hunk(bufnr, range)
+  warn_refused(true, { ok = ok, err = err })
+  return ok, err
 end
 
 ---@return stl.c.Future                 Resolves with boolean (success)

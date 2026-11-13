@@ -364,18 +364,13 @@ function M:__setup_keymaps__(bufnr, hunk, is_staged)
         local effective_start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
         local effective_vend = hunk.vend == 0 and 1 or hunk.vend ---@type integer
         local range = { effective_start, effective_vend }
+        -- `era.m.git.hunk` reports a refusal; the popup only confirms success.
         era.m.git.hunk.stage(range):finally(function(ok, result)
           if ok and result.ok then
             stl.reporter.info({
               from = __module_name__,
               subject = "Git Hunk",
               message = "Hunk staged",
-            })
-          else
-            stl.reporter.error({
-              from = __module_name__,
-              subject = "Git Hunk",
-              message = (result and result.err) or "Failed to stage hunk",
             })
           end
         end)
@@ -391,18 +386,11 @@ function M:__setup_keymaps__(bufnr, hunk, is_staged)
         local effective_start = hunk.added.start == 0 and 1 or hunk.added.start ---@type integer
         local effective_vend = hunk.vend == 0 and 1 or hunk.vend ---@type integer
         local range = { effective_start, effective_vend }
-        local ok, err = era.m.git.hunk.reset(range)
-        if ok then
+        if era.m.git.hunk.reset(range) then
           stl.reporter.info({
             from = __module_name__,
             subject = "Git Hunk",
             message = "Hunk reset",
-          })
-        else
-          stl.reporter.error({
-            from = __module_name__,
-            subject = "Git Hunk",
-            message = err or "Failed to reset hunk",
           })
         end
       end,
