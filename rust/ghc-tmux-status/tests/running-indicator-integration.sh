@@ -245,6 +245,77 @@ assert_format "" "$dead_pane" '#{E:@GHC_PANE_WAITING_FMT}' "dead pane wait"
 assert_format "" "$dead_pane" '#{E:@GHC_PANE_BORDER_STATE_FMT}' "dead pane border state"
 assert_format "" alpha:dead '#{E:@GHC_WINDOW_PREFIX_FMT}' "dead pane window"
 
+# A pane running an interactive shell drops progress once claude leaves the
+# foreground, as after a killed Claude Code session: tmux itself keeps the state,
+# and later jobs must not revive it. Panes started with a command keep progress
+# until it ends (see the window below).
+previous_shell=$(tmux_server show-option -gqv default-shell)
+shell_home="$tmp/shell-home"
+mkdir -p "$shell_home"
+# An empty HOME keeps the user's shell startup files out of the login shell.
+tmux_server set-option -g default-shell /bin/bash ';' \
+  set-environment -g HOME "$shell_home" ';' \
+  set-environment -g BASH_SILENCE_DEPRECATION_WARNING 1
+shell_pane=$(tmux_server new-window -dP -F '#{pane_id}' -t alpha -n shell)
+tmux_server set-environment -g HOME "$HOME" ';' \
+  set-environment -gu BASH_SILENCE_DEPRECATION_WARNING
+wait_for_foreground() {
+  local target=$1
+  local expected=$2
+  for _ in $(seq 1 100); do
+    if [ "$(tmux_server display-message -p -t "$target" '#{pane_current_command}')" = "$expected" ]; then
+      return 0
+    fi
+    sleep 0.05
+  done
+  fail "pane $target did not bring $expected to the foreground"
+}
+# pane_current_command follows the executable's real name, and macOS kills copies
+# of system binaries, so build a stand-in claude that reports progress and exits
+# without clearing it.
+fake_claude="$tmp/bin/claude"
+mkdir -p "$tmp/bin"
+rustc -o "$fake_claude" - <<'RUST'
+use std::io::Write;
+fn main() {
+    print!("\x1b]9;4;3\x07");
+    std::io::stdout().flush().unwrap();
+    std::thread::sleep(std::time::Duration::from_secs(2));
+}
+RUST
+wait_for_foreground "$shell_pane" bash
+tmux_server send-keys -t "$shell_pane" "$fake_claude" Enter
+wait_for_foreground "$shell_pane" claude
+wait_for_pb_state "$shell_pane" indeterminate
+assert_format "⠋ " "$shell_pane" '#{E:@GHC_PANE_RUNNING_FMT}' \
+  "progress counts while claude holds the foreground"
+assert_format "⠋ " "$shell_pane" '#{E:@GHC_PANE_BORDER_STATE_FMT}' "running claude border"
+assert_format "⠋ " alpha:shell '#{E:@GHC_WINDOW_PREFIX_FMT}' "running claude"
+wait_for_foreground "$shell_pane" bash
+assert_format "indeterminate" "$shell_pane" '#{pane_pb_state}' "tmux keeps the stale progress"
+assert_format "" "$shell_pane" '#{E:@GHC_PANE_RUNNING_FMT}' \
+  "progress is stale once claude leaves the foreground"
+assert_format "" "$shell_pane" '#{E:@GHC_PANE_BORDER_STATE_FMT}' "stale border state"
+assert_format "" alpha:shell '#{E:@GHC_WINDOW_PREFIX_FMT}' "shell back at its prompt"
+tmux_server send-keys -t "$shell_pane" "sleep 2" Enter
+wait_for_foreground "$shell_pane" sleep
+assert_format "" "$shell_pane" '#{E:@GHC_PANE_RUNNING_FMT}' \
+  "a later job does not revive stale progress"
+assert_format "" alpha:shell '#{E:@GHC_WINDOW_PREFIX_FMT}' "unrelated job after claude"
+# bash -c runs the list without exec, so the shell stays the foreground group leader
+# while the command runs; the pane's start command keeps its progress valid.
+command_pane=$(
+  tmux_server new-window -dP -F '#{pane_id}' -t alpha -n command \
+    "printf '\\033]9;4;3\\007'; sleep 3; true"
+)
+wait_for_pb_state "$command_pane" indeterminate
+wait_for_foreground "$command_pane" bash
+assert_format "⠋ " "$command_pane" '#{E:@GHC_PANE_RUNNING_FMT}' \
+  "a command pane keeps progress while its shell leads the foreground"
+tmux_server kill-window -t alpha:command ';' \
+  kill-window -t alpha:shell ';' \
+  set-option -g default-shell "$previous_shell"
+
 # The configured current-window item preserves the original idle layout and
 # prepends the live frame only while running. A theme-only reload also replaces
 # any stale decorator format from before the reverse-color styling change.
