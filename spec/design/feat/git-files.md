@@ -75,8 +75,10 @@ Status: Design。入口代码位于 `lua/era/m/git_files/`，树视图为 `era.v
 - `oe` / `of` / `os` 以光标目录（文件取其父目录）为起点并关闭浮窗；`<C-q>` 使用可见标记或当前行的文件列表。
 - 树 pane 的 Treeview View 关闭 core 默认键位（`keymaps = false`），因此没有 `<Esc><Esc>` 清除选择；
   stage / unstage 成功后清除本次操作节点的选择。
-- Preview 中 `q` 关闭、`<Tab>` 回到之前的左栏 pane、`tp` 收起 preview；inputbox 中 `<C-c>`（Insert / Normal）与
-  `q`（Normal）关闭，`tp` 切换 preview。
+- Preview 中 `q` 关闭、`<Tab>` 回到之前的左栏 pane、`tp` 收起 preview，`]h` / `[h`（别名 `]H` / `[H`、`]j` / `[j`）
+  跳到下一段 / 上一段连续新增或删除行的首行，与普通 buffer 的 hunk 导航一致：一个 `@@` 块可含多段，两端循环，
+  光标在某段内时向前跳到上一段；
+  inputbox 中 `<C-c>`（Insert / Normal）与 `q`（Normal）关闭，`tp` 切换 preview。
 - 四个 pane 都沿用 Picker 的 `<C-a>h/j/k/l`，以及 `Cmd` / `Alt` 同方向别名，覆盖 Insert / Normal / Visual mode。
   左栏上下依次导航 inputbox → Staged → Unstaged；向右进入已显示的 preview，preview 向左返回之前的左栏 pane（包含 inputbox）。
   浮窗边界在非 zen 的 tmux 环境转交 `stl.tmux.change_pane`；无 tmux 或 zen mode 时，左栏上下边界循环，

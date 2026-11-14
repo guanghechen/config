@@ -5,6 +5,10 @@ local Surface = require("era.view.picker.preview")
 local Diff = require("era.m.git_files.diff")
 local namespace = vim.api.nvim_create_namespace("era.git_files.diff")
 
+---@class era.m.git_files.preview.IChange
+---@field first                         integer
+---@field last                          integer
+
 ---@class era.m.git_files.Preview
 ---@field surface                       era.view.PickerPreview
 ---@field _root                         ?string
@@ -13,6 +17,7 @@ local namespace = vim.api.nvim_create_namespace("era.git_files.diff")
 ---@field _epoch                        integer
 ---@field _requested                    ?integer
 ---@field _rows                         era.m.git_files.diff.IRow[]
+---@field _changes                      era.m.git_files.preview.IChange[] Drawn runs of added / deleted lines.
 ---@field _gutter                       string[]
 ---@field _gutter_width                 integer
 ---@field _statuscolumn                 string
@@ -30,6 +35,7 @@ function M.new(keymaps)
   local self = setmetatable({
     _epoch = 0,
     _rows = { { kind = "info", text = "Select a file to preview its diff." } },
+    _changes = {},
     _gutter = {},
     _gutter_width = 0,
     _title = "Diff preview",
@@ -76,11 +82,20 @@ function M:_draw(bufnr)
   local digits = math.max(2, #tostring(maximum))
   local gutter = "%%#%s# %" .. digits .. "s %" .. digits .. "s %%#%s#%s "
   self._gutter, self._gutter_width = {}, maximum > 0 and 2 * digits + 5 or 0
+  self._changes = {}
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
   vim.api.nvim_buf_clear_namespace(bufnr, namespace, 0, -1)
   for index, row in ipairs(self._rows) do
     local added, removed = row.kind == "add", row.kind == "delete"
     local hunk = row.kind == "hunk"
+    if added or removed then
+      local change = self._changes[#self._changes]
+      if change and change.last == index - 1 then
+        change.last = index
+      else
+        self._changes[#self._changes + 1] = { first = index, last = index }
+      end
+    end
     local highlight = added and "m_gf_diff_add_nr"
       or removed and "m_gf_diff_del_nr"
       or hunk and "m_gf_diff_hunk"
@@ -250,6 +265,38 @@ function M:_start()
   token:on_cancel(function()
     pcall(process.kill, process, 9)
   end)
+end
+
+---Moves the cursor to the first line of the next or previous run of changed lines and wraps at either end, matching
+---buffer hunk navigation: a cursor inside a run moves back to the preceding run rather than its own start.
+---@param direction                     "next"|"prev"
+---@return nil
+function M:goto_hunk(direction)
+  local winnr = self.surface:get_winnr()
+  local changes = self._changes
+  if not winnr or not vim.api.nvim_win_is_valid(winnr) or #changes == 0 then
+    return
+  end
+  local lnum = vim.api.nvim_win_get_cursor(winnr)[1] ---@type integer
+  local target = nil ---@type era.m.git_files.preview.IChange|nil
+  if direction == "next" then
+    for _, change in ipairs(changes) do
+      if change.first > lnum then
+        target = change
+        break
+      end
+    end
+    target = target or changes[1]
+  else
+    for index = #changes, 1, -1 do
+      if changes[index].last < lnum then
+        target = changes[index]
+        break
+      end
+    end
+    target = target or changes[#changes]
+  end
+  vim.api.nvim_win_set_cursor(winnr, { target.first, 0 })
 end
 
 ---@return nil

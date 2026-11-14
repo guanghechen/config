@@ -92,6 +92,58 @@ t:test("untracked diff accepts Git's exit status one and preserves the index", f
   t.assert_eq(before, git.run(state.root, { "ls-files", "--stage", "-z" }))
 end)
 
+t:test("hunk keys walk runs of changed lines like buffer hunk navigation and wrap at either end", function()
+  local state = fixture()
+  local widget, lines = state.widget, {}
+  for index = 1, 30 do
+    lines[index] = "line " .. index
+  end
+  fs.write(state.root .. "/long.lua", lines)
+  git.run(state.root, { "add", "--", "long.lua" })
+  git.run(state.root, { "commit", "-q", "-m", "long", "--", "long.lua" })
+  lines[1], lines[5], lines[30] = "first", "fifth", "last"
+  table.insert(lines, 21, "inserted")
+  fs.write(state.root .. "/long.lua", lines)
+  t.await(widget:refresh(false))
+  support.cursor(widget, "unstaged", "long.lua")
+  widget:toggle_preview()
+  local preview = widget.preview.surface
+  local headers, runs = {}, {} ---@type integer[], integer[]
+  t.wait_until(function()
+    headers, runs = {}, {}
+    for lnum, line in ipairs(vim.api.nvim_buf_get_lines(assert(preview:get_bufnr()), 0, -1, false)) do
+      if line:sub(1, 3) == "@@ " then
+        headers[#headers + 1] = lnum
+      elseif line == "line 1" or line == "line 5" or line == "inserted" or line == "line 30" then
+        runs[#runs + 1] = lnum
+      end
+    end
+    return #headers == 3 and #runs == 4
+  end, 5000)
+  t.assert_true(runs[2] < headers[2], "the first two runs share one @@ block")
+  preview:focus()
+  local winnr = assert(preview:get_winnr())
+  vim.api.nvim_win_set_cursor(winnr, { headers[1], 0 })
+
+  ---@param keys                        string
+  ---@return integer
+  local function press(keys)
+    vim.cmd.normal(keys)
+    return vim.api.nvim_win_get_cursor(winnr)[1]
+  end
+  t.assert_eq(runs[1], press("]j"), "from a header, next lands on the first changed line")
+  t.assert_eq(runs[2], press("]h"), "next reaches a second run inside the same @@ block")
+  t.assert_eq(runs[3], press("]H"))
+  t.assert_eq(runs[4], press("]j"))
+  t.assert_eq(runs[1], press("]j"), "next wraps to the first run")
+  t.assert_eq(runs[4], press("[j"), "previous wraps to the last run")
+  t.assert_eq(runs[3], press("[h"))
+  vim.api.nvim_win_set_cursor(winnr, { runs[2] + 1, 0 })
+  t.assert_eq(runs[1], press("[H"), "inside a run, previous skips its own start")
+  vim.api.nvim_win_set_cursor(winnr, { runs[2] + 2, 0 })
+  t.assert_eq(runs[2], press("[j"), "from context, previous lands on the run above")
+end)
+
 t:test("late preview output cannot replace a newer target or write after closing", function()
   local state = fixture()
   local widget, requests, killed = state.widget, {}, 0

@@ -327,6 +327,24 @@ function M.preview(widget)
     },
     {
       modes = { "n" },
+      key = "]h",
+      aliases = { "]H", "]j" },
+      desc = "Git Files: next hunk",
+      callback = function()
+        widget.preview:goto_hunk("next")
+      end,
+    },
+    {
+      modes = { "n" },
+      key = "[h",
+      aliases = { "[H", "[j" },
+      desc = "Git Files: previous hunk",
+      callback = function()
+        widget.preview:goto_hunk("prev")
+      end,
+    },
+    {
+      modes = { "n" },
       key = "tp",
       desc = "Git Files: toggle diff preview",
       callback = function()
