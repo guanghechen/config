@@ -98,6 +98,81 @@ command = 'node "${CODEX_HOME}/script/hook/pre-bash-sensitive.mjs"'
 timeout = 5
 statusMessage = "Checking sensitive path usage"
 
+# Waits on the user for tmux; see script/hook/progress.mjs. Each command names its
+# event. Keep these synchronous so terminal events cannot overtake waits in a
+# thread; progress.mjs serializes updates and reports across threads.
+[[hooks.PermissionRequest]]
+
+[[hooks.PermissionRequest.hooks]]
+type = "command"
+command = 'node "${CODEX_HOME}/script/hook/progress.mjs" PermissionRequest'
+timeout = 5
+
+[[hooks.PreToolUse]]
+matcher = "^(request_user_input|multi_agent_v1send_input)$"
+
+[[hooks.PreToolUse.hooks]]
+type = "command"
+command = 'node "${CODEX_HOME}/script/hook/progress.mjs" PreToolUse'
+timeout = 5
+
+[[hooks.PostToolUse]]
+matcher = "^(request_user_input|multi_agent_v1(send_input|close_agent))$"
+
+[[hooks.PostToolUse.hooks]]
+type = "command"
+command = 'node "${CODEX_HOME}/script/hook/progress.mjs" PostToolUse'
+timeout = 5
+
+[[hooks.PreModelRequest]]
+
+[[hooks.PreModelRequest.hooks]]
+type = "command"
+command = 'node "${CODEX_HOME}/script/hook/progress.mjs" PreModelRequest'
+timeout = 5
+
+[[hooks.UserPromptSubmit]]
+
+[[hooks.UserPromptSubmit.hooks]]
+type = "command"
+command = 'node "${CODEX_HOME}/script/hook/progress.mjs" UserPromptSubmit'
+timeout = 5
+
+[[hooks.Stop]]
+
+[[hooks.Stop.hooks]]
+type = "command"
+command = 'node "${CODEX_HOME}/script/hook/progress.mjs" Stop'
+timeout = 5
+
+[[hooks.SubagentStop]]
+
+[[hooks.SubagentStop.hooks]]
+type = "command"
+command = 'node "${CODEX_HOME}/script/hook/progress.mjs" SubagentStop'
+timeout = 5
+
+[[hooks.Interrupt]]
+
+[[hooks.Interrupt.hooks]]
+type = "command"
+command = 'node "${CODEX_HOME}/script/hook/progress.mjs" Interrupt'
+timeout = 3
+
+[[hooks.SessionStart]]
+
+[[hooks.SessionStart.hooks]]
+type = "command"
+command = 'node "${CODEX_HOME}/script/hook/progress.mjs" SessionStart'
+timeout = 5
+
+[[hooks.SessionEnd]]
+
+[[hooks.SessionEnd.hooks]]
+type = "command"
+command = 'node "${CODEX_HOME}/script/hook/progress.mjs" SessionEnd'
+timeout = 3
+
 [sandbox_workspace_write]
 network_access = true
 

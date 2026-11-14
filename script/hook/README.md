@@ -39,10 +39,19 @@ CLI `0.161.0` 实测只传入会话 `cwd`，省略 `exec_command.workdir`，因�
 
 ## 测试与维护
 
+进度 hook 使用 Node.js 24 的内置 `node:sqlite`，状态存储在临时目录。
+注册必须保持同步；每个 thread 的 `turn_id` 和问题的 `tool_use_id` 限定清理范围，
+SQLite transaction 串行执行跨 thread 的状态更新与终端输出。
+`multi_agent_v1.send_input(interrupt=true)` 的 Pre/PostToolUse 配对只清理被中断的旧 turn，
+`close_agent` 的成功 PostToolUse 清理实际关闭的 child；两者都不依赖 child
+不会触发的 Interrupt/SessionEnd。
+更新失败时 hook 仍正常退出，不在 Codex 中留下失败记录，原因追加到临时目录的
+`codex-progress/error.log`。
+
 在 Codex 配置目录运行：
 
 ```sh
-node --test script/hook/sensitive.spec.mjs script/cli/sync.spec.mjs
+node --test script/hook/sensitive.spec.mjs script/hook/progress.spec.mjs script/cli/sync.spec.mjs
 ```
 
 测试使用虚构文件，不执行命令字符串。配置源为 `config.shared.toml`，通过 `script/cli/sync.mjs` 同步；定义变化后用 `/hooks` 检查信任，保留本机信任记录。
