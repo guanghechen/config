@@ -183,8 +183,9 @@ Workspace tabline 的 status flags：
 
 ## 文件操作
 
-- Changes pane 的 `gr` 从已发布行取得目标，并在异步准备前固定 workspace 与相对路径。
-  Untracked 项通过 `era.m.filetree.jobs` 捕获 Resource 并提交 native Filetree delete Job，资源身份、IO、取消及退出收尾
+- Changes pane 的 `gr` 从已发布行取得目标，先确认再 discard，与 VS Code 一致：tracked 文件提示丢弃改动，untracked 文件提示
+  移入回收站。只有明确回答 yes 才执行，且只作用于确认中的那一项；确认后在异步准备前固定 workspace 与相对路径。
+  Untracked 项通过 `era.m.filetree.jobs` 捕获 Resource 并提交 native Filetree trash Job，资源身份、IO、取消及退出收尾
   遵循 [Filetree 文件 Job](../../ux/filetree/jobs.md)。同一 workspace state、同一路径的未完成请求合并，后续光标或 workspace 变化不重定向动作。
 - Discard 拒绝普通目录，目录 symlink 按链接项删除；不枚举或删除其 referent。
   捕获后的资源被替换时报告失败，保留替换项；再次操作必须来自新的显式输入。

@@ -11,8 +11,9 @@ local Future = require("stl.c.future")
 local paths = require("ux.filetree.path")
 
 ---@param names                         string[]
+---@param status                        ?string The Git status of the entries; untracked by default.
 ---@return table
-local function fixture(names)
+local function fixture(names, status)
   local directory = paths.from_os(t:tempdir())
   t:patch_table(dot.path, "workspace", function()
     return directory
@@ -21,7 +22,7 @@ local function fixture(names)
   local reports = bootstrap.with_reporter(t).error
   local entries = {}
   for _, name in ipairs(names) do
-    entries[#entries + 1] = { filepath = name, stage_type = "unstaged", status = "?" }
+    entries[#entries + 1] = { filepath = name, stage_type = "unstaged", status = status or "?" }
   end
   local owner, pane = diffview.changes_pane(t, entries, { stage_type = "unstaged", viewtype = "list" }, true)
   vim.api.nvim_win_set_cursor(pane.winnr, { assert(changes.find_entry_line(pane.bufnr, entries[1])), 0 })
@@ -278,5 +279,71 @@ for _, case in ipairs({
     end
   end)
 end
+
+---Answers the prompts `vim.ui.input` opens, in order, and records what each asked.
+---@return { prompts: string[], answer: fun(index: integer, text: string|nil) }
+local function confirmations()
+  local prompts, callbacks = {}, {} ---@type string[], fun(text: string|nil)[]
+  t:patch_table(vim.ui, "input", function(opts, on_confirm)
+    prompts[#prompts + 1] = opts.prompt
+    callbacks[#callbacks + 1] = on_confirm
+  end)
+  return {
+    prompts = prompts,
+    answer = function(index, text)
+      callbacks[index](text)
+    end,
+  }
+end
+
+t:test("gr asks first, and only a yes trashes the untracked file it asked about", function()
+  local f = fixture({ "a.txt", "b.txt" })
+  vim.fn.writefile({ "a" }, f.path)
+  local captured, plans = {}, {} ---@type string[], table[]
+  local capture = Jobs.capture
+  t:patch_table(Jobs, "capture", function(path)
+    captured[#captured + 1] = path
+    return capture(path)
+  end)
+  -- The plan is recorded instead of run, so no file reaches the system trash.
+  t:patch_table(Jobs, "run", function(_, plan)
+    plans[#plans + 1] = plan
+    return Future.resolve(nil)
+  end)
+  local asked = confirmations()
+
+  action.confirm_reset(f.context)
+  asked.answer(1, nil)
+  action.confirm_reset(f.context)
+  asked.answer(2, "n")
+  t.assert_same({}, captured, "nothing on a cancel or a no")
+  action.confirm_reset(f.context)
+  -- The cursor moves on before the answer; the file asked about is still the one discarded.
+  vim.api.nvim_win_set_cursor(f.winnr, { assert(changes.find_entry_line(f.bufnr, f.entries[2])), 0 })
+  asked.answer(3, " Yes ")
+  t.wait_until(function()
+    return #plans > 0
+  end, 5000, "trash Job")
+
+  t.assert_same({ 'Trash "a.txt"?', 'Trash "a.txt"?', 'Trash "a.txt"?' }, asked.prompts)
+  t.assert_same({ f.path }, captured, "only the yes")
+  t.assert_eq("trash", plans[1].kind)
+end)
+
+t:test("gr asks before it discards the changes of a tracked file", function()
+  local f = fixture({ "m.txt" }, "M")
+  local discarded = {} ---@type table[]
+  t:patch_table(action, "reset", function(_, entry, kind)
+    discarded[#discarded + 1] = { entry.filepath, kind }
+  end)
+  local asked = confirmations()
+
+  action.confirm_reset(f.context)
+  t.assert_same({}, discarded, "nothing before the answer")
+  asked.answer(1, "y")
+
+  t.assert_same({ 'Discard changes to "m.txt"?' }, asked.prompts)
+  t.assert_same({ { "m.txt" } }, discarded, "discarded by Git, not trashed")
+end)
 
 t:run()

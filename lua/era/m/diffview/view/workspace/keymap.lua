@@ -40,7 +40,7 @@ function M.gen_changes(ctx, action)
     { modes = { "n" }, key = "]i", desc = "diffview(workspace): Go to last child/sibling", callback = function() action.goto_last_child_or_sibling() end },
     { modes = { "n" }, key = "gf", desc = "diffview(workspace): Open file in previous tab", callback = function() action.goto_file(ctx) end },
     { modes = { "n" }, key = "gF", desc = "diffview(workspace): Open file in new tab", callback = function() action.goto_file_tab(ctx) end },
-    { modes = { "n" }, key = "gr", desc = "diffview(workspace): Reset file (discard changes)", callback = function() action.reset(ctx) end },
+    { modes = { "n" }, key = "gr", desc = "diffview(workspace): Reset file (discard changes)", callback = function() action.confirm_reset(ctx) end },
     { modes = { "n" }, key = "gs", desc = "diffview(workspace): Stage file / directory", callback = function() action.stage(ctx) end },
     { modes = { "n" }, key = "gu", desc = "diffview(workspace): Unstage file / directory", callback = function() action.unstage(ctx) end },
     { modes = { "n" }, key = "g?", desc = "diffview(workspace): Show keymap help", callback = function() action.show_help(ctx) end },

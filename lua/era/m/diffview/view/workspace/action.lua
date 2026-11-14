@@ -726,9 +726,11 @@ end
 
 ---Reset (discard) file at cursor
 ---@param ctx                           era.m.diffview.view.workspace.IContext
+---@param entry                         ?era.m.diffview.IFileEntry The file to discard; the one at cursor by default.
+---@param kind                          ?"delete"|"trash" How an untracked file goes; deleted by default.
 ---@return stl.c.Future|nil
-function M.reset(ctx)
-  local entry = get_entry_at_cursor()
+function M.reset(ctx, entry, kind)
+  entry = entry or get_entry_at_cursor()
   if not entry or entry.stage_type ~= "unstaged" then
     return
   end
@@ -751,7 +753,10 @@ function M.reset(ctx)
       if resource:info().kind == "directory" then
         error("Discard does not delete directories", 0)
       end
-      return Jobs.run(captured.data, { kind = "delete", source = resource:source(), nodes = { resource:node() } })
+      return Jobs.run(
+        captured.data,
+        { kind = kind or "delete", source = resource:source(), nodes = { resource:node() } }
+      )
     end)
     pending[path] = future
     future:finally(function(ok, result)
@@ -799,6 +804,26 @@ function M.reset(ctx)
       ctx.state:request_refresh()
     end
   )
+end
+
+---Asks before discarding the file at cursor, as VS Code does: a tracked file loses its changes, and an untracked file
+---goes to the trash. Only a yes discards, and only the file it asked about.
+---@param ctx                           era.m.diffview.view.workspace.IContext
+---@return nil
+function M.confirm_reset(ctx)
+  local entry = get_entry_at_cursor()
+  if not entry or entry.stage_type ~= "unstaged" then
+    return
+  end
+
+  local untracked = entry.status == "?" ---@type boolean
+  local prompt = string.format(untracked and "Trash %q?" or "Discard changes to %q?", entry.filepath) ---@type string
+  vim.ui.input({ prompt = prompt, inputtype = "confirmation" }, function(answer)
+    answer = answer and vim.trim(answer):lower()
+    if answer == "y" or answer == "yes" then
+      M.reset(ctx, entry, untracked and "trash" or nil)
+    end
+  end)
 end
 
 ----------------------------------------------------------------------------------------------------
