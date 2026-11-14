@@ -349,13 +349,15 @@ Session list 的 group、order、focus 与 last-session 语义由 `session-navig
 - Source of truth：live pane 的 `pane_title` 以 Braille spinner
   `⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏` 之一开头；`pane_dead=1` 始终视为 idle。
   Claude Code hooks 上报 OSC 9;4 progress：`pane_pb_state=indeterminate` 显示固定帧 `⠋`；
-  `paused` 表示等待用户输入，显示 `@GHC_SYM_PANE_WAIT`。Waiting 是独立状态，因此
-  `indeterminate` 不再让位于 bell。
-- tmux 保留 `pane_pb_state` 直到下一次上报，Claude Code 异常退出（如被 kill）会把残留状态
-  留给 pane 中之后的所有 job。因此进度只在 live pane 中、`claude` 占据前台时有效；带启动命令
-  的 pane（`pane_start_command` 非空）随命令结束而 dead，其前台可能是执行命令的 shell，因此
-  始终有效。判定集中在 `@GHC_PANE_PROGRESS_LIVE_FMT`；使用方先比较上报的状态，只有处于该状态的
-  pane 才查询前台进程。设置 `default-command` 时 pane 均带启动命令，退回只认 `pane_dead`。
+  `paused` 表示等待用户输入，显示 `@GHC_SYM_PANE_WAIT`。Codex 的运行状态来自标题 spinner，
+  其 hooks 只上报 `paused`。Waiting 是独立状态，因此 `indeterminate` 不再让位于 bell。
+- tmux 保留 `pane_pb_state` 直到下一次上报，上报方异常退出（如被 kill）会把残留状态
+  留给 pane 中之后的所有 job。因此进度只在 live pane 中有效：交互式 pane 要求 `claude` 占据
+  前台，或 `codex` 占据前台且状态为 `paused`，避免后者重新激活以前 job 残留的 `indeterminate`。
+  带启动命令的 pane（`pane_start_command` 非空）随命令结束而 dead，其前台可能是执行命令的
+  shell，因此始终有效。判定集中在 `@GHC_PANE_PROGRESS_LIVE_FMT`；使用方先比较上报的状态，只有
+  处于该状态的 pane 才查询前台进程。设置 `default-command` 时 pane 均带启动命令，退回只认
+  `pane_dead`。
 - 每个 pane 只有一个状态（`waiting > spinning > idle`）。Window item 与 session item 显示其
   panes 状态的去重集合：spinning、waiting 与 bell；bell 只能按 window 归属，仅在所在 window
   没有 waiting 或 spinning pane 时成立。Terminal title 按 `waiting > spinning > bell > idle`
@@ -364,7 +366,9 @@ Session list 的 group、order、focus 与 last-session 语义由 `session-navig
   ```text
   progress_live(p)
     = !pane_dead(p)
-      && (pane_start_command(p) 非空 || pane_current_command(p) = claude)
+      && (pane_start_command(p) 非空
+          || pane_current_command(p) = claude
+          || (pane_pb_state(p) = paused && pane_current_command(p) = codex))
 
   pane_waiting(p)
     = pane_pb_state(p) = paused && progress_live(p)

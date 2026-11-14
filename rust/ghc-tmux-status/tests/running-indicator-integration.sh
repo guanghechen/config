@@ -271,20 +271,22 @@ wait_for_foreground() {
   fail "pane $target did not bring $expected to the foreground"
 }
 # pane_current_command follows the executable's real name, and macOS kills copies
-# of system binaries, so build a stand-in claude that reports progress and exits
-# without clearing it.
+# of system binaries, so build a stand-in that reports progress only when given
+# a state, then exits without clearing it.
 fake_claude="$tmp/bin/claude"
 mkdir -p "$tmp/bin"
 rustc -o "$fake_claude" - <<'RUST'
 use std::io::Write;
 fn main() {
-    print!("\x1b]9;4;3\x07");
-    std::io::stdout().flush().unwrap();
+    if let Some(state) = std::env::args().nth(1) {
+        print!("\x1b]9;4;{state}\x07");
+        std::io::stdout().flush().unwrap();
+    }
     std::thread::sleep(std::time::Duration::from_secs(2));
 }
 RUST
 wait_for_foreground "$shell_pane" bash
-tmux_server send-keys -t "$shell_pane" "$fake_claude" Enter
+tmux_server send-keys -t "$shell_pane" "$fake_claude 3" Enter
 wait_for_foreground "$shell_pane" claude
 wait_for_pb_state "$shell_pane" indeterminate
 assert_format "⠋ " "$shell_pane" '#{E:@GHC_PANE_RUNNING_FMT}' \
@@ -302,6 +304,32 @@ wait_for_foreground "$shell_pane" sleep
 assert_format "" "$shell_pane" '#{E:@GHC_PANE_RUNNING_FMT}' \
   "a later job does not revive stale progress"
 assert_format "" alpha:shell '#{E:@GHC_WINDOW_PREFIX_FMT}' "unrelated job after claude"
+# Idle Codex does not report progress, so it must not revive Claude's running
+# state left in the same pane.
+cp "$fake_claude" "$tmp/bin/codex"
+wait_for_foreground "$shell_pane" bash
+tmux_server send-keys -t "$shell_pane" "$tmp/bin/codex" Enter
+wait_for_foreground "$shell_pane" codex
+assert_format "indeterminate" "$shell_pane" '#{pane_pb_state}' "codex keeps the previous job's progress"
+assert_format "" "$shell_pane" '#{E:@GHC_PANE_RUNNING_FMT}' "idle codex frame"
+assert_format "" "$shell_pane" '#{E:@GHC_PANE_WAITING_FMT}' "idle codex wait"
+assert_format "" "$shell_pane" '#{E:@GHC_PANE_BORDER_STATE_FMT}' "idle codex border"
+assert_format "" "$shell_pane" '#{E:@GHC_WINDOW_PREFIX_FMT}' "idle codex window"
+assert_format "" "$shell_pane" '#{E:@GHC_SESSION_LIVE_STATE_FMT}' "idle codex live title state"
+publish_session_states
+assert_format "0" "$shell_pane" "$alpha_running_format" "idle codex sampled session"
+assert_format "" "$shell_pane" '#{E:@GHC_SESSION_SAMPLED_STATE_FMT}' "idle codex sampled title state"
+# Codex hooks report only waits on the user, which count while codex holds the
+# foreground.
+wait_for_foreground "$shell_pane" bash
+tmux_server send-keys -t "$shell_pane" "$tmp/bin/codex 4" Enter
+wait_for_foreground "$shell_pane" codex
+wait_for_pb_state "$shell_pane" paused
+assert_format "1" "$shell_pane" '#{E:@GHC_PANE_WAITING_FMT}' \
+  "a wait counts while codex holds the foreground"
+wait_for_foreground "$shell_pane" bash
+assert_format "" "$shell_pane" '#{E:@GHC_PANE_WAITING_FMT}' \
+  "a wait is stale once codex leaves the foreground"
 # bash -c runs the list without exec, so the shell stays the foreground group leader
 # while the command runs; the pane's start command keeps its progress valid.
 command_pane=$(
