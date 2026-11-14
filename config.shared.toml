@@ -173,6 +173,40 @@ type = "command"
 command = 'node "${CODEX_HOME}/script/hook/progress.mjs" SessionEnd'
 timeout = 3
 
+# Approved progress hooks shared by profiles. Hashes include the rendered
+# command paths; a different CODEX_HOME requires approval again.
+[hooks.state]
+
+[hooks.state."${CODEX_HOME}/config.toml:pre_model_request:0:0"]
+trusted_hash = "sha256:68d73c576af0f19dfa448a7f3387ad8ac515e1bc895590bb8eece4ba87643ab0"
+
+[hooks.state."${CODEX_HOME}/config.toml:pre_tool_use:2:0"]
+trusted_hash = "sha256:2767ffc5b2c3d917fb3d385025c9ca8c801d29a0fad89dbba96af58c936cb666"
+
+[hooks.state."${CODEX_HOME}/config.toml:permission_request:0:0"]
+trusted_hash = "sha256:f679df07dfa926b803a09b42f4e9e2ef49deb531bff651c3a77ada0fa48e2183"
+
+[hooks.state."${CODEX_HOME}/config.toml:post_tool_use:0:0"]
+trusted_hash = "sha256:874b5acf07905c2e6b957b5cad2d0b0e263f9cab22f6df461466b52693eb4760"
+
+[hooks.state."${CODEX_HOME}/config.toml:session_start:0:0"]
+trusted_hash = "sha256:939298dd13ccf4b839b840059ba333c4432edeb1531fd3213a57cbb536c895f0"
+
+[hooks.state."${CODEX_HOME}/config.toml:session_end:0:0"]
+trusted_hash = "sha256:b642138774cc191e58e8f77c0c981d4c2fbd96b5691802970c2f08d7ecae87f6"
+
+[hooks.state."${CODEX_HOME}/config.toml:user_prompt_submit:0:0"]
+trusted_hash = "sha256:06040584cce7d5ee4ecdabe042b26c15f9cc1d87559d1c5fcc8c2d1958c71453"
+
+[hooks.state."${CODEX_HOME}/config.toml:subagent_stop:0:0"]
+trusted_hash = "sha256:b5942a62ae62c74dd1eb95b65e9686f2b696df7d3b77a450db5b4343cbb4d351"
+
+[hooks.state."${CODEX_HOME}/config.toml:stop:0:0"]
+trusted_hash = "sha256:99d45e445d0ca19fdee9d22cf1a66039a857c3bc6063b25fe9a855e90326015c"
+
+[hooks.state."${CODEX_HOME}/config.toml:interrupt:0:0"]
+trusted_hash = "sha256:a54c72f2510cfe052ab11c3d9f77363644223a05c031c6a579399dfc85059109"
+
 [sandbox_workspace_write]
 network_access = true
 
