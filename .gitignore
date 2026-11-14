@@ -4,6 +4,7 @@
 /sandbox*.log
 /queue_*.sqlite*
 /thread_history_*.sqlite*
+/tui-thread-reference-capabilities/
 /state*.sqlite*
 /AGENTS.md
 
