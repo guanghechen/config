@@ -378,8 +378,8 @@ assert_not_contains "$spun_window_item" "⠧" "stale window spinner frame"
 publish_session_states
 
 # Window state is mutually exclusive: spinner wins over bell, while zoom remains
-# an independent decorator. Session items preserve both evidence types, while the
-# terminal title keeps the same priority as window state.
+# an independent decorator. Session items and the terminal title preserve both
+# evidence types.
 tmux_server set-window-option -g monitor-bell on
 tmux_server set-option -g bell-action any
 tmux_server new-window -d -t beta -n alert \
@@ -431,10 +431,8 @@ terminal_title_before=$(
 terminal_title=$(
   tmux_server display-message -p -t beta:alert '#{T:set-titles-string}'
 )
-assert_spinner_title "$terminal_title" "beta:alert" \
-  "running session suppresses bell in terminal title"
-assert_not_contains "$terminal_title" "$bell_symbol" \
-  "running terminal title omits lower-priority bell"
+assert_spinner_title "$terminal_title" "$bell_symbol beta:alert" \
+  "terminal title keeps another window's bell beside running"
 assert_equal "$terminal_title_before" \
   "$(tmux_server display-message -p -t beta:alert '#{pane_title}')" \
   "terminal title does not rewrite pane title"
@@ -452,6 +450,11 @@ assert_not_contains "$decorated_window_item" "$bell_symbol" \
 publish_session_states
 assert_format "0" beta "$beta_bell_membership_format" \
   "a bell folds into running in its own window"
+# The live title applies the same window rule and keeps only the first frame.
+tmux_server set-option -s @GHC_SL_SCHED_ACTIVE 0
+assert_format "⠇ beta:alert" beta:alert '#{T:set-titles-string}' \
+  "live terminal title folds a bell into running in its own window"
+tmux_server set-option -s @GHC_SL_SCHED_ACTIVE 1
 
 tmux_server select-pane -t beta:main -T 'idle'
 tmux_server select-pane -t "$alert_pane" -T 'idle'
@@ -502,9 +505,9 @@ last_zoom_style=$(
 assert_contains "$last_window_item_raw" "$last_zoom_style" \
   "last-window zoom swaps colors with reverse"
 
-# Window and session items show the set of their panes' states, while the
-# terminal title keeps one. A bell counts only in a window that neither waits nor
-# runs. Pane borders mark only hook-reported progress.
+# Window items, session items and the terminal title show the set of their panes'
+# states. A bell counts only in a window that neither waits nor runs. Pane borders
+# mark only hook-reported progress.
 tmux_server source-file "$repo_dir/conf/theme/panestatus02.tmux.conf"
 spinner_pane=$(tmux_server new-window -dP -F '#{pane_id}' -t beta -n wait 'sleep 30')
 tmux_server select-pane -t "$spinner_pane" -T '⠋ worker'
@@ -573,13 +576,14 @@ done
 assert_equal " $wait_symbol $bell_symbol" \
   "$(tmux_server display-message -p '#{E:@GHC_SESSION_WAIT_PREFIX_FMT}#{E:@GHC_SESSION_BELL_PREFIX_FMT}' | strip_styles)" \
   "shared prefixes draw their symbols"
-tmux_server kill-pane -t "$ring_pane"
-assert_format "$wait_symbol beta:wait" beta:wait '#{T:set-titles-string}' \
-  "sampled terminal title shows the wait alone"
+assert_spinner_title \
+  "$(tmux_server display-message -p -t beta:wait '#{T:set-titles-string}')" \
+  "$wait_symbol $bell_symbol beta:wait" "sampled terminal title shows all three states"
 tmux_server set-option -s @GHC_SL_SCHED_ACTIVE 0
-assert_format "$wait_symbol beta:wait" beta:wait '#{T:set-titles-string}' \
-  "live terminal title shows the wait alone"
+assert_format "⠋ $wait_symbol $bell_symbol beta:wait" beta:wait '#{T:set-titles-string}' \
+  "live terminal title shows all three states"
 tmux_server set-option -s @GHC_SL_SCHED_ACTIVE 1
+tmux_server kill-pane -t "$ring_pane"
 
 # Every window variant keeps its own background behind the wait.
 tmux_server select-window -t beta:wait

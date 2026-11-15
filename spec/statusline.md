@@ -358,10 +358,9 @@ Session list 的 group、order、focus 与 last-session 语义由 `session-navig
   shell，因此始终有效。判定集中在 `@GHC_PANE_PROGRESS_LIVE_FMT`；使用方先比较上报的状态，只有
   处于该状态的 pane 才查询前台进程。设置 `default-command` 时 pane 均带启动命令，退回只认
   `pane_dead`。
-- 每个 pane 只有一个状态（`waiting > spinning > idle`）。Window item 与 session item 显示其
-  panes 状态的去重集合：spinning、waiting 与 bell；bell 只能按 window 归属，仅在所在 window
-  没有 waiting 或 spinning pane 时成立。Terminal title 按 `waiting > spinning > bell > idle`
-  选择单一状态：
+- 每个 pane 只有一个状态（`waiting > spinning > idle`）。Window item、session item 与
+  terminal title 显示其 panes 状态的去重集合：spinning、waiting 与 bell；bell 只能按 window
+  归属，仅在所在 window 没有 waiting 或 spinning pane 时成立：
 
   ```text
   progress_live(p)
@@ -412,8 +411,9 @@ Session list 的 group、order、focus 与 last-session 语义由 `session-navig
   pill 文字色以保证对比度；inactive session item 为 `@GHC_SL_FG_SESSION_ITEM_WAIT`，pane
   border 为 `@GHC_PSL_FG_WAIT`。
 - Terminal title 使用 session scope：scheduler active 时读取同一份 sampled waiting/running/bell
-  membership，否则用 live `W/P` aggregation 保持 status01/fallback 可用；两条路径均按
-  `waiting > spinning > bell > idle` 选择，最后显示 `session:window`。Terminal title 不反写
+  membership，否则用 live `W/P` aggregation 保持 status01/fallback 可用；两条路径都与 session
+  item 一样，按 spinning、waiting、bell 的顺序显示状态集合（live 路径只取首个 spinning 帧，
+  bell 同样经 `@GHC_WINDOW_BELL_FMT` 判定），最后显示 `session:window`。Terminal title 不反写
   `pane_title`。
 - 每个持锁 scheduler tick 尝试一次发布 `@GHC_SL_SESSION_STATES`：
   `<sample-token><|W$session_id||R$session_id||B$session_id||2$session_id|...>`；`W`/`R`/`B`
@@ -464,8 +464,7 @@ Session list 的 group、order、focus 与 last-session 语义由 `session-navig
 - Session item 与 active-scheduler terminal title 是上述 session 定义的 freshness-bounded
   projection：sample 更新前可能暂时保留上一状态，且 consumer 不额外执行 `S/W/P` traversal。
   Scheduler inactive 时 terminal title 改用 live aggregation。Lifecycle fence 清空 sampled
-  state；session item 的 waiting、running 与 bell branch 独立 degrade，terminal title 仍按
-  单一状态 priority degrade。
+  state；session item 与 terminal title 的 waiting、running 与 bell branch 均独立 degrade。
 
 ## 9. Length 与 cache contract
 
