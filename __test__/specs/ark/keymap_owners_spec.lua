@@ -24,17 +24,15 @@ local OVERRIDES = {
   -- ui_attach replaces the <Esc> of ark/keymap.lua in Normal and Insert mode; Visual mode keeps the latter.
   ["n <Esc>"] = "ark/keymap.lua -> era/dressing/ui_attach/init.lua",
   ["i <Esc>"] = "ark/keymap.lua -> era/dressing/ui_attach/init.lua",
-  -- blink.pairs replaces the undo break-points that ark/keymap.lua maps on Enter and Space, and
-  -- era/plugin/blink-pairs.lua puts them back in front of its maps.
-  ["i <CR>"] = "ark/keymap.lua -> plugin:blink.pairs -> era/plugin/blink-pairs.lua",
-  ["i <Space>"] = "ark/keymap.lua -> plugin:blink.pairs -> era/plugin/blink-pairs.lua",
+  -- era.keystroke.pairs replaces the undo break-points that ark/keymap.lua maps on Enter and Space, keeping them.
+  ["i <CR>"] = "ark/keymap.lua -> era/keystroke/pairs/init.lua",
+  ["i <Space>"] = "ark/keymap.lua -> era/keystroke/pairs/init.lua",
 } ---@type table<string, string>
 
 -- Buffer-local maps of an edited file that hide a global map, as global source -> buffer source. Completion takes
 -- these keys and falls back to the global map when its menu does not use them.
 local SHADOWS = {
-  ["i <CR>"] = "era/plugin/blink-pairs.lua -> era/keystroke/cmp/keymap.lua",
-  ["i <C-B>"] = "plugin:blink.pairs -> era/keystroke/cmp/keymap.lua",
+  ["i <CR>"] = "era/keystroke/pairs/init.lua -> era/keystroke/cmp/keymap.lua",
   ["i <Tab>"] = "nvim -> era/keystroke/cmp/keymap.lua",
   ["i <S-Tab>"] = "nvim -> era/keystroke/cmp/keymap.lua",
   ["s <Tab>"] = "nvim -> era/keystroke/cmp/keymap.lua",

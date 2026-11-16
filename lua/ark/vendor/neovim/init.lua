@@ -44,6 +44,7 @@ vim.schedule(function()
     "hipattern",
     "indentline",
     "indentscope",
+    "pairs",
     "dim",
     "whichkey",
 
@@ -57,6 +58,7 @@ vim.schedule(function()
   era.m.image.dressing()
   era.m.paste.dressing()
   era.keystroke.cmp.setup()
+  era.keystroke.pairs.setup()
   era.keystroke.splitjoin.setup()
   era.keystroke.surrounds.setup()
   era.keystroke.textobject.setup()

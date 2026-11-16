@@ -11,6 +11,7 @@ local mods = {
   indentline = "era.dressing.indentline",
   indentscope = "era.dressing.indentscope",
   notifier = "era.dressing.notifier",
+  pairs = "era.dressing.pairs",
   scroll = "era.dressing.scroll",
   statuscolumn = "era.dressing.statuscolumn",
   statusline = "era.dressing.statusline",
@@ -35,6 +36,7 @@ local load_times = {} ---@type table<string, number>
 ---@field public indentline             era.dressing.indentline
 ---@field public indentscope            era.dressing.indentscope
 ---@field public notifier               era.dressing.notifier
+---@field public pairs                  era.dressing.pairs
 ---@field public scroll                 era.dressing.scroll
 ---@field public statuscolumn           era.dressing.statuscolumn
 ---@field public statusline             era.dressing.statusline

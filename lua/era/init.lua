@@ -89,6 +89,7 @@ local __m__mods = {
   maximize = "era.m.maximize",
   notepad = "era.m.notepad",
   nvimbar = "era.m.nvimbar",
+  pairs = "era.m.pairs",
   paste = "era.m.paste",
   picker = "era.m.picker",
   plugin = "era.m.plugin",
@@ -116,6 +117,7 @@ local __m__mods = {
 ---@field public maximize               era.m.maximize
 ---@field public notepad                era.m.notepad
 ---@field public nvimbar                era.m.nvimbar
+---@field public pairs                  era.m.pairs
 ---@field public paste                  era.m.paste
 ---@field public picker                 era.m.picker
 ---@field public plugin                 era.m.plugin

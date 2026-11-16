@@ -25,6 +25,7 @@ for _, vendor in ipairs({ "neovim", "neovide" }) do
         dressing = dressing,
         keystroke = {
           cmp = { setup = function() end },
+          pairs = { setup = function() end },
           splitjoin = { setup = function() end },
           surrounds = { setup = function() end },
           textobject = { setup = function() end },
@@ -129,6 +130,7 @@ for _, vendor in ipairs({ "neovim", "neovide" }) do
     end
     t:patch_table(era.keystroke, "splitjoin", { setup = function() end })
     t:patch_table(era.keystroke, "cmp", { setup = function() end })
+    t:patch_table(era.keystroke, "pairs", { setup = function() end })
     t:patch_table(era.keystroke, "textobject", { setup = function() end })
     local original_require = require
     t:patch_global("require", function(name)

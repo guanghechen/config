@@ -54,6 +54,9 @@ Suites:
 - [Yoz Fuzzy](fuzzy/README.md): the L1 Rust core, L2 FFI and L3 real UI levels of `script/benchmark/fuzzy.mjs`, fzf
   parity and ranking quality.
 - [Completion](cmp/README.md): the completion benchmark and its reporter.
+- [Pairs](pairs/README.md): parsing, edit tracking, redraw, matchparen and typed pairs of `era` against `blink.pairs`
+  and no pairs, on this checkout's sources up to 3 MB, pathological inputs, and release-mode probes of the `yoz.pairs`
+  engine.
 
 Single-file benchmarks:
 

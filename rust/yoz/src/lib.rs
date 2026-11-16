@@ -8,6 +8,7 @@ pub mod fs;
 pub mod fuzzy;
 pub mod git;
 pub mod job;
+pub mod pairs;
 pub mod path;
 pub mod replace;
 pub mod search;
@@ -1242,6 +1243,7 @@ fn yoz(lua: &Lua) -> LuaResult<LuaTable> {
     exports.set("fs", fs_module(lua)?)?;
     exports.set("fuzzy", fuzzy::module(lua)?)?;
     exports.set("git", git::module(lua)?)?;
+    exports.set("pairs", pairs::module(lua)?)?;
     exports.set("ux", ux::module(lua)?)?;
     #[cfg(any(target_os = "macos", target_os = "windows"))]
     exports.set("im", im_module(lua)?)?;

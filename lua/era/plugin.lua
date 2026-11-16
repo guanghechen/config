@@ -26,7 +26,6 @@ local conds = {
 ---@type era.m.plugin.IRawSpec[]
 local raw_specs = {
   -- stylua: ignore start
-  { name = "blink.pairs",                 main = "blink.pairs",                   cond = conds.standalone             },
   { name = "conform.nvim",                main = "conform",                       cond = conds.standalone             },
   { name = "flash.nvim",                  main = "flash",                         cond = conds.flash                  },
   { name = "friendly-snippets",                                                   cond = conds.standalone             },

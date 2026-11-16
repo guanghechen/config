@@ -5,6 +5,7 @@ local __module_name__ = "era.keystroke" ---@type string
 local __mods = {
   cmp = "era.keystroke.cmp",
   colorpicker = "era.keystroke.colorpicker",
+  pairs = "era.keystroke.pairs",
   splitjoin = "era.keystroke.splitjoin",
   splitline = "era.keystroke.splitline",
   surrounds = "era.keystroke.surrounds",
@@ -15,6 +16,7 @@ local __mods = {
 ---@field public __mods                 era.keystroke.__mods
 ---@field public cmp                    era.keystroke.cmp
 ---@field public colorpicker            era.keystroke.colorpicker
+---@field public pairs                  era.keystroke.pairs
 ---@field public splitjoin              era.keystroke.splitjoin
 ---@field public splitline              era.keystroke.splitline
 ---@field public surrounds              era.keystroke.surrounds

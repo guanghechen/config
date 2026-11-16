@@ -26,6 +26,7 @@ feature。多文档主题使用独立子目录与 `README.md`，例如 [Treeview
 
 - [Yoz Fuzzy](yoz/fuzzy.md)：fzf 语法与打分、native corpus、排序与收窄。
 - [Yoz Search](yoz/search.md)：匹配与替换语义、native job、取消与 match limit。
+- [Yoz Pairs](yoz/pairs.md)：括号、字符串与注释记号的切分、配对、增量更新与查询。
 
 ## feat
 
@@ -46,6 +47,7 @@ feature。多文档主题使用独立子目录与 `README.md`，例如 [Treeview
 - [Completion](feat/cmp.md)：sources、session、preview、LSP 编辑与原生 matcher。
 - [Textobject](feat/textobject.md)：对象选择、边界跳转与参数交换。
 - [Surrounds](feat/surrounds.md)：surround 动作、buffer 准入与映射归属。
+- [Pairs](feat/pairs.md)：rainbow 高亮、matchparen 与成对键入。
 - [输入法切换](feat/im.md)：input source 捕获、恢复与平台行为。
 - [Maximize](feat/maximize.md)：普通窗口投影与浮窗最大化。
 - [Nvimbar](feat/nvimbar.md)：组件取数、状态提交、通知、布局与 tabline 注册。

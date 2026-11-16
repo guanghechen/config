@@ -180,7 +180,7 @@ Snippet 展开与跳转使用 `vim.snippet`。常用文件、workspace、时间�
 转义后的 `$` 保留为 literal。自动括号使用固定的 filetype blocklist、语言括号对与
 import、except、pseudo-selector 限制，kind 与 semantic token resolution 共用这些规则。
 优先使用 kind；需要 semantic tokens 时只接受原 client、原 buffer 和未变化的输入。
-`blink.pairs` 独立处理键入括号与配对高亮。
+键入括号与配对高亮由 [Pairs](pairs.md) 独立处理；`Enter` 的 fallback 进入它的全局映射。
 
 `Tab` 依次处理菜单、snippet、inline completion、原按键；`C-y` / `C-l` 优先 inline completion。
 `Enter` 只接受用户选择的候选（导航、鼠标或插入预览）；菜单默认选中的首项只作建议，`C-y` / `C-l` 才接受它。

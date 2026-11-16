@@ -48,8 +48,8 @@ mk({ "i" }, "：", "：<C-g>u")
 mk({ "i" }, "！", "！<C-g>u")
 mk({ "i" }, "？", "？<C-g>u")
 -- As in VS Code, a line break and the first space after a word start a new undo step, so undo takes back a line or a
--- word with the space before it. blink.pairs replaces these two maps when it loads; era/plugin/blink-pairs.lua keeps
--- the break-points on its maps.
+-- word with the space before it. era.keystroke.pairs replaces these two maps in Neovim and Neovide and keeps the
+-- break-points on its own.
 mk({ "i" }, "<cr>", "<C-g>u<cr>")
 mk({ "i" }, "<space>", function()
   local col = vim.api.nvim_win_get_cursor(0)[2] ---@type integer

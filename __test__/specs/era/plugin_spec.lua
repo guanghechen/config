@@ -2,7 +2,6 @@ local bootstrap = require("__test__.support.bootstrap")
 local harness = require("__test__.support.harness")
 local t = harness.new()
 local plugin_names = {
-  "blink.pairs",
   "conform.nvim",
   "flash.nvim",
   "friendly-snippets",

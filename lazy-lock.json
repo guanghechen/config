@@ -1,5 +1,4 @@
 {
-  "blink.pairs": { "branch": "nvim@blink.pairs", "commit": "4e43012356d33a26f69eae475f746fbe9f325f44" },
   "conform.nvim": { "branch": "nvim@conform.nvim", "commit": "016802de402556da54c36bd7359b441266b01cdd" },
   "flash.nvim": { "branch": "nvim@flash.nvim", "commit": "5f0f270fdc7c5b0c21d903ee85b9cb06f2ac636a" },
   "friendly-snippets": { "branch": "nvim@friendly-snippets", "commit": "b4d01b0fdf3c9a549961c2f9ffe8dc09be166219" },

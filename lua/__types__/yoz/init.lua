@@ -12,6 +12,7 @@
 ---@field public fuzzy                  yoz.fuzzy
 ---@field public git                    yoz.git
 ---@field public im                     yoz.im|nil
+---@field public pairs                  yoz.pairs
 ---@field public replace                yoz.replace
 ---@field public find                   yoz.find
 ---@field public search                 yoz.search
