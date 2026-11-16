@@ -56,7 +56,13 @@ function M.gen_hlgroup_map(context)
     f_dim = { fg = u.fg4 },
 
     ---matched pairs
-    f_matched_pairs_0 = { fg = c.editorBracket_fg1, bg = u.bg4, bold = true },
+    -- A deeper shade of the first rainbow level, which colors the outermost pairs.
+    f_matched_pairs_0 = {
+      fg = cs.change_hex_lightness(c.editorBracket_fg1, -15),
+      bg = u.bg4,
+      bold = true,
+      italic = true,
+    },
     f_matched_pairs_1 = { fg = c.editorBracket_fg1 },
     f_matched_pairs_2 = { fg = c.editorBracket_fg2 },
     f_matched_pairs_3 = { fg = c.editorBracket_fg3 },
