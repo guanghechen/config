@@ -276,6 +276,28 @@ function M:set_cursor(row)
   return self._state:dispatch({ kind = "set_cursor", node = node }, { frame = self._frame })
 end
 
+---Commits a cursor that Neovim moved to a new position.
+---@return nil
+function M:_observe_cursor()
+  if not self:_valid() or self._publishing or self._desynced or not self._frame then
+    return
+  end
+  local cursor = vim.api.nvim_win_get_cursor(self.winnr)
+  local observed = self._observed_cursor
+  if observed and cursor[1] == observed[1] and cursor[2] == observed[2] then
+    return
+  end
+  -- Repeated or delayed events at an unchanged position carry no new navigation intent.
+  self._observed_cursor = cursor
+  if not observed or cursor[1] ~= observed[1] then
+    decorations.cursor_moved(self, cursor[1] - 1)
+  end
+  local node = self._frame:node_at(cursor[1])
+  if node then
+    self._state:dispatch({ kind = "set_cursor", node = node }, { frame = self._frame })
+  end
+end
+
 ---@param direction                     string
 ---@return nil
 function M:navigate(direction)
@@ -668,22 +690,18 @@ function M.new(state, options)
     group = self._group,
     buf = self.bufnr,
     callback = function()
-      if not self:_valid() or self._publishing or self._desynced or not self._frame then
-        return
-      end
-      local cursor = vim.api.nvim_win_get_cursor(self.winnr)
-      local observed = self._observed_cursor
-      if observed and cursor[1] == observed[1] and cursor[2] == observed[2] then
-        return
-      end
-      -- Repeated or delayed events at an unchanged position carry no new navigation intent.
-      self._observed_cursor = cursor
-      if not observed or cursor[1] ~= observed[1] then
-        decorations.cursor_moved(self, cursor[1] - 1)
-      end
-      local node = self._frame:node_at(cursor[1])
-      if node then
-        self._state:dispatch({ kind = "set_cursor", node = node }, { frame = self._frame })
+      self:_observe_cursor()
+    end,
+  })
+  -- Scrolling keeps the cursor inside the window, also in one that is not current, such as under the mouse wheel,
+  -- where no CursorMoved reports the move. A resize moves the cursor to keep the text in place, which is no navigation:
+  -- the next publication restores it.
+  vim.api.nvim_create_autocmd("WinScrolled", {
+    group = self._group,
+    callback = function()
+      local changes = not self._suspended and vim.v.event[tostring(self.winnr)]
+      if changes and changes.width == 0 and changes.height == 0 then
+        self:_observe_cursor()
       end
     end,
   })

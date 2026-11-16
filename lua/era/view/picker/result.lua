@@ -339,6 +339,17 @@ function M.new(props)
       end
     end,
   })
+  -- Scrolling keeps the cursor inside the window, also in one that is not current, such as under the mouse wheel,
+  -- where no CursorMoved reports the move; left behind, the current line would move the cursor back.
+  vim.api.nvim_create_autocmd("WinScrolled", {
+    group = augroup_CursorMoved,
+    callback = function()
+      local winnr = self._winnr ---@type integer|nil
+      if winnr ~= nil and vim.v.event[tostring(winnr)] and vim.api.nvim_win_is_valid(winnr) then
+        _o_lnum_current:next(vim.api.nvim_win_get_cursor(winnr)[1])
+      end
+    end,
+  })
 
   return self
 end

@@ -67,9 +67,10 @@ local function is_enabled(bufnr)
     return false
   end
 
-  -- These surfaces own cursor publication; animation positions would become navigation input.
-  local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr })
-  if filetype == "explorer" or filetype == "treeview" then
+  -- A Treeview View publishes the cursor of a buffer it owns; animation positions would become navigation input. No
+  -- View owns a buffer before Treeview loads.
+  local treeview = package.loaded["ux.treeview"] ---@type ux.treeview|nil
+  if treeview and treeview.attached(bufnr) then
     return false
   end
 

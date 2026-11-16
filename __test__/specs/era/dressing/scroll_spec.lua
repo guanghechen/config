@@ -288,16 +288,25 @@ for _, case in ipairs({
   end)
 end
 
+---Makes a Treeview View own `bufnr` for the rest of the case.
+---@param bufnr                         integer
+---@return nil
+local function own(bufnr)
+  t:patch_table(package.loaded, "ux.treeview", {
+    attached = function(candidate)
+      return candidate == bufnr
+    end,
+  })
+end
+
 t:test("renderer-owned cursors do not start scroll animations", function()
   local runtime = setup()
-  for _, filetype in ipairs({ "explorer", "treeview" }) do
-    runtime.options.filetype = filetype
-    runtime.view.lnum = 100
-    runtime.view.topline = 100
-    runtime.check_scroll(1)
-    t.assert_eq(0, #runtime.timers, "animation timers for " .. filetype)
-    t.assert_nil(runtime.get_states()[1], "animation state for " .. filetype)
-  end
+  own(runtime.bufnr)
+  runtime.view.lnum = 100
+  runtime.view.topline = 100
+  runtime.check_scroll(1)
+  t.assert_eq(0, #runtime.timers, "animation timers")
+  t.assert_nil(runtime.get_states()[1], "animation state")
 end)
 
 t:test("switching to an Explorer buffer releases animation options and queued work", function()
@@ -309,7 +318,7 @@ t:test("switching to an Explorer buffer releases animation options and queued wo
   assert(timer.callback)()
 
   runtime.bufnr = 2
-  runtime.options.filetype = "explorer"
+  own(2)
   runtime.view.lnum = 2
   runtime.view.topline = 1
   runtime.check_scroll(1)

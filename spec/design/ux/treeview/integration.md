@@ -38,7 +38,8 @@ end)
 ```
 
 `treeview.attach` 默认创建专用 scratch buffer，也可用 `bufnr` 交接已有的空 buffer；buffer 条件、默认键位与
-`on_activate` 见 [View](view.md)。
+`on_activate` 见 [View](view.md)。`treeview.attached(bufnr)` 判断 buffer 是否归某个 View 所有：它的正文与 cursor 只由
+View 发布，平滑滚动等会移动 cursor 的装饰据此跳过它，否则动画中的位置会成为导航输入。
 
 ## 更新与查询
 

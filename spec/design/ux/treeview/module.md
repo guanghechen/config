@@ -237,6 +237,7 @@ Lua 包装方法如下；native 方法签名见 [yoz/ux.lua](../../../../lua/__t
 | `frame:navigate(row, direction)`、`frame:adjacent_leaf(row, forward)`                       | [结构导航](indentline.md#结构导航)                                       |
 | `frame:flags(node)`、`frame:marked_nodes(visible_only)`、`frame:all_marked(nodes)`          | [selection](selection.md)                                                |
 | `treeview.attach(state, options?)`、`view:detach()`、`view:suspend()`、`view:resume(winnr)` | [View 生命周期](view.md#生命周期)                                        |
+| `treeview.attached(bufnr)`                                                                  | [Buffer 归属](integration.md#最小示例)                                   |
 | `view:frame()`、`view:status()`、`view:refresh()`、`view:refresh_decorations()`             | [render.md](render.md)                                                   |
 | `view:set_cursor(row)`、`view:navigate(direction)`、`view:activate()`                       | [结构导航](indentline.md#结构导航)、[默认键位](view.md#默认键位)         |
 | `view:select(action, recursive)`、`view:range_action(submit, notify?)`                      | [selection](selection.md#标记与交互)、[Visual 圈选](view.md#visual-圈选) |

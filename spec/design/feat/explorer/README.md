@@ -85,8 +85,8 @@ Status: Design。本文定义 Explorer 的输入、用途、窗口、编辑器�
 - 打开、复制路径等动作在输入时捕获 Resource/frame，后来的光标移动不改变本次目标。Visual 通过 Treeview
   `range_action` 保持布局与端点，不在 Lua 重建范围算法；圈选只有显式动作键才提交，Tree 与 List 都可圈选。
 - Visual 动作捕获 frame 与行范围后提交，全部使用 `recursive=true`，范围内的父节点覆盖后代；各动作键见[默认键位](#默认键位)。
-- `explorer` / `treeview` buffer 不参与 Lua scroll dressing 的插值动画；cursor 与 viewport 由 renderer 发布，
-  动画中间位置不能反向成为新的导航输入。窗口从普通 buffer 切入时释放已有动画及其临时 window options。
+- Explorer buffer 归 Treeview View 所有，不参与 Lua scroll dressing 的插值动画（见 [Treeview 接入](../../ux/treeview/integration.md)）；
+  窗口从普通 buffer 切入时释放已有动画及其临时 window options。
 
 ## Selection 与文件操作
 

@@ -242,6 +242,7 @@ function Data:_poll()
   return preparing
 end
 
+---@class ux.treeview
 local M = {}
 
 ---@param options                       ?ux.treeview.IDataOptions
@@ -277,6 +278,13 @@ end
 ---@return ux.treeview.View
 function M.attach(state, options)
   return require("ux.treeview.view").new(state, options)
+end
+
+---Whether a View owns `bufnr`, which only it publishes text and cursor to.
+---@param bufnr                         integer
+---@return boolean
+function M.attached(bufnr)
+  return require("ux.treeview.decorations").attached(bufnr)
 end
 
 return M

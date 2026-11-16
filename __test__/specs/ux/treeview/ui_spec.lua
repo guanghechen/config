@@ -92,6 +92,75 @@ t:test("an attached UI draws ephemeral viewport marks and independent shared-sta
   t.assert_eq(0, channel:lua("return #reports.error"))
 end)
 
+---Attaches `wheel_view` in the child to a 200-row `wheel_data`, then focuses a new window above it.
+---@param channel                       __test__.support.UI
+---@return nil
+local function unfocused_view(channel)
+  channel:lua([[
+    local await = require("__test__.support.treeview").await
+    local treeview = require("ux.treeview")
+    wheel_data = treeview.new_data()
+    wheel_records = { { key = "root", label = "root", can_expand = true } }
+    for index = 1, 200 do
+      wheel_records[#wheel_records + 1] = { key = "n" .. index, parent = "root", label = "row " .. index }
+    end
+    assert(await(wheel_data:import(wheel_records)).kind == "Applied")
+    local state = await(wheel_data:create_state({ kind = "children_of", node = wheel_data:source():id("root") }))
+    wheel_view = treeview.attach(state, { keymaps = false })
+    assert(vim.wait(5000, function() return wheel_view:frame() ~= nil end))
+    vim.cmd("aboveleft new")
+  ]])
+end
+
+---Adds a row to `wheel_data` and waits for `wheel_view` to publish it, which restores the cursor of its state.
+---@param channel                       __test__.support.UI
+---@return nil
+local function publish_row(channel)
+  channel:lua([[
+    wheel_records[#wheel_records + 1] = { key = "n201", parent = "root", label = "row 201" }
+    assert(require("__test__.support.treeview").await(wheel_data:import(wheel_records)).kind == "Applied")
+  ]])
+  channel:wait_until(function()
+    return channel:lua(
+      "local status = wheel_view:status() return status.frame.row_count == 201 and not status.preparing"
+    )
+  end, 5000)
+end
+
+t:test("a wheel scroll over an unfocused window moves its cursor, and the next publication keeps both", function()
+  local channel = UI.open(t, { width = 80, height = 30, runtime = "native" })
+  unfocused_view(channel)
+  channel:rpc("nvim_command", "redraw")
+  local position = channel:lua("return vim.fn.win_screenpos(wheel_view.winnr)")
+  for _ = 1, 3 do
+    channel:rpc("nvim_input_mouse", "wheel", "down", "", 0, position[1] + 1, position[2] + 1)
+  end
+  channel:wait_until(function()
+    return channel:lua("return vim.fn.getwininfo(wheel_view.winnr)[1].topline") == 10
+  end, 5000, "the wheel scrolls the unfocused window")
+  publish_row(channel)
+  local window = channel:lua("return vim.fn.getwininfo(wheel_view.winnr)[1]")
+  t.assert_eq(10, window.topline)
+  t.assert_eq(10, channel:lua("return vim.api.nvim_win_get_cursor(wheel_view.winnr)[1]"))
+  t.assert_eq(0, channel:lua("return #reports.error"))
+end)
+
+t:test("a resize that moves the cursor of an unfocused window is no navigation", function()
+  local channel = UI.open(t, { width = 80, height = 30, runtime = "native" })
+  unfocused_view(channel)
+  -- A window opened above it keeps the text in place, pushing the cursor of the first row down.
+  channel:lua([[
+    vim.o.splitkeep = "screen"
+    vim.api.nvim_win_call(wheel_view.winnr, function() vim.cmd("aboveleft new") end)
+  ]])
+  channel:wait_until(function()
+    return channel:lua("return vim.api.nvim_win_get_cursor(wheel_view.winnr)[1]") > 1
+  end, 5000, "the resize moves the cursor")
+  publish_row(channel)
+  t.assert_eq(1, channel:lua("return vim.api.nvim_win_get_cursor(wheel_view.winnr)[1]"))
+  t.assert_eq(0, channel:lua("return #reports.error"))
+end)
+
 t:test("connectors and navigation are exact, and persistent decoration errors stop after one resync", function()
   local channel = UI.open(t, { width = 80, height = 30, runtime = "native" })
   channel:lua([[

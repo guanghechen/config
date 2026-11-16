@@ -57,7 +57,8 @@ LSP symbols 不被解释为磁盘全量目录。接入步骤见 [Treeview 接入
   失败或 dispose 后以 `Rejected` 完成。
 - 行数、当前行和 preview 通知跟随 View 的 `on_frame`。Current-line observable 读取发布后的 View cursor，
   不能把迟到的 Frame cursor acknowledgement 回写成新输入或移动 Visual 端点。明确的行导航立即提交给 native View，
-  observable 仅通知其余 UI。
+  observable 仅通知其余 UI。滚动移动的 cursor（如鼠标滚轮滚动非当前的结果窗口）在 `WinScrolled` 时同步到
+  observable，它不能以旧行把 cursor 移回。
 - Metadata-only 变更也刷新共享 Data 上所有 View 的 viewport decorations；可见主结果的 publication/ready 等待其准备完成。
 
 ### 准备与原子提交
