@@ -218,4 +218,26 @@ t:test("]p and [p in a side-by-side window focus the pane of the preview, in pla
   t.assert_eq(lyt.history.commits_winnr, vim.api.nvim_get_current_win(), "a History preview leads to History")
 end)
 
+t:test("sidebar panes keep their buffers against buffer switches, also the ones immersive mode recreates", function()
+  local session = open()
+  local lyt = session.layout
+  local other = t:buffer()
+  for _, name in ipairs({ "staged", "unstaged", "history" }) do
+    local winnr = assert(name == "history" and lyt.history.commits_winnr or lyt.changes[name].winnr)
+    local bufnr = vim.api.nvim_win_get_buf(winnr)
+    vim.api.nvim_set_current_win(winnr)
+    local ok, err = pcall(vim.cmd.buffer, other)
+    t.assert_false(ok, name .. " refuses another buffer")
+    t.assert_true(tostring(err):find("E1513", 1, true) ~= nil, name .. ": " .. tostring(err))
+    t.assert_eq(bufnr, vim.api.nvim_win_get_buf(winnr), name .. " keeps its buffer")
+  end
+
+  vim.api.nvim_set_current_win(assert(lyt.changes.staged.winnr))
+  action.toggle_immersive(session)
+  action.cycle_sidebar(session, 1)
+  t.assert_true(vim.wo[assert(lyt.changes.unstaged.winnr)].winfixbuf, "recreated Unstaged")
+  action.toggle_immersive(session)
+  t.assert_true(vim.wo[assert(lyt.changes.staged.winnr)].winfixbuf, "recreated Staged")
+end)
+
 t:run()

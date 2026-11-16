@@ -136,6 +136,8 @@ local function attach_history(history, winnr)
   if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
     bufnr = create_history_buffer(history)
   end
+  -- A reused pane window fixes its buffer until released.
+  vim.api.nvim_set_option_value("winfixbuf", false, { win = winnr, scope = "local" })
   vim.api.nvim_win_set_buf(winnr, bufnr)
   apply_history_winopts(winnr)
 end
@@ -182,6 +184,7 @@ local function attach_changes(changes, stage_type, winnr)
   if not pane.bufnr or not vim.api.nvim_buf_is_valid(pane.bufnr) then
     pane.bufnr = create_changes_buffer(changes, stage_type)
   end
+  vim.api.nvim_set_option_value("winfixbuf", false, { win = winnr, scope = "local" })
   vim.api.nvim_win_set_buf(winnr, pane.bufnr)
   pane_changes.apply_winopts(winnr)
 end
@@ -858,6 +861,14 @@ function M.destroy(lyt)
   end
   if lyt.sbs_right_winnr then
     pane_sbs.restore_winopts(lyt.sbs_right_winnr)
+  end
+
+  -- A pane window outlives the session as the last window of the last tab, where it takes other buffers again.
+  for _, name in ipairs(SIDEBAR_PANES) do
+    local winnr = sidebar_winnr(lyt, name)
+    if winnr then
+      vim.api.nvim_set_option_value("winfixbuf", false, { win = winnr, scope = "local" })
+    end
   end
 
   -- Clean up Changes buffers.

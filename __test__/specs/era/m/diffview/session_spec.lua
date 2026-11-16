@@ -415,4 +415,33 @@ t:test("a session closed on the last tab is no longer found", function()
   t.assert_nil(Session.current(), "no session")
 end)
 
+t:test("a session closing in the last tab leaves a window that shows other buffers again", function()
+  diffview.repository(t)
+  local function sidebar_only()
+    local session = diffview.open_workspace(t)
+    for _, winnr in ipairs({ session.layout.sbs_left_winnr, session.layout.sbs_right_winnr }) do
+      vim.api.nvim_win_close(winnr, true)
+    end
+    return session
+  end
+  for _, case in ipairs({
+    {
+      "commits and files",
+      function()
+        return diffview.open_log(t, { layout = 5 })
+      end,
+    },
+    { "sidebar alone", sidebar_only },
+  }) do
+    local label, session = case[1], case[2]()
+    vim.cmd.tabonly()
+    session:close()
+    local winnr = vim.api.nvim_get_current_win()
+    t.assert_false(vim.wo[winnr].winfixbuf, label .. ": the last window is free")
+    local bufnr = t:buffer()
+    vim.api.nvim_win_set_buf(winnr, bufnr)
+    t.assert_eq(bufnr, vim.api.nvim_win_get_buf(winnr), label)
+  end
+end)
+
 t:run()

@@ -207,6 +207,8 @@ t:test("commit signs survive native attachment, resume and replacement windows",
   t.assert_eq("yes:1", vim.api.nvim_get_option_value("signcolumn", { win = winnr }))
   owner:unmount(true)
   ctx.layout.commits_winnr = diffview.panel_window(t, bufnr)
+  -- The old pane window gives up its buffer as a layout change does, releasing it first.
+  vim.api.nvim_set_option_value("winfixbuf", false, { win = winnr, scope = "local" })
   vim.api.nvim_win_set_buf(winnr, t:buffer())
   treeview.await(commits_view.render_commits(ctx))
   t.assert_eq("yes:1", vim.api.nvim_get_option_value("signcolumn", { win = ctx.layout.commits_winnr }))

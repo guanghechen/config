@@ -56,6 +56,8 @@ local function changes_layout()
       vim.api.nvim_win_close(unstaged.winnr, true)
     end
     vim.api.nvim_set_current_win(original_winnr)
+    -- The window became the Staged pane, which fixes its buffer.
+    vim.api.nvim_set_option_value("winfixbuf", false, { win = original_winnr, scope = "local" })
     vim.api.nvim_win_set_buf(original_winnr, original_bufnr)
     for _, pane in ipairs({ staged, unstaged }) do
       if pane.bufnr and vim.api.nvim_buf_is_valid(pane.bufnr) then

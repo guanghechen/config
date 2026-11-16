@@ -73,6 +73,8 @@ M.WINOPTS_PANEL = {
   relativenumber = false,
   signcolumn = "no",
   spell = false,
+  -- Jumps and other buffer switches cannot replace a pane; a layout change releases it first.
+  winfixbuf = true,
   wrap = false,
 }
 
