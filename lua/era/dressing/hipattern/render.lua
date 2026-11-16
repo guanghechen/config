@@ -12,6 +12,15 @@ local INLINE_PRIORITY = 2000 ---@type integer
 local HIGHLIGHT_PRIORITY = 200 ---@type integer
 local namespace = vim.api.nvim_create_namespace(__module_name__) ---@type integer
 
+--- The swatch drawn before a color code, or nil for a color without one. Other renderers that lay out hipattern's
+--- buffers, such as render-markdown's tables, measure it from here.
+---@param color                         string|nil
+---@return [string, string][]|nil
+function M.swatch(color)
+  local hlgroup = highlight.get_color_group(color)
+  return hlgroup and { { INLINE_TEXT, hlgroup } } or nil
+end
+
 ---@param bufnr                         integer
 ---@param from_row                      integer
 ---@param to_row                        integer
@@ -23,12 +32,12 @@ local function render_rows(bufnr, from_row, to_row)
     local row = from_row + index - 1 ---@type integer
     for _, decoration in ipairs(matcher.match(line, filetype)) do
       if decoration.kind == "inline_color" then
-        local hlgroup = highlight.get_color_group(decoration.color)
-        if hlgroup ~= nil then
+        local swatch = M.swatch(decoration.color)
+        if swatch ~= nil then
           vim.api.nvim_buf_set_extmark(bufnr, namespace, row, decoration.coll, {
             priority = INLINE_PRIORITY,
             right_gravity = false,
-            virt_text = { { INLINE_TEXT, hlgroup } },
+            virt_text = swatch,
             virt_text_pos = "inline",
           })
         end

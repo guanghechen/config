@@ -350,6 +350,38 @@ return {
         cern = { pattern = "cern.ch", icon = " ", kind = "suffix", priority = 60 },
       },
     },
+    custom_handlers = {
+      markdown = {
+        extends = true,
+        -- hipattern's color swatches widen table cells. render-markdown pads cells and draws wrapped rows with the
+        -- inline text registered in its request context, which runs this before its own table handler; the context
+        -- is not a public API.
+        parse = function(ctx)
+          local bufnr = ctx.buf ---@type integer
+          if not require("era.dressing.hipattern").is_enabled(bufnr) then
+            return {}
+          end
+          local matcher = require("era.dressing.hipattern.matcher")
+          local render = require("era.dressing.hipattern.render")
+          local context = require("render-markdown.request.context").get(bufnr)
+          local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr }) ---@type string
+          local query = vim.treesitter.query.parse("markdown", "(pipe_table) @table")
+          -- Whole tables in view, as render-markdown lays them out; whole lines, as hipattern matches them.
+          context.view:query(ctx.root, query, function(_, node)
+            local first, _, last = node:range()
+            for index, line in ipairs(vim.api.nvim_buf_get_lines(bufnr, first, last + 1, false)) do
+              for _, decoration in ipairs(matcher.match(line, filetype)) do
+                local swatch = decoration.kind == "inline_color" and render.swatch(decoration.color) or nil
+                if swatch ~= nil then
+                  context.inline:add(first + index - 1, { col = decoration.coll, line = swatch })
+                end
+              end
+            end
+          end)
+          return {}
+        end,
+      },
+    },
     paragraph = {
       enabled = true,
       left_margin = 0,
