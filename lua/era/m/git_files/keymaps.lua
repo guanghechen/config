@@ -82,18 +82,18 @@ function M.tree(widget)
     },
     {
       modes = { "n" },
-      key = "<Tab>",
-      desc = "Git Files: switch pane",
+      key = "]p",
+      desc = "Git Files: next pane",
       callback = function()
-        widget:focus(widget._active == "unstaged" and "staged" or "unstaged")
+        widget:cycle(1)
       end,
     },
     {
       modes = { "n" },
-      key = "<S-Tab>",
-      desc = "Git Files: switch pane",
+      key = "[p",
+      desc = "Git Files: previous pane",
       callback = function()
-        widget:focus(widget._active == "unstaged" and "staged" or "unstaged")
+        widget:cycle(-1)
       end,
     },
     {
@@ -146,20 +146,15 @@ function M.tree(widget)
     },
     {
       modes = { "n", "x" },
-      key = "m",
+      key = "<Tab>",
       desc = "Git Files: toggle selection",
       callback = function()
-        local pane = widget:current()
-        if pane.tree.view then
-          pane.tree.view:select("toggle_node", false):catch(function(error)
-            stl.reporter.warn({ from = __module_name__, subject = "select", message = tostring(error) })
-          end)
-        end
+        widget:toggle_selection(widget._active)
       end,
     },
     {
       modes = { "n" },
-      key = "z",
+      key = "oz",
       desc = "Git Files: recursive expansion",
       callback = after_expansion(function()
         local pane, key = widget:current()
@@ -250,6 +245,14 @@ function M.tree(widget)
       end,
     },
     {
+      modes = { "n", "x" },
+      key = "z;",
+      desc = "Git Files: toggle immersive column",
+      callback = function()
+        widget:toggle_immersive()
+      end,
+    },
+    {
       modes = { "n" },
       key = "tf",
       desc = "Git Files: compact directories",
@@ -318,12 +321,10 @@ function M.preview(widget)
       end,
     },
     {
-      modes = { "n" },
+      modes = { "n", "x" },
       key = "<Tab>",
-      desc = "Git Files: focus previous pane",
-      callback = function()
-        widget:focus(widget._last_left)
-      end,
+      desc = "Git Files: noop",
+      callback = stl.fn.noop,
     },
     {
       modes = { "n" },
@@ -387,17 +388,31 @@ function M.input(widget)
     {
       modes = { "i", "n" },
       key = "<Tab>",
-      desc = "Git Files: focus Staged",
+      desc = "Git Files: toggle target tree selection",
       callback = function()
-        widget:focus("staged")
+        widget:toggle_selection()
       end,
     },
     {
-      modes = { "i", "n" },
+      modes = { "i" },
       key = "<S-Tab>",
-      desc = "Git Files: focus Unstaged",
+      desc = "Git Files: noop",
+      callback = stl.fn.noop,
+    },
+    {
+      modes = { "n" },
+      key = "]p",
+      desc = "Git Files: next pane",
       callback = function()
-        widget:focus("unstaged")
+        widget:cycle(1)
+      end,
+    },
+    {
+      modes = { "n" },
+      key = "[p",
+      desc = "Git Files: previous pane",
+      callback = function()
+        widget:cycle(-1)
       end,
     },
     {
@@ -456,6 +471,14 @@ function M.input(widget)
       desc = "Git Files: toggle diff preview",
       callback = function()
         widget:toggle_preview()
+      end,
+    },
+    {
+      modes = { "n" },
+      key = "z;",
+      desc = "Git Files: toggle immersive column",
+      callback = function()
+        widget:toggle_immersive()
       end,
     },
   }

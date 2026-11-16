@@ -26,6 +26,17 @@ Neovim 无法锁定 tabpage；`:tabs` 仍可观察该 tab，原生命令/API 仍
 - Widget 在最大化期间修改边框等呈现字段时经 `dot.state.maximized.set_float_config()` 写入原 config，恢复后生效，
   不改动最大化外框。
 
+## 侧栏沉浸
+
+带纵向堆叠侧栏的界面在侧栏 pane 中把 `z;` 绑定为沉浸切换；侧栏之外（preview、SBS）的 `z;` 仍是上述 window 最大化。
+
+- 沉浸时侧栏只显示当前 pane（界面固定的输入框保留），占满侧栏高度；其余 pane 隐藏，保留各自的 Treeview State
+  （展开、选择与逻辑 cursor）。再次 `z;` 按原顺序恢复隐藏的 pane 与默认高度，当前 pane 的窗口与焦点不变。
+- 沉浸时 `<C-a>h/j/k/l` 只在可见 pane 之间移动；`]p` / `[p` 以及界面中把焦点移入隐藏 pane 的其他操作
+  让该 pane 取代当前 pane。
+- 模式属于界面实例；各界面的 pane、切换操作与生命周期见 [Git Files](git-files.md#布局) 与
+  [Diffview 布局](diffview/layout.md#沉浸模式)。
+
 ## 状态归属
 
 `dot.state.maximized` 持有两类状态：

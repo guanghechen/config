@@ -12,8 +12,12 @@ Status: Design。入口代码位于 `lua/era/m/git_files/`，树视图为 `era.v
   Staged、Unstaged；右栏为跨越整个左栏高度的单个 diff preview，不按左栏分段。
 - 输入框高度固定为一行，两棵树分配剩余高度，各自拥有 native Data/State/View，独立保存展开、选择、
   当前子目录、光标与滚动位置。空组仍保留窗口和零文件数标题。
+- `z;` 切换左栏的[侧栏沉浸](maximize.md#侧栏沉浸)，保留 inputbox 与最近使用的树；另一棵树的浮窗隐藏，wincmd 与鼠标
+  都不能进入，滚动位置也保持不变。进入另一棵树（`]p` / `[p`、inputbox 的目标切换，或 stage / unstage 清空
+  来源 pane 后的转移）时两者互换。模式随 widget 保留，重开浮窗不重置。
 - 四个 pane 组成一个连续圆角外框，共用单线分隔，不显示 footer。下方 pane 的顶边承担左栏的横向分隔，
-  左栏的右边承担 preview 的竖向分隔；只有整个浮窗的四个外角使用圆角。Preview 收起或恢复时同步更新边框连接。
+  左栏的右边承担 preview 的竖向分隔；只有整个浮窗的四个外角使用圆角。沉浸模式下显示的树承担左栏底边。
+  Preview 收起或恢复时同步更新边框连接。
 - 两棵树不显示 winbar。顶边左侧依次放标记位、名称、刷新 / index 操作状态（`Refreshing…`、`Updating index…`、
   `Refresh failed`）、文件数、新增 / 删除汇总与 unknown 文件数；右侧放当前行 / 可见总行数，空树显示 `0 / 0`。
   标记位以 `stl.icon.ui.ArrowPresent` 标出最近使用的树（inputbox 的首选目标，见[输入与过滤](#输入与过滤)），另一棵在该位置
@@ -44,12 +48,14 @@ Status: Design。入口代码位于 `lua/era/m/git_files/`，树视图为 `era.v
 - Inputbox 的内容实时作为 [fzf 语法](../yoz/fuzzy.md#查询语法)、smart-case 的路径 query 同时过滤两棵树；
   输入中的 CR / LF 归一化为空格。
   隐藏后重开保留 query。过滤后的树保留连接祖先。
-- 打开后焦点在 inputbox（Normal）。Inputbox 驱动一棵目标树，在打开时以及 inputbox 的移动键与 `<CR>` 触发时解析：
+- 打开后焦点在 inputbox（Normal）。Inputbox 驱动一棵目标树，在打开时以及 inputbox 的移动键、`<CR>` 与 `<Tab>` 触发时解析：
   首选树有可见行时取首选树，否则取另一棵有可见行的树，两棵都没有可见行时保持首选树。打开时首选 Staged，之后首选
   最近使用的树；解析出的目标树成为最近使用的树，preview 随之切换。
 - Inputbox 中 `j` / `k`（Normal）以及 `<Down>` / `<Up>`、`<C-j>` / `<C-k>`（Insert / Normal）按 count 逐行移动目标树的光标，
   `gg` / `G`（Normal）移到首行 / 末行，有 count 时移到该行。移动停在边界、不循环；焦点与 mode 不变，位置计数与 preview 随之更新。
-- `/` 聚焦输入并进入 Insert；inputbox 中 `<CR>` 进入目标树，`<Tab>` / `<S-Tab>` 分别进入 Staged / Unstaged。
+- `/` 聚焦输入并进入 Insert；inputbox 中 `<CR>` 进入目标树，`]p` / `[p`（Normal）分别进入 Staged / Unstaged；
+  `<Tab>`（Insert / Normal）切换目标树当前行的选择，目标树成为最近使用的树；`<S-Tab>`（Insert）为空操作，不向 query
+  插入缩进。
 - `tf` 切换目录压缩，默认开启。
 
 ## 键位
@@ -60,29 +66,34 @@ Status: Design。入口代码位于 `lua/era/m/git_files/`，树视图为 `era.v
 | ----------------------------------- | ------------------------------------------------------------------- |
 | `<CR>` / `l`                        | 目录切换展开；文件在当前 tab 的源文件窗口打开并关闭浮窗             |
 | `h`                                 | 已展开目录折叠；否则跳到父行                                        |
-| `z` / `W`                           | 递归切换当前目录；递归折叠当前子目录 root                           |
+| `oz` / `W`                          | 递归切换当前目录；递归折叠当前子目录 root                           |
 | `[i` / `]i`                         | 父行；最后直接子项或兄弟                                            |
 | `.` / `<BS>` / `gw`                 | 以光标目录为子目录 root；父目录；workspace root，均不越过 workspace |
-| `m`（Visual）                       | 切换当前行或 Visual 范围节点自身的选择                              |
+| `<Tab>`（Visual）                   | 切换当前行或 Visual 范围节点自身的选择                              |
 | `gs` / `gu`（Visual）               | Unstaged 中 stage；Staged 中 unstage                                |
 | `oc`（Visual）                      | 复制目标路径                                                        |
 | `oe` / `of` / `os` / `oo` / `<C-q>` | Find Explorer；查找文件；内容搜索；system open；quickfix            |
 | `/` / `R` / `tp` / `tf`             | 聚焦输入；刷新；切换 preview；切换压缩                              |
-| `<Tab>` / `<S-Tab>`                 | 切换到另一棵树                                                      |
+| `z;`（Visual）                      | 切换左栏沉浸模式                                                    |
+| `]p` / `[p`                         | 按 inputbox → Staged → Unstaged 循环聚焦，两端循环                  |
 | `q`（Visual）                       | 关闭浮窗                                                            |
 
 - 打开文件前检查 worktree 中文件存在；缺失时提示并保留窗口。
 - `oe` / `of` / `os` 以光标目录（文件取其父目录）为起点并关闭浮窗；`<C-q>` 使用可见标记或当前行的文件列表。
 - 树 pane 的 Treeview View 关闭 core 默认键位（`keymaps = false`），因此没有 `<Esc><Esc>` 清除选择；
   stage / unstage 成功后清除本次操作节点的选择。
-- Preview 中 `q` 关闭、`<Tab>` 回到之前的左栏 pane、`tp` 收起 preview，`]h` / `[h`（别名 `]H` / `[H`、`]j` / `[j`）
+- Preview 中 `q` 关闭、`tp` 收起 preview，`<Tab>`（Normal / Visual）为空操作，不回落到全局 `<C-i>` 的 jumplist 跳转；
+  `]h` / `[h`（别名 `]H` / `[H`、`]j` / `[j`）
   跳到下一段 / 上一段连续新增或删除行的首行，与普通 buffer 的 hunk 导航一致：一个 `@@` 块可含多段，两端循环，
   光标在某段内时向前跳到上一段；
-  inputbox 中 `<C-c>`（Insert / Normal）与 `q`（Normal）关闭，`tp` 切换 preview。
+  inputbox 中 `<C-c>`（Insert / Normal）与 `q`（Normal）关闭，`tp` 切换 preview，`z;`（Normal）切换左栏沉浸模式。
 - 四个 pane 都沿用 Picker 的 `<C-a>h/j/k/l`，以及 `Cmd` / `Alt` 同方向别名，覆盖 Insert / Normal / Visual mode。
-  左栏上下依次导航 inputbox → Staged → Unstaged；向右进入已显示的 preview，preview 向左返回之前的左栏 pane（包含 inputbox）。
+  左栏上下依次导航 inputbox → Staged → Unstaged，沉浸模式下为 inputbox → 显示的树；向右进入已显示的 preview，
+  preview 向左返回之前的左栏 pane（包含 inputbox）。
   浮窗边界在非 zen 的 tmux 环境转交 `stl.tmux.change_pane`；无 tmux 或 zen mode 时，左栏上下边界循环，
   preview 向右返回之前的左栏 pane，其余无相邻 pane 的方向不移动。
+- 鼠标滚轮滚动指针下的 pane，焦点不变。树的 cursor 按 Neovim 规则留在窗口内并成为该树的当前行，位置计数随之更新；
+  滚动最近使用的树时 preview 随当前行切换。
 
 ## Stage 与 unstage
 

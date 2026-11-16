@@ -97,10 +97,6 @@ t:test("layout creates staged above unstaged with independent buffers and focus"
 
   view.focus_changes(lyt)
   t.assert_eq(unstaged.winnr, vim.api.nvim_get_current_win(), "default focus is unstaged")
-  view.cycle_focus(lyt)
-  t.assert_eq(lyt.history.commits_winnr, vim.api.nvim_get_current_win(), "cycle reaches History")
-  view.cycle_focus(lyt)
-  t.assert_eq(staged.winnr, vim.api.nvim_get_current_win(), "cycle wraps to staged")
 end)
 
 t:test("History toggles at the bottom and shares preview ownership", function()
@@ -182,7 +178,6 @@ t:test("Changes restores the last focused sibling across SBS navigation and pane
   local staged_winnr = assert(lyt.changes.staged.winnr) ---@type integer
   local unstaged_winnr = assert(lyt.changes.unstaged.winnr) ---@type integer
   local left_winnr = assert(lyt.sbs_left_winnr) ---@type integer
-  local right_winnr = assert(lyt.sbs_right_winnr) ---@type integer
 
   vim.api.nvim_set_current_win(staged_winnr)
   vim.api.nvim_set_current_win(left_winnr)
@@ -193,11 +188,6 @@ t:test("Changes restores the last focused sibling across SBS navigation and pane
   vim.api.nvim_set_current_win(left_winnr)
   view.focus_changes(lyt)
   t.assert_eq(unstaged_winnr, vim.api.nvim_get_current_win(), "unstaged restored")
-
-  vim.api.nvim_set_current_win(staged_winnr)
-  vim.api.nvim_set_current_win(right_winnr)
-  view.cycle_focus(lyt)
-  t.assert_eq(staged_winnr, vim.api.nvim_get_current_win(), "cycle restores staged")
 
   vim.api.nvim_set_current_win(unstaged_winnr)
   vim.api.nvim_set_current_win(left_winnr)

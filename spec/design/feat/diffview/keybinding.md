@@ -30,6 +30,9 @@ Help 使用 `mode + key` 作为 mapping identity；Normal 与 Visual 的同名 m
 ### Changes pane
 
 - `<CR>`、`<2-LeftMouse>`：选择文件或切换目录展开状态。
+- `]p` / `[p`：聚焦下一个 / 上一个侧栏 pane（Staged → Unstaged → History，两端循环）；沉浸时切换显示的 pane。
+- `z;`（Normal / Visual）：切换侧栏沉浸，见[布局](layout.md#沉浸模式)。
+- `<Tab>`：空操作，不回落到全局 `<C-i>` 的 jumplist 跳转。
 - `J` / `K`：移动到下一项 / 上一项并选择。
 - `<C-j>` / `<C-k>`：选择下一个 / 上一个 file diff。
 - `[i` / `]i`：跳到 parent / last child-or-sibling。
@@ -52,7 +55,10 @@ Changes 与 History pane 支持鼠标滚轮。
 History 显式定义以下 bindings，不继承 standalone commits 的 layout controls：
 
 - `<CR>`、`<2-LeftMouse>`：选择 commit/file，或切换 expanded commit 下的 directory。
-- `<Tab>`：将当前 commit 设为 active commit。
+- `s`：将当前 commit 设为 active commit。
+- `<Tab>`：空操作，同 Changes pane。
+- `]p` / `[p`：聚焦下一个 / 上一个侧栏 pane；沉浸时切换显示的 pane。
+- `z;`（Normal / Visual）：切换侧栏沉浸。
 - `<C-j>` / `<C-k>`：选择下一个 / 上一个 commit。
 - `[[` / `]]`：上一页 / 下一页。
 - `[i` / `]i`：跳到 parent / last child-or-sibling。
@@ -74,6 +80,8 @@ History 显式定义以下 bindings，不继承 standalone commits 的 layout co
 
 - `<C-j>`、`<C-k>`、`gf`、`gF` 和 fold actions 根据 active preview 分发给 Changes 或 History。
 - `gs`、`gu`、normal/visual `ghu` 仅在 Changes preview 中执行 workspace mutation。
+- `]p` / `[p`：聚焦 preview 所属的侧栏 pane，即 History 或当前 entry 所在的 Changes pane；它隐藏时聚焦其他可见
+  pane，沉浸时它取代当前 pane。不在 SBS 中执行 Neovim 原生的 put。
 - `t4` 始终切换 workspace 的 untracked files。
 - refresh 同时更新 Changes 与 History。
 

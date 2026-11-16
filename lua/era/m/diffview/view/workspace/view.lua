@@ -8,6 +8,8 @@ local pane_commits = require("era.m.diffview.pane.commits")
 local pane_sbs = require("era.m.diffview.pane.sbs")
 
 local HISTORY_HEIGHT = 2 ---@type integer (one winline row plus one content row)
+---@type era.m.diffview.view.workspace.SidebarPane[]
+local SIDEBAR_PANES = { "staged", "unstaged", "history" }
 
 ---Workspace view controller.
 ---Manages Changes, History, shared preview, and workspace lifecycle.
@@ -37,6 +39,14 @@ local M = {}
 ---@field public sbs_right_winnr         integer|nil
 ---@field public preview_generation      integer
 ---@field public preview_source          "changes"|"history"|nil
+---@field public immersive               ?era.m.diffview.view.workspace.IImmersive
+
+---@alias era.m.diffview.view.workspace.SidebarPane "staged"|"unstaged"|"history"
+
+---The sidebar shows one of its panes over its whole height.
+---@class era.m.diffview.view.workspace.IImmersive
+---@field public panes                   era.m.diffview.view.workspace.SidebarPane[] Panes it showed before, in column order.
+---@field public active                  era.m.diffview.view.workspace.SidebarPane The pane it shows.
 
 ---@class era.m.diffview.view.workspace.IOpenEntryOpts
 ---@field public preserve_view           boolean|nil
@@ -116,6 +126,20 @@ local function apply_history_winopts(winnr)
   vim.api.nvim_set_option_value("statuscolumn", " ", { win = winnr, scope = "local" })
 end
 
+---Shows History in `winnr`, in a new buffer once the last one is gone.
+---@param history                        era.m.diffview.view.commits.ILayout
+---@param winnr                          integer
+---@return nil
+local function attach_history(history, winnr)
+  history.commits_winnr = winnr
+  local bufnr = history.commits_bufnr ---@type integer|nil
+  if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
+    bufnr = create_history_buffer(history)
+  end
+  vim.api.nvim_win_set_buf(winnr, bufnr)
+  apply_history_winopts(winnr)
+end
+
 ---@param history                        era.m.diffview.view.commits.ILayout
 ---@param anchor_winnr                   integer
 ---@return nil
@@ -129,13 +153,7 @@ local function create_history_below(history, anchor_winnr)
     return
   end
 
-  history.commits_winnr = history_winnr
-  local bufnr = history.commits_bufnr ---@type integer|nil
-  if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
-    bufnr = create_history_buffer(history)
-  end
-  vim.api.nvim_win_set_buf(history_winnr, bufnr)
-  apply_history_winopts(history_winnr)
+  attach_history(history, history_winnr)
   vim.api.nvim_win_set_height(history_winnr, HISTORY_HEIGHT)
 end
 
@@ -153,6 +171,21 @@ local function create_changes_buffer(changes, stage_type)
   return bufnr
 end
 
+---Shows the Changes pane of `stage_type` in `winnr`, in a new buffer once hiding wiped the last one.
+---@param changes                        era.m.diffview.view.workspace.IChangesLayout
+---@param stage_type                     stl.m.diffview.StageTypeEnum
+---@param winnr                          integer
+---@return nil
+local function attach_changes(changes, stage_type, winnr)
+  local pane = changes[stage_type] ---@type era.m.diffview.view.workspace.IChangesPane
+  pane.winnr = winnr
+  if not pane.bufnr or not vim.api.nvim_buf_is_valid(pane.bufnr) then
+    pane.bufnr = create_changes_buffer(changes, stage_type)
+  end
+  vim.api.nvim_win_set_buf(winnr, pane.bufnr)
+  pane_changes.apply_winopts(winnr)
+end
+
 ---Create the vertically stacked Staged and Unstaged sibling panes in one Changes column.
 ---@param anchor_winnr                  integer
 ---@return era.m.diffview.view.workspace.IChangesLayout
@@ -161,12 +194,9 @@ local function create_changes_layout(anchor_winnr)
   local changes = create_empty_changes_layout()
 
   for _, stage_type in ipairs({ "staged", "unstaged" }) do
-    local pane = changes[stage_type] ---@type era.m.diffview.view.workspace.IChangesPane
-    pane.winnr = result.winnrs[stage_type]
-    pane.bufnr = create_changes_buffer(changes, stage_type)
-    if pane.winnr then
-      vim.api.nvim_win_set_buf(pane.winnr, pane.bufnr)
-      pane_changes.apply_winopts(pane.winnr)
+    local winnr = result.winnrs[stage_type] ---@type integer|nil
+    if winnr then
+      attach_changes(changes, stage_type, winnr)
     end
   end
 
@@ -414,6 +444,90 @@ function M.close_windows(lyt)
 end
 
 ----------------------------------------------------------------------------------------------------
+-- Sidebar panes
+----------------------------------------------------------------------------------------------------
+
+---@param lyt                            era.m.diffview.view.workspace.ILayout
+---@param name                           era.m.diffview.view.workspace.SidebarPane
+---@return integer|nil
+local function sidebar_winnr(lyt, name)
+  if name == "history" then
+    return first_valid_window(lyt.history.commits_winnr)
+  end
+  return first_valid_window(lyt.changes[name].winnr)
+end
+
+---Opens a window for the sidebar pane `name` with the Ex `split` command run from `ref_winnr`.
+---@param lyt                            era.m.diffview.view.workspace.ILayout
+---@param name                           era.m.diffview.view.workspace.SidebarPane
+---@param ref_winnr                      integer
+---@param split                          string
+---@return integer
+local function open_sidebar_pane(lyt, name, ref_winnr, split)
+  local winnr = ref_winnr ---@type integer
+  vim.api.nvim_win_call(ref_winnr, function()
+    vim.cmd(split)
+    winnr = vim.api.nvim_get_current_win()
+  end)
+  if name == "history" then
+    attach_history(lyt.history, winnr)
+  else
+    ---@cast name stl.m.diffview.StageTypeEnum
+    attach_changes(lyt.changes, name, winnr)
+  end
+  return winnr
+end
+
+---@param lyt                            era.m.diffview.view.workspace.ILayout
+---@param name                           era.m.diffview.view.workspace.SidebarPane
+---@return nil
+local function hide_sidebar_pane(lyt, name)
+  local winnr = sidebar_winnr(lyt, name)
+  if winnr then
+    vim.api.nvim_win_hide(winnr)
+  end
+  if name == "history" then
+    lyt.history.commits_winnr = nil
+  else
+    lyt.changes[name].winnr = nil
+  end
+end
+
+---Makes `name` the only sidebar pane, over the whole sidebar or in a new one beside SBS.
+---@param lyt                            era.m.diffview.view.workspace.ILayout
+---@param name                           era.m.diffview.view.workspace.SidebarPane
+---@return integer|nil
+local function show_alone(lyt, name)
+  local winnr = sidebar_winnr(lyt, name)
+  -- Resizing can move the cursor of a window ('splitkeep', 'scrolloff'); the pane keeps the view it had.
+  local view = winnr and vim.api.nvim_win_call(winnr, vim.fn.winsaveview)
+  if not winnr then
+    local ref_winnr = sidebar_winnr(lyt, "staged") or sidebar_winnr(lyt, "unstaged") or sidebar_winnr(lyt, "history")
+    if ref_winnr then
+      winnr = open_sidebar_pane(lyt, name, ref_winnr, "aboveleft split")
+    else
+      ref_winnr = first_valid_window(lyt.sbs_left_winnr, lyt.sbs_right_winnr)
+      if not ref_winnr then
+        return nil
+      end
+      winnr = open_sidebar_pane(lyt, name, ref_winnr, "topleft vsplit")
+      vim.api.nvim_win_set_width(winnr, dot.context.diffview.panel_width:snapshot())
+    end
+  end
+  for _, other in ipairs(SIDEBAR_PANES) do
+    if other ~= name then
+      hide_sidebar_pane(lyt, other)
+    end
+  end
+  if view then
+    vim.api.nvim_win_call(winnr, function()
+      vim.fn.winrestview(view)
+    end)
+  end
+  return winnr
+end
+
+----------------------------------------------------------------------------------------------------
 -- Panel visibility
 ----------------------------------------------------------------------------------------------------
 
@@ -458,14 +572,9 @@ function M.show_changes(lyt)
   local result = layout_util.create(layout_util.vertical("staged", "unstaged", 0.5), anchor_winnr)
 
   for _, stage_type in ipairs({ "staged", "unstaged" }) do
-    local pane = M.get_changes_pane(lyt, stage_type)
-    pane.winnr = result.winnrs[stage_type]
-    if not pane.bufnr or not vim.api.nvim_buf_is_valid(pane.bufnr) then
-      pane.bufnr = create_changes_buffer(lyt.changes, stage_type)
-    end
-    if pane.winnr then
-      vim.api.nvim_win_set_buf(pane.winnr, pane.bufnr)
-      pane_changes.apply_winopts(pane.winnr)
+    local winnr = result.winnrs[stage_type] ---@type integer|nil
+    if winnr then
+      attach_changes(lyt.changes, stage_type, winnr)
     end
   end
   M.sync_changes_heights(lyt)
@@ -483,25 +592,9 @@ function M.hide_changes(lyt)
   if not has_reference then
     return lyt
   end
-  for _, pane in ipairs({ lyt.changes.unstaged, lyt.changes.staged }) do
-    if pane.winnr and vim.api.nvim_win_is_valid(pane.winnr) then
-      vim.api.nvim_win_hide(pane.winnr)
-    end
-    pane.winnr = nil
-  end
+  hide_sidebar_pane(lyt, "unstaged")
+  hide_sidebar_pane(lyt, "staged")
   return lyt
-end
-
----Toggle changes panel visibility
----@param lyt                            era.m.diffview.view.workspace.ILayout
----@return era.m.diffview.view.workspace.ILayout
-function M.toggle_changes(lyt)
-  for _, pane in ipairs(M.get_changes_panes(lyt)) do
-    if pane.winnr and vim.api.nvim_win_is_valid(pane.winnr) then
-      return M.hide_changes(lyt)
-    end
-  end
-  return M.show_changes(lyt)
 end
 
 ---Show the repository History pane at the bottom of the workspace navigation column.
@@ -529,13 +622,7 @@ function M.show_history(lyt)
   vim.cmd("topleft vsplit")
   local history_winnr = vim.api.nvim_get_current_win() ---@type integer
   vim.api.nvim_win_set_width(history_winnr, dot.context.diffview.panel_width:snapshot())
-  history.commits_winnr = history_winnr
-  local bufnr = history.commits_bufnr ---@type integer|nil
-  if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
-    bufnr = create_history_buffer(history)
-  end
-  vim.api.nvim_win_set_buf(history_winnr, bufnr)
-  apply_history_winopts(history_winnr)
+  attach_history(history, history_winnr)
   return lyt
 end
 
@@ -552,11 +639,7 @@ function M.hide_history(lyt)
     return lyt
   end
 
-  local history = lyt.history
-  if history.commits_winnr and vim.api.nvim_win_is_valid(history.commits_winnr) then
-    vim.api.nvim_win_hide(history.commits_winnr)
-  end
-  history.commits_winnr = nil
+  hide_sidebar_pane(lyt, "history")
   M.sync_changes_heights(lyt)
   return lyt
 end
@@ -575,12 +658,7 @@ end
 ---@return era.m.diffview.view.workspace.ILayout
 ---@return boolean visible
 function M.toggle_sidebar(lyt)
-  local visible = lyt.history.commits_winnr ~= nil and vim.api.nvim_win_is_valid(lyt.history.commits_winnr)
-  for _, pane in ipairs(M.get_changes_panes(lyt)) do
-    visible = visible or (pane.winnr ~= nil and vim.api.nvim_win_is_valid(pane.winnr))
-  end
-
-  if visible then
+  if #M.sidebar_panes(lyt) > 0 then
     if not first_valid_window(lyt.sbs_left_winnr, lyt.sbs_right_winnr) then
       return lyt, true
     end
@@ -589,13 +667,114 @@ function M.toggle_sidebar(lyt)
     return lyt, false
   end
 
-  M.show_changes(lyt)
-  M.show_history(lyt)
-  visible = lyt.history.commits_winnr ~= nil and vim.api.nvim_win_is_valid(lyt.history.commits_winnr)
-  for _, pane in ipairs(M.get_changes_panes(lyt)) do
-    visible = visible or (pane.winnr ~= nil and vim.api.nvim_win_is_valid(pane.winnr))
+  if lyt.immersive then
+    show_alone(lyt, lyt.immersive.active)
+  else
+    M.show_changes(lyt)
+    M.show_history(lyt)
   end
-  return lyt, visible
+  return lyt, #M.sidebar_panes(lyt) > 0
+end
+
+----------------------------------------------------------------------------------------------------
+-- Immersive sidebar
+----------------------------------------------------------------------------------------------------
+
+---The sidebar panes on screen, in column order.
+---@param lyt                            era.m.diffview.view.workspace.ILayout
+---@return era.m.diffview.view.workspace.SidebarPane[]
+function M.sidebar_panes(lyt)
+  return vim.tbl_filter(function(name)
+    return sidebar_winnr(lyt, name) ~= nil
+  end, SIDEBAR_PANES)
+end
+
+---@param lyt                            era.m.diffview.view.workspace.ILayout
+---@param winnr                          integer
+---@return era.m.diffview.view.workspace.SidebarPane|nil
+function M.sidebar_pane_at(lyt, winnr)
+  for _, name in ipairs(SIDEBAR_PANES) do
+    if sidebar_winnr(lyt, name) == winnr then
+      return name
+    end
+  end
+  return nil
+end
+
+---Shows `name` alone in the immersive sidebar, which returns to it as well when immersive mode ends. Staged and Unstaged
+---return as one Changes panel.
+---@param lyt                            era.m.diffview.view.workspace.ILayout
+---@param name                           era.m.diffview.view.workspace.SidebarPane
+---@return integer|nil
+function M.show_immersive(lyt, name)
+  local immersive = assert(lyt.immersive, "the sidebar is not immersive")
+  local panes = immersive.panes
+  immersive.panes = vim.tbl_filter(function(pane)
+    return pane == name or vim.tbl_contains(panes, pane) or (name ~= "history" and pane ~= "history")
+  end, SIDEBAR_PANES)
+  immersive.active = name
+  return show_alone(lyt, name)
+end
+
+---Brings back the panes the sidebar showed before immersive mode, around the pane it shows and in column order, at
+---their default heights. A hidden sidebar stays hidden.
+---@param lyt                            era.m.diffview.view.workspace.ILayout
+---@return nil
+function M.leave_immersive(lyt)
+  local immersive = lyt.immersive
+  lyt.immersive = nil
+  local winnr = immersive and sidebar_winnr(lyt, immersive.active)
+  if not immersive or not winnr then
+    return
+  end
+  local view = vim.api.nvim_win_call(winnr, vim.fn.winsaveview)
+  local anchor, above = winnr, true
+  for _, name in ipairs(immersive.panes) do
+    if name == immersive.active then
+      above = false
+    elseif above then
+      open_sidebar_pane(lyt, name, winnr, "aboveleft split")
+    else
+      anchor = open_sidebar_pane(lyt, name, anchor, "belowright split")
+    end
+  end
+  M.sync_changes_heights(lyt)
+  vim.api.nvim_win_call(winnr, function()
+    vim.fn.winrestview(view)
+  end)
+end
+
+---Shows only `name` in the sidebar, or brings back the panes it showed before.
+---@param lyt                            era.m.diffview.view.workspace.ILayout
+---@param name                           era.m.diffview.view.workspace.SidebarPane The pane the sidebar keeps.
+---@return nil
+function M.toggle_immersive(lyt, name)
+  if lyt.immersive then
+    M.leave_immersive(lyt)
+    return
+  end
+  lyt.immersive = { panes = M.sidebar_panes(lyt), active = name }
+  show_alone(lyt, name)
+end
+
+---Focuses the sidebar pane `step` places after the current one, wrapping; the immersive sidebar shows it in place of
+---the current pane.
+---@param lyt                            era.m.diffview.view.workspace.ILayout
+---@param step                           integer
+---@return era.m.diffview.view.workspace.SidebarPane|nil
+function M.cycle_sidebar(lyt, step)
+  local current = M.sidebar_pane_at(lyt, vim.api.nvim_get_current_win())
+  local panes = lyt.immersive and lyt.immersive.panes or M.sidebar_panes(lyt)
+  local index = current and stl.table.find_index(panes, current)
+  if not index or #panes < 2 then
+    return nil
+  end
+  local name = panes[stl.fn.navigate_circular(index, step, #panes)]
+  local winnr = lyt.immersive and M.show_immersive(lyt, name) or sidebar_winnr(lyt, name)
+  if winnr then
+    vim.api.nvim_set_current_win(winnr)
+  end
+  return name
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -630,56 +809,6 @@ function M.focus_history(lyt)
     return true
   end
   return false
-end
-
----Focus left sbs window
----@param lyt                            era.m.diffview.view.workspace.ILayout
-function M.focus_left(lyt)
-  if lyt.sbs_left_winnr and vim.api.nvim_win_is_valid(lyt.sbs_left_winnr) then
-    vim.api.nvim_set_current_win(lyt.sbs_left_winnr)
-  end
-end
-
----Focus right sbs window
----@param lyt                            era.m.diffview.view.workspace.ILayout
-function M.focus_right(lyt)
-  if lyt.sbs_right_winnr and vim.api.nvim_win_is_valid(lyt.sbs_right_winnr) then
-    vim.api.nvim_set_current_win(lyt.sbs_right_winnr)
-  end
-end
-
----Cycle focus: staged -> unstaged -> History -> left -> right -> staged.
----@param lyt                            era.m.diffview.view.workspace.ILayout
-function M.cycle_focus(lyt)
-  local current_winnr = vim.api.nvim_get_current_win()
-  local right_valid = lyt.sbs_right_winnr and vim.api.nvim_win_is_valid(lyt.sbs_right_winnr)
-  if current_winnr == lyt.sbs_right_winnr or (current_winnr == lyt.sbs_left_winnr and not right_valid) then
-    if M.focus_changes(lyt) then
-      return
-    end
-  end
-  local valid = {} ---@type integer[]
-  local current_idx = nil ---@type integer|nil
-
-  ---@param winnr integer|nil
-  local function append(winnr)
-    if winnr and vim.api.nvim_win_is_valid(winnr) then
-      valid[#valid + 1] = winnr
-      if winnr == current_winnr then
-        current_idx = #valid
-      end
-    end
-  end
-  append(lyt.changes.staged.winnr)
-  append(lyt.changes.unstaged.winnr)
-  append(lyt.history.commits_winnr)
-  append(lyt.sbs_left_winnr)
-  append(lyt.sbs_right_winnr)
-
-  if #valid == 0 then
-    return
-  end
-  vim.api.nvim_set_current_win(valid[current_idx and (current_idx % #valid) + 1 or 1])
 end
 
 ----------------------------------------------------------------------------------------------------

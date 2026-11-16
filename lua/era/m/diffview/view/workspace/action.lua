@@ -488,6 +488,39 @@ local function capture_transfer(ctx, target, destination_stage_type)
   }
 end
 
+---Prepares what sidebar windows a layout change opened need: keymaps, rows and winlines of Changes and History, or
+---of `pane` alone when only it opened.
+---@param ctx                            era.m.diffview.view.workspace.IContext
+---@param pane                           ?era.m.diffview.view.workspace.SidebarPane
+---@return nil
+local function refresh_sidebar(ctx, pane)
+  if pane ~= "history" then
+    ctx:setup_changes()
+    workspace_view.render_changes(ctx)
+  end
+  if pane == nil or pane == "history" then
+    ctx:setup_history()
+    require("era.m.diffview.view.commits.view").render_commits(ctx.history)
+  end
+end
+
+---Focuses the sidebar pane `name`, which the immersive sidebar shows in place of the pane it shows.
+---@param ctx                            era.m.diffview.view.workspace.IContext
+---@param name                           era.m.diffview.view.workspace.SidebarPane
+---@return boolean
+local function focus_sidebar_pane(ctx, name)
+  local lyt = ctx.layout
+  if lyt.immersive and lyt.immersive.active ~= name and #workspace_view.sidebar_panes(lyt) > 0 then
+    workspace_view.show_immersive(lyt, name)
+    refresh_sidebar(ctx, name)
+  end
+  if name == "history" then
+    return workspace_view.focus_history(lyt)
+  end
+  ---@cast name stl.m.diffview.StageTypeEnum
+  return workspace_view.focus_changes(lyt, name)
+end
+
 ---Refresh after a stage transfer without stealing a newer selection or focus.
 ---@param ctx                           era.m.diffview.view.workspace.IContext
 ---@param transfer                      era.m.diffview.view.workspace.ITransferContext
@@ -516,7 +549,7 @@ local function refresh_after_transfer(ctx, transfer)
       and vim.api.nvim_win_is_valid(source.winnr)
       and vim.api.nvim_get_current_win() == source.winnr
     then
-      workspace_view.focus_changes(ctx.layout, transfer.destination_stage_type)
+      focus_sidebar_pane(ctx, transfer.destination_stage_type)
     end
   end)
 end
@@ -918,6 +951,49 @@ end
 -- Focus actions
 ----------------------------------------------------------------------------------------------------
 
+---Shows only the focused sidebar pane, or every pane the sidebar showed before.
+---@param ctx                            era.m.diffview.view.workspace.IContext
+---@return nil
+function M.toggle_immersive(ctx)
+  local lyt = ctx.layout
+  local name = workspace_view.sidebar_pane_at(lyt, vim.api.nvim_get_current_win())
+  if not name then
+    return
+  end
+  workspace_view.toggle_immersive(lyt, name)
+  -- Entering only hides panes; leaving opens the others again.
+  if not lyt.immersive then
+    refresh_sidebar(ctx)
+  end
+end
+
+---Focuses the next or previous sidebar pane, which the immersive sidebar shows in place of the current one.
+---@param ctx                            era.m.diffview.view.workspace.IContext
+---@param step                           integer
+---@return nil
+function M.cycle_sidebar(ctx, step)
+  local name = workspace_view.cycle_sidebar(ctx.layout, step)
+  if name and ctx.layout.immersive then
+    refresh_sidebar(ctx, name)
+  end
+end
+
+---Focuses the sidebar pane whose entry the preview shows: History, or the Changes pane of the current entry; another
+---visible pane when that one is hidden.
+---@param ctx                            era.m.diffview.view.workspace.IContext
+---@return nil
+function M.focus_preview_pane(ctx)
+  local lyt = ctx.layout
+  local name = "history" ---@type era.m.diffview.view.workspace.SidebarPane
+  if lyt.preview_source ~= "history" then
+    local current = ctx.state:get_current_entry()
+    name = current and current.stage_type or lyt.changes.last_focused_stage_type or "unstaged"
+  end
+  if not focus_sidebar_pane(ctx, name) and not workspace_view.focus_changes(lyt) then
+    workspace_view.focus_history(lyt)
+  end
+end
+
 ---Reveal the active entry in Changes, or hide Changes when it is already focused.
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 function M.reveal(ctx)
@@ -929,10 +1005,17 @@ function M.reveal(ctx)
     end
   end
 
-  workspace_view.show_changes(ctx.layout)
+  local current = ctx.state:get_current_entry()
+  if ctx.layout.immersive then
+    workspace_view.show_immersive(
+      ctx.layout,
+      current and current.stage_type or ctx.layout.changes.last_focused_stage_type
+    )
+  else
+    workspace_view.show_changes(ctx.layout)
+  end
   ctx:setup_changes()
 
-  local current = ctx.state:get_current_entry()
   if current and current.stage_type then
     local dir = vim.fn.fnamemodify(current.filepath, ":h")
     while dir ~= "." and dir ~= "" do
@@ -948,34 +1031,10 @@ function M.reveal(ctx)
   workspace_view.focus_changes(ctx.layout, current and current.stage_type or nil)
 end
 
----Focus changes panel
----@param ctx                            era.m.diffview.view.workspace.IContext
-function M.focus_changes(ctx)
-  workspace_view.focus_changes(ctx.layout)
-end
-
----Focus left sbs window
----@param ctx                            era.m.diffview.view.workspace.IContext
-function M.focus_left(ctx)
-  workspace_view.focus_left(ctx.layout)
-end
-
----Focus right sbs window
----@param ctx                            era.m.diffview.view.workspace.IContext
-function M.focus_right(ctx)
-  workspace_view.focus_right(ctx.layout)
-end
-
 ---Scroll the window under the mouse without changing focus.
 ---@param direction                      "down"|"up"
 function M.scroll_mouse(direction)
   layout_util.scroll_mouse(direction)
-end
-
----Cycle focus between panels
----@param ctx                            era.m.diffview.view.workspace.IContext
-function M.cycle_focus(ctx)
-  workspace_view.cycle_focus(ctx.layout)
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -1271,6 +1330,11 @@ end
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 function M.toggle_history(ctx)
   local lyt = ctx.layout
+  -- History joins or leaves the panes the sidebar shows, so immersive mode ends first.
+  if lyt.immersive then
+    workspace_view.leave_immersive(lyt)
+    refresh_sidebar(ctx)
+  end
   workspace_view.toggle_history(lyt)
   if lyt.history.commits_winnr and vim.api.nvim_win_is_valid(lyt.history.commits_winnr) then
     ctx:setup_history()
@@ -1287,12 +1351,11 @@ function M.toggle_sidebar(ctx)
   if not visible then
     return
   end
-  ctx:setup_changes()
-  workspace_view.render_changes(ctx)
-  ctx:setup_history()
-  require("era.m.diffview.view.commits.view").render_commits(ctx.history)
+  refresh_sidebar(ctx, lyt.immersive and lyt.immersive.active)
   local current = ctx.state:get_current_entry()
-  workspace_view.focus_changes(lyt, current and current.stage_type or nil)
+  if not workspace_view.focus_changes(lyt, current and current.stage_type or nil) then
+    workspace_view.focus_history(lyt)
+  end
 end
 
 ----------------------------------------------------------------------------------------------------

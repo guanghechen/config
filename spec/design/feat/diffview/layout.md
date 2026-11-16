@@ -35,6 +35,18 @@ Workspace 与 standalone commits 分别管理布局；快捷键适用范围见[�
   和 sidebar 恢复时重新分配；History 隐藏后，两者平分整列高度。
 - 三个 panes 共用列宽，分别持有 buffer 与 domain state。空 pane 至少保留一个 window row，entry 数不决定 pane height。
 
+### 沉浸模式
+
+Staged、Unstaged 与 History 中 `z;` 切换[侧栏沉浸](../maximize.md#侧栏沉浸)。
+
+- 隐藏的 pane 关闭窗口。Changes buffer 随之重建，展开与 cursor 由 workspace state 保留，返回时 cursor 落在原节点。
+- [`]p` / `[p`](keybinding.md#changes-pane) 在进入沉浸时显示的 pane 之间切换。把焦点移入隐藏 pane 的操作，即
+  `<leader>er`、stage / unstage 清空当前 pane 后的焦点转移与 SBS 的 `]p` / `[p`，让该 pane 取代当前 pane 并加入
+  切换范围；Staged 与 Unstaged 成对加入，退出时一并恢复。
+- `<leader>er` 显示当前 entry 所在的 Changes pane；`<leader>et` 隐藏或恢复当前 pane；`Fdiffviewtogglecommits` 改变
+  侧栏组成，先退出沉浸模式。
+- 模式随 workspace 关闭结束。
+
 ### Winline 与列表
 
 Staged、Unstaged 各自持有 window-owned Nvimbar，左侧显示 `󰊢 Staged (N)` / `󰊢 Unstaged (N)`，

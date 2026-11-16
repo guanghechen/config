@@ -78,6 +78,7 @@ for _, case in ipairs({
     name = "source exhaustion moves focus even when a Git refresh event supersedes the write's refresh",
     superseded = true,
   },
+  { name = "in immersive mode source exhaustion shows the other pane in the column", immersive = true },
 }) do
   t:test(case.name, function()
     local state = fixture()
@@ -94,12 +95,22 @@ for _, case in ipairs({
     end
     t.await(pane.tree:ready())
     widget:focus("unstaged")
+    if case.immersive then
+      widget:toggle_immersive()
+    end
     t.await(assert(widget:transfer("unstaged")))
     support.ready(widget)
     t.assert_eq("", git.run(state.root, { "diff", "--name-only" }))
     t.assert_eq(0, pane.tree.totals.count, "the source pane is empty")
     t.assert_eq(2, widget.panes.staged.tree.totals.count)
     t.assert_true(widget.panes.staged.result:isfocused(), "focus moved to Staged")
+    if case.immersive then
+      local function hidden(scope)
+        return vim.api.nvim_win_get_config(widget.panes[scope].result:get_winnr()).hide == true
+      end
+      t.assert_true(widget._immersive, "still immersive")
+      t.assert_same({ false, true }, { hidden("staged"), hidden("unstaged") }, "the column shows Staged")
+    end
     t.assert_eq(0, #state.warnings, vim.inspect(state.warnings))
   end)
 end

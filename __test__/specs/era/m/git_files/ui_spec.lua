@@ -330,7 +330,7 @@ t:test("the input drives its target tree in Normal and Insert modes while the bo
     marks = { staged = "─", unstaged = marker },
     preview = "unstaged:outside.lua",
   }, "a target without visible rows falls back to the other tree")
-  expect("<Tab>", {
+  expect("<Esc>]p", {
     focus = "staged",
     mode = "n",
     active = "staged",
@@ -338,6 +338,250 @@ t:test("the input drives its target tree in Normal and Insert modes while the bo
   }, "entering a tree makes it the most recently used tree")
   expect("<C-a>k", { focus = "input", mode = "n", active = "staged" }, "the input keeps the empty tree preferred")
   expect("<CR>", { focus = "unstaged", active = "unstaged" }, "Enter resolves the target the same way")
+  t.assert_eq(0, #ui:lua("return errors"))
+end)
+
+---A widget on 60 untracked files, whose Unstaged tree is taller than its window, with `unstaged()` in the child: that
+---window's topline and cursor, whether the tree's state and the pane's current line have both taken the cursor, and
+---whether the input has the focus.
+---@param setup                         ?string Lua the child runs before the widget opens.
+---@return __test__.support.UI
+---@return table grid
+local function tall_unstaged(setup)
+  local files = {} ---@type table<string, string[]>
+  for index = 1, 60 do
+    files[string.format("many/file%02d.lua", index)] = { "new" }
+  end
+  local ui, grid = support.surface(t, 140, 42, support.changes(t, {}, files))
+  ui:lua((setup or "") .. [[
+    open()
+    function unstaged()
+      local pane = widget.panes.unstaged
+      local winnr = pane.result:get_winnr()
+      local cursor = vim.api.nvim_win_get_cursor(winnr)[1]
+      local status = pane.tree.view:status()
+      return {
+        topline = vim.fn.getwininfo(winnr)[1].topline,
+        cursor = cursor,
+        settled = not status.preparing and status.frame.cursor_row == cursor and pane.result.lnum_current:snapshot() == cursor,
+        input = widget.input:isfocused(),
+      }
+    end
+  ]])
+  return ui, grid
+end
+
+---Waits until `check` accepts `unstaged()`, failing with the last one it saw.
+---@param ui                            __test__.support.UI
+---@param check                         fun(state: table): boolean
+---@param message                       string
+---@return table
+local function wait_unstaged(ui, check, message)
+  local state
+  local ok = pcall(ui.wait_until, ui, function()
+    state = ui:lua("return unstaged()")
+    return check(state)
+  end, 5000)
+  t.assert_true(ok, message .. ": " .. vim.inspect(state))
+  return state
+end
+
+t:test("the mouse wheel scrolls a tree under it while the input keeps focus", function()
+  local ui, grid = tall_unstaged()
+  ui:rpc("nvim_command", "redraw")
+  local window = ui:lua("return vim.fn.getwininfo(widget.panes.unstaged.result:get_winnr())[1]")
+  ---@return nil
+  local function step()
+    ui:rpc("nvim_input_mouse", "wheel", "down", "", 0, window.winrow + 2, window.wincol + 4)
+    ui:rpc("nvim_eval", "0")
+  end
+
+  -- With the tree publishing nothing, the pane's current line alone must follow the cursor the wheel moved; left
+  -- behind, it would move the cursor back.
+  ui:lua([[
+    local surface = require("ux.treeview.surface")
+    local request, held = surface.request, widget.panes.unstaged.tree.view
+    hold = true
+    surface.request = function(view, ...)
+      if not hold or view ~= held then
+        return request(view, ...)
+      end
+    end
+  ]])
+  step()
+  ui:wait_lua("return unstaged().topline == 4", 5000, "the first step scrolls three lines")
+  local held = ui:lua("return unstaged()")
+  t.assert_eq(held.cursor, ui:lua("return widget.panes.unstaged.result.lnum_current:snapshot()"))
+  ui:lua("hold = false")
+
+  -- One step at a time, as a wheel turns: publications of earlier steps can land between later ones.
+  for _ = 2, 4 do
+    step()
+  end
+  local state = wait_unstaged(ui, function(state)
+    return state.topline == 13 and state.settled
+  end, "four wheel steps of three lines stay scrolled")
+  t.assert_true(state.input, "the input keeps focus")
+  t.wait_until(function()
+    return border_text(grid, "Unstaged"):find(string.format(" %d / 61 ", state.cursor), 1, true) ~= nil
+  end, 5000, "the border counts the row the wheel moved the cursor to")
+  t.assert_eq(0, #ui:lua("return errors"))
+end)
+
+t:test("the input moves a tall target tree by jumps that its state follows, with smooth scrolling on", function()
+  -- Smooth scrolling animates the windows a program scrolls, unless a Treeview View owns the cursor there.
+  local ui = tall_unstaged("era.dressing.scroll.dressing()\n")
+  for _, case in ipairs({ { "G", 61 }, { "gg", 1 }, { "40j", 41 } }) do
+    ui:rpc("nvim_input", case[1])
+    wait_unstaged(ui, function(state)
+      return state.cursor == case[2] and state.settled
+    end, string.format("%s moves the tree to row %d", case[1], case[2]))
+  end
+  t.assert_eq(0, #ui:lua("return errors"))
+end)
+
+t:test("<Tab> toggles the selection at the cursor of a tree, or of the target tree from the input", function()
+  local root = support.changes(t, {
+    ["dir/mixed.lua"] = { "one", "two", "three", "staged" },
+    ["dir/second.lua"] = { "base", "staged" },
+  }, { ["outside.lua"] = { "base", "unstaged" } })
+  local ui = support.surface(t, 140, 42, root)
+  ui:lua([[
+    open()
+    function selected(scope)
+      local tree = widget.panes[scope].tree
+      local rows = {}
+      for _, key in ipairs(tree:selected_keys(false, tree:frame())) do
+        rows[#rows + 1] = tree:retrieve_lnum(key)
+      end
+      table.sort(rows)
+      return rows
+    end
+  ]])
+
+  ---@param keys                        string
+  ---@param rows                        integer[] Selected rows of Staged.
+  ---@param message                     string
+  ---@return nil
+  local function expect(keys, rows, message)
+    ui:rpc("nvim_input", keys)
+    local actual
+    local ok = pcall(ui.wait_until, ui, function()
+      actual = ui:lua("return selected('staged')")
+      return vim.deep_equal(actual, rows)
+    end, 5000)
+    t.assert_true(ok, message .. ": " .. vim.inspect(actual))
+  end
+
+  expect("<Tab>", { 1 }, "the input toggles the row of its target tree")
+  expect("<Tab>", {}, "and back")
+  expect("i<Tab>", { 1 }, "from Insert mode too")
+  t.assert_eq("i", ui:lua("return vim.api.nvim_get_mode().mode"), "the input stays in Insert mode")
+  expect("<Esc>]pj<Tab>", { 1, 2 }, "a tree toggles its current row")
+  expect("<Tab>", { 1 }, "and back")
+  expect("Vj<Tab>", { 1, 2, 3 }, "and a Visual range")
+  t.assert_eq(0, #ui:lua("return errors"))
+end)
+
+t:test("<Tab> in the preview and <S-Tab> in the Insert mode input do nothing", function()
+  local root = support.changes(t, { ["dir/mixed.lua"] = { "one", "two", "three", "staged" } }, {})
+  local ui = support.surface(t, 140, 42, root)
+  -- The global <Tab> jumps back, here to a buffer the fixed preview window cannot show.
+  ui:lua([[
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, { "one", "two" })
+    vim.cmd("normal! G")
+    open()
+    vim.v.errmsg = ""
+  ]])
+  ui:rpc("nvim_input", "<C-a>l")
+  ui:wait_lua("return widget.preview.surface:isfocused()", 5000)
+  ui:rpc("nvim_input", "<Tab><C-a>hi<S-Tab>x")
+  ui:wait_lua("return widget.input:isfocused() and vim.api.nvim_get_current_line() ~= ''", 5000, "the input took x")
+  t.assert_eq("x", ui:lua("return vim.api.nvim_get_current_line()"), "<S-Tab> leaves the query")
+  t.assert_eq("", ui:lua("return vim.v.errmsg"), "<Tab> leaves the preview buffer")
+  t.assert_eq(0, #ui:lua("return errors"))
+end)
+
+t:test("z; leaves the input and the most recently used tree in the column, which follows tree switches", function()
+  local root = support.changes(t, { ["dir/mixed.lua"] = { "one", "two", "three", "staged" } }, {
+    ["outside.lua"] = { "base", "unstaged" },
+  })
+  local ui = support.surface(t, 140, 42, root)
+  ui:lua([[
+    stl.env.IS_TMUX = false
+    open()
+    function column()
+      local function window(winnr)
+        local config = vim.api.nvim_win_get_config(winnr)
+        return { row = config.row, height = config.height, hide = config.hide, focusable = config.focusable }
+      end
+      local state = {
+        focus = widget.input:isfocused() and "input" or "preview",
+        active = widget._active,
+        input = window(widget.input:get_winnr()),
+        preview = window(widget.preview.surface:get_winnr()),
+      }
+      for scope, pane in pairs(widget.panes) do
+        state.focus = pane.result:isfocused() and scope or state.focus
+        state[scope] = window(pane.result:get_winnr())
+      end
+      return state
+    end
+  ]])
+
+  ---@param keys                        string
+  ---@param check                       fun(state: table): boolean
+  ---@param message                     string
+  ---@return table
+  local function expect(keys, check, message)
+    if keys ~= "" then
+      ui:rpc("nvim_input", keys)
+    end
+    local state
+    local ok = pcall(ui.wait_until, ui, function()
+      state = ui:lua("return column()")
+      return check(state)
+    end, 5000)
+    t.assert_true(ok, message .. "\n" .. vim.inspect(state))
+    return state
+  end
+
+  ---@param shown                       era.view.git_files.Scope
+  ---@return fun(state: table): boolean
+  local function immersive(shown)
+    local hidden = shown == "staged" and "unstaged" or "staged"
+    return function(state)
+      local tree = state[shown]
+      return not tree.hide
+        and tree.focusable
+        and state[hidden].hide
+        and not state[hidden].focusable
+        and tree.row == state.input.row + 2
+        and tree.row + tree.height == state.preview.row + state.preview.height
+    end
+  end
+
+  local split = expect("", function(state)
+    return state.focus == "input" and not state.staged.hide and not state.unstaged.hide
+  end, "both trees show at first")
+  expect("z;", immersive("staged"), "z; in the input shows the input over the most recently used tree only")
+  expect("<C-a>j", function(state)
+    return state.focus == "staged" and immersive("staged")(state)
+  end, "the column below the input holds the shown tree")
+  expect("<C-a>j", function(state)
+    return state.focus == "input"
+  end, "the shown tree is the bottom of the column")
+  expect("[p", function(state)
+    return state.focus == "unstaged" and state.active == "unstaged" and immersive("unstaged")(state)
+  end, "entering the other tree shows it in place of the first")
+  expect("<C-a>k<C-a>j", function(state)
+    return state.focus == "unstaged"
+  end, "the input leads back down to the shown tree")
+  expect("z;", function(state)
+    return state.focus == "unstaged"
+      and vim.deep_equal(state.staged, split.staged)
+      and vim.deep_equal(state.unstaged, split.unstaged)
+  end, "z; in a tree shows both trees again")
   t.assert_eq(0, #ui:lua("return errors"))
 end)
 

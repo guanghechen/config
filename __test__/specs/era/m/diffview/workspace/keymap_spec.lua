@@ -199,6 +199,35 @@ t:test("History keys exclude standalone layout controls", function()
   end
 end)
 
+t:test("sidebar panes map z; and pane switching and keep <Tab> inert, and side-by-side keeps the global z;", function()
+  local action, calls = diffview.recorder()
+  local ctx = diffview.workspace_context({ layout = {}, history = {} })
+  local changes, history = keymap.gen_changes(ctx, action), keymap.gen_history(ctx, action, diffview.recorder())
+  for _, mode in ipairs({ "n", "x" }) do
+    assert(find(changes, "z;", mode), "Changes z; in " .. mode).callback()
+    assert(find(history, "z;", mode), "History z; in " .. mode).callback()
+  end
+  for _, mapping in ipairs({ find(changes, "]p"), find(changes, "[p"), find(history, "]p"), find(history, "[p") }) do
+    mapping.callback()
+  end
+  t.assert_eq(
+    string.rep("toggle_immersive,", 4) .. string.rep("cycle_sidebar,", 3) .. "cycle_sidebar",
+    diffview.names(calls)
+  )
+  t.assert_same({ 1, -1, 1, -1 }, { calls[5].args[2], calls[6].args[2], calls[7].args[2], calls[8].args[2] }, "steps")
+  t.assert_eq("diffview(history): Set as active commit", assert(find(history, "s")).desc)
+  t.assert_eq(stl.fn.noop, assert(find(changes, "<Tab>")).callback, "Changes <Tab> skips the global jump")
+  t.assert_eq(stl.fn.noop, assert(find(history, "<Tab>")).callback, "History <Tab> skips the global jump")
+  t.assert_nil(find(keymap.gen_sbs(ctx, action, diffview.recorder()), "z;"), "side-by-side keeps the global z;")
+
+  -- Side-by-side ]p and [p lead to the sidebar instead of putting into the previewed file.
+  local sbs_action, sbs_calls = diffview.recorder()
+  local sbs = keymap.gen_sbs(ctx, sbs_action, diffview.recorder())
+  assert(find(sbs, "]p", "n")).callback()
+  assert(find(sbs, "[p", "n")).callback()
+  t.assert_eq("focus_preview_pane,focus_preview_pane", diffview.names(sbs_calls), "side-by-side ]p and [p")
+end)
+
 t:test("help keeps normal and visual mappings for the same key", function()
   local ctx = diffview.workspace_context({ layout = {}, history = {} })
   local modes = {} ---@type table<string, boolean>

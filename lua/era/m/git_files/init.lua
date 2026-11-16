@@ -38,6 +38,7 @@ local scopes = { "staged", "unstaged" }
 ---@field _query                        string
 ---@field _foldempty                    boolean
 ---@field _preview_enabled              boolean
+---@field _immersive                    boolean The left column shows the inputbox and the most recently used tree only
 ---@field _disposed                     boolean
 ---@field _closing                      boolean
 ---@field _writing                      boolean
@@ -86,6 +87,7 @@ function M.new()
     _query = "",
     _foldempty = true,
     _preview_enabled = true,
+    _immersive = false,
     _disposed = false,
     _closing = false,
     _writing = false,
@@ -258,6 +260,11 @@ function M:_set_active(scope)
     return
   end
   self._active = scope
+  if self._immersive then
+    -- The layout shows the active tree and redraws both headers.
+    self:resize()
+    return
+  end
   for _, side in ipairs(scopes) do
     self:_header(self.panes[side])
   end
@@ -297,6 +304,29 @@ function M:move(motion, count)
   self:_update_preview()
 end
 
+---Focuses the left-column pane `step` places after the current one, wrapping: the inputbox, Staged, then Unstaged.
+---@param step                          integer
+---@return nil
+function M:cycle(step)
+  local column = { "input", "staged", "unstaged" } ---@type era.m.git_files.LeftPane[]
+  local index = stl.table.find_index(column, self.input:isfocused() and "input" or self._active) or 1
+  self:focus(column[stl.fn.navigate_circular(index, step, #column)])
+end
+
+---Toggles the selection at the cursor of the tree `scope`, by default the inputbox's target, which becomes the most
+---recently used tree.
+---@param scope                         ?era.view.git_files.Scope
+---@return nil
+function M:toggle_selection(scope)
+  local pane = self.panes[scope or self:target()]
+  self:_set_active(pane.scope)
+  if pane.tree.view then
+    pane.tree.view:select("toggle_node", false):catch(function(error)
+      report(error, "select")
+    end)
+  end
+end
+
 ---@param direction                     "h"|"j"|"k"|"l"
 ---@return nil
 function M:navigate(direction)
@@ -307,16 +337,19 @@ function M:navigate(direction)
   local from_preview = preview:isfocused()
   local from_input = self.input:isfocused()
   local current = from_input and "input" or self._active
+  -- The left column from top to bottom, as the layout shows it.
+  local column = self._immersive and { "input", self._active } or { "input", "staged", "unstaged" }
+  local index = stl.table.find_index(column, current) or 1
   if from_preview then
     if direction == "h" then
       self:focus(self._last_left)
       return
     end
-  elseif direction == "j" and current ~= "unstaged" then
-    self:focus(current == "input" and "staged" or "unstaged")
+  elseif direction == "j" and index < #column then
+    self:focus(column[index + 1])
     return
-  elseif direction == "k" and current ~= "input" then
-    self:focus(current == "unstaged" and "staged" or "input")
+  elseif direction == "k" and index > 1 then
+    self:focus(column[index - 1])
     return
   elseif direction == "l" and preview:isvisible() then
     if from_input then
@@ -333,7 +366,7 @@ function M:navigate(direction)
   if from_preview and direction == "l" then
     self:focus(self._last_left)
   elseif not from_preview and (direction == "j" or direction == "k") then
-    self:focus(direction == "j" and "input" or "unstaged")
+    self:focus(column[direction == "j" and 1 or #column])
   end
 end
 
@@ -574,13 +607,16 @@ function M:_layout()
   )
   for index, scope in ipairs(scopes) do
     local pane = self.panes[scope]
+    -- Immersive mode gives the most recently used tree the whole column below the inputbox and hides the other.
+    local upper = index == 1 and not self._immersive
+    local hidden = self._immersive and scope ~= self._active
     local dimension = {
-      row = row + 2 + (index == 1 and 0 or top + 1),
+      row = row + 2 + ((index == 1 or self._immersive) and 0 or top + 1),
       col = col,
       width = left - 2,
-      height = index == 1 and top or height - top - 5,
+      height = self._immersive and height - 4 or index == 1 and top or height - top - 5,
     }
-    local border = index == 1 and { "├", "─", "┤", "│", "", "", "", "│" }
+    local border = upper and { "├", "─", "┤", "│", "", "", "", "│" }
       or { "├", "─", "┤", "│", preview and "┴" or "╯", "─", "╰", "│" }
     local winnr = pane.result:create_win({
       border = border,
@@ -589,7 +625,7 @@ function M:_layout()
       zindex = 50,
     }, dimension)
     pane.result:resize(dimension)
-    dot.state.maximized.set_float_config(winnr, { border = border })
+    dot.state.maximized.set_float_config(winnr, { border = border, hide = hidden, focusable = not hidden })
     self:_header(pane)
   end
   if preview then
@@ -700,6 +736,12 @@ function M:toggle_preview()
   if not self._preview_enabled and self.preview.surface:isfocused() then
     self:focus(self._last_left)
   end
+  self:resize()
+end
+
+---@return nil
+function M:toggle_immersive()
+  self._immersive = not self._immersive
   self:resize()
 end
 

@@ -49,7 +49,7 @@ feature。多文档主题使用独立子目录与 `README.md`，例如 [Treeview
 - [Surrounds](feat/surrounds.md)：surround 动作、buffer 准入与映射归属。
 - [Pairs](feat/pairs.md)：rainbow 高亮、matchparen 与成对键入。
 - [输入法切换](feat/im.md)：input source 捕获、恢复与平台行为。
-- [Maximize](feat/maximize.md)：普通窗口投影与浮窗最大化。
+- [Maximize](feat/maximize.md)：普通窗口投影、浮窗最大化与侧栏沉浸。
 - [Nvimbar](feat/nvimbar.md)：组件取数、状态提交、通知、布局与 tabline 注册。
 - [Winline LSP 面包屑](feat/lsp-symbols.md)：documentSymbol 请求合并、新鲜度契约与超大文档节奏。
 - [Notepad](feat/notepad.md)：source、storage engine、便签编辑与导航。
