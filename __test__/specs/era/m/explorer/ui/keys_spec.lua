@@ -102,15 +102,15 @@ t:test("fold keys coexist with which-key and publish names and status together",
   )
   t.assert_eq(
     "Explorer: recursive expansion",
-    ui:lua("return vim.fn.maparg('z', 'n', false, true).desc"),
-    "which-key must preserve Explorer's replacement mapping"
+    ui:lua("return vim.fn.maparg('oz', 'n', false, true).desc"),
+    "which-key must preserve Explorer's mapping"
   )
   ui:lua("popups = 0")
   tracking = true
   for step = 1, 8 do
     local expanded = step % 2 == 1
     local recursive = step > 4
-    ui:rpc("nvim_input", recursive and "z" or expanded and "l" or "h")
+    ui:rpc("nvim_input", recursive and "oz" or expanded and "l" or "h")
     ui:wait_lua(
       [[
       local expanded, recursive = ...

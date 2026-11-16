@@ -89,7 +89,7 @@ t:test("fold batches use preceding commits and a manual cursor move keeps its ow
   local b = await(session.data:resolve(path .. "/b"))
   local child = fixture.cursor(widget, path .. "/a/child")
   fixture.idle(widget)
-  for _, keys in ipairs({ "ll", "zz" }) do
+  for _, keys in ipairs({ "ll", "ozoz" }) do
     press(widget, keys)
     await(session.state:inspect_selection())
     fixture.idle(widget)

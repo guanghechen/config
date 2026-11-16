@@ -89,7 +89,7 @@ function M.bind(widget, view)
     },
     {
       modes = { "n" },
-      key = "z",
+      key = "oz",
       desc = "Explorer: recursive expansion",
       callback = function()
         invoke("recursive")

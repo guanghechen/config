@@ -35,7 +35,7 @@ t:test("suspend, resume and disable preserve a mapping that replaced a trigger",
   local callback = function()
     calls = calls + 1
   end
-  vim.keymap.set("n", "z", callback, { buffer = bufnr, nowait = true, desc = "Explorer: recursive expansion" })
+  vim.keymap.set("n", "z", callback, { buffer = bufnr, nowait = true, desc = "buffer z" })
   State.suspend(bufnr, "n")
   t.assert_eq(callback, vim.fn.maparg("z", "n", false, true).callback, "suspend keeps the replacement")
   State.resume(bufnr, "n")
@@ -50,7 +50,7 @@ t:test("trigger attachment checks the target buffer instead of the current buffe
   local bufnr = new_buffer()
   ---@return nil
   local callback = function() end
-  vim.keymap.set("n", "z", callback, { buffer = bufnr, nowait = true, desc = "Explorer: recursive expansion" })
+  vim.keymap.set("n", "z", callback, { buffer = bufnr, nowait = true, desc = "buffer z" })
   new_buffer()
   Input.__bind__(bufnr, "n", "z", "z")
   local mapping = State.__get_keymap__(bufnr, "n", "z")
