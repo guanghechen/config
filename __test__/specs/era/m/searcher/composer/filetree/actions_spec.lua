@@ -100,6 +100,18 @@ t:test("oi shows the details of the file of the cursor row, never in Visual mode
   t.assert_eq("searcher: file info", mappings.insert.desc, "Insert oi, as the result window can keep Insert mode")
 end)
 
+t:test("g? shows the keymap help of the window it is pressed in", function()
+  local composer = fixture()
+  local shown = {} ---@type era.view.keysheet.IBufferProps[]
+  t:patch_table(require("era.view.keysheet"), "for_buffer", function(props)
+    shown[#shown + 1] = props
+    return { open = function() end }
+  end)
+  picker.action(composer, "searcher: keymap help")()
+  t.assert_eq(1, #shown)
+  t.assert_eq(vim.api.nvim_get_current_buf(), shown[1].bufnr)
+end)
+
 t:test("copy filepath offers the choices one row below and four columns right of the result cursor", function()
   local composer = fixture()
   t:patch_table(composer, "__retrieve_filedata__", function()

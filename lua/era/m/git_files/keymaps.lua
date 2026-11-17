@@ -3,6 +3,11 @@ local __module_name__ = "era.m.git_files.keymaps" ---@type string
 
 local M = {}
 
+---@return nil
+local function show_help()
+  require("era.view.keysheet").for_buffer({ bufnr = vim.api.nvim_get_current_buf(), title = "Git Files" }):open()
+end
+
 ---@param widget                        era.m.git_files.Widget
 ---@return stl.t.IKeymap[]
 local function navigation(widget)
@@ -80,6 +85,7 @@ function M.tree(widget)
         widget:hide()
       end,
     },
+    { modes = { "n" }, key = "g?", desc = "Git Files: keymap help", callback = show_help },
     {
       modes = { "n" },
       key = "]p",
@@ -328,6 +334,7 @@ function M.preview(widget)
         widget:hide()
       end,
     },
+    { modes = { "n" }, key = "g?", desc = "Git Files: keymap help", callback = show_help },
     {
       modes = { "n", "x" },
       key = "<Tab>",
@@ -377,6 +384,7 @@ function M.input(widget)
         widget:hide()
       end,
     },
+    { modes = { "n" }, key = "g?", desc = "Git Files: keymap help", callback = show_help },
     {
       modes = { "i", "n" },
       key = "<C-c>",

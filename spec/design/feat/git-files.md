@@ -77,7 +77,9 @@ Status: Design。入口代码位于 `lua/era/m/git_files/`，树视图为 `era.v
 | `z;`（Visual）                             | 切换左栏沉浸模式                                                    |
 | `]p` / `[p`                                | 按 inputbox → Staged → Unstaged 循环聚焦，两端循环                  |
 | `q`（Visual）                              | 关闭浮窗                                                            |
+| `g?`                                       | 快捷键帮助                                                          |
 
+- 树 pane、输入框与 preview 都用 `g?` 显示当前 pane 的快捷键帮助，规则同 [Explorer](explorer/README.md#默认键位)。
 - 打开文件前检查 worktree 中文件存在；缺失时提示并保留窗口。
 - `oe` / `of` / `os` 以光标目录（文件取其父目录）为起点并关闭浮窗；`<C-q>` 使用可见标记或当前行的文件列表。
 - 树 pane 的 Treeview View 关闭 core 默认键位（`keymaps = false`），因此没有 `<Esc><Esc>` 清除选择；

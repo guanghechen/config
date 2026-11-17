@@ -191,6 +191,7 @@ Git Files 的双树、刷新与 stage / unstage 见 [Git Files](git-files.md)。
   按 source 的已有结果补入，不扫描目录。Searcher 与 Tree Picker 的结果不承载文件操作，`c` 为空操作，不切换展开。
 - 文件 Picker 在 result window 用 `a` 新建，与 Explorer 一致；finder 中 `a` 仍用于编辑 query，不新建。
 - 文件 Picker 与 Searcher 的 `oi` 显示光标项的文件详情，与 Explorer 的 `oi` 一致。
+- Picker 与 Searcher 的每个窗口都用 `g?` 显示该窗口的快捷键帮助，规则同 [Explorer](explorer/README.md#默认键位)。
 
 ## 生命周期
 

@@ -445,38 +445,10 @@ function M.bind(widget, view)
   vim.list_extend(keymaps, dot.state.widget.get_keymaps(widget))
   keymaps[#keymaps + 1] = {
     modes = { "n" },
-    key = "?",
+    key = "g?",
     desc = "Explorer: keymap help",
     callback = function()
-      local help = {} ---@type stl.t.IKeymap[]
-      local entries = {} ---@type table<string, stl.t.IKeymap>
-      for _, mode in ipairs({ "n", "x" }) do
-        for _, mapping in ipairs(vim.api.nvim_buf_get_keymap(view.bufnr, mode)) do
-          -- Which-key installs synthetic prefix mappings alongside the actual actions.
-          if mapping.desc and mapping.desc ~= "" and mapping.desc ~= "wk-trigger" then
-            local key = vim.fn.keytrans(vim.keycode(mapping.lhs))
-            local desc = mapping.desc:gsub("^Explorer:%s*", ""):gsub("^Treeview:?%s+", "")
-            local id = key .. "\0" .. desc
-            local entry = entries[id]
-            if entry then
-              entry.modes[#entry.modes + 1] = mode
-            else
-              entry = {
-                modes = { mode },
-                key = key,
-                desc = desc,
-                callback = mapping.callback or mapping.rhs or "",
-              }
-              entries[id] = entry
-              help[#help + 1] = entry
-            end
-          end
-        end
-      end
-      table.sort(help, function(left, right)
-        return left.key < right.key or left.key == right.key and table.concat(left.modes) < table.concat(right.modes)
-      end)
-      require("era.view.keysheet").new({ title = "Explorer", keymaps = help }):open()
+      require("era.view.keysheet").for_buffer({ bufnr = view.bufnr, title = "Explorer" }):open()
     end,
   }
   for _, keymap in ipairs(keymaps) do

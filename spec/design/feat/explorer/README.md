@@ -304,7 +304,7 @@ Status: Design。本文定义 Explorer 的输入、用途、窗口、编辑器�
 | `o<CR>` / `w` / `J`、`<C-x>` / `L`、`<C-v>` / `<C-t>`         | 打开选区；选窗口；split；vsplit；tab                                            |
 | `[d`、`]d` / `[e`、`]e` / `[w`、`]w` / `[h`、`]h`             | diagnostic；error；warning；Git 导航                                            |
 | `of` / `os` / `oe` / `oc` / `oi` / `oo`、`O` / `<C-q>` / `oa` | 查找；搜索；目录；路径；详情；系统打开；quickfix；AI 位置，Visual `oa` 使用范围 |
-| `<Space>` / `R` / `?` / `q`                                   | 动作和任务；刷新；帮助；关闭 pane                                               |
+| `<Space>` / `R` / `g?` / `q`                                  | 动作和任务；刷新；帮助；关闭 pane                                               |
 | `i` / `I`                                                     | 无动作，不进入正文编辑                                                          |
 
 展开与折叠的执行时机、写入语义及 List 中的处理见 [Treeview expansion](../../ux/treeview/expansion.md#consumer-动作)；
@@ -327,8 +327,9 @@ Status: Design。本文定义 Explorer 的输入、用途、窗口、编辑器�
 
 Normal `<Space>` 使用 `nowait=false`，保留 `<leader>1` 等全局 leader 组合；单独按 Space 在 `timeoutlen`
 后打开动作菜单（原生 Neovim 默认 300 ms）。其余 Explorer 自有绑定继续使用 `nowait=true`。
-`?` 从当前 buffer 实际生效的 Normal/Visual 映射生成帮助，包含 Treeview 继承键位、刷新别名与本地覆盖；
-相同按键和说明合并显示 modes，按键排序并省略重复的 Explorer/Treeview 前缀；不展示 which-key 内部前缀触发器。
+`g?` 从当前 buffer 实际生效的 Normal/Visual 映射生成帮助，包含 Treeview 继承键位、刷新别名与本地覆盖；
+相同按键和说明合并显示 modes，按键排序并省略说明中的标题与作用域前缀（如 `Explorer:`、`picker#result:`、Treeview）；
+不展示 which-key 内部前缀触发器与空操作；`?` 保留为全局反向搜索。
 
 ## 退出协议
 

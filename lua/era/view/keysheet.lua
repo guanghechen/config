@@ -2,6 +2,10 @@
 ---@field public title                  ?string
 ---@field public keymaps                stl.t.IKeymap[]
 
+---@class era.view.keysheet.IBufferProps
+---@field public bufnr                  integer
+---@field public title                  ?string
+
 ---@class era.view.keysheet.IState
 ---@field protected _disposed           boolean
 ---@field protected _bufnr              integer|nil
@@ -18,6 +22,24 @@ local COLUMN_GAP = 4 ---@type integer
 local PADDING_LEFT = 2 ---@type integer
 local PADDING_RIGHT = 2 ---@type integer
 
+---Leaves out the scopes that name where a mapping comes from: the title, an unspaced scope such as "picker#result: " or
+---"era.fn.find_files: ", and the "Treeview" of inherited tree keys.
+---@param desc                          string
+---@param title                         string|nil
+---@return string
+local function unscoped(desc, title)
+  local scope = title and "^" .. vim.pesc(title) .. ":%s+" ---@type string|nil
+  local previous ---@type string|nil
+  while desc ~= previous do
+    previous = desc
+    desc = desc:gsub("^Treeview:?%s+", ""):gsub("^[%w%.#_%-%(%)]+:%s+", "")
+    if scope then
+      desc = desc:gsub(scope, "")
+    end
+  end
+  return desc
+end
+
 ---@param props                         era.view.keysheet.IProps
 ---@return era.view.Keysheet
 function M.new(props)
@@ -29,6 +51,36 @@ function M.new(props)
   self._title = props.title or "Keymap Help"
   self._keymaps = props.keymaps
   return self
+end
+
+---Keysheet of the mappings `bufnr` takes in Normal and Visual mode, without the which-key prefixes and the no-ops that
+---only block a fallback.
+---@param props                         era.view.keysheet.IBufferProps
+---@return era.view.Keysheet
+function M.for_buffer(props)
+  local keymaps = {} ---@type stl.t.IKeymap[]
+  local entries = {} ---@type table<string, stl.t.IKeymap>
+  for _, mode in ipairs({ "n", "x" }) do
+    for _, mapping in ipairs(vim.api.nvim_buf_get_keymap(props.bufnr, mode)) do
+      local desc = unscoped(mapping.desc or "", props.title)
+      if desc ~= "" and desc ~= "wk-trigger" and desc ~= "noop" then
+        local key = vim.fn.keytrans(vim.keycode(mapping.lhs))
+        local id = key .. "\0" .. desc
+        local entry = entries[id]
+        if entry then
+          entry.modes[#entry.modes + 1] = mode
+        else
+          entry = { modes = { mode }, key = key, desc = desc, callback = mapping.callback or mapping.rhs or "" }
+          entries[id] = entry
+          keymaps[#keymaps + 1] = entry
+        end
+      end
+    end
+  end
+  table.sort(keymaps, function(left, right)
+    return left.key < right.key or left.key == right.key and table.concat(left.modes) < table.concat(right.modes)
+  end)
+  return M.new({ title = props.title, keymaps = keymaps })
 end
 
 ---@return nil
@@ -102,6 +154,7 @@ function M:open()
   end
 
   local winnr = vim.api.nvim_open_win(bufnr, true, {
+    zindex = dot.win.resolve_zindex(),
     relative = "editor",
     row = 1,
     col = 1,

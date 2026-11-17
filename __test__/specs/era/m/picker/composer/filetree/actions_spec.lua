@@ -276,6 +276,18 @@ t:test("a creates from the result window, and oi shows the details of the cursor
   t.assert_same({ path, path }, shown)
 end)
 
+t:test("g? shows the keymap help of the window it is pressed in", function()
+  local composer = picker.filetree_composer(t, "keymap-help")
+  local shown = {} ---@type era.view.keysheet.IBufferProps[]
+  t:patch_table(require("era.view.keysheet"), "for_buffer", function(props)
+    shown[#shown + 1] = props
+    return { open = function() end }
+  end)
+  picker.action(composer, "picker: keymap help")()
+  t.assert_eq(1, #shown)
+  t.assert_eq(vim.api.nvim_get_current_buf(), shown[1].bufnr)
+end)
+
 t:test("lexical consumers emit slash-only relative paths", function()
   local confirmed = nil ---@type string[]|nil
   local composer = picker.filetree_composer(t, "canonical-consumers", nil, function(_, filepaths)

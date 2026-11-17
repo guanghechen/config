@@ -153,6 +153,26 @@ t:test("oi shows the details of the file at the cursor and reports a file absent
   t.assert_eq(state.root .. "/link.lua", shown, "a dangling symlink has details of its own")
 end)
 
+t:test("g? shows the keymap help of each pane", function()
+  local state = fixture()
+  local keymaps = require("era.m.git_files.keymaps")
+  local shown = {} ---@type era.view.keysheet.IBufferProps[]
+  t:patch_table(require("era.view.keysheet"), "for_buffer", function(props)
+    shown[#shown + 1] = props
+    return { open = function() end }
+  end)
+  for _, pane in ipairs({ keymaps.tree(state.widget), keymaps.preview(state.widget), keymaps.input(state.widget) }) do
+    for _, keymap in ipairs(pane) do
+      if keymap.key == "g?" then
+        keymap.callback()
+      end
+    end
+  end
+  t.assert_eq(3, #shown, "tree, preview and input")
+  t.assert_eq("Git Files", shown[1].title)
+  t.assert_eq(vim.api.nvim_get_current_buf(), shown[1].bufnr)
+end)
+
 t:test("a Visual range stages all selected rows", function()
   local state = fixture()
   local widget = state.widget

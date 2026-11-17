@@ -878,6 +878,14 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
       end,
     },
     {
+      modes = { "n" },
+      key = "g?",
+      desc = "picker: keymap help",
+      callback = function()
+        require("era.view.keysheet").for_buffer({ bufnr = vim.api.nvim_get_current_buf() }):open()
+      end,
+    },
+    {
       modes = { "i", "n", "x" },
       key = "<C-a>r",
       aliases = { "<D-r>", "<M-r>" },

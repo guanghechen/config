@@ -283,7 +283,10 @@ t:test("help shows effective Treeview keys, refresh aliases and local overrides 
       sheet:dispose()
     end
   end)
-  press(widget, "?")
+  for _, mapping in ipairs(vim.api.nvim_buf_get_keymap(view.bufnr, "n")) do
+    t.assert_true(mapping.lhs ~= "?", "? stays the global backward search")
+  end
+  press(widget, "g?")
   t.assert_true(sheet and sheet:isvisible())
   local entries, descriptions = {}, {}
   for _, keymap in ipairs(sheet._keymaps) do
