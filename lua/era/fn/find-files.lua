@@ -215,7 +215,7 @@ picker = era.m.picker.FiletreeComposer.new({
   keymaps_common = {
     {
       modes = { "n", "x" },
-      key = "tc",
+      key = "gc",
       desc = string.format("%s: change root (cwd)", title),
       callback = function()
         local cwd = dot.path.cwd() ---@type string
@@ -224,7 +224,7 @@ picker = era.m.picker.FiletreeComposer.new({
     },
     {
       modes = { "n", "x" },
-      key = "tw",
+      key = "gw",
       desc = string.format("%s: change root (workspace)", title),
       callback = function()
         local workspace = dot.path.workspace() ---@type string
