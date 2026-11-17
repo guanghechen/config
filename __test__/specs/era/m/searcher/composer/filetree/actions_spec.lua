@@ -66,6 +66,21 @@ t:test("files are ordered by frecency, the most visited first", function()
   t.assert_same({ other, b, a }, composer._uuids_order, "frecency order")
 end)
 
+t:test("c does nothing in search results, which carry no file operations", function()
+  local composer = fixture()
+  local mapping = vim.api.nvim_buf_call(composer.result:get_bufnr(), function()
+    return vim.fn.maparg("c", "n", false, true)
+  end)
+  t.assert_eq("searcher#result: noop", mapping.desc)
+  local toggle ---@type stl.t.IKeymap|nil
+  for _, keymap in ipairs(composer.result.keymaps) do
+    if keymap.key == "<Right>" then
+      toggle = keymap
+    end
+  end
+  t.assert_false(vim.list_contains(assert(toggle).aliases or {}, "c"), "c no longer toggles")
+end)
+
 t:test("copy filepath offers the choices one row below and four columns right of the result cursor", function()
   local composer = fixture()
   t:patch_table(composer, "__retrieve_filedata__", function()

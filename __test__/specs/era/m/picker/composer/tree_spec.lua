@@ -258,6 +258,20 @@ t:test("Tab toggles the selection from the finder while a filter is being typed"
   t.assert_true(vim.list_contains(tab and tab.modes or {}, "i"), "Insert mode, like Normal mode and the result pane")
 end)
 
+t:test("c does nothing in tree results, whose nodes are not files", function()
+  local composer = action_fixture("result-c")
+  local c, toggle ---@type stl.t.IKeymap|nil, stl.t.IKeymap|nil
+  for _, keymap in ipairs(composer.result.keymaps) do
+    if keymap.key == "c" then
+      c = keymap
+    elseif keymap.key == "<Right>" then
+      toggle = keymap
+    end
+  end
+  t.assert_true(c ~= nil and c.callback == stl.fn.noop, "c is a noop")
+  t.assert_false(vim.list_contains(toggle and toggle.aliases or {}, "c"), "c no longer toggles")
+end)
+
 t:test("confirming in a picker that closes for good reports the node", function()
   local composer = action_fixture("confirm-closes")
   composer:insert(composer._tree.root, "one", { name = "one" })

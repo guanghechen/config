@@ -1263,7 +1263,7 @@ function M:__resolve_builtin_keymaps_result__()
     {
       modes = { "n", "x" },
       key = "d",
-      aliases = { "dd", "X", "x" },
+      aliases = { "dd", "X", "x", "c" },
       desc = "searcher#result: noop",
       callback = stl.fn.noop,
     },

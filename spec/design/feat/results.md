@@ -186,6 +186,9 @@ Git Files 的双树、刷新与 stage / unstage 见 [Git Files](git-files.md)。
   保留 location identity 与 metadata，不扫描目录补入其他文件。等待已排队的 selection 后再迁移标记；
   同步结果须仍持有原 producer record，旧 Frame 的操作不向替换后的集合补项。Create 在捕获的目标目录内补齐相对路径；
   `../` 使用同一 snapshot 的祖先 Resource。跨卷绝对路径由用户输入明确新目标后解析。
+- 文件 Picker 的 `c` 把光标项复制到路径，与 [Explorer](explorer/README.md) 无选区时的复制到路径一致：
+  `Copy to: ` prompt 默认填入相对 cwd 的 `-copy` 路径，可复制到任意目录，目标已存在时确认覆盖。副本位于 root 内时
+  按 source 的已有结果补入，不扫描目录。Searcher 与 Tree Picker 的结果不承载文件操作，`c` 为空操作，不切换展开。
 
 ## 生命周期
 

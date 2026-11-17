@@ -115,6 +115,23 @@ local function entry_name(input)
   return input
 end
 
+---Shows the outcome of a file operation started on the directory `observed_root`: focuses `target` while the cursor
+---stays where it was, and refreshes the listing.
+---@param target                        ?string
+---@param observed_root                 yoz.ux.filetree.Resource
+---@param position                      {row: integer, sequence: integer}
+---@return nil
+local function show_outcome(target, observed_root, position)
+  local displayed = root()
+  if displayed and displayed:node() == observed_root:node() then
+    if surface.state:navigation_sequence() == position.sequence then
+      surface:focus_path(target, position.row)
+    end
+    surface:refresh():catch(report)
+    picker:mark_preview_dirty()
+  end
+end
+
 ---@param plan                          ux.filetree.IOperationPlan|ux.filetree.ICreatePlan
 ---@param target                        ?string
 ---@param observed_root                 yoz.ux.filetree.Resource
@@ -149,14 +166,7 @@ local function run(plan, target, observed_root, position)
       from = __module_name__,
       message = (plan.kind or "create") .. ": " .. (target or item.source or "done"),
     })
-    local displayed = root()
-    if displayed and displayed:node() == observed_root:node() then
-      if surface.state:navigation_sequence() == position.sequence then
-        surface:focus_path(target, position.row)
-      end
-      surface:refresh():catch(report)
-      picker:mark_preview_dirty()
-    end
+    show_outcome(target, observed_root, position)
   end)
 end
 
@@ -211,37 +221,60 @@ local function delete_entry()
   end)
 end
 
----@param kind                          "copy"|"move"
+---Copies the entry to a path the user gives, as the Explorer's copy to path does.
 ---@return nil
-local function transfer(kind)
+local function copy_entry()
   local selected, parent = current()
   local displayed = root()
   if not selected or not displayed then
     return
   end
   if parent then
-    report("Cannot " .. (kind == "copy" and "copy" or "rename") .. " parent entry ../")
+    report("Cannot copy parent entry ../")
+    return
+  end
+  if operation then
+    report("A file operation is already running")
+    return
+  end
+  local position = { row = picker.result.lnum_current:snapshot(), sequence = surface.state:navigation_sequence() }
+  operation = true
+  Jobs.copy_to_path(selected:path(), picker.result:get_winnr()):finally(function(ok, target)
+    operation = false
+    if not ok then
+      report(target)
+    elseif target and not picker:isdisposed() then
+      -- A copy elsewhere leaves the cursor; the listing still refreshes for a copy into a shown subdirectory.
+      show_outcome(paths.dirname(target) == displayed:path() and target or nil, displayed, position)
+    end
+  end)
+end
+
+---@return nil
+local function rename_entry()
+  local selected, parent = current()
+  local displayed = root()
+  if not selected or not displayed then
+    return
+  end
+  if parent then
+    report("Cannot rename parent entry ../")
     return
   end
   local source = selected:source()
   local position = { row = picker.result.lnum_current:snapshot(), sequence = surface.state:navigation_sequence() }
   local destination = surface.data:inspect(source, source:node(selected:node()).parent)
   local filename = paths.basename(selected:path())
-  local suggested = filename
-  if kind == "copy" then
-    local ext = selected:info().directory and "" or paths.extname(filename)
-    suggested = ext ~= "" and filename:sub(1, #filename - #ext) .. "-copy" .. ext or filename .. "-copy"
-  end
-  prompt({ prompt = kind == "copy" and "Copy as: " or "Rename to: ", default = suggested }, function(input)
+  prompt({ prompt = "Rename to: ", default = filename }, function(input)
     local name = entry_name(input)
     if name and name ~= filename then
       run({
-        kind = kind,
+        kind = "move",
         source = source,
         nodes = { selected:node() },
         target = destination,
         name = name,
-        prepare_move = kind == "move",
+        prepare_move = true,
       }, paths.resolve(destination:path(), name), displayed, position)
     end
   end)
@@ -328,22 +361,8 @@ local actions = {
   { modes = { "n", "x" }, key = "od", desc = "filetree: delete", callback = delete_entry },
   { modes = { "n", "x" }, key = "oc", desc = "filetree: copy filepath", callback = copy_path },
   { modes = { "n", "x" }, key = "oA", desc = "filetree: add to ai", callback = add_to_ai },
-  {
-    modes = { "n", "x" },
-    key = "c",
-    desc = "filetree: copy as",
-    callback = function()
-      transfer("copy")
-    end,
-  },
-  {
-    modes = { "n", "x" },
-    key = "or",
-    desc = "filetree: rename",
-    callback = function()
-      transfer("move")
-    end,
-  },
+  { modes = { "n", "x" }, key = "c", desc = "filetree: copy to path", callback = copy_entry },
+  { modes = { "n", "x" }, key = "or", desc = "filetree: rename", callback = rename_entry },
   {
     modes = { "n", "x" },
     key = "<Backspace>",

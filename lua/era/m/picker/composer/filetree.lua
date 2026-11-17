@@ -42,6 +42,7 @@ local PATHS_WAIT_MS = 10000 ---@type integer Longest a key waits for the paths b
 ---@field public remove_node            fun(): nil
 ---@field public rename_node            fun(): nil
 ---@field public move_node              fun(): nil
+---@field public copy_node              fun(): nil
 ---@field public collapse_node          fun(): nil
 ---@field public toggle_node            fun(): nil
 ---@field public toggle_node_deeply     fun(): nil
@@ -403,6 +404,9 @@ function M.new(props)
     end,
     move_node = function()
       self:__file_operation__("move")
+    end,
+    copy_node = function()
+      self:__copy_node__()
     end,
     toggle_node = function()
       local nodeuuid = self:__retrieve_nodeuuid__() ---@type string|nil
@@ -804,7 +808,7 @@ function M.new(props)
     {
       modes = { "i", "n", "x" },
       key = "<Right>",
-      aliases = { "<Left>", "c" },
+      aliases = { "<Left>" },
       desc = "filetree: toggle",
       callback = actions.toggle_node,
     },
@@ -919,6 +923,12 @@ function M.new(props)
       key = "om",
       desc = "filetree: move node",
       callback = actions.move_node,
+    },
+    {
+      modes = { "i", "n", "x" },
+      key = "c",
+      desc = "filetree: copy to path",
+      callback = actions.copy_node,
     },
     {
       modes = { "i", "n", "x" },
@@ -1827,6 +1837,64 @@ function M:__file_operation__(kind)
     self._file_operation_busy = false
     if not ok then
       stl.reporter.error({ from = __module_name__, subject = kind, message = tostring(error) })
+    end
+  end)
+end
+
+---Copies the file or directory at the cursor to a path the user gives, as the Explorer's copy to path does. A copy
+---inside the root joins the tree with the rows the source has.
+---@return nil
+function M:__copy_node__()
+  local frame = self._treeview:frame()
+  local fileuuid, filedata = self:__retrieve_file__(frame)
+  local rootdata = self:__retrieve_rootdata__(frame)
+  if not fileuuid or not filedata or not rootdata then
+    return
+  end
+  if self._file_operation_busy then
+    stl.reporter.warn({ from = self.fullname, message = "A file operation is already running" })
+    return
+  end
+  self._file_operation_busy = true
+  local future = stl.async.run_future(function()
+    local copied = require("era.m.filetree.jobs").copy_to_path(filedata.filepath, self.result:get_winnr()):await()
+    if not copied or self._disposed then
+      return
+    end
+    local destination = yoz.canonical_path.from_os_path(copied, false)
+    if destination ~= rootdata.filepath and not yoz.canonical_path.is_descendant(rootdata.filepath, destination) then
+      return
+    end
+    if self._treeview:selection_pending() then
+      local ready = self._treeview:ready():await()
+      if ready.kind == "Rejected" then
+        error(ready.error, 0)
+      end
+      if self._disposed then
+        return
+      end
+    end
+    local from = yoz.canonical_path.from_os_path(filedata.filepath, false)
+    local files = {} ---@type era.view.result_paths.IFile[]
+    self._filetree:walk(require("era.view.result_paths").key(from), function(_, data)
+      files[#files + 1] = data
+    end)
+    for _, data in ipairs(files) do
+      local relative = yoz.canonical_path.relative(from, data.filepath, false)
+      local path = relative == "" and destination or yoz.canonical_path.join(destination, relative, false)
+      if data.filetype == "directory" then
+        self._treeview:insert_dirpath(path)
+      else
+        self._treeview:insert_filepath(path, false)
+      end
+    end
+    self:__refresh_file_indexes__()
+    self._scheduler_match:schedule()
+  end)
+  future:finally(function(ok, error)
+    self._file_operation_busy = false
+    if not ok then
+      stl.reporter.error({ from = __module_name__, subject = "copy", message = tostring(error) })
     end
   end)
 end

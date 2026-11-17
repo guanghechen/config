@@ -151,8 +151,9 @@ end
 ---@param source                        yoz.ux.filetree.Resource
 ---@param path                          string
 ---@param overwrite                     ?fun(confirmation: table): stl.c.Future
+---@param kind                          "copy"|"move"
 ---@return stl.c.Future
-function M.move(data, source, path, overwrite)
+local function transfer(data, source, path, overwrite, kind)
   local parent = paths.dirname(path)
   local missing = {}
   ---@param directory                   string
@@ -187,13 +188,102 @@ function M.move(data, source, path, overwrite)
   end
   return target(parent):then_(function(destination)
     return M.run(data, {
-      kind = "move",
+      kind = kind,
       source = source:source(),
       nodes = { source:node() },
       target = destination,
       name = paths.basename(path),
-      prepare_move = true,
+      prepare_move = kind == "move",
     }, overwrite)
+  end)
+end
+
+---@param data                          ux.filetree.Data
+---@param source                        yoz.ux.filetree.Resource
+---@param path                          string
+---@param overwrite                     ?fun(confirmation: table): stl.c.Future
+---@return stl.c.Future
+function M.copy(data, source, path, overwrite)
+  return transfer(data, source, path, overwrite, "copy")
+end
+
+---@param data                          ux.filetree.Data
+---@param source                        yoz.ux.filetree.Resource
+---@param path                          string
+---@param overwrite                     ?fun(confirmation: table): stl.c.Future
+---@return stl.c.Future
+function M.move(data, source, path, overwrite)
+  return transfer(data, source, path, overwrite, "move")
+end
+
+---Asks whether a transfer replaces an existing target, as the Explorer does.
+---@param confirmation                  table
+---@return stl.c.Future
+function M.confirm_overwrite(confirmation)
+  return Future.new(function(resolve)
+    vim.ui.input({
+      prompt = "Overwrite existing target?\nTarget: "
+        .. string.format("%q", confirmation.target_label)
+        .. "\nSource: "
+        .. string.format("%q", confirmation.source_label),
+      inputtype = "confirmation",
+    }, function(answer)
+      answer = answer and vim.trim(answer):lower()
+      resolve(answer == "y" or answer == "yes")
+    end)
+  end)
+end
+
+---Asks where to copy the file or directory at `path` and copies it there, as the Explorer's copy to path does: the
+---answer is relative to the cwd and defaults to a `-copy` name beside the source.
+---@param path                          string Canonical path of the source.
+---@param winnr                         ?integer The window whose cursor the prompt opens at.
+---@return stl.c.Future                 The canonical path of the copy, or nil when nothing was copied.
+function M.copy_to_path(path, winnr)
+  return stl.async.run_future(function()
+    local captured = M.capture(path):await()
+    local directory = captured.resource:info().directory
+    local name = paths.basename(path)
+    local extension = directory and "" or paths.extname(name)
+    if #extension == #name then
+      extension = ""
+    end
+    local default = path:sub(1, #path - #extension) .. "-copy" .. extension
+    local cwd = paths.from_os(dot.path.cwd())
+    local input = Future.new(function(resolve)
+      ---@return nil
+      local function ask()
+        vim.ui.input({
+          prompt = "Copy to: ",
+          default = paths.relative(cwd, default),
+          completion = "file",
+          relative = "cursor",
+        }, resolve)
+      end
+      if winnr and vim.api.nvim_win_is_valid(winnr) then
+        vim.api.nvim_win_call(winnr, ask)
+      else
+        ask()
+      end
+    end):await()
+    if not input or input == "" then
+      return nil
+    end
+    local destination = paths.trim(paths.resolve(cwd, paths.from_os(input)))
+    local result = M.copy(captured.data, captured.resource, destination, M.confirm_overwrite):await()
+    if result.error then
+      error(result.error, 0)
+    end
+    if not result.success then
+      return nil
+    end
+    local item = result.items[#result.items]
+    if item.sync_error then
+      stl.reporter.warn({ from = __module_name__, message = item.sync_error.message })
+    end
+    destination = item.target or destination
+    stl.reporter.info({ from = __module_name__, message = "copy: " .. paths.relative(cwd, destination) })
+    return destination
   end)
 end
 

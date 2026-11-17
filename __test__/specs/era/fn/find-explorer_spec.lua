@@ -57,7 +57,8 @@ end)
 t:test("native create/copy/rename/delete update the current directory and editor buffers", function()
   local ui, path = fixture.new(t)
   actions(ui)
-  ui:lua([[action("alpha.lua","c","copied.lua")]])
+  -- The answer is relative to the cwd, which is not the listed directory.
+  ui:lua([[local path=...; action("alpha.lua","c",path.."/copied.lua")]], path)
   ui:wait_lua([[return present("copied.lua") and not require("era.m.filetree.jobs").pending()]], 8000, "copy listed")
   t.assert_true(vim.uv.fs_stat(path .. "/copied.lua") ~= nil)
   ui:lua(
@@ -99,18 +100,23 @@ t:test("native create/copy/rename/delete update the current directory and editor
 end)
 
 t:test("completion preserves navigation made while the file operation was running", function()
-  local ui = fixture.new(t)
+  local ui, path = fixture.new(t)
   actions(ui)
-  ui:lua([[
+  ui:lua(
+    [[
+    local path=...
     require("era.m.filetree.jobs").run=function()
       local future,resolve=stl.c.Future.new_with_resolver()
       finish_operation=resolve
       return future
     end
-    action("alpha.lua","c","copy.lua")
+    action("alpha.lua","c",path.."/copy.lua")
     choose("Alpha-two.txt")
-    finish_operation({success=true,status={},items={{status="success"}}})
-  ]])
+  ]],
+    path
+  )
+  ui:wait_lua("return finish_operation~=nil", 8000, "copy started")
+  ui:lua([[finish_operation({success=true,status={},items={{status="success"}}})]])
   ui:wait_lua(
     [[return not surface._focus and surface:retrieve(picker.result.lnum_current:snapshot()):info().label=="Alpha-two.txt"]],
     8000,
@@ -119,15 +125,18 @@ t:test("completion preserves navigation made while the file operation was runnin
   t.assert_eq(0, ui:lua("return #errors"))
 end)
 
-t:test("parent guards, no overwrite, and captured resource identity survive prompts", function()
+t:test("parent guards, a declined overwrite, and captured resource identity survive prompts", function()
   local ui, path = fixture.new(t)
   actions(ui)
   ui:lua([[action("../","od","yes"); action("../","c","copy"); action("../","or","renamed")]])
   t.assert_eq(0, ui:lua("return #prompts"))
   t.assert_eq(3, ui:lua("return #errors"))
-  ui:lua([[errors={}; action("alpha.lua","c","Alpha-two.txt")]])
-  ui:wait_lua([[return #errors>0 and not require("era.m.filetree.jobs").pending()]], 8000, "overwriting copy refused")
+  -- Every prompt of the action takes the same answer, so the overwrite confirmation is declined.
+  ui:lua([[local path=...; errors={}; action("alpha.lua","c",path.."/Alpha-two.txt")]], path)
+  ui:wait_lua([[return #prompts==2 and not require("era.m.filetree.jobs").pending()]], 8000, "overwrite asked")
+  t.assert_true(ui:lua("return prompts[2].prompt"):find("Overwrite existing target?", 1, true) ~= nil)
   t.assert_eq("other", vim.fn.readfile(path .. "/Alpha-two.txt")[1])
+  t.assert_eq(0, ui:lua("return #errors"), vim.inspect(ui:lua("return errors")))
   ui:lua([[errors={}; action("alpha.lua","or",nil,true)]])
   assert(vim.uv.fs_rename(path .. "/alpha.lua", path .. "/saved.lua"))
   vim.fn.writefile({ "replacement" }, path .. "/alpha.lua")

@@ -43,7 +43,7 @@ Finder/result 使用同一组动作键；`c` 优先在 result window 生效。
 | `Backspace` | 返回父目录                |
 | `oa`        | Create                    |
 | `od`        | Delete                    |
-| `c`         | Copy As：同目录复制并改名 |
+| `c`         | Copy To Path：复制到路径  |
 | `or`        | Rename：同目录重命名      |
 | `oc`        | Copy Path Menu            |
 | `oA`        | Add To AI                 |
@@ -70,9 +70,10 @@ Finder/result 使用同一组动作键；`c` 优先在 result window 生效。
 没有当前项时 no-op；`../` 不可删除。文件直接删除，目录递归删除。
 成功后刷新，并尽量停留在原行号附近。
 
-### `c`：同目录复制
+### `c`：复制到路径
 
-`Copy as: ` prompt 的默认名称如下：
+与 [Explorer](README.md) 无选区时的复制到路径一致：`Copy to: ` prompt 默认填入 source 旁的 `-copy` 路径，
+以相对 cwd 的形式显示；输入同样相对 cwd 解析，可复制到任意目录，缺少的父目录随复制创建。
 
 | Source    | 默认名称       |
 | --------- | -------------- |
@@ -80,9 +81,8 @@ Finder/result 使用同一组动作键；`c` 优先在 result window 生效。
 | `LICENSE` | `LICENSE-copy` |
 | `foo/`    | `foo-copy`     |
 
-没有当前项时 no-op；不允许复制 `../`。只接受非空名称，不允许 `.`/`..`、`/`、`\` 或控制字符。
-目标位于 source 的父目录，使用新名称；目录按目录复制。目标已存在则拒绝，不 overwrite。
-成功后刷新，并尝试定位新项。
+没有当前项时 no-op；不允许复制 `../`。目标已存在时询问是否覆盖，仅接受大小写不敏感的 `y` / `yes`。
+成功后刷新；副本位于当前目录时定位到它。
 
 ### `or`：同目录重命名
 

@@ -184,6 +184,60 @@ t:test("mutation actions pass captured resources and canonical paths to native J
   t.assert_eq(rootpath .. "/nested/new", moved_path, "a trailing slash is a directory marker, not a parent path")
 end)
 
+t:test("c copies the cursor item to a path and adds the copy inside the root with the source's rows", function()
+  local composer = picker.filetree_composer(t, "copy-to-path")
+  local Jobs = require("era.m.filetree.jobs")
+  local Future = require("stl.c.future")
+  local rootpath = "/workspace/project"
+  local _, rootdata = create_file(rootpath, "directory")
+  local source = rootpath .. "/src"
+  local source_uuid, source_data = create_file(source, "directory")
+  composer._filetree:insert_directory_absolute(rootpath)
+  composer._filetree:insert_file_absolute(source .. "/main.lua")
+  composer.__retrieve_file__ = function()
+    return source_uuid, source_data
+  end
+  composer.__retrieve_rootdata__ = function()
+    return rootdata
+  end
+  t:patch_table(composer._scheduler_match, "schedule", function() end)
+  t:patch_table(composer, "__refresh_file_indexes__", function() end)
+  local copied, destination ---@type string|nil, string|nil
+  t:patch_table(Jobs, "copy_to_path", function(path)
+    copied = path
+    return Future.resolve(destination)
+  end)
+  local inserted = {} ---@type string[]
+  t:patch_table(composer._treeview, "insert_filepath", function(_, path)
+    inserted[#inserted + 1] = path
+  end)
+  t:patch_table(composer._treeview, "insert_dirpath", function(_, path)
+    inserted[#inserted + 1] = path .. "/"
+  end)
+  ---@param to                          string|nil
+  ---@return string[]
+  local function copy(to)
+    destination, inserted = to, {}
+    picker.action(composer, "filetree: copy to path")()
+    t.wait_until(function()
+      return not composer._file_operation_busy
+    end, 5000)
+    table.sort(inserted)
+    return inserted
+  end
+
+  local keys = {} ---@type table<string, stl.t.IKeymap>
+  for _, keymap in ipairs(composer.result.keymaps) do
+    keys[keymap.key] = keymap
+  end
+  t.assert_eq("filetree: copy to path", keys["c"].desc)
+  t.assert_false(vim.list_contains(keys["<Right>"].aliases or {}, "c"), "c no longer toggles")
+  t.assert_same({ rootpath .. "/lib/", rootpath .. "/lib/main.lua" }, copy(rootpath .. "/lib"))
+  t.assert_eq(source, copied)
+  t.assert_same({}, copy("/elsewhere/lib"), "a copy outside the root stays out of the tree")
+  t.assert_same({}, copy(nil), "nothing copied")
+end)
+
 t:test("lexical consumers emit slash-only relative paths", function()
   local confirmed = nil ---@type string[]|nil
   local composer = picker.filetree_composer(t, "canonical-consumers", nil, function(_, filepaths)

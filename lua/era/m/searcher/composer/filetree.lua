@@ -1254,7 +1254,7 @@ function M.new(props)
     {
       modes = { "i", "n", "x" },
       key = "<Right>",
-      aliases = { "<Left>", "c" },
+      aliases = { "<Left>" },
       desc = "searcher: toggle",
       callback = actions.toggle_node,
     },

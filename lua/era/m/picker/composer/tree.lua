@@ -579,9 +579,15 @@ function M.new(props)
     {
       modes = { "i", "n", "x" },
       key = "<Right>",
-      aliases = { "<Left>", "c" },
+      aliases = { "<Left>" },
       desc = "tree: toggle",
       callback = actions.toggle_node,
+    },
+    {
+      modes = { "n", "x" },
+      key = "c",
+      desc = "tree: noop",
+      callback = stl.fn.noop,
     },
     {
       modes = { "i", "n" },

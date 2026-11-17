@@ -56,4 +56,41 @@ t:test("an explicit target on another volume resolves the new directory", functi
   t.assert_false(plan.directory)
 end)
 
+t:test("copy to path asks relative to the cwd with a -copy default and confirms overwriting", function()
+  local directory = t:tempdir()
+  -- The source sits below the cwd, so its default and the answers show which directory they are relative to.
+  vim.fn.mkdir(directory .. "/src/folder", "p")
+  vim.fn.writefile({ "hello" }, directory .. "/src/alpha.lua")
+  vim.fn.writefile({ "other" }, directory .. "/taken.lua")
+  t:patch_table(dot.path, "cwd", function()
+    return directory
+  end)
+  t:patch_table(stl.reporter, "info", function() end)
+  local prompts, answers = {}, {} ---@type table[], string[]
+  t:patch_table(vim.ui, "input", function(options, callback)
+    prompts[#prompts + 1] = options
+    callback(table.remove(answers, 1))
+  end)
+
+  answers = { "nested/deeper/alpha.lua" }
+  local copied = await(Jobs.copy_to_path(directory .. "/src/alpha.lua"))
+  t.assert_eq("Copy to: ", prompts[1].prompt)
+  t.assert_eq("src/alpha-copy.lua", prompts[1].default)
+  t.assert_eq(directory .. "/nested/deeper/alpha.lua", copied, "missing directories are created")
+  t.assert_same({ "hello" }, vim.fn.readfile(copied))
+
+  answers = {}
+  t.assert_nil(await(Jobs.copy_to_path(directory .. "/src/folder")), "an empty answer copies nothing")
+  t.assert_eq("src/folder-copy", prompts[#prompts].default)
+
+  answers = { "taken.lua", "no" }
+  t.assert_nil(await(Jobs.copy_to_path(directory .. "/src/alpha.lua")), "a declined overwrite copies nothing")
+  t.assert_true(prompts[#prompts].prompt:find("Overwrite existing target?", 1, true) ~= nil)
+  t.assert_same({ "other" }, vim.fn.readfile(directory .. "/taken.lua"))
+  answers = { "taken.lua", "yes" }
+  t.assert_eq(directory .. "/taken.lua", await(Jobs.copy_to_path(directory .. "/src/alpha.lua")))
+  t.assert_same({ "hello" }, vim.fn.readfile(directory .. "/taken.lua"))
+  t.assert_false(Jobs.pending())
+end)
+
 t:run()
