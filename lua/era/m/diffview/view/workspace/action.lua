@@ -307,6 +307,35 @@ function M.toggle_collapse(ctx)
   ctx.state:toggle_collapse(assert(item.stage_type), item.uuid)
 end
 
+---Expands the directory at the cursor or selects the entry there.
+---@param ctx                           era.m.diffview.view.workspace.IContext
+---@return nil
+function M.expand_or_select(ctx)
+  local bufnr, lnum = get_cursor_info()
+  local item = pane_changes.get_item_at_line(bufnr, lnum)
+  if item and item.type == "directory" and item.uuid then
+    ctx.state:expand_dir(assert(item.stage_type), item.uuid)
+    return
+  end
+  M.select(ctx)
+end
+
+---Collapses the expanded directory at the cursor or goes to the parent node.
+---@param ctx                           era.m.diffview.view.workspace.IContext
+---@return nil
+function M.collapse_or_parent(ctx)
+  local bufnr, lnum = get_cursor_info()
+  local item = pane_changes.get_item_at_line(bufnr, lnum)
+  if item and item.type == "directory" and item.uuid then
+    local stage_type = assert(item.stage_type)
+    if not ctx.state:is_collapsed(stage_type, item.uuid) then
+      ctx.state:collapse_dir(stage_type, item.uuid)
+      return
+    end
+  end
+  M.goto_parent_node()
+end
+
 ----------------------------------------------------------------------------------------------------
 -- Navigation actions
 ----------------------------------------------------------------------------------------------------

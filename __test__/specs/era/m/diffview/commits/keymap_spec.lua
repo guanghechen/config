@@ -33,6 +33,21 @@ t:test("the commits pane sets the active commit with s, keeps <Tab> inert and sh
   t.assert_eq("set_active_commit,show_details", diffview.names(calls), "oi shows the commit details")
 end)
 
+t:test("the commit and file panes close with q and move with l and h, without oo", function()
+  local action, calls = diffview.recorder()
+  local ctx = diffview.commits_context({})
+  local commits, files = keymap.gen_commits(ctx, action), keymap.gen_filetree(ctx, action)
+  for _, key in ipairs({ "l", "h", "q" }) do
+    assert(find(commits, key)).callback()
+  end
+  for _, key in ipairs({ "l", "q" }) do
+    assert(find(files, key)).callback()
+  end
+  t.assert_eq("expand_or_select,collapse_or_parent,close,view_diff,close", diffview.names(calls))
+  t.assert_eq(require("era.m.diffview.pane.filetree").goto_parent_node, assert(find(files, "h")).callback, "files h")
+  t.assert_nil(find(commits, "oo"), "commits oo")
+end)
+
 t:test("every pane exposes the current view's fold commands", function()
   local action, calls = diffview.recorder()
   local ctx = diffview.commits_context({})

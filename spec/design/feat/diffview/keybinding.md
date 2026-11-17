@@ -30,6 +30,7 @@ Help 使用 `mode + key` 作为 mapping identity；Normal 与 Visual 的同名 m
 ### Changes pane
 
 - `<CR>`、`<2-LeftMouse>`：选择文件或切换目录展开状态。
+- `l` / `h`：`l` 展开目录或选择文件；`h` 折叠展开的目录，否则跳到 parent。
 - `]p` / `[p`：聚焦下一个 / 上一个侧栏 pane（Staged → Unstaged → History，两端循环）；沉浸时切换显示的 pane。
 - `z;`（Normal / Visual）：切换侧栏沉浸，见[布局](layout.md#沉浸模式)。
 - `<Tab>`：空操作，不回落到全局 `<C-i>` 的 jumplist 跳转。
@@ -56,6 +57,7 @@ Changes 与 History pane 支持鼠标滚轮。
 History 显式定义以下 bindings，不继承 standalone commits 的 layout controls：
 
 - `<CR>`、`<2-LeftMouse>`：选择 commit/file，或切换 expanded commit 下的 directory。
+- `l` / `h`：`l` 展开 commit 或 directory、在 file 上选择；`h` 折叠展开的 commit 或 directory，否则跳到 parent。
 - `s`：将当前 commit 设为 active commit。
 - `<Tab>`：空操作，同 Changes pane。
 - `]p` / `[p`：聚焦下一个 / 上一个侧栏 pane；沉浸时切换显示的 pane。
@@ -67,13 +69,14 @@ History 显式定义以下 bindings，不继承 standalone commits 的 layout co
 - `g/`：按 hash prefix 或 commit message 搜索并跳转。
 - `oc`：复制当前 file/directory path。
 - `yy`：复制完整 commit hash。
-- `gh` / `gl` / `oo`：折叠 / 展开 / 切换当前 commit 或 directory。
+- `gh` / `gl`：折叠 / 展开当前 commit 或 directory。
 - `za` / `zc` / `zo`：切换 / 折叠 / 展开当前 commit 或 directory。
 - `gH` / `gL`：折叠 / 展开所有 commits。
 - `gf` / `gF`：打开当前 commit file。
 - `gR`：将文件恢复到当前 commit 版本。
 - `t1` / `t2`：切换 viewtype / compact paths。
 - `t3`、`zM`、`zR`：控制 History preview folds。
+- `q`：关闭 Diffview。
 
 `P`、`p1..p5`、`pp`、`t0` 仅属于 standalone commits，不得出现在 workspace History。
 
@@ -101,9 +104,11 @@ Commits pane 使用与 workspace History 相同的 commit-domain bindings，并�
 
 - `<CR>`、`<2-LeftMouse>`：选择文件。文件树列出当前 commit 的文件，选中的文件成为当前文件；布局 5 没有 SBS，随之切到
   布局 2（Commits 在左）显示其 diff，`p5` 回到文件树。
+- `l` / `h`：`l` 同 `<CR>`；文件树没有折叠，`h` 跳到 parent。
 - `gf` / `gF`：打开文件。
 - `gR`：将文件恢复到当前 commit 版本。
 - `t1` / `t2`：切换 viewtype / compact paths。
+- `q`：关闭 Diffview。
 
 ### SBS pane
 

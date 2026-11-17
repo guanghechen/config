@@ -287,6 +287,36 @@ function M.collapse(ctx)
   end
 end
 
+---Expands the commit or directory at the cursor or selects the file there.
+---@param ctx                           era.m.diffview.view.commits.IContext
+---@return nil
+function M.expand_or_select(ctx)
+  local item = get_item_at_cursor()
+  if item and item.type == "file" then
+    M.select(ctx)
+    return
+  end
+  M.expand(ctx)
+end
+
+---Collapses the expanded commit or directory at the cursor or goes to the parent node.
+---@param ctx                           era.m.diffview.view.commits.IContext
+---@return nil
+function M.collapse_or_parent(ctx)
+  local item = get_item_at_cursor()
+  if item and item.commit then
+    local hash = item.commit.hash
+    if
+      item.type == "commit" and ctx.state:is_commit_expanded(hash)
+      or item.type == "directory" and item.uuid and not ctx.state:is_commit_dir_collapsed(hash, item.uuid)
+    then
+      M.collapse(ctx)
+      return
+    end
+  end
+  pane_commits.goto_parent_node()
+end
+
 ---Expand all commits
 ---@param ctx                           era.m.diffview.view.commits.IContext
 ---@return nil

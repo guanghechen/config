@@ -456,4 +456,69 @@ t:test("restore waits behind the index writes queued before it", function()
   end, 10000, "restored once the writer finishes")
 end)
 
+t:test("l expands a commit or directory and selects a file, and h collapses it or goes to the parent", function()
+  diffview.committed(t, { ["lua/era/a.lua"] = { "a" }, ["lua/era/b.lua"] = { "b" } })
+  local session = diffview.open_log(t, { layout = 4 })
+  local commit = session.state:get_commits()[1]
+  local lyt = session.layout
+  stl.async.run(function()
+    action.__expand_commit__(session, commit)
+  end)
+  vim.api.nvim_set_current_win(lyt.commits_winnr)
+  ---Waits for the first row of `kind` and puts the cursor on it.
+  ---@param kind                        "commit"|"directory"|"file"
+  ---@return table item
+  local function cursor_on(kind)
+    local found = nil ---@type table|nil
+    t.wait_until(function()
+      for lnum = 1, vim.api.nvim_buf_line_count(lyt.commits_bufnr) do
+        local item = pane_commits.get_item_at_line(lyt.commits_bufnr, lnum)
+        if item and item.type == kind then
+          found = item
+          vim.api.nvim_win_set_cursor(lyt.commits_winnr, { lnum, 0 })
+          return true
+        end
+      end
+      return false
+    end, 10000, "a " .. kind .. " row")
+    return assert(found)
+  end
+  ---@return string|nil
+  local function cursor_kind()
+    local item = pane_commits.get_item_at_line(lyt.commits_bufnr, vim.api.nvim_win_get_cursor(lyt.commits_winnr)[1])
+    return item and item.type
+  end
+
+  local directory = cursor_on("directory")
+  action.collapse_or_parent(session)
+  t.wait_until(function()
+    return session.state:is_commit_dir_collapsed(commit.hash, directory.uuid)
+  end, 5000, "h collapses the directory")
+  action.collapse_or_parent(session)
+  t.assert_eq("commit", cursor_kind(), "h on a collapsed directory goes to its commit")
+
+  cursor_on("directory")
+  action.expand_or_select(session)
+  t.wait_until(function()
+    return not session.state:is_commit_dir_collapsed(commit.hash, directory.uuid)
+  end, 5000, "l expands the directory")
+  local selected = 0
+  t:patch_table(action, "select", function()
+    selected = selected + 1
+  end)
+  cursor_on("file")
+  action.expand_or_select(session)
+  t.assert_eq(1, selected, "l selects the file")
+  cursor_on("commit")
+  action.collapse_or_parent(session)
+  t.wait_until(function()
+    return not session.state:is_commit_expanded(commit.hash)
+  end, 5000, "h collapses the commit")
+  action.expand_or_select(session)
+  t.wait_until(function()
+    return session.state:is_commit_expanded(commit.hash)
+  end, 10000, "l expands the commit again")
+  cursor_on("directory")
+end)
+
 t:run()

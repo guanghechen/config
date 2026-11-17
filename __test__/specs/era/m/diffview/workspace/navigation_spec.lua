@@ -260,4 +260,35 @@ t:test("toggle_sidebar restores Changes and History, then focuses the current en
   )
 end)
 
+t:test("l expands a directory or selects a file, and h collapses a directory or goes to the parent", function()
+  local session = open({ edited = { "dir/a.lua", "dir/sub/b.lua" } })
+  local opened = record_previews()
+  local winnr = session.layout.changes.unstaged.winnr
+
+  diffview.cursor_on(session, "unstaged", "dir/sub")
+  action.collapse_or_parent(session)
+  t.wait_until(function()
+    return diffview.row(session, "unstaged", "dir/sub/b.lua") == nil
+  end, 5000, "h collapses the expanded directory")
+  diffview.cursor_on(session, "unstaged", "dir/sub")
+  action.collapse_or_parent(session)
+  t.assert_eq(
+    diffview.row(session, "unstaged", "dir"),
+    vim.api.nvim_win_get_cursor(winnr)[1],
+    "h then goes to the parent"
+  )
+
+  diffview.cursor_on(session, "unstaged", "dir/sub")
+  action.expand_or_select(session)
+  t.wait_until(function()
+    return diffview.row(session, "unstaged", "dir/sub/b.lua") ~= nil
+  end, 5000, "l expands the collapsed directory")
+  diffview.cursor_on(session, "unstaged", "dir/a.lua")
+  action.expand_or_select(session)
+  t.assert_eq("unstaged:dir/a.lua", current(session), "l selects the file")
+  t.wait_until(function()
+    return #opened == 1
+  end, 5000, "l previews the file")
+end)
+
 t:run()

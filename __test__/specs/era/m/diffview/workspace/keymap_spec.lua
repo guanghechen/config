@@ -238,6 +238,21 @@ t:test("oi shows the details of the file in Changes and of the commit in History
   t.assert_eq("show_details", diffview.names(history_calls))
 end)
 
+t:test("Changes and History move with l and h, and History closes with q instead of oo", function()
+  local action, calls = diffview.recorder()
+  local history_action, history_calls = diffview.recorder()
+  local ctx = diffview.workspace_context({ layout = {}, history = {} })
+  local changes, history = keymap.gen_changes(ctx, action), keymap.gen_history(ctx, action, history_action)
+  for _, key in ipairs({ "l", "h" }) do
+    assert(find(changes, key)).callback()
+    assert(find(history, key)).callback()
+  end
+  assert(find(history, "q")).callback()
+  t.assert_eq("expand_or_select,collapse_or_parent,close", diffview.names(calls))
+  t.assert_eq("expand_or_select,collapse_or_parent", diffview.names(history_calls))
+  t.assert_nil(find(history, "oo"), "History oo")
+end)
+
 t:test("help keeps normal and visual mappings for the same key", function()
   local ctx = diffview.workspace_context({ layout = {}, history = {} })
   local modes = {} ---@type table<string, boolean>

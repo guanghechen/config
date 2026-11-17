@@ -2,6 +2,7 @@
 local __module_name__ = "era.m.diffview.view.commits.keymap" ---@type string
 
 local pane_commits = require("era.m.diffview.pane.commits")
+local pane_filetree = require("era.m.diffview.pane.filetree")
 
 ---Commits view keymaps. Generators bind keys to `action`: the commits action module, or a stand-in in tests.
 ---@class era.m.diffview.view.commits.keymap
@@ -48,6 +49,8 @@ function M.gen_commit_pane(ctx, action)
     { modes = { "n" }, key = "<ScrollWheelDown>", desc = "diffview(commits): Scroll window under mouse down", callback = function() action.scroll_mouse("down") end },
     { modes = { "n" }, key = "<ScrollWheelUp>", desc = "diffview(commits): Scroll window under mouse up", callback = function() action.scroll_mouse("up") end },
     { modes = { "n" }, key = "<CR>", desc = "diffview(commits): Select / Toggle expand", callback = function() action.select(ctx) end },
+    { modes = { "n" }, key = "l", desc = "diffview(commits): Expand commit / directory or select file", callback = function() action.expand_or_select(ctx) end },
+    { modes = { "n" }, key = "h", desc = "diffview(commits): Collapse commit / directory or go to parent node", callback = function() action.collapse_or_parent(ctx) end },
     { modes = { "n" }, key = "s", desc = "diffview(commits): Set as active commit", callback = function() action.set_active_commit(ctx) end },
     { modes = { "n" }, key = "<Tab>", desc = "diffview(commits): noop", callback = stl.fn.noop },
     { modes = { "n" }, key = "K", desc = "diffview(commits): Show commit details", callback = function() action.show_details(ctx) end },
@@ -67,7 +70,7 @@ function M.gen_commit_pane(ctx, action)
     { modes = { "n" }, key = "gh", desc = "diffview(commits): Collapse commit / directory", callback = function() action.collapse(ctx) end },
     { modes = { "n" }, key = "gl", desc = "diffview(commits): Expand commit / directory", callback = function() action.expand(ctx) end },
     { modes = { "n" }, key = "oc", desc = "diffview(commits): Copy filepath", callback = function() action.copy_filepath(ctx) end },
-    { modes = { "n" }, key = "oo", desc = "diffview(commits): Toggle commit / directory", callback = function() action.toggle_expand(ctx) end },
+    { modes = { "n" }, key = "q", desc = "diffview(commits): Close diffview", callback = function() action.close(ctx) end },
     { modes = { "n" }, key = "t1", desc = "diffview(commits): Toggle viewtype (tree/list)", callback = function() action.toggle_viewtype(ctx) end },
     { modes = { "n" }, key = "t2", desc = "diffview(commits): Toggle compact directory paths", callback = function() action.toggle_foldempty(ctx) end },
     { modes = { "n" }, key = "yy", desc = "diffview(commits): Yank commit hash", callback = function() action.yank_hash(ctx) end },
@@ -104,6 +107,9 @@ function M.gen_filetree(ctx, action)
     { modes = { "n" }, key = "<ScrollWheelDown>", desc = "diffview(commits): Scroll window under mouse down", callback = function() action.scroll_mouse("down") end },
     { modes = { "n" }, key = "<ScrollWheelUp>", desc = "diffview(commits): Scroll window under mouse up", callback = function() action.scroll_mouse("up") end },
     { modes = { "n" }, key = "<CR>", desc = "diffview(commits): Select file", callback = function() action.view_diff(ctx) end },
+    { modes = { "n" }, key = "l", desc = "diffview(commits): Select file", callback = function() action.view_diff(ctx) end },
+    { modes = { "n" }, key = "h", desc = "diffview(commits): Go to parent node", callback = pane_filetree.goto_parent_node },
+    { modes = { "n" }, key = "q", desc = "diffview(commits): Close diffview", callback = function() action.close(ctx) end },
     { modes = { "n" }, key = "g?", desc = "diffview(commits): Show keymap help", callback = function() action.show_help(ctx) end },
     { modes = { "n" }, key = "gF", desc = "diffview(commits): Open file in new tab", callback = function() action.goto_file_tab(ctx) end },
     { modes = { "n" }, key = "gR", desc = "diffview(commits): Restore file to commit version", callback = function() action.restore_file(ctx) end },
