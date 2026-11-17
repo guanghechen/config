@@ -258,7 +258,7 @@ for _, intent in ipairs({
     elseif intent == "disabled_compress" then
       widget:toggle_flag(3)
     elseif intent == "fold" then
-      await(widget:action():collapse_all())
+      await(session.state:set_expanded({ view:frame():header().root.node }, false, true))
     elseif intent == "native_fold" then
       local resource = await(data:resolve(path .. "/directory"))
       await(session:fold(view:frame(), resource:node(), "toggle"))

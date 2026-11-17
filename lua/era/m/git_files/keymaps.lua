@@ -171,17 +171,6 @@ function M.tree(widget)
     },
     {
       modes = { "n" },
-      key = "W",
-      desc = "Git Files: collapse all",
-      callback = after_expansion(function()
-        local pane = widget:current()
-        if pane.tree.root then
-          pane.tree:collapse(pane.tree.root, "collapse", true)
-        end
-      end),
-    },
-    {
-      modes = { "n" },
       key = "[i",
       desc = "Git Files: parent row",
       callback = function()

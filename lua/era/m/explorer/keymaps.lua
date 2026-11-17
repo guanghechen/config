@@ -97,14 +97,6 @@ function M.bind(widget, view)
     },
     {
       modes = { "n" },
-      key = "W",
-      desc = "Explorer: collapse all",
-      callback = function()
-        invoke("collapse_all")
-      end,
-    },
-    {
-      modes = { "n" },
       key = "<BS>",
       desc = "Explorer: parent root",
       callback = function()

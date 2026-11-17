@@ -234,15 +234,6 @@ function M:recursive()
   return self:_fold("recursive")
 end
 
----@return stl.c.Future|nil
-function M:collapse_all()
-  local session, view = self._widget:context()
-  local frame = view:frame()
-  if frame and frame:header().mode == "tree" then
-    return session.state:set_expanded({ frame:header().root.node }, false, true)
-  end
-end
-
 ---@param action                        fun(session: era.m.explorer.Session, view: ux.filetree.View): stl.c.Future|nil
 ---@return stl.c.Future
 function M:_navigate(action)
