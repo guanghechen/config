@@ -917,7 +917,6 @@ function M.new(props)
     {
       modes = { "i", "n", "x" },
       key = "od",
-      alias = { "d" },
       desc = "filetree: remove node",
       callback = actions.remove_node,
     },
@@ -948,7 +947,6 @@ function M.new(props)
     {
       modes = { "i", "n", "x" },
       key = "or",
-      alias = { "r" },
       desc = "filetree: rename node",
       callback = actions.rename_node,
     },
