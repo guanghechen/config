@@ -879,6 +879,24 @@ function M.copy_filepath()
   })
 end
 
+---Shows the details of the file at the cursor, as the Explorer's file info does.
+---@return nil
+function M.show_info()
+  local entry = get_entry_at_cursor()
+  if not entry then
+    return
+  end
+  local filepath = util.workspace_path(entry.filepath)
+  -- A dangling symlink has details of its own; only a missing entry has none.
+  if not vim.uv.fs_lstat(filepath) then
+    stl.reporter.warn({ from = __module_name__, subject = "info", message = "File does not exist: " .. entry.filepath })
+    return
+  end
+  require("era.m.filetree.jobs").show_info(yoz.canonical_path.from_os_path(filepath, false)):catch(function(error)
+    stl.reporter.error({ from = __module_name__, subject = "info", message = tostring(error) })
+  end)
+end
+
 ---Open file in previous/existing tab (keeps diffview open)
 ---@param ctx                            era.m.diffview.view.workspace.IContext
 function M.goto_file(ctx)

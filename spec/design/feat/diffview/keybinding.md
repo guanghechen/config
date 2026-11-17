@@ -39,6 +39,7 @@ Help 使用 `mode + key` 作为 mapping identity；Normal 与 Visual 的同名 m
 - `gs` / `gu`：stage / unstage 当前文件或目录。
 - `gr`：discard 当前文件改动。
 - `oc`：复制当前文件路径。
+- `oi`：显示当前文件的详情，与 Explorer 的 `oi` 一致。
 - `gf` / `gF`：打开当前文件。
 - `za` / `zc` / `zo`：切换 / 关闭 / 打开 tree fold。
 - `zC`、`zM`、`zO`、`zR`：控制当前 view 的所有 diff folds。
@@ -62,7 +63,7 @@ History 显式定义以下 bindings，不继承 standalone commits 的 layout co
 - `<C-j>` / `<C-k>`：选择下一个 / 上一个 commit。
 - `[[` / `]]`：上一页 / 下一页。
 - `[i` / `]i`：跳到 parent / last child-or-sibling。
-- `K`、`gK`：显示 commit details。
+- `K`、`gK`、`oi`：显示 commit details。
 - `g/`：按 hash prefix 或 commit message 搜索并跳转。
 - `oc`：复制当前 file/directory path。
 - `yy`：复制完整 commit hash。

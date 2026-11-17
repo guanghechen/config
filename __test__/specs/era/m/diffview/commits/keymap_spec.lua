@@ -23,12 +23,14 @@ t:test("commit keys expose cross-page search, copy filepath and directory folds"
   end
 end)
 
-t:test("the commits pane sets the active commit with s and keeps <Tab> inert", function()
+t:test("the commits pane sets the active commit with s, keeps <Tab> inert and shows details with oi", function()
   local action, calls = diffview.recorder()
   local keymaps = keymap.gen_commits(diffview.commits_context({}), action)
   assert(find(keymaps, "s")).callback()
   t.assert_eq("set_active_commit", diffview.names(calls))
   t.assert_eq(stl.fn.noop, assert(find(keymaps, "<Tab>")).callback, "<Tab> skips the global jump")
+  assert(find(keymaps, "oi")).callback()
+  t.assert_eq("set_active_commit,show_details", diffview.names(calls), "oi shows the commit details")
 end)
 
 t:test("every pane exposes the current view's fold commands", function()

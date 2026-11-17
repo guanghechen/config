@@ -31,7 +31,7 @@ Status: Design。定义 picker 内的单目录浏览与单项文件操作。
 
 ## 动作与按键
 
-Finder/result 使用同一组动作键；`c` 优先在 result window 生效。
+Finder/result 使用同一组动作键；`a` 只在 result window 生效，finder 中仍用于编辑 query；`c` 优先在 result window 生效。
 
 查询与三个匹配开关经 64 ms debounce 后提交过滤。表中动作与双击打开以按键时的查询为准，
 规则同 [Picker 按键与查询同步](../picker-surface.md#picker-按键与查询同步)：先把 Finder 内容同步到查询；过滤未覆盖当前查询或 debounce 未到时立即过滤，
@@ -41,17 +41,18 @@ Finder/result 使用同一组动作键；`c` 优先在 result window 生效。
 | ----------- | ------------------------- |
 | `Enter`     | 打开文件／进入目录        |
 | `Backspace` | 返回父目录                |
-| `oa`        | Create                    |
+| `a`         | Create（result window）   |
 | `od`        | Delete                    |
 | `c`         | Copy To Path：复制到路径  |
 | `or`        | Rename：同目录重命名      |
 | `oc`        | Copy Path Menu            |
-| `oA`        | Add To AI                 |
+| `oa`        | Add To AI                 |
+| `oi`        | File Info：文件详情       |
 
 本工具不支持批量 copy/rename、跨目录 move 或复杂事务回滚，这些交给 [Explorer](README.md)；
 `c` 可以复制到任意路径。
 
-### `oa`：创建
+### `a`：创建
 
 `Create: ` prompt 只接受 `name` 或 `name/`：前者创建文件，后者创建目录。
 `name` 不得为空、为 `.`/`..`，或包含 `/`、`\` 与控制字符；其他格式拒绝并报错。
@@ -95,7 +96,11 @@ Finder/result 使用同一组动作键；`c` 优先在 result window 生效。
 菜单保留 `absolute / relative / filename`，弹窗配置为 `relative = "cursor", row = 1, col = 4`。
 触发时焦点不在 result window 的，完成后恢复焦点。
 
-### `oA`：添加到 AI
+### `oi`：文件详情
+
+与 [Explorer](README.md) 的 `oi` 一致，打开当前项的文件详情（权限、大小、时间等）；`../` 显示父目录的详情。
+
+### `oa`：添加到 AI
 
 读取当前项路径并调用 `era.fn.add_locations_to_ai`。
 

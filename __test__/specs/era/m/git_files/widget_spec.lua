@@ -115,6 +115,44 @@ for _, case in ipairs({
   end)
 end
 
+t:test("oi shows the details of the file at the cursor and reports a file absent from the worktree", function()
+  local state = fixture()
+  local widget = state.widget
+  local shown ---@type string|nil
+  t:patch_table(require("era.m.filetree.jobs"), "show_info", function(filepath)
+    shown = filepath
+    return stl.c.Future.resolve()
+  end)
+  local function info()
+    for _, keymap in ipairs(require("era.m.git_files.keymaps").tree(widget)) do
+      if keymap.key == "oi" then
+        keymap.callback()
+      end
+    end
+  end
+  support.cursor(widget, "unstaged", "dir/second.lua")
+  info()
+  t.assert_eq(state.root .. "/dir/second.lua", shown)
+
+  shown = nil
+  widget:hide()
+  vim.fn.delete(state.root .. "/outside.lua")
+  widget:toggle()
+  support.ready(widget)
+  support.cursor(widget, "unstaged", "outside.lua")
+  info()
+  t.assert_nil(shown, "an absent file has no details")
+  t.assert_eq(1, #state.warnings, vim.inspect(state.warnings))
+
+  widget:hide()
+  assert(vim.uv.fs_symlink(state.root .. "/missing", state.root .. "/link.lua"))
+  widget:toggle()
+  support.ready(widget)
+  support.cursor(widget, "unstaged", "link.lua")
+  info()
+  t.assert_eq(state.root .. "/link.lua", shown, "a dangling symlink has details of its own")
+end)
+
 t:test("a Visual range stages all selected rows", function()
   local state = fixture()
   local widget = state.widget

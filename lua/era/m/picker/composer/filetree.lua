@@ -49,6 +49,7 @@ local PATHS_WAIT_MS = 10000 ---@type integer Longest a key waits for the paths b
 ---
 ---@field public add_node_to_ai         fun(): nil
 ---@field public add_subtree_to_ai      fun(): nil
+---@field public show_node_info         fun(): nil
 ---@field public attach_parent          fun(): nil
 ---@field public copy_node_filepath     fun(): nil
 ---@field public goto_lnum_lastchild    fun(): nil
@@ -434,6 +435,15 @@ function M.new(props)
         era.fn.add_locations_to_ai(locations)
       end)
     end,
+    show_node_info = function()
+      local _, data = self:__retrieve_file__()
+      if data == nil then
+        return
+      end
+      require("era.m.filetree.jobs").show_info(data.filepath):catch(function(error)
+        stl.reporter.error({ from = __module_name__, subject = "info", message = tostring(error) })
+      end)
+    end,
     add_subtree_to_ai = function()
       treeview:range_action(function(frame, first, last)
         local locations = {} ---@type dot.t.ILocation[]
@@ -759,10 +769,10 @@ function M.new(props)
       callback = actions.remove_node,
     },
     {
-      modes = { "n", "x" },
+      modes = { "n" },
       key = "oi",
-      desc = "filetree: create node",
-      callback = actions.create_node,
+      desc = "filetree: file info",
+      callback = actions.show_node_info,
     },
     {
       modes = { "n", "x" },
@@ -912,11 +922,16 @@ function M.new(props)
       callback = actions.remove_node,
     },
     {
-      modes = { "i", "n", "x" },
-      key = "oi",
-      alias = { "a" },
+      modes = { "i", "n" },
+      key = "a",
       desc = "filetree: create node",
       callback = actions.create_node,
+    },
+    {
+      modes = { "i", "n" },
+      key = "oi",
+      desc = "filetree: file info",
+      callback = actions.show_node_info,
     },
     {
       modes = { "i", "n", "x" },

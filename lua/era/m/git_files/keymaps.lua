@@ -297,6 +297,14 @@ function M.tree(widget)
     },
     {
       modes = { "n" },
+      key = "oi",
+      desc = "Git Files: file info",
+      callback = function()
+        widget:browse("info")
+      end,
+    },
+    {
+      modes = { "n" },
       key = "<C-q>",
       desc = "Git Files: quickfix",
       callback = function()

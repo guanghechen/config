@@ -62,21 +62,21 @@ Status: Design。入口代码位于 `lua/era/m/git_files/`，树视图为 `era.v
 
 树 pane（Normal；标注 Visual 的同时绑定 Visual）：
 
-| 按键                                | 动作                                                                |
-| ----------------------------------- | ------------------------------------------------------------------- |
-| `<CR>` / `l`                        | 目录切换展开；文件在当前 tab 的源文件窗口打开并关闭浮窗             |
-| `h`                                 | 已展开目录折叠；否则跳到父行                                        |
-| `oz` / `W`                          | 递归切换当前目录；递归折叠当前子目录 root                           |
-| `[i` / `]i`                         | 父行；最后直接子项或兄弟                                            |
-| `.` / `<BS>` / `gw`                 | 以光标目录为子目录 root；父目录；workspace root，均不越过 workspace |
-| `<Tab>`（Visual）                   | 切换当前行或 Visual 范围节点自身的选择                              |
-| `gs` / `gu`（Visual）               | Unstaged 中 stage；Staged 中 unstage                                |
-| `oc`（Visual）                      | 复制目标路径                                                        |
-| `oe` / `of` / `os` / `oo` / `<C-q>` | Find Explorer；查找文件；内容搜索；system open；quickfix            |
-| `/` / `R` / `tp` / `tf`             | 聚焦输入；刷新；切换 preview；切换压缩                              |
-| `z;`（Visual）                      | 切换左栏沉浸模式                                                    |
-| `]p` / `[p`                         | 按 inputbox → Staged → Unstaged 循环聚焦，两端循环                  |
-| `q`（Visual）                       | 关闭浮窗                                                            |
+| 按键                                       | 动作                                                                |
+| ------------------------------------------ | ------------------------------------------------------------------- |
+| `<CR>` / `l`                               | 目录切换展开；文件在当前 tab 的源文件窗口打开并关闭浮窗             |
+| `h`                                        | 已展开目录折叠；否则跳到父行                                        |
+| `oz` / `W`                                 | 递归切换当前目录；递归折叠当前子目录 root                           |
+| `[i` / `]i`                                | 父行；最后直接子项或兄弟                                            |
+| `.` / `<BS>` / `gw`                        | 以光标目录为子目录 root；父目录；workspace root，均不越过 workspace |
+| `<Tab>`（Visual）                          | 切换当前行或 Visual 范围节点自身的选择                              |
+| `gs` / `gu`（Visual）                      | Unstaged 中 stage；Staged 中 unstage                                |
+| `oc`（Visual）                             | 复制目标路径                                                        |
+| `oe` / `of` / `os` / `oo` / `oi` / `<C-q>` | Find Explorer；查找文件；内容搜索；system open；文件详情；quickfix  |
+| `/` / `R` / `tp` / `tf`                    | 聚焦输入；刷新；切换 preview；切换压缩                              |
+| `z;`（Visual）                             | 切换左栏沉浸模式                                                    |
+| `]p` / `[p`                                | 按 inputbox → Staged → Unstaged 循环聚焦，两端循环                  |
+| `q`（Visual）                              | 关闭浮窗                                                            |
 
 - 打开文件前检查 worktree 中文件存在；缺失时提示并保留窗口。
 - `oe` / `of` / `os` 以光标目录（文件取其父目录）为起点并关闭浮窗；`<C-q>` 使用可见标记或当前行的文件列表。

@@ -228,6 +228,16 @@ t:test("sidebar panes map z; and pane switching and keep <Tab> inert, and side-b
   t.assert_eq("focus_preview_pane,focus_preview_pane", diffview.names(sbs_calls), "side-by-side ]p and [p")
 end)
 
+t:test("oi shows the details of the file in Changes and of the commit in History", function()
+  local action, calls = diffview.recorder()
+  local history_action, history_calls = diffview.recorder()
+  local ctx = diffview.workspace_context({ layout = {}, history = {} })
+  assert(find(keymap.gen_changes(ctx, action), "oi")).callback()
+  assert(find(keymap.gen_history(ctx, action, history_action), "oi")).callback()
+  t.assert_eq("show_info", diffview.names(calls))
+  t.assert_eq("show_details", diffview.names(history_calls))
+end)
+
 t:test("help keeps normal and visual mappings for the same key", function()
   local ctx = diffview.workspace_context({ layout = {}, history = {} })
   local modes = {} ---@type table<string, boolean>

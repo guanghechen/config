@@ -33,6 +33,28 @@ function M.capture(path)
   end)
 end
 
+---Shows the details of the file or directory at `path` in the Explorer's file info view, unless the window it was
+---asked from has lost the focus by the time they are read.
+---@param path                          string Canonical path.
+---@return stl.c.Future
+function M.show_info(path)
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  return stl.async.run_future(function()
+    local captured = M.capture(path):await()
+    local details = checked(captured.data:details(captured.resource):await())
+    if vim.api.nvim_get_current_win() ~= winnr then
+      return
+    end
+    -- A picker result window keeps Insert mode when focused from its finder; the view takes its keys in Normal mode.
+    if vim.api.nvim_get_mode().mode == "i" then
+      vim.cmd("stopinsert")
+    end
+    require("era.view.fileinfo")
+      .new({ filepath = captured.resource:path(), kind = captured.resource:info().kind, details = details })
+      :open()
+  end)
+end
+
 ---@param data                          ux.filetree.Data
 ---@param plan                          ux.filetree.IOperationPlan|ux.filetree.ICreatePlan
 ---@param overwrite                     ?fun(confirmation: table): stl.c.Future

@@ -58,6 +58,7 @@ local SEARCH_INDICATOR_DELAY_NS = 120 * 1e6 ---@type integer
 ---@field public open_node              fun(): nil
 ---@field public collapse_node          fun(): nil
 ---@field public send_to_qflist         fun(): nil
+---@field public show_node_info         fun(): nil
 ---@field public toggle_node            fun(): nil
 ---@field public toggle_node_recursively fun(): nil
 ---@field public toggle_selection       fun(): nil
@@ -580,6 +581,15 @@ function M.new(props)
           on_attached(self, parentdata.filepath)
         end
       end
+    end,
+    show_node_info = function()
+      local data = self:__retrieve_filedata__() ---@type era.view.result_paths.IFile|nil
+      if data == nil then
+        return
+      end
+      require("era.m.filetree.jobs").show_info(data.filepath):catch(function(error)
+        stl.reporter.error({ from = __module_name__, subject = "info", message = tostring(error) })
+      end)
     end,
     copy_node_filepath = function()
       local data = self:__retrieve_filedata__() ---@type era.view.result_paths.IFile|nil
@@ -1109,6 +1119,12 @@ function M.new(props)
       callback = actions.copy_node_filepath,
     },
     {
+      modes = { "n" },
+      key = "oi",
+      desc = "searcher: file info",
+      callback = actions.show_node_info,
+    },
+    {
       modes = { "n", "x" },
       key = "oz",
       desc = "searcher: toggle (recursively)",
@@ -1208,6 +1224,12 @@ function M.new(props)
       key = "oc",
       desc = "searcher: copy filepath",
       callback = actions.copy_node_filepath,
+    },
+    {
+      modes = { "n" },
+      key = "oi",
+      desc = "searcher: file info",
+      callback = actions.show_node_info,
     },
     {
       modes = { "n", "x" },
@@ -1339,6 +1361,12 @@ function M.new(props)
       key = "oc",
       desc = "searcher: copy filepath",
       callback = actions.copy_node_filepath,
+    },
+    {
+      modes = { "i", "n" },
+      key = "oi",
+      desc = "searcher: file info",
+      callback = actions.show_node_info,
     },
     {
       modes = { "i", "n", "x" },

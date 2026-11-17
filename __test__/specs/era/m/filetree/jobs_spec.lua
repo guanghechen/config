@@ -93,4 +93,49 @@ t:test("copy to path asks relative to the cwd with a -copy default and confirms 
   t.assert_false(Jobs.pending())
 end)
 
+t:test("show info opens the Explorer's file info with the details of the resource", function()
+  local directory = t:tempdir()
+  vim.fn.writefile({ "hello" }, directory .. "/alpha.lua")
+  local shown ---@type table|nil
+  t:patch_table(require("era.view.fileinfo"), "new", function(props)
+    shown = props
+    return { open = function() end }
+  end)
+  await(Jobs.show_info(directory .. "/alpha.lua"))
+  local props = assert(shown)
+  t.assert_eq(directory .. "/alpha.lua", props.filepath)
+  t.assert_eq("file", props.kind)
+  t.assert_true(props.details ~= nil, "details")
+end)
+
+t:test("show info opens nothing once the window it was asked from has lost the focus", function()
+  local directory = t:tempdir()
+  vim.fn.writefile({ "hello" }, directory .. "/alpha.lua")
+  local opened = false
+  t:patch_table(require("era.view.fileinfo"), "new", function()
+    opened = true
+    return { open = function() end }
+  end)
+  local shown = Jobs.show_info(directory .. "/alpha.lua")
+  t:window(t:buffer(), { relative = "editor", row = 0, col = 0, width = 20, height = 1 }, true)
+  await(shown)
+  t.assert_false(opened)
+end)
+
+t:test("show info leaves Insert mode first, so the view takes its keys", function()
+  local directory = t:tempdir()
+  vim.fn.writefile({ "hello" }, directory .. "/alpha.lua")
+  local ui = require("__test__.support.ui").open(t, { width = 120, height = 40, runtime = "ark" })
+  ui:rpc("nvim_input", "i")
+  ui:wait_lua([[return vim.api.nvim_get_mode().mode == "i"]], 5000, "Insert mode")
+  ui:lua([[require("era.m.filetree.jobs").show_info(...)]], directory .. "/alpha.lua")
+  ui:wait_lua(
+    [[return vim.api.nvim_win_get_config(0).relative ~= "" and vim.api.nvim_get_mode().mode == "n"]],
+    8000,
+    "file info focused in Normal mode"
+  )
+  ui:rpc("nvim_input", "q")
+  ui:wait_lua([[return vim.api.nvim_win_get_config(0).relative == ""]], 5000, "q closes the file info")
+end)
+
 t:run()

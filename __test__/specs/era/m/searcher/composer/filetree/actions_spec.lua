@@ -81,6 +81,25 @@ t:test("c does nothing in search results, which carry no file operations", funct
   t.assert_false(vim.list_contains(assert(toggle).aliases or {}, "c"), "c no longer toggles")
 end)
 
+t:test("oi shows the details of the file of the cursor row, never in Visual mode", function()
+  local composer = fixture()
+  t:patch_table(composer, "__retrieve_filedata__", function()
+    return { filepath = root .. "/other.lua" }
+  end)
+  local shown ---@type string|nil
+  t:patch_table(require("era.m.filetree.jobs"), "show_info", function(filepath)
+    shown = filepath
+    return stl.c.Future.resolve()
+  end)
+  picker.action(composer, "searcher: file info")()
+  t.assert_eq(root .. "/other.lua", shown)
+  local mappings = vim.api.nvim_buf_call(composer.result:get_bufnr(), function()
+    return { visual = vim.fn.maparg("oi", "x", false, true), insert = vim.fn.maparg("oi", "i", false, true) }
+  end)
+  t.assert_nil(next(mappings.visual), "Visual oi")
+  t.assert_eq("searcher: file info", mappings.insert.desc, "Insert oi, as the result window can keep Insert mode")
+end)
+
 t:test("copy filepath offers the choices one row below and four columns right of the result cursor", function()
   local composer = fixture()
   t:patch_table(composer, "__retrieve_filedata__", function()

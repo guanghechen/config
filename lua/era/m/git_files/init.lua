@@ -916,7 +916,7 @@ function M:filter()
   vim.cmd.startinsert()
 end
 
----@param action                        "explorer"|"find"|"search"|"system"|"quickfix"
+---@param action                        "explorer"|"find"|"search"|"system"|"info"|"quickfix"
 ---@return nil
 function M:browse(action)
   local pane, key, data = self:current()
@@ -937,6 +937,17 @@ function M:browse(action)
   local path = data.filetype == "directory" and data.filepath or yoz.canonical_path.dirname(data.filepath, false)
   if action == "system" then
     vim.ui.open(yoz.canonical_path.to_os_path(data.filepath))
+    return
+  end
+  if action == "info" then
+    -- A dangling symlink has details of its own; only a missing entry has none.
+    if not vim.uv.fs_lstat(yoz.canonical_path.to_os_path(data.filepath)) then
+      report("File is absent from the worktree: " .. vim.fn.strtrans(data.filepath), "info")
+      return
+    end
+    require("era.m.filetree.jobs").show_info(data.filepath):catch(function(error)
+      report(error, "info")
+    end)
     return
   end
   self:hide()

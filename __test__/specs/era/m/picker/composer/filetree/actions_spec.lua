@@ -238,6 +238,44 @@ t:test("c copies the cursor item to a path and adds the copy inside the root wit
   t.assert_same({}, copy(nil), "nothing copied")
 end)
 
+t:test("a creates from the result window, and oi shows the details of the cursor file from both panes", function()
+  local composer = picker.filetree_composer(t, "create-and-info")
+  local Jobs = require("era.m.filetree.jobs")
+  local Future = require("stl.c.future")
+  ---The mapping of `key` that takes effect: the last one bound.
+  ---@param keymaps                     stl.t.IKeymap[]
+  ---@param key                         string
+  ---@return stl.t.IKeymap|nil
+  local function effective(keymaps, key)
+    local found = nil ---@type stl.t.IKeymap|nil
+    for _, keymap in ipairs(keymaps) do
+      if keymap.key == key then
+        found = keymap
+      end
+    end
+    return found
+  end
+  t.assert_eq("filetree: create node", assert(effective(composer.result.keymaps, "a")).desc)
+  t.assert_nil(effective(composer.finder.keymaps, "a"), "a edits the query in the finder")
+  -- Never in Visual mode, as in the Explorer; the result window also takes them in the Insert mode it can keep.
+  t.assert_same({ "i", "n" }, assert(effective(composer.result.keymaps, "a")).modes, "result a")
+  t.assert_same({ "i", "n" }, assert(effective(composer.result.keymaps, "oi")).modes, "result oi")
+  t.assert_same({ "n" }, assert(effective(composer.finder.keymaps, "oi")).modes, "finder oi")
+  local path = "/workspace/project/src/main.lua"
+  local uuid, data = create_file(path, "file")
+  composer.__retrieve_file__ = function()
+    return uuid, data
+  end
+  local shown = {} ---@type string[]
+  t:patch_table(Jobs, "show_info", function(filepath)
+    shown[#shown + 1] = filepath
+    return Future.resolve()
+  end)
+  assert(effective(composer.result.keymaps, "oi")).callback()
+  assert(effective(composer.finder.keymaps, "oi")).callback()
+  t.assert_same({ path, path }, shown)
+end)
+
 t:test("lexical consumers emit slash-only relative paths", function()
   local confirmed = nil ---@type string[]|nil
   local composer = picker.filetree_composer(t, "canonical-consumers", nil, function(_, filepaths)

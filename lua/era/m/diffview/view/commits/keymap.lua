@@ -51,6 +51,7 @@ function M.gen_commit_pane(ctx, action)
     { modes = { "n" }, key = "s", desc = "diffview(commits): Set as active commit", callback = function() action.set_active_commit(ctx) end },
     { modes = { "n" }, key = "<Tab>", desc = "diffview(commits): noop", callback = stl.fn.noop },
     { modes = { "n" }, key = "K", desc = "diffview(commits): Show commit details", callback = function() action.show_details(ctx) end },
+    { modes = { "n" }, key = "oi", desc = "diffview(commits): Show commit details", callback = function() action.show_details(ctx) end },
     { modes = { "n" }, key = "[[", desc = "diffview(commits): Previous page", callback = function() action.prev_page(ctx) end },
     { modes = { "n" }, key = "]]", desc = "diffview(commits): Next page", callback = function() action.next_page(ctx) end },
     { modes = { "n" }, key = "[i", desc = "diffview(commits): Go to parent node", callback = pane_commits.goto_parent_node },

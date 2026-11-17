@@ -77,7 +77,7 @@ t:test("native create/copy/rename/delete update the current directory and editor
   )
   t.assert_eq(vim.uv.fs_realpath(path .. "/renamed.lua"), ui:lua("return vim.api.nvim_buf_get_name(renamed_buffer)"))
   t.assert_nil(vim.uv.fs_stat(path .. "/copied.lua"))
-  ui:lua([[action("../","oa","new-dir/")]])
+  ui:lua([[action("../","a","new-dir/")]])
   ui:wait_lua(
     [[return present("new-dir") and not require("era.m.filetree.jobs").pending()]],
     8000,
@@ -97,6 +97,38 @@ t:test("native create/copy/rename/delete update the current directory and editor
   )
   t.assert_nil(vim.uv.fs_stat(path .. "/new-dir"))
   t.assert_eq(0, ui:lua("return #errors"), vim.inspect(ui:lua("return errors")))
+end)
+
+t:test("oi shows the details of the row, oa adds it to AI, and a creates from the result window only", function()
+  local ui, path = fixture.new(t)
+  actions(ui)
+  ui:lua([[
+    shown, added = {}, {}
+    require("era.m.filetree.jobs").show_info = function(filepath)
+      shown[#shown + 1] = filepath
+      return stl.c.Future.resolve()
+    end
+    era.fn.add_locations_to_ai = function(locations)
+      added[#added + 1] = locations[1].filepath
+    end
+    action("alpha.lua", "oi")
+    action("alpha.lua", "oa")
+  ]])
+  t.assert_same({ path .. "/alpha.lua" }, ui:lua("return shown"))
+  t.assert_same({ path .. "/alpha.lua" }, ui:lua("return added"))
+  local function binding(keymaps, key)
+    return ui:lua(
+      "for _, keymap in ipairs(props."
+        .. keymaps
+        .. ") do if keymap.key == ... then return { desc = keymap.desc, modes = keymap.modes } end end",
+      key
+    )
+  end
+  -- Normal mode only, as in the Explorer.
+  t.assert_same({ desc = "filetree: create", modes = { "n" } }, binding("keymaps_result", "a"))
+  t.assert_same({ desc = "filetree: file info", modes = { "n" } }, binding("keymaps_result", "oi"))
+  t.assert_nil(binding("keymaps_finder", "a"), "a edits the query in the finder")
+  t.assert_eq(0, ui:lua("return #errors"))
 end)
 
 t:test("completion preserves navigation made while the file operation was running", function()

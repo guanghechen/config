@@ -316,6 +316,14 @@ local function add_to_ai()
   end
 end
 
+---@return nil
+local function show_info()
+  local selected = current()
+  if selected then
+    Jobs.show_info(selected:path()):catch(report)
+  end
+end
+
 ---@param bufnr                         integer
 ---@return era.m.picker.preview.IDrawResult
 local function preview_file(bufnr)
@@ -357,10 +365,10 @@ end
 -- Every action reads the rows: the one under the cursor, or the directory they list.
 ---@type stl.t.IKeymap[]
 local actions = {
-  { modes = { "n", "x" }, key = "oa", desc = "filetree: create", callback = create_entry },
   { modes = { "n", "x" }, key = "od", desc = "filetree: delete", callback = delete_entry },
   { modes = { "n", "x" }, key = "oc", desc = "filetree: copy filepath", callback = copy_path },
-  { modes = { "n", "x" }, key = "oA", desc = "filetree: add to ai", callback = add_to_ai },
+  { modes = { "n", "x" }, key = "oa", desc = "filetree: add to ai", callback = add_to_ai },
+  { modes = { "n" }, key = "oi", desc = "filetree: file info", callback = show_info },
   { modes = { "n", "x" }, key = "c", desc = "filetree: copy to path", callback = copy_entry },
   { modes = { "n", "x" }, key = "or", desc = "filetree: rename", callback = rename_entry },
   {
@@ -374,8 +382,11 @@ local actions = {
     end,
   },
 }
+-- `a` appends to the query in the finder, so only the result window creates with it.
+---@type stl.t.IKeymap
+local create = { modes = { "n" }, key = "a", desc = "filetree: create", callback = create_entry }
 
-for _, keymap in ipairs(actions) do
+for _, keymap in ipairs(vim.list_extend({ create }, actions)) do
   keymap.callback = settled(keymap.callback --[[@as fun(): nil]])
 end
 
@@ -404,7 +415,7 @@ picker = era.m.picker.BasicComposer.new({
     },
   },
   keymaps_finder = actions,
-  keymaps_result = actions,
+  keymaps_result = vim.list_extend({ create }, actions),
   render_result = function()
     surface:filter(display())
   end,
