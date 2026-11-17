@@ -48,8 +48,8 @@ Finder/result 使用同一组动作键；`c` 优先在 result window 生效。
 | `oc`        | Copy Path Menu            |
 | `oA`        | Add To AI                 |
 
-本工具不支持批量 copy/rename、跨目录 move 或复杂事务回滚；
-跨目录操作交给 [Explorer](README.md)。
+本工具不支持批量 copy/rename、跨目录 move 或复杂事务回滚，这些交给 [Explorer](README.md)；
+`c` 可以复制到任意路径。
 
 ### `oa`：创建
 
@@ -102,8 +102,8 @@ Finder/result 使用同一组动作键；`c` 优先在 result window 生效。
 ## 刷新与失败处理
 
 动作全部经 `era.m.filetree.jobs` 提交 Rust Filetree Jobs，prompt 前从显示 Frame 捕获资源，
-identity 校验与收尾遵循 [Filetree 文件 Job](../../ux/filetree/jobs.md)。Find Explorer 不接受 overwrite，
-rename 使用与 Explorer 相同的 editor buffer / LSP 同步。
+identity 校验与收尾遵循 [Filetree 文件 Job](../../ux/filetree/jobs.md)。create 与 rename 不 overwrite，
+复制到路径按 Explorer 的规则先确认；rename 使用与 Explorer 相同的 editor buffer / LSP 同步。
 
 成功后由 native publication 更新已加载目录；当前仍处于原目录时刷新，并尝试定位新项。
 删除定位到原行号附近，避免上下文根行抢占 cursor fallback；期间存在更新的用户导航时保留该导航。
@@ -112,8 +112,8 @@ rename 使用与 Explorer 相同的 editor buffer / LSP 同步。
 
 ## 决策与成本
 
-- Copy/Rename 只接受名称，避免把同目录操作隐式变成跨目录 move/copy。
-- 目标冲突直接报错，避免引入覆盖确认和目录覆盖语义。
+- Rename 只接受名称，避免把同目录操作隐式变成跨目录 move；跨目录复制由 `c` 按 Explorer 的规则完成。
+- create 与 rename 的目标冲突直接报错，避免引入覆盖确认和目录覆盖语义；`c` 沿用 Explorer 的覆盖确认。
 - 主结果不把整份 readdir 导出到 Lua 再导入另一个 Data；列宽和永久高亮也不按全目录维护。
 - 目录 IO、过滤、投影和 metadata 格式化在 native worker；Lua 装饰成本随 viewport 行数增长。
   Filter/排序和结构变化仍可读取当前目录的全部候选，首开不是常数成本。
