@@ -362,6 +362,13 @@ for _, entry in ipairs({
   }
 end
 
+---@return nil
+local function parent_directory()
+  local displayed = root()
+  local path = displayed and displayed:path() or directory
+  open_directory(paths.dirname(path), path)
+end
+
 -- Every action reads the rows: the one under the cursor, or the directory they list.
 ---@type stl.t.IKeymap[]
 local actions = {
@@ -371,22 +378,17 @@ local actions = {
   { modes = { "n" }, key = "oi", desc = "filetree: file info", callback = show_info },
   { modes = { "n", "x" }, key = "c", desc = "filetree: copy to path", callback = copy_entry },
   { modes = { "n", "x" }, key = "or", desc = "filetree: rename", callback = rename_entry },
-  {
-    modes = { "n", "x" },
-    key = "<Backspace>",
-    desc = "filetree: parent directory",
-    callback = function()
-      local displayed = root()
-      local path = displayed and displayed:path() or directory
-      open_directory(paths.dirname(path), path)
-    end,
-  },
+  { modes = { "n", "x" }, key = "<Backspace>", desc = "filetree: parent directory", callback = parent_directory },
 }
--- `a` appends to the query in the finder, so only the result window creates with it.
----@type stl.t.IKeymap
-local create = { modes = { "n" }, key = "a", desc = "filetree: create", callback = create_entry }
+-- `a`, `l` and `h` edit the query in the finder, so only the result window takes them.
+---@type stl.t.IKeymap[]
+local result_actions = {
+  { modes = { "n" }, key = "a", desc = "filetree: create", callback = create_entry },
+  { modes = { "n" }, key = "l", desc = "filetree: open", callback = confirm },
+  { modes = { "n" }, key = "h", desc = "filetree: parent directory", callback = parent_directory },
+}
 
-for _, keymap in ipairs(vim.list_extend({ create }, actions)) do
+for _, keymap in ipairs(vim.list_extend(vim.list_slice(result_actions), actions)) do
   keymap.callback = settled(keymap.callback --[[@as fun(): nil]])
 end
 
@@ -415,7 +417,7 @@ picker = era.m.picker.BasicComposer.new({
     },
   },
   keymaps_finder = actions,
-  keymaps_result = vim.list_extend({ create }, actions),
+  keymaps_result = vim.list_extend(result_actions, actions),
   render_result = function()
     surface:filter(display())
   end,

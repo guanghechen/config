@@ -131,6 +131,24 @@ t:test("oi shows the details of the row, oa adds it to AI, and a creates from th
   t.assert_eq(0, ui:lua("return #errors"))
 end)
 
+t:test("l enters a directory and h returns to its parent, from the result window only", function()
+  local ui = fixture.new(t)
+  actions(ui)
+  ui:lua([[action("folder", "l")]])
+  ui:wait_lua([[return present("sub")]], 8000, "l entered the directory")
+  ui:lua([[action("sub", "h")]])
+  ui:wait_lua([[return present("alpha.lua")]], 8000, "h returned to the parent")
+  local finder_keys = ui:lua([[
+    local keys = {}
+    for _, keymap in ipairs(props.keymaps_finder) do
+      if keymap.key == "l" or keymap.key == "h" then keys[#keys + 1] = keymap.key end
+    end
+    return keys
+  ]])
+  t.assert_same({}, finder_keys, "l and h edit the query in the finder")
+  t.assert_eq(0, ui:lua("return #errors"))
+end)
+
 t:test("completion preserves navigation made while the file operation was running", function()
   local ui, path = fixture.new(t)
   actions(ui)
