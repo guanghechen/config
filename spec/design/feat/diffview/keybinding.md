@@ -16,7 +16,7 @@
 ## 通用约定
 
 - `g?`：显示当前 Diffview 的快捷键帮助。
-- `K`：hover，显示当前项的详情：Changes 为文件详情，History 与 Commits 为 commit details。`J` 不映射，保持 Neovim 原生行为。
+- `K`：hover，显示当前项的详情：Changes 为文件详情，History 与 Commits 为 commit details。
 - `<C-a>r`：刷新当前 view；aliases 为 `<D-r>`、`<M-r>`。
 - `<C-j>` / `<C-k>`：选择下一个 / 上一个 domain item。
 - `gf` / `gF`：在已有普通 tab / 新 tab 打开当前文件。
@@ -35,6 +35,7 @@ Help 使用 `mode + key` 作为 mapping identity；Normal 与 Visual 的同名 m
 - `]p` / `[p`：聚焦下一个 / 上一个侧栏 pane（Staged → Unstaged → History，两端循环）；沉浸时切换显示的 pane。
 - `z;`（Normal / Visual）：切换侧栏沉浸，见[布局](layout.md#沉浸模式)。
 - `<Tab>`：空操作，不回落到全局 `<C-i>` 的 jumplist 跳转。
+- `J`：空操作；原生的合并行在只读的 Changes 中只会报 E21。
 - `<C-j>` / `<C-k>`：选择下一个 / 上一个 file diff。
 - `[i` / `]i`：跳到 parent / last child-or-sibling。
 - `gs` / `gu`：stage / unstage 当前文件或目录。

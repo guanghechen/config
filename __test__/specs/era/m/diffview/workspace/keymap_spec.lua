@@ -228,7 +228,7 @@ t:test("sidebar panes map z; and pane switching and keep <Tab> inert, and side-b
   t.assert_eq("focus_preview_pane,focus_preview_pane", diffview.names(sbs_calls), "side-by-side ]p and [p")
 end)
 
-t:test("K and oi show file details in Changes and commit details in History, and J stays native", function()
+t:test("K and oi show file details in Changes and commit details in History, and J does nothing", function()
   local action, calls = diffview.recorder()
   local history_action, history_calls = diffview.recorder()
   local ctx = diffview.workspace_context({ layout = {}, history = {} })
@@ -239,7 +239,7 @@ t:test("K and oi show file details in Changes and commit details in History, and
   end
   t.assert_eq("show_info,show_info", diffview.names(calls))
   t.assert_eq("show_details,show_details", diffview.names(history_calls))
-  t.assert_nil(find(changes, "J"), "Changes J")
+  t.assert_eq(stl.fn.noop, assert(find(changes, "J")).callback, "Changes J skips the read-only join")
 end)
 
 t:test("Changes and History move with l and h, and History closes with q instead of oo", function()

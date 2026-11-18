@@ -37,6 +37,7 @@ function M.gen_changes(ctx, action)
     { modes = { "n" }, key = "l", desc = "diffview(workspace): Expand directory or select entry", callback = function() action.expand_or_select(ctx) end },
     { modes = { "n" }, key = "h", desc = "diffview(workspace): Collapse directory or go to parent node", callback = function() action.collapse_or_parent(ctx) end },
     { modes = { "n" }, key = "<Tab>", desc = "diffview(workspace): noop", callback = stl.fn.noop },
+    { modes = { "n" }, key = "J", desc = "diffview(workspace): noop", callback = stl.fn.noop },
     { modes = { "n" }, key = "]p", desc = "diffview(workspace): Next sidebar pane", callback = function() action.cycle_sidebar(ctx, 1) end },
     { modes = { "n" }, key = "[p", desc = "diffview(workspace): Previous sidebar pane", callback = function() action.cycle_sidebar(ctx, -1) end },
     { modes = { "n", "x" }, key = "z;", desc = "diffview(workspace): Toggle immersive sidebar", callback = function() action.toggle_immersive(ctx) end },
