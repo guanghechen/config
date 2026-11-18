@@ -147,6 +147,32 @@ local __highlights__ = {
 ---@field public on_preview_rendered    ?era.m.searcher.composer.basic.IOnPreviewRendered
 ---@field public on_result_rendered     ?era.m.searcher.composer.basic.IOnResultRendered
 
+---Leaves Insert mode in the current window, which just regained the focus and was not edited, without the step back
+---to the left that <Esc> takes: the cursor stays where it was unless the caller moved it or changed the buffer.
+---@return nil
+local function stop_insert_in_place()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
+  local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
+  local autocmd = vim.api.nvim_create_autocmd("InsertLeave", {
+    once = true,
+    callback = function()
+      if not vim.api.nvim_win_is_valid(winnr) or vim.api.nvim_win_get_buf(winnr) ~= bufnr then
+        return
+      end
+      local current = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
+      if current[1] == cursor[1] and current[2] == cursor[2] - 1 then
+        vim.api.nvim_win_set_cursor(winnr, cursor)
+      end
+    end,
+  })
+  -- Insert mode ends before scheduled callbacks run; drop the handler if it did not fire.
+  vim.schedule(function()
+    pcall(vim.api.nvim_del_autocmd, autocmd)
+  end)
+  vim.cmd("stopinsert")
+end
+
 ---@class era.m.searcher.BasicComposer : dot.t.IWidget
 ---@field public uuid                   string
 ---@field public fullname               string
@@ -160,6 +186,8 @@ local __highlights__ = {
 ---@field protected _result_number      boolean
 ---
 ---@field protected _disposed           boolean
+---@field protected _opened_in_insert   boolean Whether the window the searcher took the focus from was in Insert mode.
+---@field protected _origin_winnr       ?integer The window the searcher took the focus from.
 ---@field protected _pane_focused       era.m.searcher.composer.basic.PaneEnum
 ---@field protected _pane_last_focused  era.m.searcher.composer.basic.PaneEnum
 ---@field protected _recommended_height number
@@ -230,6 +258,7 @@ function M.new(props)
   self.fullname = fullname
   self.permanent = permanent
   self._disposed = false
+  self._opened_in_insert = false
   self._pane_focused = pane_focused
   self._pane_last_focused = pane_last_focused
   self._recommended_height = recommended_height
@@ -381,6 +410,9 @@ function M:dispose()
   if self._disposed then
     return
   end
+  if self:__holds_insert__() then
+    stop_insert_in_place()
+  end
   self._disposed = true
 
   local fullname = self.fullname ---@type string
@@ -480,6 +512,11 @@ end
 function M:focus(pane)
   self:__health__()
   dot.state.widget.push(self)
+
+  if not self:isfocused() then
+    self._origin_winnr = vim.api.nvim_get_current_win()
+    self._opened_in_insert = vim.api.nvim_get_mode().mode:match("^[iR]") ~= nil
+  end
 
   local has_new_created = self:__create_wins__()
   local pane_focused = has_new_created and "finder" or self._pane_focused ---@type era.m.searcher.composer.basic.PaneEnum
@@ -828,6 +865,17 @@ function M:__health__()
   end
 end
 
+---Typing a pattern leaves the finder in Insert mode, which would carry over to the window the searcher returns to,
+---also when the caller focuses that window itself before closing the searcher.
+---@protected
+---@return boolean
+function M:__holds_insert__()
+  if self._opened_in_insert or vim.api.nvim_get_mode().mode:match("^[iR]") == nil then
+    return false
+  end
+  return self:isfocused() or vim.api.nvim_get_current_win() == self._origin_winnr
+end
+
 ---@protected
 ---@return nil
 function M:__hide__()
@@ -836,6 +884,7 @@ function M:__hide__()
   local result = self.result ---@type era.m.searcher.Result
   local preview = self.preview ---@type era.m.searcher.Preview|nil
 
+  local holds_insert = self:__holds_insert__() ---@type boolean
   finder:hide()
   if replacer ~= nil then
     replacer:hide()
@@ -843,6 +892,9 @@ function M:__hide__()
   result:hide()
   if preview ~= nil then
     preview:hide()
+  end
+  if holds_insert then
+    stop_insert_in_place()
   end
 end
 
