@@ -32,13 +32,18 @@ Neovim 无法锁定 tabpage；`:tabs` 仍可观察该 tab，原生命令/API 仍
 window 的类型查找 handler，找到就交给它，否则按上文处理普通 window 与浮动 window。
 
 - Handler 提供 `toggle(winnr)` 与 `is_maximized(winnr)`；`era.m.maximize.is_maximized(winnr)` 统一回答三种方式。
+- 模块在 window 关闭或转作他用之前调用 `era.m.maximize.restore(winnr)`，结束 handler 对它的放大；调用时 window 仍须
+  带着注册 handler 的类型。
 - 自己记录窗口尺寸的模块，在 `is_maximized` 期间不记录尺寸变化，也不把放大后的尺寸保存为原尺寸。
 
 `era.m.maximize.in_place` 是现成的 handler，在原 tab 内放大：
 
-- 用 `wincmd _`、`wincmd |` 把 window 放到最大，window 与 buffer 不变，并记下整个 tab 的布局。
-- 再次 toggle、焦点进入同 tab 的另一个普通 window、或离开该 tab 时恢复布局；进入浮动 window 不恢复。期间 tab 的 window
-  有增减时，只恢复该 window 自己的尺寸。被放大的 window 关闭时只丢弃状态。同一时间最多一个 window 原地放大。
+- 用 `wincmd _`、`wincmd |` 把 window 放到最大，window 与 buffer 不变，并记下 tab 中每个普通 window 的宽高；浮动
+  window 不在其中。同一时间最多一个 window 原地放大。
+- 再次 toggle、焦点进入同 tab 的另一个普通 window、或离开该 tab 时恢复；进入浮动 window 不恢复。被放大的 window 关闭时，
+  其余 window 在关闭完成后恢复。
+- 恢复把记下的尺寸还给仍在 tab 中的 window：宽度都还原；高度只还原与其他 window 同在一列（自身或所在的行处于纵向堆叠中）
+  的 window，独占整列高度的 window 还原高度会把差额交给命令行。
 
 Explorer 使用 `in_place`：树视图与按 tab 的记录都绑定在原 window 上，换到临时 tab 会失去图标、缩进线与按键。
 
@@ -59,7 +64,7 @@ Explorer 使用 `in_place`：树视图与按 tab 的记录都绑定在原 window
 
 - 浮窗：原 window handle 与可恢复的 presentation state，就地更新 resize snapshot。
 - 普通窗口：source tab/window、maximize tab/window、lifecycle augroup 与 closing guard。
-- 原地放大：window、tab、放大前的布局与尺寸，以及恢复用的 augroup。
+- 原地放大：window、tab、放大前各普通 window 的宽高，以及恢复用的 augroup。
 
 `era.m.maximize` 负责创建和关闭流程；`dot.state.maximized` 负责 projection sync，
 并在最终清理前校验 identity。Tab 类型与命令匹配见 [Tab](../dot/tab.md)。

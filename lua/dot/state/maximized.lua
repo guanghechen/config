@@ -12,14 +12,16 @@
 ---@field public augroup                integer
 ---@field public closing                boolean
 
----A window enlarged within its own tab, with what restores the tab around it.
+---@class dot.state.maximized.IWinSize
+---@field public winnr                  integer
+---@field public width                  integer
+---@field public height                 integer
+
+---A window enlarged within its own tab, with the sizes that restore the tab around it.
 ---@class dot.state.maximized.IInPlaceContext
 ---@field public winnr                  integer
 ---@field public tabnr                  integer
----@field public layout                 string The `winrestcmd()` of the tab before the window was enlarged.
----@field public winnrs                 integer[] The windows of the tab that `layout` sizes.
----@field public width                  integer
----@field public height                 integer
+---@field public sizes                  dot.state.maximized.IWinSize[] The windows of the tab that are not floating, before.
 ---@field public augroup                integer
 
 ---@class dot.state.maximized.IContext

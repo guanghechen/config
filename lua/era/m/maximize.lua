@@ -249,21 +249,64 @@ end
 -- In-place maximize
 ----------------------------------------------------------------------------------------------------
 
+---Whether `winnr` lies in a column with other windows, itself or through the rows around it: only then does its height
+---move rows between windows; otherwise they go to the command line or come from it.
+---@param winnr                         integer
+---@param node                          table A node of `vim.fn.winlayout()`.
+---@param in_column                     ?boolean Whether a column above `node` holds other windows.
+---@return boolean
+local function stacked(winnr, node, in_column)
+  if node[1] == "leaf" then
+    return in_column == true and node[2] == winnr
+  end
+  for _, child in ipairs(node[2]) do
+    if stacked(winnr, child, in_column or node[1] == "col") then
+      return true
+    end
+  end
+  return false
+end
+
+---The sizes of the windows of `tabnr` that are not floating, in their order.
+---@param tabnr                         integer
+---@return dot.state.maximized.IWinSize[]
+local function measure(tabnr)
+  local sizes = {} ---@type dot.state.maximized.IWinSize[]
+  for _, winnr in ipairs(vim.api.nvim_tabpage_list_wins(tabnr)) do
+    if not stl.nvim.win.is_float(winnr) then
+      local width, height = vim.api.nvim_win_get_width(winnr), vim.api.nvim_win_get_height(winnr) ---@type integer, integer
+      sizes[#sizes + 1] = { winnr = winnr, width = width, height = height }
+    end
+  end
+  return sizes
+end
+
+---Gives the windows still in the tab the sizes measured before the maximize, twice over as `winrestcmd()` does, since
+---one size bounds the next.
+---@param in_place                      dot.state.maximized.IInPlaceContext
+---@return nil
+local function resize_back(in_place)
+  if not vim.api.nvim_tabpage_is_valid(in_place.tabnr) then
+    return
+  end
+  local layout = vim.fn.winlayout(vim.api.nvim_tabpage_get_number(in_place.tabnr)) ---@type table
+  for _ = 1, 2 do
+    for _, size in ipairs(in_place.sizes) do
+      if vim.api.nvim_win_is_valid(size.winnr) and vim.api.nvim_win_get_tabpage(size.winnr) == in_place.tabnr then
+        vim.api.nvim_win_set_width(size.winnr, size.width)
+        if stacked(size.winnr, layout) then
+          vim.api.nvim_win_set_height(size.winnr, size.height)
+        end
+      end
+    end
+  end
+end
+
 ---@param in_place                      dot.state.maximized.IInPlaceContext
 ---@return nil
 local function restore_in_place(in_place)
-  if not dot.state.maximized.dispose_in_place(in_place) or not vim.api.nvim_win_is_valid(in_place.winnr) then
-    return
-  end
-  -- The layout sizes windows by number, which holds only in the tab it was taken in, with the same windows.
-  if
-    vim.api.nvim_get_current_tabpage() == in_place.tabnr
-    and vim.deep_equal(vim.api.nvim_tabpage_list_wins(in_place.tabnr), in_place.winnrs)
-  then
-    vim.cmd(in_place.layout)
-  else
-    vim.api.nvim_win_set_width(in_place.winnr, in_place.width)
-    vim.api.nvim_win_set_height(in_place.winnr, in_place.height)
+  if dot.state.maximized.dispose_in_place(in_place) then
+    resize_back(in_place)
   end
 end
 
@@ -279,10 +322,7 @@ local function maximize_in_place(winnr)
   local in_place = {
     winnr = winnr,
     tabnr = tabnr,
-    layout = vim.fn.winrestcmd(),
-    winnrs = vim.api.nvim_tabpage_list_wins(tabnr),
-    width = vim.api.nvim_win_get_width(winnr),
-    height = vim.api.nvim_win_get_height(winnr),
+    sizes = measure(tabnr),
     augroup = vim.api.nvim_create_augroup("era_maximize_in_place", { clear = true }),
   }
   dot.state.maximized.set_in_place(in_place)
@@ -291,8 +331,8 @@ local function maximize_in_place(winnr)
     vim.cmd("wincmd |")
   end)
 
-  -- Working in another window of the tab or in another tab restores the layout; a float, such as a prompt the
-  -- window opens, does not.
+  -- Working in another window of the tab or in another tab restores the sizes; a float, such as a prompt the window
+  -- opens, does not.
   vim.api.nvim_create_autocmd("WinEnter", {
     group = in_place.augroup,
     callback = function()
@@ -316,7 +356,14 @@ local function maximize_in_place(winnr)
     group = in_place.augroup,
     pattern = tostring(winnr),
     callback = function()
-      dot.state.maximized.dispose_in_place(in_place)
+      if dot.state.maximized.dispose_in_place(in_place) then
+        -- The others take their sizes back once the window is gone, unless another window was maximized meanwhile.
+        vim.schedule(function()
+          if dot.state.maximized.get_in_place() == nil then
+            resize_back(in_place)
+          end
+        end)
+      end
     end,
   })
 end
@@ -364,6 +411,9 @@ end
 ---@param winnr                         integer
 ---@return boolean
 function M.is_maximized(winnr)
+  if not vim.api.nvim_win_is_valid(winnr) then
+    return false
+  end
   local handler = handlers[vim.w[winnr].wintype] ---@type era.m.maximize.IHandler|nil
   if handler ~= nil then
     return handler.is_maximized(winnr)
@@ -371,6 +421,20 @@ function M.is_maximized(winnr)
   local original = dot.state.maximized.get_original_float() ---@type dot.state.maximized.IOriginalFloatWindow|nil
   local normal = dot.state.maximized.get_normal() ---@type dot.state.maximized.INormalContext|nil
   return original ~= nil and original.winnr == winnr or normal ~= nil and normal.maximize_winnr == winnr
+end
+
+---Restores `winnr` if its handler maximized it, as a module does before the window closes or takes another role. The
+---window must still have the type the handler is registered for.
+---@param winnr                         integer
+---@return nil
+function M.restore(winnr)
+  if not vim.api.nvim_win_is_valid(winnr) then
+    return
+  end
+  local handler = handlers[vim.w[winnr].wintype] ---@type era.m.maximize.IHandler|nil
+  if handler ~= nil and handler.is_maximized(winnr) then
+    handler.toggle(winnr)
+  end
 end
 
 ---@return nil

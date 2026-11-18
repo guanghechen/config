@@ -394,14 +394,9 @@ t:test("in-place maximize restores the layout on the next toggle or once another
   t.assert_eq(layout, vim.fn.winrestcmd(), "restored once another window takes the focus")
 end)
 
-t:test("in-place maximize restores the window alone once the tab changed, and the layout on leaving the tab", function()
-  local left = side_by_side()
-  Maximize.in_place.toggle(left)
-  vim.cmd("rightbelow vsplit")
-  t.assert_false(Maximize.in_place.is_maximized(left))
-  t.assert_eq(20, vim.api.nvim_win_get_width(left), "the window's own width")
-
-  vim.api.nvim_set_current_win(left)
+t:test("in-place maximize restores the sizes on leaving the tab", function()
+  local left, right = side_by_side()
+  local width = vim.api.nvim_win_get_width(right) ---@type integer
   local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
   Maximize.in_place.toggle(left)
   vim.cmd("tabnew")
@@ -413,6 +408,77 @@ t:test("in-place maximize restores the window alone once the tab changed, and th
   vim.api.nvim_set_current_tabpage(tabnr)
   -- The tabline the new tab brings takes a row; the widths are the layout's.
   t.assert_eq(20, vim.api.nvim_win_get_width(left))
+  t.assert_eq(width, vim.api.nvim_win_get_width(right))
+end)
+
+t:test("in-place maximize restores the sizes whatever floats open or close meanwhile", function()
+  local left, right = side_by_side()
+  vim.api.nvim_set_current_win(right)
+  vim.cmd("leftabove vsplit")
+  local middle = vim.api.nvim_get_current_win() ---@type integer
+  vim.api.nvim_win_set_width(middle, 20)
+  local float =
+    vim.api.nvim_open_win(t:buffer(), false, { relative = "editor", row = 0, col = 0, width = 5, height = 1 })
+
+  Maximize.in_place.toggle(left)
+  vim.api.nvim_win_close(float, true)
+  Maximize.in_place.toggle(left)
+  t.assert_same(
+    { 20, 20, vim.o.columns - 42 },
+    { vim.api.nvim_win_get_width(left), vim.api.nvim_win_get_width(middle), vim.api.nvim_win_get_width(right) }
+  )
+end)
+
+t:test("closing an in-place maximized window gives the others their sizes back", function()
+  local left, right = side_by_side()
+  vim.api.nvim_set_current_win(right)
+  vim.cmd("aboveleft split")
+  local top = vim.api.nvim_get_current_win() ---@type integer
+  local cmdheight = vim.o.cmdheight ---@type integer
+  t:defer(function()
+    vim.o.cmdheight = cmdheight
+  end)
+  Maximize.in_place.toggle(top)
+
+  vim.api.nvim_win_close(top, true)
+  t.assert_false(Maximize.is_maximized(top))
+  t.wait_until(function()
+    return vim.api.nvim_win_get_width(left) == 20
+  end, 1000, "the window beside it back to its width")
+  t.assert_eq(cmdheight, vim.o.cmdheight, "the command line keeps its height")
+end)
+
+t:test("in-place maximize restores no height of a window left alone in its column", function()
+  local left, right = side_by_side()
+  vim.cmd("wincmd l | belowright split")
+  local bottom = vim.api.nvim_get_current_win() ---@type integer
+  vim.api.nvim_set_current_win(right)
+  local cmdheight = vim.o.cmdheight ---@type integer
+  t:defer(function()
+    vim.o.cmdheight = cmdheight
+  end)
+  Maximize.in_place.toggle(right)
+  vim.api.nvim_win_close(bottom, true)
+
+  Maximize.in_place.toggle(right)
+  t.assert_eq(20, vim.api.nvim_win_get_width(left))
+  t.assert_eq(cmdheight, vim.o.cmdheight, "the command line keeps its height")
+  t.assert_eq(vim.api.nvim_win_get_height(left), vim.api.nvim_win_get_height(right), "the column's full height")
+end)
+
+t:test("restore ends the maximize of a window by its handler, and leaves other windows as they are", function()
+  local left, right = side_by_side()
+  Maximize.register("test:in-place", Maximize.in_place)
+  vim.w[left].wintype = "test:in-place"
+  Maximize.in_place.toggle(left)
+
+  Maximize.restore(right)
+  t.assert_true(Maximize.is_maximized(left), "restoring another window")
+  Maximize.restore(left)
+  t.assert_false(Maximize.is_maximized(left))
+  t.assert_eq(20, vim.api.nvim_win_get_width(left))
+  Maximize.restore(left)
+  t.assert_false(Maximize.is_maximized(left), "restoring it again does not maximize it")
 end)
 
 t:run()
