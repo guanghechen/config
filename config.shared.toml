@@ -175,8 +175,6 @@ timeout = 3
 
 # Approved progress hooks shared by profiles. Hashes include the rendered
 # command paths; a different CODEX_HOME requires approval again.
-[hooks.state]
-
 [hooks.state."${CODEX_HOME}/config.toml:pre_model_request:0:0"]
 trusted_hash = "sha256:68d73c576af0f19dfa448a7f3387ad8ac515e1bc895590bb8eece4ba87643ab0"
 
