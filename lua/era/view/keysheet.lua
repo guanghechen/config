@@ -154,6 +154,10 @@ function M:open()
     vim.hl.range(bufnr, self._ns, hl.hlname, { hl.lnum, hl.coll }, { hl.lnum, hl.colr })
   end
 
+  -- A read-only pane keeps the Insert mode a focus move brought in; the sheet takes its keys in Normal mode.
+  if vim.api.nvim_get_mode().mode:match("^[iR]") then
+    vim.cmd("stopinsert")
+  end
   local winnr = vim.api.nvim_open_win(bufnr, true, {
     zindex = dot.win.resolve_zindex(),
     relative = "editor",

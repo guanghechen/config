@@ -289,4 +289,15 @@ t:test("a late cursor acknowledgement preserves the current Visual endpoint", fu
   t.assert_eq(2, vim.api.nvim_win_get_cursor(value:get_winnr())[1])
 end)
 
+t:test("a cursor move in Insert mode, which a focus move brings in, selects the row", function()
+  local owner = tree(3)
+  local value = result(owner, "picker")
+  value:create_win({ border = "none", number = false, winhighlight = "" }, { row = 0, col = 0, width = 40, height = 4 })
+  treeview.await(owner:ready())
+  value:focus()
+  vim.api.nvim_win_set_cursor(value:get_winnr(), { 3, 0 })
+  vim.api.nvim_exec_autocmds("CursorMovedI", {})
+  t.assert_eq(3, value.lnum_current:snapshot())
+end)
+
 t:run()

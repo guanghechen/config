@@ -3,6 +3,7 @@
 local __module_name__ = "era.view.picker.result" ---@type string
 
 local Future = require("stl.c.future")
+local Keymap = require("era.view.picker.keymap")
 local nvimbar = require("era.m.nvimbar")
 local c = nvimbar.component
 local Nvimbar = nvimbar.Nvimbar
@@ -328,7 +329,8 @@ function M.new(props)
     end
   end, true)
 
-  vim.api.nvim_create_autocmd("CursorMoved", {
+  -- Insert mode reaches the window with a focus move and moves the cursor there as Normal mode does.
+  vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
     group = augroup_CursorMoved,
     callback = function()
       local winnr = vim.api.nvim_get_current_win() ---@type integer
@@ -484,7 +486,7 @@ function M:create_buf()
   vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
   vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
 
-  stl.nvim.fn.bindkeys(self.keymaps, { bufnr = bufnr, nowait = true, noremap = true, silent = true })
+  Keymap.bind(self.keymaps, bufnr)
 
   self._scheduler_content:schedule({ immediate = true })
   return bufnr, true

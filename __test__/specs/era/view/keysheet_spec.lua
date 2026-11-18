@@ -46,4 +46,17 @@ t:test("a keysheet opens above the floating window it is asked from", function()
   t.assert_true(vim.api.nvim_win_get_config(assert(sheet._winnr)).zindex > 51, "above a picker window")
 end)
 
+t:test("a keysheet opened from Insert mode takes its keys in Normal mode", function()
+  local ui = require("__test__.support.ui").open(t, { width = 80, height = 24, runtime = "ark" })
+  ui:lua([[
+    vim.keymap.set("i", "<F5>", function()
+      require("era.view.keysheet").new({ keymaps = {} }):open()
+    end)
+  ]])
+  ui:rpc("nvim_input", "i<F5>")
+  ui:wait_lua("return vim.bo.filetype == 'board' and vim.api.nvim_get_mode().mode == 'n'", 5000, "Normal mode sheet")
+  ui:rpc("nvim_input", "q")
+  ui:wait_lua("return vim.bo.filetype ~= 'board'", 5000, "q closes the sheet")
+end)
+
 t:run()

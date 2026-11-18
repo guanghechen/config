@@ -22,6 +22,25 @@ t:test("feature Preview modules alias the shared surface", function()
   t.assert_true(era.m.searcher.Preview == era.view.PickerPreview, "searcher Preview alias identity")
 end)
 
+t:test("preview takes its Normal keys in Insert mode too", function()
+  local preview = era.view.PickerPreview.new({
+    keymaps = { { modes = { "n" }, key = "zx", desc = "case: normal", callback = stl.fn.noop } },
+    name = "preview keys",
+    diagnostic_scope = "contract.preview",
+    relative_number = false,
+    draw = function()
+      return { cursorline = false, number = false, title = "", wrap = false }
+    end,
+  })
+  t:defer(function()
+    preview:dispose()
+  end)
+  local mapping = vim.api.nvim_buf_call(preview:create_buf(), function()
+    return vim.fn.maparg("zx", "i", false, true)
+  end)
+  t.assert_eq("case: normal", mapping.desc)
+end)
+
 -- Each draw returns `result`, which also stands for the last draw `__update_winopts__` reads. With `failure`, a draw
 -- then fails and must report from that scope.
 for _, case in ipairs({

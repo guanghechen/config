@@ -2,6 +2,8 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.view.picker.preview" ---@type string
 
+local Keymap = require("era.view.picker.keymap")
+
 ---@alias era.view.picker.preview.IDraw
 ---| fun(bufnr: integer, force: boolean): era.view.picker.preview.IDrawResult
 
@@ -245,7 +247,7 @@ function M:create_buf()
   vim.api.nvim_set_option_value("modifiable", false, { buf = bufnr })
   vim.api.nvim_set_option_value("readonly", true, { buf = bufnr })
 
-  stl.nvim.fn.bindkeys(self.keymaps, { bufnr = bufnr, nowait = true, noremap = true, silent = true })
+  Keymap.bind(self.keymaps, bufnr)
   return bufnr, true
 end
 

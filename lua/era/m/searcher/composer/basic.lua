@@ -856,6 +856,20 @@ function M:__focus_pane__(pane_focused)
   end
 end
 
+---Focuses the finder to edit the query where `key` starts Insert mode. Insert mode, which the result and the preview
+---take in with a focus move, carries over to the finder and edits at its cursor, where `a` and `i` leave it.
+---@protected
+---@param key                           "A"|"a"|"I"|"i"|"O"|"o"
+---@return nil
+function M:__back_to_edit__(key)
+  local insert = vim.api.nvim_get_mode().mode:match("^[iR]") ~= nil ---@type boolean
+  self:__focus_pane__("finder")
+  if vim.api.nvim_get_current_win() ~= self.finder:get_winnr() or (insert and (key == "a" or key == "i")) then
+    return
+  end
+  vim.api.nvim_feedkeys(insert and vim.keycode("<C-o>") .. key or key, "n", false)
+end
+
 ---@protected
 ---@return nil
 function M:__health__()
@@ -1332,12 +1346,7 @@ function M:__resolve_builtin_keymaps_result__()
       key = "A",
       desc = "searcher#result: back to edit (A)",
       callback = function()
-        self:__focus_pane__("finder")
-
-        local winnr = vim.api.nvim_get_current_win() ---@type integer
-        if winnr == self.finder:get_winnr() then
-          vim.api.nvim_feedkeys("A", "n", false)
-        end
+        self:__back_to_edit__("A")
       end,
     },
     {
@@ -1345,12 +1354,7 @@ function M:__resolve_builtin_keymaps_result__()
       key = "a",
       desc = "searcher#result: back to edit (a)",
       callback = function()
-        self:__focus_pane__("finder")
-
-        local winnr = vim.api.nvim_get_current_win() ---@type integer
-        if winnr == self.finder:get_winnr() then
-          vim.api.nvim_feedkeys("a", "n", false)
-        end
+        self:__back_to_edit__("a")
       end,
     },
     {
@@ -1358,12 +1362,7 @@ function M:__resolve_builtin_keymaps_result__()
       key = "I",
       desc = "searcher#result: back to edit (I)",
       callback = function()
-        self:__focus_pane__("finder")
-
-        local winnr = vim.api.nvim_get_current_win() ---@type integer
-        if winnr == self.finder:get_winnr() then
-          vim.api.nvim_feedkeys("I", "n", false)
-        end
+        self:__back_to_edit__("I")
       end,
     },
     {
@@ -1371,12 +1370,7 @@ function M:__resolve_builtin_keymaps_result__()
       key = "i",
       desc = "searcher#result: back to edit (i)",
       callback = function()
-        self:__focus_pane__("finder")
-
-        local winnr = vim.api.nvim_get_current_win() ---@type integer
-        if winnr == self.finder:get_winnr() then
-          vim.api.nvim_feedkeys("i", "n", false)
-        end
+        self:__back_to_edit__("i")
       end,
     },
     {
@@ -1384,12 +1378,7 @@ function M:__resolve_builtin_keymaps_result__()
       key = "O",
       desc = "searcher#result: back to edit (O)",
       callback = function()
-        self:__focus_pane__("finder")
-
-        local winnr = vim.api.nvim_get_current_win() ---@type integer
-        if winnr == self.finder:get_winnr() then
-          vim.api.nvim_feedkeys("O", "n", false)
-        end
+        self:__back_to_edit__("O")
       end,
     },
     {
@@ -1397,12 +1386,7 @@ function M:__resolve_builtin_keymaps_result__()
       key = "o",
       desc = "searcher#result: back to edit (o)",
       callback = function()
-        self:__focus_pane__("finder")
-
-        local winnr = vim.api.nvim_get_current_win() ---@type integer
-        if winnr == self.finder:get_winnr() then
-          vim.api.nvim_feedkeys("o", "n", false)
-        end
+        self:__back_to_edit__("o")
       end,
     },
     {
@@ -1656,12 +1640,7 @@ function M:__resolve_builtin_keymaps_preview__()
       key = "A",
       desc = "searcher#preview: back to edit (A)",
       callback = function()
-        self:__focus_pane__("finder")
-
-        local winnr = vim.api.nvim_get_current_win() ---@type integer
-        if winnr == self.finder:get_winnr() then
-          vim.api.nvim_feedkeys("A", "n", false)
-        end
+        self:__back_to_edit__("A")
       end,
     },
     {
@@ -1669,12 +1648,7 @@ function M:__resolve_builtin_keymaps_preview__()
       key = "a",
       desc = "searcher#preview: back to edit (a)",
       callback = function()
-        self:__focus_pane__("finder")
-
-        local winnr = vim.api.nvim_get_current_win() ---@type integer
-        if winnr == self.finder:get_winnr() then
-          vim.api.nvim_feedkeys("a", "n", false)
-        end
+        self:__back_to_edit__("a")
       end,
     },
     {
@@ -1682,12 +1656,7 @@ function M:__resolve_builtin_keymaps_preview__()
       key = "I",
       desc = "searcher#preview: back to edit (I)",
       callback = function()
-        self:__focus_pane__("finder")
-
-        local winnr = vim.api.nvim_get_current_win() ---@type integer
-        if winnr == self.finder:get_winnr() then
-          vim.api.nvim_feedkeys("I", "n", false)
-        end
+        self:__back_to_edit__("I")
       end,
     },
     {
@@ -1695,12 +1664,7 @@ function M:__resolve_builtin_keymaps_preview__()
       key = "i",
       desc = "searcher#preview: back to edit (i)",
       callback = function()
-        self:__focus_pane__("finder")
-
-        local winnr = vim.api.nvim_get_current_win() ---@type integer
-        if winnr == self.finder:get_winnr() then
-          vim.api.nvim_feedkeys("i", "n", false)
-        end
+        self:__back_to_edit__("i")
       end,
     },
     {

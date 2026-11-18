@@ -5,12 +5,13 @@ local List = require("era.m.picker.composer.list")
 
 ---@param permanent                     boolean
 ---@param refocus                       ?boolean Whether the confirm callback focuses the source window before closing.
+---@param texts                         ?string[] The items of the list, a single `needle` by default.
 ---@return __test__.support.UI
-local function session(permanent, refocus)
+local function session(permanent, refocus, texts)
   local ui = require("__test__.support.ui").open(t, { width = 100, height = 32, runtime = "ark" })
   ui:lua(
     [[
-    local permanent, refocus = ...
+    local permanent, refocus, texts = ...
     vim.api.nvim_buf_set_lines(0, 0, -1, false, { "local value = 1", "local other = 2" })
     vim.api.nvim_win_set_cursor(0, { 1, 6 })
     source_winnr = vim.api.nvim_get_current_win()
@@ -31,13 +32,18 @@ local function session(permanent, refocus)
         confirmed = confirmed + 1
       end,
     })
-    picker:reset_data({ items = { { uuid = "one", text = "needle", text_lower = "needle", data = {} } } })
+    local items = {}
+    for index, text in ipairs(texts) do
+      items[index] = { uuid = tostring(index), text = text, text_lower = text, data = {} }
+    end
+    picker:reset_data({ items = items })
     vim.keymap.set({ "n", "i" }, "<F5>", function()
       picker:focus()
     end)
   ]],
     permanent,
-    refocus == true
+    refocus == true,
+    texts or { "needle" }
   )
   return ui
 end
@@ -98,6 +104,31 @@ t:test("a picker opened from Insert mode returns to Insert mode", function()
   t.assert_true(state.source, "focus returns to the source window")
   t.assert_eq("i", state.mode, "Insert mode is resumed")
   t.assert_same({ 1, 6 }, state.cursor, "the cursor keeps its column")
+end)
+
+t:test("the result takes Normal keys in the Insert mode a focus move from the finder carries over", function()
+  local ui = session(true, false, { "alpha", "beta", "gamma" })
+  press(ui, "<F5>", "vim.api.nvim_get_current_win() ~= source_winnr")
+  if ui:lua("return vim.api.nvim_get_mode().mode") ~= "i" then
+    press(ui, "i", "vim.api.nvim_get_mode().mode == 'i'")
+  end
+  press(
+    ui,
+    "<M-j>",
+    "vim.api.nvim_get_current_win() == picker.result:get_winnr() and picker.result.lnum_total:snapshot() == 3"
+  )
+  ui:lua("vim.v.errmsg = ''")
+
+  press(ui, "j", "picker.result.lnum_current:snapshot() == 2")
+  press(ui, "G", "picker.result.lnum_current:snapshot() == 3")
+  press(ui, "k", "picker.result.lnum_current:snapshot() == 2")
+  t.assert_eq("i", ui:lua("return vim.api.nvim_get_mode().mode"), "the result keeps Insert mode")
+  t.assert_eq("", ui:lua("return vim.v.errmsg"), "no key edits the read-only result")
+
+  -- Back in the finder, A starts the query instead of typing into it.
+  press(ui, "A", "vim.api.nvim_get_current_win() == picker.finder:get_winnr()")
+  press(ui, "l", "vim.api.nvim_buf_get_lines(picker.finder:get_bufnr(), 0, 1, false)[1] == 'l'")
+  t.assert_eq("i", ui:lua("return vim.api.nvim_get_mode().mode"), "the finder keeps Insert mode")
 end)
 
 ---Observables of the filter controls of a List, disposed when the case ends.
