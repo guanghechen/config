@@ -389,4 +389,30 @@ t:test("reveal chooses the most specific child alias and preserves an alias work
   t.assert_eq(base .. "/alias", aliased:get_root_filepath())
 end)
 
+t:test("maximize widens the Explorer in its own window and keeps the width it restores to", function()
+  local path = t:tempdir()
+  write(path .. "/a")
+  local widget = fixture.widget(path)
+  local _, view = widget:context()
+  local winnr, width = view.winnr, vim.api.nvim_win_get_width(view.winnr)
+  t:defer(function()
+    local in_place = dot.state.maximized.get_in_place()
+    if in_place ~= nil then
+      dot.state.maximized.dispose_in_place(in_place)
+    end
+  end)
+
+  dot.state.status.set_winnr_command(winnr)
+  era.m.maximize.toggle()
+  t.assert_eq(winnr, widget:get_winnr(), "the Explorer keeps its window and tab")
+  t.assert_true(vim.api.nvim_win_get_width(winnr) > width, "widened")
+  t.assert_true(era.m.maximize.is_maximized(winnr))
+  era.m.maximize.toggle()
+  t.assert_eq(width, vim.api.nvim_win_get_width(winnr), "restored")
+
+  era.m.maximize.toggle()
+  widget:hide()
+  t.assert_eq(width, widget._o_width:snapshot(), "hiding a maximized Explorer keeps the width it restores to")
+end)
+
 t:run()

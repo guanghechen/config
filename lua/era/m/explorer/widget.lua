@@ -23,6 +23,9 @@ local SELECTION_GLYPHS = {
   },
 }
 
+-- The tree view and the per-tab bookkeeping belong to the Explorer window, which a transient tab would not show.
+era.m.maximize.register(stl.e.WinTypeEnum.EXPLORER, era.m.maximize.in_place)
+
 ---@class era.m.explorer.Widget : dot.t.IWidget
 ---@field name                          string
 ---@field fullname                      string
@@ -137,7 +140,10 @@ function M.new(props)
       for _, winnr in ipairs(vim.v.event.windows or {}) do
         for tabnr, owned in pairs(self._tab_wins) do
           if winnr == owned and self:get_winnr(tabnr) == owned then
-            self._o_width:next(vim.api.nvim_win_get_width(owned))
+            -- A maximized Explorer is wider only for the while; the width stays the one it restores to.
+            if not era.m.maximize.is_maximized(owned) then
+              self._o_width:next(vim.api.nvim_win_get_width(owned))
+            end
             return
           end
         end
@@ -541,7 +547,9 @@ function M:hide(tabnr)
   if not winnr then
     return
   end
-  self._o_width:next(vim.api.nvim_win_get_width(winnr))
+  if not era.m.maximize.is_maximized(winnr) then
+    self._o_width:next(vim.api.nvim_win_get_width(winnr))
+  end
   local view = self._views[tabnr]
   self:_forget_window(tabnr, winnr)
   if view then
@@ -575,7 +583,7 @@ end
 function M:resize()
   local width = math.max(1, math.min(self._o_width:snapshot(), vim.o.columns - 1))
   for tabnr, winnr in pairs(self._tab_wins) do
-    if self:get_winnr(tabnr) == winnr then
+    if self:get_winnr(tabnr) == winnr and not era.m.maximize.is_maximized(winnr) then
       vim.api.nvim_win_set_width(winnr, width)
     end
   end

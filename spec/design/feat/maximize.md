@@ -26,6 +26,22 @@ Neovim 无法锁定 tabpage；`:tabs` 仍可观察该 tab，原生命令/API 仍
 - Widget 在最大化期间修改边框等呈现字段时经 `dot.state.maximized.set_float_config()` 写入原 config，恢复后生效，
   不改动最大化外框。
 
+## 窗口自管的最大化
+
+窗口类型（`vim.w.wintype`）可以经 `era.m.maximize.register(wintype, handler)` 声明自己的最大化方式。Toggle 先按目标
+window 的类型查找 handler，找到就交给它，否则按上文处理普通 window 与浮动 window。
+
+- Handler 提供 `toggle(winnr)` 与 `is_maximized(winnr)`；`era.m.maximize.is_maximized(winnr)` 统一回答三种方式。
+- 自己记录窗口尺寸的模块，在 `is_maximized` 期间不记录尺寸变化，也不把放大后的尺寸保存为原尺寸。
+
+`era.m.maximize.in_place` 是现成的 handler，在原 tab 内放大：
+
+- 用 `wincmd _`、`wincmd |` 把 window 放到最大，window 与 buffer 不变，并记下整个 tab 的布局。
+- 再次 toggle、焦点进入同 tab 的另一个普通 window、或离开该 tab 时恢复布局；进入浮动 window 不恢复。期间 tab 的 window
+  有增减时，只恢复该 window 自己的尺寸。被放大的 window 关闭时只丢弃状态。同一时间最多一个 window 原地放大。
+
+Explorer 使用 `in_place`：树视图与按 tab 的记录都绑定在原 window 上，换到临时 tab 会失去图标、缩进线与按键。
+
 ## 侧栏沉浸
 
 带纵向堆叠侧栏的界面在侧栏 pane 中把 `z;` 绑定为沉浸切换；侧栏之外（preview、SBS）的 `z;` 仍是上述 window 最大化。
@@ -39,10 +55,11 @@ Neovim 无法锁定 tabpage；`:tabs` 仍可观察该 tab，原生命令/API 仍
 
 ## 状态归属
 
-`dot.state.maximized` 持有两类状态：
+`dot.state.maximized` 持有三类状态：
 
 - 浮窗：原 window handle 与可恢复的 presentation state，就地更新 resize snapshot。
 - 普通窗口：source tab/window、maximize tab/window、lifecycle augroup 与 closing guard。
+- 原地放大：window、tab、放大前的布局与尺寸，以及恢复用的 augroup。
 
 `era.m.maximize` 负责创建和关闭流程；`dot.state.maximized` 负责 projection sync，
 并在最终清理前校验 identity。Tab 类型与命令匹配见 [Tab](../dot/tab.md)。

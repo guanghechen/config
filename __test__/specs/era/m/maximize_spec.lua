@@ -317,4 +317,102 @@ t:test("a border set while a float is maximized applies once it is restored", fu
   t.assert_same(double, vim.api.nvim_win_get_config(float_winnr).border, "the border set while maximized")
 end)
 
+---Splits the current window into two side by side; when the case ends only the right one is left and no window is
+---maximized in place.
+---@return integer left
+---@return integer right
+local function side_by_side()
+  local right = vim.api.nvim_get_current_win() ---@type integer
+  vim.cmd("leftabove vsplit")
+  local left = vim.api.nvim_get_current_win() ---@type integer
+  vim.api.nvim_win_set_width(left, 20)
+  t:defer(function()
+    local in_place = maximized.get_in_place() ---@type dot.state.maximized.IInPlaceContext|nil
+    if in_place ~= nil then
+      maximized.dispose_in_place(in_place)
+    end
+    for _, winnr in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+      if winnr ~= right then
+        vim.api.nvim_win_close(winnr, true)
+      end
+    end
+    winnr_command = 0
+  end)
+  return left, right
+end
+
+t:test("a window type with a handler maximizes through it instead of a transient tab", function()
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
+  local toggled = {} ---@type integer[]
+  Maximize.register("test:owned", {
+    toggle = function(target)
+      toggled[#toggled + 1] = target
+    end,
+    is_maximized = function(target)
+      return target == winnr
+    end,
+  })
+  vim.w[winnr].wintype = "test:owned"
+  t:defer(function()
+    vim.w[winnr].wintype = nil
+    winnr_command = 0
+  end)
+
+  winnr_command = winnr
+  Maximize.toggle()
+
+  t.assert_same({ winnr }, toggled)
+  t.assert_nil(maximized.get_normal(), "no transient tab")
+  t.assert_true(Maximize.is_maximized(winnr), "the handler answers")
+end)
+
+t:test("in-place maximize restores the layout on the next toggle or once another window takes the focus", function()
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  local left, right = side_by_side()
+  local layout = vim.fn.winrestcmd() ---@type string
+
+  Maximize.in_place.toggle(left)
+  t.assert_eq(tabnr, vim.api.nvim_get_current_tabpage(), "same tab")
+  t.assert_true(vim.api.nvim_win_get_width(left) > 20, "enlarged")
+  t.assert_true(Maximize.in_place.is_maximized(left))
+  Maximize.in_place.toggle(left)
+  t.assert_false(Maximize.in_place.is_maximized(left))
+  t.assert_eq(layout, vim.fn.winrestcmd(), "restored by the toggle")
+
+  Maximize.in_place.toggle(left)
+  local float = vim.api.nvim_open_win(t:buffer(), true, {
+    relative = "editor",
+    row = 0,
+    col = 0,
+    width = 5,
+    height = 1,
+  })
+  vim.api.nvim_win_close(float, true)
+  t.assert_true(Maximize.in_place.is_maximized(left), "a float keeps it maximized")
+  vim.api.nvim_set_current_win(right)
+  t.assert_false(Maximize.in_place.is_maximized(left))
+  t.assert_eq(layout, vim.fn.winrestcmd(), "restored once another window takes the focus")
+end)
+
+t:test("in-place maximize restores the window alone once the tab changed, and the layout on leaving the tab", function()
+  local left = side_by_side()
+  Maximize.in_place.toggle(left)
+  vim.cmd("rightbelow vsplit")
+  t.assert_false(Maximize.in_place.is_maximized(left))
+  t.assert_eq(20, vim.api.nvim_win_get_width(left), "the window's own width")
+
+  vim.api.nvim_set_current_win(left)
+  local tabnr = vim.api.nvim_get_current_tabpage() ---@type integer
+  Maximize.in_place.toggle(left)
+  vim.cmd("tabnew")
+  local added = vim.api.nvim_get_current_tabpage() ---@type integer
+  t:defer(function()
+    close_tab(added)
+  end)
+  t.assert_false(Maximize.in_place.is_maximized(left), "leaving the tab restores it")
+  vim.api.nvim_set_current_tabpage(tabnr)
+  -- The tabline the new tab brings takes a row; the widths are the layout's.
+  t.assert_eq(20, vim.api.nvim_win_get_width(left))
+end)
+
 t:run()

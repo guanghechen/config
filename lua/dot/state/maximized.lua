@@ -12,9 +12,20 @@
 ---@field public augroup                integer
 ---@field public closing                boolean
 
+---A window enlarged within its own tab, with what restores the tab around it.
+---@class dot.state.maximized.IInPlaceContext
+---@field public winnr                  integer
+---@field public tabnr                  integer
+---@field public layout                 string The `winrestcmd()` of the tab before the window was enlarged.
+---@field public winnrs                 integer[] The windows of the tab that `layout` sizes.
+---@field public width                  integer
+---@field public height                 integer
+---@field public augroup                integer
+
 ---@class dot.state.maximized.IContext
 ---@field public original_float         ?dot.state.maximized.IOriginalFloatWindow
 ---@field public normal                 ?dot.state.maximized.INormalContext
+---@field public in_place               ?dot.state.maximized.IInPlaceContext
 
 ---@class dot.state.maximized.ResolveResizeOpts
 ---@field public winblend               ?integer
@@ -28,6 +39,7 @@
 local context = {
   original_float = nil,
   normal = nil,
+  in_place = nil,
 }
 
 ---@class dot.state.maximized
@@ -112,6 +124,30 @@ end
 ---@return nil
 function M.clear_normal()
   context.normal = nil
+end
+
+---@param in_place                      dot.state.maximized.IInPlaceContext
+---@return nil
+function M.set_in_place(in_place)
+  context.in_place = in_place
+end
+
+---@return dot.state.maximized.IInPlaceContext|nil
+function M.get_in_place()
+  return context.in_place
+end
+
+---Dispose the active in-place context only when identity still matches.
+---@param in_place                      dot.state.maximized.IInPlaceContext
+---@return boolean
+function M.dispose_in_place(in_place)
+  if context.in_place ~= in_place then
+    return false
+  end
+
+  context.in_place = nil
+  pcall(vim.api.nvim_del_augroup_by_id, in_place.augroup)
+  return true
 end
 
 ---@param wincfg                        vim.api.keyset.win_config
