@@ -391,7 +391,8 @@ function WorkspaceSession:__watch_changes_size__()
       if resize.sync_heights then
         workspace_view.sync_changes_heights(self.layout)
       end
-      if resize.remember_width then
+      -- A maximized pane widens the sidebar only for the while; the width stays the one it restores to.
+      if resize.remember_width and not workspace_view.is_sidebar_maximized(self.layout) then
         dot.context.diffview.panel_width:next(resize.remember_width)
       end
       if resize.render then
@@ -562,11 +563,18 @@ end
 -- Opening
 ----------------------------------------------------------------------------------------------------
 
+---Maximizes the panes in place: their tree views are bound to their windows, which a transient tab would not show.
+---@return nil
+local function register_maximize()
+  era.m.maximize.register(stl.e.WinTypeEnum.DIFFVIEW_PANEL, era.m.maximize.in_place)
+end
+
 ---Opens the repository Git workspace, or returns to its tab when it is open.
 ---@param opts                          ?{ layout: integer|nil }
 ---@return era.m.diffview.WorkspaceSession|nil
 function M.open_workspace(opts)
   workspace_tabline.register()
+  register_maximize()
   if not dot.path.workspace() then
     stl.reporter.warn({ from = __module_name__, subject = "open_workspace", message = "Not in a git repository" })
     return nil
@@ -632,6 +640,7 @@ end
 ---@return era.m.diffview.CommitsSession|nil
 function M.open_log(opts)
   commits_tabline.register()
+  register_maximize()
   if not dot.path.workspace() then
     stl.reporter.warn({ from = __module_name__, subject = "open_log", message = "Not in a git repository" })
     return nil

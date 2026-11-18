@@ -8,6 +8,7 @@
 | :-------------------- | :--------------------- |
 | `ux:board`            | 通用面板（通知历史等） |
 | `ux:cmdline`          | 命令行窗口             |
+| `ux:diffview-panel`   | Diffview 列表 pane     |
 | `ux:explorer`         | 文件浏览器             |
 | `ux:input`            | 输入框                 |
 | `ux:notify`           | 通知弹窗               |

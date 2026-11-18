@@ -122,6 +122,7 @@ M.TabTypeSet = {
 M.WinTypeEnum = {
   BOARD             = "ux:board",
   CMDLINE           = "ux:cmdline",
+  DIFFVIEW_PANEL    = "ux:diffview-panel",
   EXPLORER          = "ux:explorer",
   INPUT             = "ux:input",
   NOTIFY            = "ux:notify",

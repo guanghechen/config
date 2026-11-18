@@ -20,6 +20,7 @@ local __module_name__ = "dot.win" ---@type string
 local wintype_attrs = {
   focusable = {
     [stl.e.WinTypeEnum.BOARD] = true,
+    [stl.e.WinTypeEnum.DIFFVIEW_PANEL] = true,
     [stl.e.WinTypeEnum.EXPLORER] = true,
     [stl.e.WinTypeEnum.INPUT] = true,
     [stl.e.WinTypeEnum.NOTIFY] = true,
@@ -36,7 +37,9 @@ local wintype_attrs = {
   },
   projectable = {},
   sourcefile = {},
-  swappable = {},
+  swappable = {
+    [stl.e.WinTypeEnum.DIFFVIEW_PANEL] = true,
+  },
 }
 
 local meta_map = {} ---@type table<integer, dot.win.IMeta|nil>

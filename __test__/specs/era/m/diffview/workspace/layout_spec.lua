@@ -4,6 +4,7 @@ local diffview = require("__test__.support.diffview")
 local treeview = require("__test__.support.treeview")
 local WorkspaceState = require("era.m.diffview.view.workspace.state").State
 local commits_view = require("era.m.diffview.view.commits.view")
+local layout_util = require("era.m.diffview.layout")
 local pane_changes = require("era.m.diffview.pane.changes")
 local view = require("era.m.diffview.view.workspace.view")
 
@@ -56,8 +57,8 @@ local function changes_layout()
       vim.api.nvim_win_close(unstaged.winnr, true)
     end
     vim.api.nvim_set_current_win(original_winnr)
-    -- The window became the Staged pane, which fixes its buffer.
-    vim.api.nvim_set_option_value("winfixbuf", false, { win = original_winnr, scope = "local" })
+    -- The window became the Staged pane.
+    layout_util.release_pane_win(original_winnr)
     vim.api.nvim_win_set_buf(original_winnr, original_bufnr)
     for _, pane in ipairs({ staged, unstaged }) do
       if pane.bufnr and vim.api.nvim_buf_is_valid(pane.bufnr) then

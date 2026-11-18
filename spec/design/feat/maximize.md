@@ -45,7 +45,8 @@ window 的类型查找 handler，找到就交给它，否则按上文处理普�
 - 恢复把记下的尺寸还给仍在 tab 中的 window：宽度都还原；高度只还原与其他 window 同在一列（自身或所在的行处于纵向堆叠中）
   的 window，独占整列高度的 window 还原高度会把差额交给命令行。
 
-Explorer 使用 `in_place`：树视图与按 tab 的记录都绑定在原 window 上，换到临时 tab 会失去图标、缩进线与按键。
+Explorer 与 [Diffview 的列表 pane](diffview/layout.md) 使用 `in_place`：树视图绑定在原 window 上，换到临时 tab
+会失去图标、缩进线等装饰，Explorer 按 tab 的记录也会失效。
 
 ## 侧栏沉浸
 

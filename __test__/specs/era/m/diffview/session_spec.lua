@@ -424,20 +424,40 @@ t:test("a session closing in the last tab leaves a window that shows other buffe
     end
     return session
   end
+  t:defer(function()
+    local in_place = dot.state.maximized.get_in_place()
+    if in_place ~= nil then
+      dot.state.maximized.dispose_in_place(in_place)
+    end
+  end)
   for _, case in ipairs({
     {
       "commits and files",
       function()
-        return diffview.open_log(t, { layout = 5 })
+        local session = diffview.open_log(t, { layout = 5 })
+        return session, assert(session.layout.filetree_winnr)
       end,
     },
-    { "sidebar alone", sidebar_only },
+    {
+      "sidebar alone",
+      function()
+        local session = sidebar_only()
+        return session, assert(session.layout.history.commits_winnr)
+      end,
+    },
   }) do
-    local label, session = case[1], case[2]()
+    local label, session, pane_winnr = case[1], case[2]()
     vim.cmd.tabonly()
+    vim.api.nvim_set_current_win(pane_winnr)
+    dot.state.status.set_winnr_command(pane_winnr)
+    era.m.maximize.toggle()
     session:close()
     local winnr = vim.api.nvim_get_current_win()
+    t.assert_eq(pane_winnr, winnr, label .. ": the pane left")
+    t.assert_nil(dot.state.maximized.get_in_place(), label .. ": the maximize ended")
     t.assert_false(vim.wo[winnr].winfixbuf, label .. ": the last window is free")
+    t.assert_true(dot.win.is_sourcefile(winnr), label .. ": a source file window")
+    t.assert_true(assert(dot.win.resolve(winnr, false)).history ~= nil, label .. ": with a buffer history")
     local bufnr = t:buffer()
     vim.api.nvim_win_set_buf(winnr, bufnr)
     t.assert_eq(bufnr, vim.api.nvim_win_get_buf(winnr), label)

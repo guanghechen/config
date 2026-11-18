@@ -314,8 +314,8 @@ function M.switch_layout(lyt, new_layout_type)
   -- Get current window and set temp buffer to keep tab alive
   local current_winnr = vim.api.nvim_get_current_win()
   local original_bufnr = vim.api.nvim_win_get_buf(current_winnr)
-  -- A pane window fixes its buffer; the window turns into the pivot of the new layout.
-  vim.api.nvim_set_option_value("winfixbuf", false, { win = current_winnr, scope = "local" })
+  -- The window turns into the pivot of the new layout.
+  layout_util.release_pane_win(current_winnr)
   vim.api.nvim_win_set_buf(current_winnr, temp_bufnr)
 
   -- Close all windows except current one
@@ -661,10 +661,10 @@ function M.destroy(lyt)
     pane_sbs.restore_winopts(lyt.sbs_right_winnr)
   end
 
-  -- A pane window outlives the session as the last window of the last tab, where it takes other buffers again.
+  -- A pane window outlives the session as the last window of the last tab.
   for _, winnr in pairs({ lyt.commits_winnr, lyt.filetree_winnr }) do
     if vim.api.nvim_win_is_valid(winnr) then
-      vim.api.nvim_set_option_value("winfixbuf", false, { win = winnr, scope = "local" })
+      layout_util.release_pane_win(winnr)
     end
   end
 

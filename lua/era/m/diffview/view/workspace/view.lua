@@ -487,6 +487,7 @@ end
 local function hide_sidebar_pane(lyt, name)
   local winnr = sidebar_winnr(lyt, name)
   if winnr then
+    era.m.maximize.restore(winnr)
     vim.api.nvim_win_hide(winnr)
   end
   if name == "history" then
@@ -692,6 +693,19 @@ function M.sidebar_panes(lyt)
   end, SIDEBAR_PANES)
 end
 
+---Whether one of the sidebar panes is maximized.
+---@param lyt                            era.m.diffview.view.workspace.ILayout
+---@return boolean
+function M.is_sidebar_maximized(lyt)
+  for _, name in ipairs(SIDEBAR_PANES) do
+    local winnr = sidebar_winnr(lyt, name)
+    if winnr and era.m.maximize.is_maximized(winnr) then
+      return true
+    end
+  end
+  return false
+end
+
 ---@param lyt                            era.m.diffview.view.workspace.ILayout
 ---@param winnr                          integer
 ---@return era.m.diffview.view.workspace.SidebarPane|nil
@@ -863,11 +877,11 @@ function M.destroy(lyt)
     pane_sbs.restore_winopts(lyt.sbs_right_winnr)
   end
 
-  -- A pane window outlives the session as the last window of the last tab, where it takes other buffers again.
+  -- A pane window outlives the session as the last window of the last tab.
   for _, name in ipairs(SIDEBAR_PANES) do
     local winnr = sidebar_winnr(lyt, name)
     if winnr then
-      vim.api.nvim_set_option_value("winfixbuf", false, { win = winnr, scope = "local" })
+      layout_util.release_pane_win(winnr)
     end
   end
 
@@ -1005,6 +1019,10 @@ function M.sync_changes_heights(lyt)
   local history_winnr = lyt.history and lyt.history.commits_winnr or nil ---@type integer|nil
   if history_winnr and not vim.api.nvim_win_is_valid(history_winnr) then
     history_winnr = nil
+  end
+  -- A maximized pane holds the column until it is restored.
+  if M.is_sidebar_maximized(lyt) then
+    return
   end
   local total_height = vim.api.nvim_win_get_height(staged_winnr) + vim.api.nvim_win_get_height(unstaged_winnr)
   if history_winnr then

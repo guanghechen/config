@@ -5,6 +5,9 @@ Workspace 与 standalone commits 分别管理布局；快捷键适用范围见[�
 列表 pane（Workspace 的 Changes、History，standalone 的 Commits、Filetree）的窗口固定 buffer（`winfixbuf`）：
 jumplist 跳转、`:buffer` 等切换 buffer 的命令不能替换它，打开文件也不选它作目标窗口；Diffview 改变布局时先解除再复用窗口。
 
+列表 pane 的窗口带类型 `ux:diffview-panel`，[最大化](../maximize.md#窗口自管的最大化)时在原 tab 内放大。窗口隐藏、
+session 关闭后留下、或成为新布局的 pivot 之前先结束放大；留下的窗口清除类型，回到普通窗口。
+
 ## Workspace：`diffview_workspace`
 
 | 布局 | 内容                    | 结构                                               |

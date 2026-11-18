@@ -26,12 +26,22 @@ t:test("commit and file panes keep their buffers, and a switch from the commits 
   t.assert_true(vim.wo[assert(session.layout.commits_winnr)].winfixbuf, "commits pane")
   t.assert_true(vim.wo[assert(session.layout.filetree_winnr)].winfixbuf, "file pane")
 
+  t:defer(function()
+    local in_place = dot.state.maximized.get_in_place()
+    if in_place ~= nil then
+      dot.state.maximized.dispose_in_place(in_place)
+    end
+  end)
   vim.api.nvim_set_current_win(session.layout.commits_winnr)
+  dot.state.status.set_winnr_command(session.layout.commits_winnr)
+  era.m.maximize.toggle()
   require("era.m.diffview.view.commits.action").switch_to_layout(session, 2)
   local commits_winnr = assert(session.layout.commits_winnr)
   t.assert_eq(2, session.layout.layout_type)
+  t.assert_nil(dot.state.maximized.get_in_place(), "the maximize ended with the layout")
   t.assert_eq(session.layout.commits_bufnr, vim.api.nvim_win_get_buf(commits_winnr), "commits buffer shown")
   t.assert_true(vim.wo[commits_winnr].winfixbuf, "new commits pane")
+  t.assert_eq(stl.e.WinTypeEnum.DIFFVIEW_PANEL, vim.w[commits_winnr].wintype, "new commits pane")
 end)
 
 t:run()

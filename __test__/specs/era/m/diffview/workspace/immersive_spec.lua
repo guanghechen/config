@@ -240,4 +240,54 @@ t:test("sidebar panes keep their buffers against buffer switches, also the ones 
   t.assert_true(vim.wo[assert(lyt.changes.staged.winnr)].winfixbuf, "recreated Staged")
 end)
 
+---Maximizes `winnr` as the maximize command does from it; the case ends with no window maximized.
+---@param winnr                         integer
+---@return nil
+local function maximize(winnr)
+  t:defer(function()
+    local in_place = dot.state.maximized.get_in_place()
+    if in_place ~= nil then
+      dot.state.maximized.dispose_in_place(in_place)
+    end
+  end)
+  vim.api.nvim_set_current_win(winnr)
+  dot.state.status.set_winnr_command(winnr)
+  era.m.maximize.toggle()
+end
+
+t:test("maximize enlarges a sidebar pane in its own window and keeps the sidebar it restores to", function()
+  local session = open()
+  local winnr = assert(session.layout.changes.unstaged.winnr)
+  local tabnr = vim.api.nvim_get_current_tabpage()
+  local width, height = vim.api.nvim_win_get_width(winnr), vim.api.nvim_win_get_height(winnr)
+  local panel_width = dot.context.diffview.panel_width:snapshot()
+  local cmdheight = vim.o.cmdheight
+
+  maximize(winnr)
+  t.assert_eq(tabnr, vim.api.nvim_get_current_tabpage(), "the pane stays in its tab")
+  t.assert_true(vim.api.nvim_win_get_width(winnr) > width, "widened")
+  local maximized_height = vim.api.nvim_win_get_height(winnr)
+  t.assert_true(maximized_height > height, "heightened")
+  vim.api.nvim_exec_autocmds("WinResized", {})
+  t.assert_eq(panel_width, dot.context.diffview.panel_width:snapshot(), "the panel width it restores to")
+  t.assert_eq(maximized_height, vim.api.nvim_win_get_height(winnr), "the column's proportions wait")
+
+  era.m.maximize.toggle()
+  t.assert_same({ width, height }, { vim.api.nvim_win_get_width(winnr), vim.api.nvim_win_get_height(winnr) })
+  t.assert_eq(cmdheight, vim.o.cmdheight, "the command line keeps its height")
+end)
+
+t:test("hiding a maximized pane restores the sidebar first", function()
+  local session = open()
+  local lyt = session.layout
+  local unstaged_winnr = assert(lyt.changes.unstaged.winnr)
+  local width = vim.api.nvim_win_get_width(unstaged_winnr)
+  maximize(assert(lyt.history.commits_winnr))
+
+  action.toggle_history(session)
+  t.assert_same({ "staged", "unstaged" }, workspace_view.sidebar_panes(lyt))
+  t.assert_nil(dot.state.maximized.get_in_place(), "no window maximized")
+  t.assert_eq(width, vim.api.nvim_win_get_width(unstaged_winnr), "the sidebar width")
+end)
+
 t:run()

@@ -132,6 +132,7 @@
 ---@alias stl.t.WinTypeEnum
 ---| "ux:board"
 ---| "ux:cmdline"
+---| "ux:diffview-panel"
 ---| "ux:explorer"
 ---| "ux:input"
 ---| "ux:notify"
@@ -153,6 +154,7 @@
 ---@class stl.e.IWinTypeEnum
 ---@field public BOARD                  "ux:board"
 ---@field public CMDLINE                "ux:cmdline"
+---@field public DIFFVIEW_PANEL         "ux:diffview-panel"
 ---@field public EXPLORER               "ux:explorer"
 ---@field public INPUT                  "ux:input"
 ---@field public NOTIFY                 "ux:notify"

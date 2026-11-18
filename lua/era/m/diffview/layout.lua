@@ -295,6 +295,17 @@ function M.set_win_buf(winnr, bufnr)
   end
 end
 
+---Makes a pane window a plain window, as the window a session leaves or the pivot of another layout: back from a
+---maximize, open to other buffers, and keeping a buffer history. The maximize ends while the window still has its type.
+---@param winnr                         integer
+---@return nil
+function M.release_pane_win(winnr)
+  era.m.maximize.restore(winnr)
+  vim.api.nvim_set_option_value("winfixbuf", false, { win = winnr, scope = "local" })
+  vim.w[winnr].wintype = nil
+  dot.win.resolve(winnr, true)
+end
+
 ---Turn off diff mode for all windows in current tab
 function M.diff_off_all()
   local tabnr = vim.api.nvim_get_current_tabpage()

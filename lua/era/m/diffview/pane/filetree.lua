@@ -58,6 +58,7 @@ function M.apply_winopts(winnr)
   for opt, val in pairs(config.WINOPTS_PANEL) do
     vim.api.nvim_set_option_value(opt, val, { win = winnr, scope = "local" })
   end
+  vim.w[winnr].wintype = stl.e.WinTypeEnum.DIFFVIEW_PANEL
   vim.api.nvim_set_option_value("winhighlight", gen_winhl(), { win = winnr, scope = "local" })
 end
 
