@@ -1,9 +1,9 @@
-model = "gpt-6-astra"
+model = "gpt-6.2-astra"
 model_provider = "copilot-dev"
 model_reasoning_effort = "high"
 
 [agents]
-default_subagent_model = "gpt-6-astra"
+default_subagent_model = "gpt-6.2-astra"
 
 [model_providers.copilot-dev]
 name = "copilot-dev"
