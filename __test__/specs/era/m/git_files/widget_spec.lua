@@ -173,6 +173,27 @@ t:test("g? shows the keymap help of each pane", function()
   t.assert_eq(vim.api.nvim_get_current_buf(), shown[1].bufnr)
 end)
 
+t:test("every pane refreshes with <C-a>r and its Cmd and Alt aliases, as the Picker does", function()
+  local state = fixture()
+  local keymaps = require("era.m.git_files.keymaps")
+  local refreshes = {} ---@type boolean[]
+  t:patch_table(state.widget, "refresh", function(_, force)
+    refreshes[#refreshes + 1] = force
+  end)
+  for _, pane in ipairs({ keymaps.tree(state.widget), keymaps.input(state.widget), keymaps.preview(state.widget) }) do
+    local refresh = nil ---@type stl.t.IKeymap|nil
+    for _, keymap in ipairs(pane) do
+      if keymap.key == "<C-a>r" then
+        refresh = keymap
+      end
+    end
+    local found = assert(refresh, "<C-a>r")
+    t.assert_same({ "<D-r>", "<M-r>" }, found.aliases, "aliases")
+    found.callback()
+  end
+  t.assert_same({ false, false, false }, refreshes, "tree, input and preview refresh as R does")
+end)
+
 t:test("a Visual range stages all selected rows", function()
   local state = fixture()
   local widget = state.widget

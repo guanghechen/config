@@ -89,7 +89,7 @@ Status: Design。入口代码位于 `lua/era/m/git_files/`，树视图为 `era.v
   跳到下一段 / 上一段连续新增或删除行的首行，与普通 buffer 的 hunk 导航一致：一个 `@@` 块可含多段，两端循环，
   光标在某段内时向前跳到上一段；
   inputbox 中 `<C-c>`（Insert / Normal）与 `q`（Normal）关闭，`tp` 切换 preview，`z;`（Normal）切换左栏沉浸模式。
-- 四个 pane 都沿用 Picker 的 `<C-a>h/j/k/l`，以及 `Cmd` / `Alt` 同方向别名，覆盖 Insert / Normal / Visual mode。
+- 四个 pane 都沿用 Picker 的 `<C-a>h/j/k/l` 与刷新键 `<C-a>r`，以及 `Cmd` / `Alt` 别名，覆盖 Insert / Normal / Visual mode。
   左栏上下依次导航 inputbox → Staged → Unstaged，沉浸模式下为 inputbox → 显示的树；向右进入已显示的 preview，
   preview 向左返回之前的左栏 pane（包含 inputbox）。
   浮窗边界在非 zen 的 tmux 环境转交 `stl.tmux.change_pane`；无 tmux 或 zen mode 时，左栏上下边界循环，

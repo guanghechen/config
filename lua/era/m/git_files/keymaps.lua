@@ -8,11 +8,21 @@ local function show_help()
   require("era.view.keysheet").for_buffer({ bufnr = vim.api.nvim_get_current_buf(), title = "Git Files" }):open()
 end
 
+---Keys every pane takes: the focus moves and the refresh of the Picker, in Insert, Normal and Visual mode.
 ---@param widget                        era.m.git_files.Widget
 ---@return stl.t.IKeymap[]
-local function navigation(widget)
+local function shared(widget)
   ---@type stl.t.IKeymap[]
   return {
+    {
+      modes = { "i", "n", "x" },
+      key = "<C-a>r",
+      aliases = { "<D-r>", "<M-r>" },
+      desc = "Git Files: refresh",
+      callback = function()
+        widget:refresh(false)
+      end,
+    },
     {
       modes = { "i", "n", "x" },
       key = "<C-a>h",
@@ -307,7 +317,7 @@ function M.tree(widget)
       end,
     },
   }
-  return vim.list_extend(keys, navigation(widget))
+  return vim.list_extend(keys, shared(widget))
 end
 
 ---@param widget                        era.m.git_files.Widget
@@ -357,7 +367,7 @@ function M.preview(widget)
       end,
     },
   }
-  return vim.list_extend(keys, navigation(widget))
+  return vim.list_extend(keys, shared(widget))
 end
 
 ---@param widget                        era.m.git_files.Widget
@@ -487,7 +497,7 @@ function M.input(widget)
       end,
     },
   }
-  return vim.list_extend(keys, navigation(widget))
+  return vim.list_extend(keys, shared(widget))
 end
 
 return M
