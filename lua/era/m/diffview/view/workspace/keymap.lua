@@ -49,7 +49,7 @@ function M.gen_changes(ctx, action)
     { modes = { "n" }, key = "gr", desc = "diffview(workspace): Reset file (discard changes)", callback = function() action.confirm_reset(ctx) end },
     { modes = { "n" }, key = "gs", desc = "diffview(workspace): Stage file / directory", callback = function() action.stage(ctx) end },
     { modes = { "n" }, key = "gu", desc = "diffview(workspace): Unstage file / directory", callback = function() action.unstage(ctx) end },
-    { modes = { "n" }, key = "g?", desc = "diffview(workspace): Show keymap help", callback = function() action.show_help(ctx) end },
+    { modes = { "n" }, key = "g?", desc = "diffview(workspace): Show keymap help", callback = function() action.show_help() end },
     { modes = { "n" }, key = "oc", desc = "diffview(workspace): Copy filepath", callback = function() action.copy_filepath() end },
     { modes = { "n" }, key = "oi", desc = "diffview(workspace): File info", callback = function() action.show_info() end },
     { modes = { "n" }, key = "q", desc = "diffview(workspace): Close diffview", callback = function() action.close(ctx) end },
@@ -81,7 +81,7 @@ function M.gen_sbs(ctx, action, history_action)
     { modes = { "n" }, key = "<C-k>", desc = "diffview(workspace): Prev file diff", callback = function() dispatch_preview(ctx, action.goto_prev_entry, history_action, "goto_prev_commit") end },
     { modes = { "n" }, key = "gf", desc = "diffview(workspace): Open file in previous tab", callback = function() dispatch_preview(ctx, action.goto_file, history_action, "goto_file") end },
     { modes = { "n" }, key = "gF", desc = "diffview(workspace): Open file in new tab", callback = function() dispatch_preview(ctx, action.goto_file_tab, history_action, "goto_file_tab") end },
-    { modes = { "n" }, key = "g?", desc = "diffview(workspace): Show keymap help", callback = function() action.show_help(ctx) end },
+    { modes = { "n" }, key = "g?", desc = "diffview(workspace): Show keymap help", callback = function() action.show_help() end },
     { modes = { "n" }, key = "]p", desc = "diffview(workspace): Focus the sidebar pane of the preview", callback = function() action.focus_preview_pane(ctx) end },
     { modes = { "n" }, key = "[p", desc = "diffview(workspace): Focus the sidebar pane of the preview", callback = function() action.focus_preview_pane(ctx) end },
     { modes = { "n" }, key = "za", desc = "diffview(workspace): Toggle panel collapse", callback = function() dispatch_preview(ctx, action.sbs_toggle_collapse, history_action, "sbs_toggle_expand") end },
@@ -136,7 +136,7 @@ function M.gen_history(ctx, action, history_action)
     { modes = { "n" }, key = "]]", desc = "diffview(history): Next page", callback = function() history_action.next_page(history) end },
     { modes = { "n" }, key = "[i", desc = "diffview(history): Go to parent node", callback = pane_commits.goto_parent_node },
     { modes = { "n" }, key = "]i", desc = "diffview(history): Go to last child/sibling", callback = pane_commits.goto_last_child_or_sibling },
-    { modes = { "n" }, key = "g?", desc = "diffview(workspace): Show keymap help", callback = function() action.show_help(ctx) end },
+    { modes = { "n" }, key = "g?", desc = "diffview(workspace): Show keymap help", callback = function() action.show_help() end },
     { modes = { "n" }, key = "gF", desc = "diffview(history): Open file in new tab", callback = function() history_action.goto_file_tab(history) end },
     { modes = { "n" }, key = "gH", desc = "diffview(history): Collapse all commits", callback = function() history_action.collapse_all(history) end },
     { modes = { "n" }, key = "gK", desc = "diffview(history): Show commit details", callback = function() history_action.show_details(history) end },
@@ -212,42 +212,6 @@ function M.setup_history(ctx, action, history_action)
     return
   end
   apply_keymaps(bufnr, M.gen_history(ctx, action, history_action))
-end
-
-----------------------------------------------------------------------------------------------------
-
----Get all keymaps for help display
----@param ctx                            era.m.diffview.view.workspace.IContext
----@param action                         era.m.diffview.view.workspace.action
----@param history_action                 era.m.diffview.view.commits.action
----@return stl.t.IKeymap[]
-function M.get_help_keymaps(ctx, action, history_action)
-  local all = {} ---@type stl.t.IKeymap[]
-  local seen = {} ---@type table<string, boolean>
-
-  for _, keymaps in ipairs({
-    M.gen_changes(ctx, action),
-    M.gen_sbs(ctx, action, history_action),
-    M.gen_history(ctx, action, history_action),
-  }) do
-    for _, km in ipairs(keymaps) do
-      local unseen_modes = {} ---@type string[]
-      for _, mode in ipairs(km.modes) do
-        local identity = mode .. "\0" .. km.key ---@type string
-        if not seen[identity] then
-          seen[identity] = true
-          unseen_modes[#unseen_modes + 1] = mode
-        end
-      end
-      if #unseen_modes == #km.modes then
-        all[#all + 1] = km
-      elseif #unseen_modes > 0 then
-        all[#all + 1] = vim.tbl_extend("force", {}, km, { modes = unseen_modes })
-      end
-    end
-  end
-
-  return all
 end
 
 return M

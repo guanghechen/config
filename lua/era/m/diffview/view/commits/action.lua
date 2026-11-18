@@ -1339,14 +1339,10 @@ end
 -- Help action
 ----------------------------------------------------------------------------------------------------
 
----Show keymap help
----@param ctx                            era.m.diffview.view.commits.IContext
-function M.show_help(ctx)
-  local sheet = era.view.Keysheet.new({
-    title = "Diffview Commits Keybindings",
-    keymaps = ctx:get_keymaps(),
-  })
-  sheet:open()
+---Shows the keymap help of the pane the key is pressed in, with the keys every pane shares.
+function M.show_help()
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+  era.view.Keysheet.for_buffer({ bufnr = bufnr, title = "Diffview Commits Keybindings" }):open()
 end
 
 ----------------------------------------------------------------------------------------------------

@@ -28,7 +28,6 @@ local M = {}
 ---@field public loader                  era.m.diffview.content.Loader
 ---@field public pending_discards        table<string, stl.c.Future> Untracked discards in flight, by path.
 ---@field public close                   fun(self: era.m.diffview.view.workspace.IContext): nil
----@field public get_keymaps             fun(self: era.m.diffview.view.workspace.IContext): stl.t.IKeymap[]
 ---@field public refresh                 fun(self: era.m.diffview.view.workspace.IContext): nil Refreshes Changes and History.
 ---@field public setup_changes           fun(self: era.m.diffview.view.workspace.IContext): nil
 ---@field public setup_history           fun(self: era.m.diffview.view.workspace.IContext): nil
@@ -1409,14 +1408,10 @@ end
 -- Help action
 ----------------------------------------------------------------------------------------------------
 
----Show keymap help
----@param ctx                            era.m.diffview.view.workspace.IContext
-function M.show_help(ctx)
-  local sheet = era.view.Keysheet.new({
-    title = "Diffview Workspace Keybindings",
-    keymaps = ctx:get_keymaps(),
-  })
-  sheet:open()
+---Shows the keymap help of the pane the key is pressed in, with the keys every pane shares.
+function M.show_help()
+  local bufnr = vim.api.nvim_get_current_buf() ---@type integer
+  era.view.Keysheet.for_buffer({ bufnr = bufnr, title = "Diffview Workspace Keybindings" }):open()
 end
 
 ----------------------------------------------------------------------------------------------------

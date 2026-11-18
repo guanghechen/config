@@ -91,25 +91,25 @@ t:test("commit and file panes scroll the window under the mouse, and side-by-sid
   t.assert_nil(find(sbs, "<ScrollWheelUp>"), "side-by-side wheel up")
 end)
 
-t:test("help keeps mappings with the same key in different modes", function()
-  t:patch_table(keymap, "gen_commits", function()
-    return { { modes = { "n" }, key = "test", desc = "normal", callback = function() end } }
+t:test("g? in every commits pane shows the keymap help of the pane it is pressed in", function()
+  local shown = {} ---@type era.view.keysheet.IBufferProps[]
+  t:patch_table(require("era.view.keysheet"), "for_buffer", function(props)
+    shown[#shown + 1] = props
+    return { open = function() end }
   end)
-  t:patch_table(keymap, "gen_filetree", function()
-    return { { modes = { "x" }, key = "test", desc = "visual", callback = function() end } }
-  end)
-  t:patch_table(keymap, "gen_sbs", function()
-    return {}
-  end)
-
-  local modes = {} ---@type table<string, boolean>
-  for _, mapping in ipairs(keymap.get_help_keymaps(diffview.commits_context({}), diffview.recorder())) do
-    for _, mode in ipairs(mapping.modes) do
-      modes[mode] = true
-    end
+  local action = require("era.m.diffview.view.commits.action")
+  local ctx = diffview.commits_context({})
+  for _, keymaps in ipairs({
+    keymap.gen_commits(ctx, action),
+    keymap.gen_filetree(ctx, action),
+    keymap.gen_sbs(ctx, action),
+  }) do
+    assert(find(keymaps, "g?")).callback()
   end
-  t.assert_true(modes.n, "normal mapping")
-  t.assert_true(modes.x, "visual mapping")
+  t.assert_eq(3, #shown)
+  for _, props in ipairs(shown) do
+    t.assert_eq(vim.api.nvim_get_current_buf(), props.bufnr)
+  end
 end)
 
 t:test("commits panes get mouse mappings each time they are created", function()

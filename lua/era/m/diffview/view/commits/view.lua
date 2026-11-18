@@ -34,7 +34,6 @@ local M = {}
 ---@field public loader                  era.m.diffview.content.Loader
 ---@field public begin_preview           fun(self: era.m.diffview.view.commits.IContext): fun(): boolean Starts a preview; the result tells whether it is still current.
 ---@field public close                   fun(self: era.m.diffview.view.commits.IContext): nil
----@field public get_keymaps             fun(self: era.m.diffview.view.commits.IContext): stl.t.IKeymap[]
 ---@field public render_winline          fun(self: era.m.diffview.view.commits.IContext): nil
 ---@field public setup_commits           fun(self: era.m.diffview.view.commits.IContext): nil
 ---@field public setup_filetree          fun(self: era.m.diffview.view.commits.IContext): nil

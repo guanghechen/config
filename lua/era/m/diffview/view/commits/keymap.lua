@@ -59,7 +59,7 @@ function M.gen_commit_pane(ctx, action)
     { modes = { "n" }, key = "]]", desc = "diffview(commits): Next page", callback = function() action.next_page(ctx) end },
     { modes = { "n" }, key = "[i", desc = "diffview(commits): Go to parent node", callback = pane_commits.goto_parent_node },
     { modes = { "n" }, key = "]i", desc = "diffview(commits): Go to last child/sibling", callback = pane_commits.goto_last_child_or_sibling },
-    { modes = { "n" }, key = "g?", desc = "diffview(commits): Show keymap help", callback = function() action.show_help(ctx) end },
+    { modes = { "n" }, key = "g?", desc = "diffview(commits): Show keymap help", callback = function() action.show_help() end },
     { modes = { "n" }, key = "gF", desc = "diffview(commits): Open file in new tab", callback = function() action.goto_file_tab(ctx) end },
     { modes = { "n" }, key = "gH", desc = "diffview(commits): Collapse all commits", callback = function() action.collapse_all(ctx) end },
     { modes = { "n" }, key = "gK", desc = "diffview(commits): Show commit details", callback = function() action.show_details(ctx) end },
@@ -110,7 +110,7 @@ function M.gen_filetree(ctx, action)
     { modes = { "n" }, key = "l", desc = "diffview(commits): Select file", callback = function() action.view_diff(ctx) end },
     { modes = { "n" }, key = "h", desc = "diffview(commits): Go to parent node", callback = pane_filetree.goto_parent_node },
     { modes = { "n" }, key = "q", desc = "diffview(commits): Close diffview", callback = function() action.close(ctx) end },
-    { modes = { "n" }, key = "g?", desc = "diffview(commits): Show keymap help", callback = function() action.show_help(ctx) end },
+    { modes = { "n" }, key = "g?", desc = "diffview(commits): Show keymap help", callback = function() action.show_help() end },
     { modes = { "n" }, key = "gF", desc = "diffview(commits): Open file in new tab", callback = function() action.goto_file_tab(ctx) end },
     { modes = { "n" }, key = "gR", desc = "diffview(commits): Restore file to commit version", callback = function() action.restore_file(ctx) end },
     { modes = { "n" }, key = "gf", desc = "diffview(commits): Open file in previous tab", callback = function() action.goto_file(ctx) end },
@@ -134,7 +134,7 @@ function M.gen_sbs(ctx, action)
   -- stylua: ignore
   ---@type stl.t.IKeymap[]
   local keymaps = {
-    { modes = { "n" }, key = "g?", desc = "diffview(commits): Show keymap help", callback = function() action.show_help(ctx) end },
+    { modes = { "n" }, key = "g?", desc = "diffview(commits): Show keymap help", callback = function() action.show_help() end },
     { modes = { "n" }, key = "gF", desc = "diffview(commits): Open file in new tab", callback = function() action.goto_file_tab(ctx) end },
     { modes = { "n" }, key = "gf", desc = "diffview(commits): Open file in previous tab", callback = function() action.goto_file(ctx) end },
     { modes = { "n" }, key = "zC", desc = "diffview(commits): Close all diff folds", callback = function() action.close_all_folds(ctx) end },
@@ -207,39 +207,6 @@ function M.setup_filetree(ctx, action)
 
   local keymaps = M.gen_filetree(ctx, action)
   apply_keymaps(lyt.filetree_bufnr, keymaps)
-end
-
-----------------------------------------------------------------------------------------------------
--- Help keymaps
-----------------------------------------------------------------------------------------------------
-
----Get all keymaps for help display
----@param ctx                            era.m.diffview.view.commits.IContext
----@param action                         era.m.diffview.view.commits.action
----@return stl.t.IKeymap[]
-function M.get_help_keymaps(ctx, action)
-  local all = {} ---@type stl.t.IKeymap[]
-  local seen = {} ---@type table<string, boolean>
-
-  for _, keymaps in ipairs({ M.gen_commits(ctx, action), M.gen_filetree(ctx, action), M.gen_sbs(ctx, action) }) do
-    for _, km in ipairs(keymaps) do
-      local unseen_modes = {} ---@type string[]
-      for _, mode in ipairs(km.modes) do
-        local identity = mode .. "\0" .. km.key ---@type string
-        if not seen[identity] then
-          seen[identity] = true
-          unseen_modes[#unseen_modes + 1] = mode
-        end
-      end
-      if #unseen_modes == #km.modes then
-        all[#all + 1] = km
-      elseif #unseen_modes > 0 then
-        all[#all + 1] = vim.tbl_extend("force", {}, km, { modes = unseen_modes })
-      end
-    end
-  end
-
-  return all
 end
 
 return M

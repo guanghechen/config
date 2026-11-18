@@ -10,11 +10,6 @@ local M = {}
 
 local function noop() end
 
----@return stl.t.IKeymap[]
-local function no_keymaps()
-  return {}
-end
-
 ---@param context                       table
 ---@param fields                        table
 ---@return table
@@ -32,7 +27,6 @@ function M.workspace_context(fields)
   return assign({
     pending_discards = {},
     close = noop,
-    get_keymaps = no_keymaps,
     refresh = noop,
     setup_changes = noop,
     setup_history = noop,
@@ -53,7 +47,6 @@ function M.commits_context(fields)
       end
     end,
     close = noop,
-    get_keymaps = no_keymaps,
     render_winline = noop,
     setup_commits = noop,
     setup_filetree = noop,

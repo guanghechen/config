@@ -15,7 +15,7 @@
 
 ## 通用约定
 
-- `g?`：显示当前 Diffview 的快捷键帮助。
+- `g?`：显示当前 pane 上生效的快捷键，含各 pane 共用的键，规则同 [Explorer](../explorer/README.md#默认键位)。
 - `K`：hover，显示当前项的详情：Changes 为文件详情，History 与 Commits 为 commit details。
 - `<C-a>r`：刷新当前 view；aliases 为 `<D-r>`、`<M-r>`。
 - `<C-j>` / `<C-k>`：选择下一个 / 上一个 domain item。
@@ -23,8 +23,6 @@
 - `zC` / `zM`：关闭当前 view 的所有 diff folds。
 - `zO` / `zR`：打开当前 view 的所有 diff folds。
 - `t3`：切换默认 diff fold policy，并应用到当前 preview domain。
-
-Help 使用 `mode + key` 作为 mapping identity；Normal 与 Visual 的同名 mapping 分别保留。
 
 ## Git Workspace
 

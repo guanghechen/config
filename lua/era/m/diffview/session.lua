@@ -231,11 +231,6 @@ function History:render_winline()
   workspace_winline.render_history(self)
 end
 
----@return stl.t.IKeymap[]
-function History:get_keymaps()
-  return self.workspace:get_keymaps()
-end
-
 ---@return nil
 function History:setup_commits()
   self.workspace:setup_history()
@@ -273,11 +268,6 @@ end
 ---@field public pending_discards       table<string, stl.c.Future> Untracked discards in flight, by path.
 local WorkspaceSession = setmetatable({}, { __index = Session })
 WorkspaceSession.__index = WorkspaceSession
-
----@return stl.t.IKeymap[]
-function WorkspaceSession:get_keymaps()
-  return workspace_keymap.get_help_keymaps(self, workspace_action, commits_action)
-end
 
 ---@return stl.t.IKeymap[]
 function WorkspaceSession:sbs_keymaps()
@@ -464,11 +454,6 @@ end
 ---The standalone log has no pane winline.
 ---@return nil
 function CommitsSession:render_winline() end
-
----@return stl.t.IKeymap[]
-function CommitsSession:get_keymaps()
-  return commits_keymap.get_help_keymaps(self, commits_action)
-end
 
 ---@return stl.t.IKeymap[]
 function CommitsSession:sbs_keymaps()

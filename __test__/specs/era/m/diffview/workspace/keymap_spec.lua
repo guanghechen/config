@@ -257,18 +257,25 @@ t:test("Changes and History move with l and h, and History closes with q instead
   t.assert_nil(find(history, "oo"), "History oo")
 end)
 
-t:test("help keeps normal and visual mappings for the same key", function()
+t:test("g? in every workspace pane shows the keymap help of the pane it is pressed in", function()
+  local shown = {} ---@type era.view.keysheet.IBufferProps[]
+  t:patch_table(require("era.view.keysheet"), "for_buffer", function(props)
+    shown[#shown + 1] = props
+    return { open = function() end }
+  end)
+  local action = require("era.m.diffview.view.workspace.action")
   local ctx = diffview.workspace_context({ layout = {}, history = {} })
-  local modes = {} ---@type table<string, boolean>
-  for _, mapping in ipairs(keymap.get_help_keymaps(ctx, diffview.recorder(), diffview.recorder())) do
-    if mapping.key == "ghu" then
-      for _, mode in ipairs(mapping.modes) do
-        modes[mode] = true
-      end
-    end
+  for _, keymaps in ipairs({
+    keymap.gen_changes(ctx, action),
+    keymap.gen_sbs(ctx, action, diffview.recorder()),
+    keymap.gen_history(ctx, action, diffview.recorder()),
+  }) do
+    assert(find(keymaps, "g?")).callback()
   end
-  t.assert_true(modes.n, "normal ghu")
-  t.assert_true(modes.x, "visual ghu")
+  t.assert_eq(3, #shown)
+  for _, props in ipairs(shown) do
+    t.assert_eq(vim.api.nvim_get_current_buf(), props.bufnr)
+  end
 end)
 
 t:test("the refresh key refreshes the session from every workspace pane", function()

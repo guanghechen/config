@@ -289,7 +289,7 @@ t:test("workspace: History previews a commit's file; reveal and the toggles swit
   t.assert_eq(0, ui:lua("return #errors"))
 end)
 
-t:test("help: g? lists the keymaps of the focused view", function()
+t:test("help: g? lists the keymaps of the focused pane", function()
   local ui = child(repository())
   local p = open_workspace(ui, { "c.txt" }, { "a.txt" })
   local help = [[
@@ -309,9 +309,9 @@ t:test("help: g? lists the keymaps of the focused view", function()
   ]]
 
   press(ui, p.changes[1], "g?")
-  local workspace_help =
-    await(ui, help, "workspace help", "Stage file / directory", "Unstage selected index line", "Show commit details")
-  ui:lua("vim.api.nvim_win_close(..., true)", workspace_help)
+  local changes_help = await(ui, help, "Changes help", "Stage file / directory", "File info", "Refresh")
+  t.assert_nil(ui:lua(help, "Show commit details"), "the History keys stay out of the Changes help")
+  ui:lua("vim.api.nvim_win_close(..., true)", changes_help)
 
   local log = open_log(ui, "a.txt")
   press(ui, ui:lua("return panes().history"), "g?")
