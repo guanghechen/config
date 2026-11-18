@@ -29,9 +29,10 @@ local function hold_publication(view)
 end
 
 ---@param view                          ux.treeview.View
+---@param event                         ?string The cursor event, CursorMoved by default.
 ---@return nil
-local function cursor_event(view)
-  vim.api.nvim_exec_autocmds("CursorMoved", { group = view._group, buf = view.bufnr, modeline = false })
+local function cursor_event(view, event)
+  vim.api.nvim_exec_autocmds(event or "CursorMoved", { group = view._group, buf = view.bufnr, modeline = false })
 end
 
 ---@param state                         ux.treeview.State
@@ -245,6 +246,15 @@ t:test("an unfocused publication keeps the cursor in view when the top row's nod
     window.topline <= cursor and cursor < window.topline + window.height,
     string.format("cursor %d outside rows %d-%d", cursor, window.topline, window.topline + window.height - 1)
   )
+end)
+
+t:test("a cursor move in Insert mode, which a focus move carries in, commits as one in Normal mode", function()
+  local state, view, nodes = fixture()
+  vim.api.nvim_win_set_cursor(view.winnr, { 3, 0 })
+  cursor_event(view, "CursorMovedI")
+  t.wait_until(function()
+    return state:snapshot():header().cursor == nodes[3]
+  end, 5000)
 end)
 
 t:run()

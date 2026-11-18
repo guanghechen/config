@@ -686,7 +686,8 @@ function M.new(state, options)
       end
     end,
   })
-  vim.api.nvim_create_autocmd("CursorMoved", {
+  -- Insert mode enters the read-only window only with a focus move; its moves report CursorMovedI instead.
+  vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
     group = self._group,
     buf = self.bufnr,
     callback = function()

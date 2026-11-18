@@ -174,6 +174,7 @@ UTF-8 边界；顶端行按原 topline 的 NodeId 在新 Frame 中定位，定�
 
 View 记录实际恢复或观察到的 cursor 坐标；坐标未变的重复、迟到 `CursorMoved` 不提交新导航，不能用旧 Frame
 覆盖已完成但尚未显示的 native cursor。真实位置变化按实际显示的 Frame 提交 SetCursor，不等待待发布 snapshot。
+Insert 模式只随焦点移动进入只读的 Treeview 窗口，其中的 cursor 移动（如方向键、鼠标）只有 `CursorMovedI`，View 同样观察。
 Neovim 滚动窗口时把 cursor 留在窗口内；非当前窗口的这种移动（如鼠标滚轮滚动 Picker 输入期间的结果窗口）没有
 `CursorMoved`，View 在本窗口尺寸不变的 `WinScrolled` 中同样观察，否则下一次发布按旧 cursor 把窗口滚回。尺寸变化挪动的
 cursor 不是导航，由下一次发布恢复。
