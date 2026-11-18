@@ -192,7 +192,7 @@ function M.dressing()
     return true
   end
 
-  stl.nvim.fn.make_keys({ "i", "n", "s" }, "<esc>", function()
+  stl.nvim.fn.make_keys({ "i", "n", "s", "x" }, "<esc>", function()
     local hunk_nav = package.loaded["era.m.git.hunk_nav"] ---@type era.m.git.hunk_nav|nil
     if hunk_nav ~= nil then
       hunk_nav.clear_nav()

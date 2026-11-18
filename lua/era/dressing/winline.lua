@@ -73,6 +73,8 @@ local function resolve_nvimbar(winnr)
           and vim.api.nvim_get_option_value("winbar", { win = winnr, scope = "local" }) ~= result
         then
           vim.api.nvim_set_option_value("winbar", result, { win = winnr, scope = "local" })
+          -- A throttled publication can land after the screen settled, which setting the option does not redraw.
+          vim.api.nvim__redraw({ win = winnr, winbar = true })
         end
       end,
       validate = function()

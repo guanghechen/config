@@ -20,6 +20,7 @@ local t = harness.new()
 ---@field fast                           boolean
 ---@field flush_calls                    integer
 ---@field escape                         fun(): string
+---@field escape_modes                   string[]
 ---@field hunk_nav_clears                integer
 ---@field search_clears                  integer
 ---@field searching                      boolean
@@ -81,10 +82,11 @@ local function setup(initially_enabled)
     debug = { log_silent = function() end },
     nvim = {
       fn = {
-        make_keys = function(_, lhs, callback)
+        make_keys = function(modes, lhs, callback)
           runtime.keymap_calls = runtime.keymap_calls + 1
           if lhs == "<esc>" then
             runtime.escape = callback
+            runtime.escape_modes = modes
           end
         end,
       },
@@ -263,6 +265,7 @@ for _, case in ipairs({
 
     local key = runtime.escape()
 
+    t.assert_same({ "i", "n", "s", "x" }, runtime.escape_modes, "Visual mode clears the search as the others do")
     t.assert_nil(package.loaded["vim.snippet"], "escape does not load snippets to clean them")
     t.assert_eq("<esc>", key, "mapped key")
     t.assert_false(runtime.searching, "searching state")

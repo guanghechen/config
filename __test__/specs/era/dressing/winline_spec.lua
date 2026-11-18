@@ -183,7 +183,7 @@ t:test("dressing subscribes once and routes dirty updates to valid current and p
   t.assert_same({ winnr, winnr }, rendered_winnrs, "closed and missing windows are ignored")
 end)
 
-t:test("source windows show the confirmed path at once and apply delivered symbols", function()
+t:test("source windows show the confirmed path at once, apply delivered symbols and draw publications", function()
   local winnr = vim.api.nvim_get_current_win() ---@type integer
   t:buffer(nil, { name = "/tmp/winline-spec-source.lua", listed = true, current = true })
 
@@ -251,7 +251,8 @@ t:test("source windows show the confirmed path at once and apply delivered symbo
     m = {
       nvimbar = {
         Nvimbar = {
-          new = function()
+          new = function(props)
+            bar.props = props
             return bar
           end,
         },
@@ -300,6 +301,17 @@ t:test("source windows show the confirmed path at once and apply delivered symbo
   bar.disposed = true
   deliver(winnr, first)
   t.assert_eq("confirmed", meta.winline.lsp_symbols[1].name, "disposed bar ignores deliveries")
+
+  local redraws = {} ---@type vim.api.keyset.redraw[]
+  t:patch_table(vim.api, "nvim__redraw", function(opts)
+    redraws[#redraws + 1] = opts
+  end)
+  t:defer(function()
+    vim.api.nvim_set_option_value("winbar", "", { win = winnr, scope = "local" })
+  end)
+  bar.props.on_fulfilled("published")
+  t.assert_eq("published", vim.api.nvim_get_option_value("winbar", { win = winnr, scope = "local" }))
+  t.assert_same({ { win = winnr, winbar = true } }, redraws, "a publication is drawn at once")
 end)
 
 t:run()

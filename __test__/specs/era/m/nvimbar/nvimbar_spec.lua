@@ -343,7 +343,7 @@ t:test("a startup rename replaces queued contexts without waiting for another di
   t.assert_eq(1, refreshed, "the stale queued context never reaches the provider")
 end)
 
-t:test("window forks keep independent targets and close with their windows", function()
+t:test("window forks keep independent targets, draw what they publish and close with their windows", function()
   local source_winnr = nvimbar.window(t)
   local target_winnr, target_bufnr = nvimbar.window(t)
   local bar = nvimbar.bar(t, Nvimbar, source_winnr)
@@ -359,11 +359,23 @@ t:test("window forks keep independent targets and close with their windows", fun
       }
     end,
   })
+  local redraws = {} ---@type vim.api.keyset.redraw[]
+  local redraw = vim.api.nvim__redraw
+  t:patch_table(vim.api, "nvim__redraw", function(opts)
+    redraws[#redraws + 1] = opts
+    return redraw(opts)
+  end)
   local fork = bar:fork(target_winnr)
   bar:refresh()
   t.wait_until(function()
     return vim.api.nvim_get_option_value("winbar", { win = target_winnr }):find(tostring(target_bufnr), 1, true) ~= nil
   end, 5000)
+  t.assert_true(
+    vim.tbl_contains(redraws, function(opts)
+      return opts.win == target_winnr and opts.winbar == true
+    end, { predicate = true }),
+    "the published winbar is drawn at once"
+  )
   t.assert_eq(fork, bar:fork(target_winnr), "reuses the owned window instance")
   vim.api.nvim_win_close(target_winnr, true)
   t.assert_true(fork:isdisposed())

@@ -21,9 +21,10 @@ local OVERRIDES = {
   ["n ]A"] = "nvim -> era/keystroke/textobject/keymap.lua",
   ["n [b"] = "nvim -> era/keystroke/textobject/keymap.lua",
   ["n ]b"] = "nvim -> era/keystroke/textobject/keymap.lua",
-  -- ui_attach replaces the <Esc> of ark/keymap.lua in Normal and Insert mode; Visual mode keeps the latter.
+  -- ui_attach replaces the <Esc> of ark/keymap.lua in Normal, Insert and Visual mode, so all clear the search state.
   ["n <Esc>"] = "ark/keymap.lua -> era/dressing/ui_attach/init.lua",
   ["i <Esc>"] = "ark/keymap.lua -> era/dressing/ui_attach/init.lua",
+  ["x <Esc>"] = "ark/keymap.lua -> era/dressing/ui_attach/init.lua",
   -- era.keystroke.pairs replaces the undo break-points that ark/keymap.lua maps on Enter and Space, keeping them.
   ["i <CR>"] = "ark/keymap.lua -> era/keystroke/pairs/init.lua",
   ["i <Space>"] = "ark/keymap.lua -> era/keystroke/pairs/init.lua",
