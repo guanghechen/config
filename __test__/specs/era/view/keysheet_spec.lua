@@ -2,7 +2,7 @@ require("ark.bootstrap").setup()
 local t = require("__test__.support.harness").new()
 local Keysheet = require("era.view.keysheet")
 
-t:test("a buffer keysheet merges modes and leaves out scopes, which-key prefixes and no-ops", function()
+t:test("a buffer keysheet names keys as mapped and drops scopes, which-key prefixes and no-ops", function()
   local bufnr = t:buffer()
   ---@param modes                       string|string[]
   ---@param lhs                         string
@@ -18,12 +18,16 @@ t:test("a buffer keysheet merges modes and leaves out scopes, which-key prefixes
   map("n", "p1", "diffview(commits): Layout 1: commits top")
   map("n", "g", "wk-trigger")
   map("n", "<Tab>", "searcher#result: noop")
+  map("n", "<C-j>", "picker#finder: focus next item")
+  map("n", "<C-i>", "picker#finder: history backward")
 
   local entries = {} ---@type string[]
   for _, keymap in ipairs(Keysheet.for_buffer({ bufnr = bufnr, title = "Git Files" })._keymaps) do
     entries[#entries + 1] = keymap.key .. " " .. table.concat(keymap.modes, ",") .. " " .. keymap.desc
   end
   t.assert_same({
+    "<C-I> n history backward",
+    "<C-J> n focus next item",
     "R n refresh",
     "[i n parent",
     "oa n,x add to ai",

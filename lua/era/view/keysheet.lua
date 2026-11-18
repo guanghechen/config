@@ -64,7 +64,8 @@ function M.for_buffer(props)
     for _, mapping in ipairs(vim.api.nvim_buf_get_keymap(props.bufnr, mode)) do
       local desc = unscoped(mapping.desc or "", props.title)
       if desc ~= "" and desc ~= "wk-trigger" and desc ~= "noop" then
-        local key = vim.fn.keytrans(vim.keycode(mapping.lhs))
+        -- The raw keys keep <C-j> and <C-i> apart from <NL> and <Tab>, which they are mapped apart from.
+        local key = vim.fn.keytrans(mapping.lhsraw)
         local id = key .. "\0" .. desc
         local entry = entries[id]
         if entry then
