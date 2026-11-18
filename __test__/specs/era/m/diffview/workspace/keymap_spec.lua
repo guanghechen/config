@@ -228,14 +228,18 @@ t:test("sidebar panes map z; and pane switching and keep <Tab> inert, and side-b
   t.assert_eq("focus_preview_pane,focus_preview_pane", diffview.names(sbs_calls), "side-by-side ]p and [p")
 end)
 
-t:test("oi shows the details of the file in Changes and of the commit in History", function()
+t:test("K and oi show file details in Changes and commit details in History, and J stays native", function()
   local action, calls = diffview.recorder()
   local history_action, history_calls = diffview.recorder()
   local ctx = diffview.workspace_context({ layout = {}, history = {} })
-  assert(find(keymap.gen_changes(ctx, action), "oi")).callback()
-  assert(find(keymap.gen_history(ctx, action, history_action), "oi")).callback()
-  t.assert_eq("show_info", diffview.names(calls))
-  t.assert_eq("show_details", diffview.names(history_calls))
+  local changes, history = keymap.gen_changes(ctx, action), keymap.gen_history(ctx, action, history_action)
+  for _, key in ipairs({ "K", "oi" }) do
+    assert(find(changes, key)).callback()
+    assert(find(history, key)).callback()
+  end
+  t.assert_eq("show_info,show_info", diffview.names(calls))
+  t.assert_eq("show_details,show_details", diffview.names(history_calls))
+  t.assert_nil(find(changes, "J"), "Changes J")
 end)
 
 t:test("Changes and History move with l and h, and History closes with q instead of oo", function()

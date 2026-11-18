@@ -16,6 +16,7 @@
 ## 通用约定
 
 - `g?`：显示当前 Diffview 的快捷键帮助。
+- `K`：hover，显示当前项的详情：Changes 为文件详情，History 与 Commits 为 commit details。`J` 不映射，保持 Neovim 原生行为。
 - `<C-a>r`：刷新当前 view；aliases 为 `<D-r>`、`<M-r>`。
 - `<C-j>` / `<C-k>`：选择下一个 / 上一个 domain item。
 - `gf` / `gF`：在已有普通 tab / 新 tab 打开当前文件。
@@ -34,13 +35,12 @@ Help 使用 `mode + key` 作为 mapping identity；Normal 与 Visual 的同名 m
 - `]p` / `[p`：聚焦下一个 / 上一个侧栏 pane（Staged → Unstaged → History，两端循环）；沉浸时切换显示的 pane。
 - `z;`（Normal / Visual）：切换侧栏沉浸，见[布局](layout.md#沉浸模式)。
 - `<Tab>`：空操作，不回落到全局 `<C-i>` 的 jumplist 跳转。
-- `J` / `K`：移动到下一项 / 上一项并选择。
 - `<C-j>` / `<C-k>`：选择下一个 / 上一个 file diff。
 - `[i` / `]i`：跳到 parent / last child-or-sibling。
 - `gs` / `gu`：stage / unstage 当前文件或目录。
 - `gr`：discard 当前文件改动。
 - `oc`：复制当前文件路径。
-- `oi`：显示当前文件的详情，与 Explorer 的 `oi` 一致。
+- `K`、`oi`：显示当前文件的详情，与 Explorer 的 `oi` 一致。
 - `gf` / `gF`：打开当前文件。
 - `za` / `zc` / `zo`：切换 / 关闭 / 打开 tree fold。
 - `zC`、`zM`、`zO`、`zR`：控制当前 view 的所有 diff folds。
