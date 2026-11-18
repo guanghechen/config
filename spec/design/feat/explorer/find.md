@@ -47,7 +47,7 @@ Finder/result 使用同一组动作键；`a`、`l`、`h` 只在 result window �
 | `or`              | Rename：同目录重命名     |
 | `oc`              | Copy Path Menu           |
 | `oa`              | Add To AI                |
-| `oi`              | File Info：文件详情      |
+| `oi`、`K`         | File Info：文件详情      |
 
 本工具不支持批量 copy/rename、跨目录 move 或复杂事务回滚，这些交给 [Explorer](README.md)；
 `c` 可以复制到任意路径。
@@ -96,7 +96,7 @@ Finder/result 使用同一组动作键；`a`、`l`、`h` 只在 result window �
 菜单保留 `absolute / relative / filename`，弹窗配置为 `relative = "cursor", row = 1, col = 4`。
 触发时焦点不在 result window 的，完成后恢复焦点。
 
-### `oi`：文件详情
+### `oi`、`K`：文件详情
 
 与 [Explorer](README.md) 的 `oi` 一致，打开当前项的文件详情（权限、大小、时间等）；`../` 显示父目录的详情。
 

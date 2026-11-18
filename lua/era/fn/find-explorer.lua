@@ -375,7 +375,7 @@ local actions = {
   { modes = { "n", "x" }, key = "od", desc = "filetree: delete", callback = delete_entry },
   { modes = { "n", "x" }, key = "oc", desc = "filetree: copy filepath", callback = copy_path },
   { modes = { "n", "x" }, key = "oa", desc = "filetree: add to ai", callback = add_to_ai },
-  { modes = { "n" }, key = "oi", desc = "filetree: file info", callback = show_info },
+  { modes = { "n" }, key = "oi", aliases = { "K" }, desc = "filetree: file info", callback = show_info },
   { modes = { "n", "x" }, key = "c", desc = "filetree: copy to path", callback = copy_entry },
   { modes = { "n", "x" }, key = "or", desc = "filetree: rename", callback = rename_entry },
   { modes = { "n", "x" }, key = "<Backspace>", desc = "filetree: parent directory", callback = parent_directory },

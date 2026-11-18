@@ -261,6 +261,8 @@ t:test("a creates from the result window, and oi shows the details of the cursor
   t.assert_same({ "i", "n" }, assert(effective(composer.result.keymaps, "a")).modes, "result a")
   t.assert_same({ "i", "n" }, assert(effective(composer.result.keymaps, "oi")).modes, "result oi")
   t.assert_same({ "n" }, assert(effective(composer.finder.keymaps, "oi")).modes, "finder oi")
+  t.assert_same({ "K" }, assert(effective(composer.result.keymaps, "oi")).aliases, "result K")
+  t.assert_same({ "K" }, assert(effective(composer.finder.keymaps, "oi")).aliases, "finder K")
   local path = "/workspace/project/src/main.lua"
   local uuid, data = create_file(path, "file")
   composer.__retrieve_file__ = function()

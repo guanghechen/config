@@ -1121,6 +1121,7 @@ function M.new(props)
     {
       modes = { "n" },
       key = "oi",
+      aliases = { "K" },
       desc = "searcher: file info",
       callback = actions.show_node_info,
     },
@@ -1228,6 +1229,7 @@ function M.new(props)
     {
       modes = { "n" },
       key = "oi",
+      aliases = { "K" },
       desc = "searcher: file info",
       callback = actions.show_node_info,
     },
@@ -1365,6 +1367,7 @@ function M.new(props)
     {
       modes = { "i", "n" },
       key = "oi",
+      aliases = { "K" },
       desc = "searcher: file info",
       callback = actions.show_node_info,
     },

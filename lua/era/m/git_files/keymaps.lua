@@ -303,6 +303,7 @@ function M.tree(widget)
     {
       modes = { "n" },
       key = "oi",
+      aliases = { "K" },
       desc = "Git Files: file info",
       callback = function()
         widget:browse("info")

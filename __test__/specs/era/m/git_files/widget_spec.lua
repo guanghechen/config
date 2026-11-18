@@ -126,6 +126,7 @@ t:test("oi shows the details of the file at the cursor and reports a file absent
   local function info()
     for _, keymap in ipairs(require("era.m.git_files.keymaps").tree(widget)) do
       if keymap.key == "oi" then
+        t.assert_same({ "K" }, keymap.aliases, "K shows the details as oi does")
         keymap.callback()
       end
     end

@@ -318,6 +318,7 @@ t:test("help shows effective Treeview keys, refresh aliases and local overrides 
   t.assert_eq("switch Tree/List view", entries["t2"][1].desc)
   t.assert_eq("toggle directory compression", entries["t3"][1].desc)
   t.assert_eq("toggle hidden files", entries["t4"][1].desc)
+  t.assert_eq("file info", assert(entries["K"])[1].desc, "K shows the details as oi does")
   t.assert_nil(entries["g"], "which-key prefix triggers are not Explorer actions")
   local text = table.concat(vim.api.nvim_buf_get_lines(sheet._bufnr, 0, -1, false), "\n")
   t.assert_true(text:find("<Esc><Esc>", 1, true) ~= nil)

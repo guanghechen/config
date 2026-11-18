@@ -94,10 +94,15 @@ t:test("oi shows the details of the file of the cursor row, never in Visual mode
   picker.action(composer, "searcher: file info")()
   t.assert_eq(root .. "/other.lua", shown)
   local mappings = vim.api.nvim_buf_call(composer.result:get_bufnr(), function()
-    return { visual = vim.fn.maparg("oi", "x", false, true), insert = vim.fn.maparg("oi", "i", false, true) }
+    return {
+      visual = vim.fn.maparg("oi", "x", false, true),
+      insert = vim.fn.maparg("oi", "i", false, true),
+      hover = vim.fn.maparg("K", "n", false, true),
+    }
   end)
   t.assert_nil(next(mappings.visual), "Visual oi")
   t.assert_eq("searcher: file info", mappings.insert.desc, "Insert oi, as the result window can keep Insert mode")
+  t.assert_eq("searcher: file info", mappings.hover.desc, "K shows the details as oi does")
 end)
 
 t:test("g? shows the keymap help of the window it is pressed in", function()

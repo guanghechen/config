@@ -120,13 +120,14 @@ t:test("oi shows the details of the row, oa adds it to AI, and a creates from th
     return ui:lua(
       "for _, keymap in ipairs(props."
         .. keymaps
-        .. ") do if keymap.key == ... then return { desc = keymap.desc, modes = keymap.modes } end end",
+        .. ") do if keymap.key == ... then"
+        .. " return { desc = keymap.desc, modes = keymap.modes, aliases = keymap.aliases } end end",
       key
     )
   end
   -- Normal mode only, as in the Explorer.
   t.assert_same({ desc = "filetree: create", modes = { "n" } }, binding("keymaps_result", "a"))
-  t.assert_same({ desc = "filetree: file info", modes = { "n" } }, binding("keymaps_result", "oi"))
+  t.assert_same({ desc = "filetree: file info", modes = { "n" }, aliases = { "K" } }, binding("keymaps_result", "oi"))
   t.assert_nil(binding("keymaps_finder", "a"), "a edits the query in the finder")
   t.assert_eq(0, ui:lua("return #errors"))
 end)

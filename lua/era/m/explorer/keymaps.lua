@@ -340,6 +340,7 @@ function M.bind(widget, view)
     {
       modes = { "n" },
       key = "oi",
+      aliases = { "K" },
       desc = "Explorer: file info",
       callback = function()
         invoke("auxiliary", "info")

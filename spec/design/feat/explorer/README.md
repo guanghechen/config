@@ -289,23 +289,23 @@ Status: Design。本文定义 Explorer 的输入、用途、窗口、编辑器�
 
 ## 默认键位
 
-| 按键                                                          | 动作                                                                            |
-| ------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `l` / `<CR>` / 双击                                           | Tree 分支切换展开，文件打开                                                     |
-| `h` / `oz`                                                    | 折叠或折叠父目录；递归切换                                                      |
-| `[i` / `]i`                                                   | 父行；最后直接子项或兄弟，Normal/Visual，仅 Tree                                |
-| `<BS>` / `.` / `gb` / `gc` / `gw`                             | 父 root；当前目录；上一 root；cwd；workspace                                    |
-| `t1` / `t2` / `t3` / `t4`、`H`                                | selected-only；Tree/List；压缩；隐藏项                                          |
-| `<Tab>` / `ms` / `mc`（`y`）/ `mx`                            | select；select；copy；cut，同用途切换选中                                       |
-| Visual `<Tab>` / `c`（`y`）/ `x`                              | 切换范围选择；范围并入选区并设为 copy；cut                                      |
-| `<Esc><Esc>`                                                  | 先取消 copy/cut 并保留选区；普通 select 时清空选区，Normal/Visual               |
-| `c` / `x` / `p`                                               | 无选区时复制/移动到路径，有选区时标记 copy/cut；paste                           |
-| `a` / `A` / `r` / `d`                                         | 新建；新建目录；rename；delete/trash，Visual `d` 删除范围                       |
-| `o<CR>` / `w` / `J`、`<C-x>` / `L`、`<C-v>` / `<C-t>`         | 打开选区；选窗口；split；vsplit；tab                                            |
-| `[d`、`]d` / `[e`、`]e` / `[w`、`]w` / `[h`、`]h`             | diagnostic；error；warning；Git 导航                                            |
-| `of` / `os` / `oe` / `oc` / `oi` / `oo`、`O` / `<C-q>` / `oa` | 查找；搜索；目录；路径；详情；系统打开；quickfix；AI 位置，Visual `oa` 使用范围 |
-| `<Space>` / `R` / `g?` / `q`                                  | 动作和任务；刷新；帮助；关闭 pane                                               |
-| `i` / `I`                                                     | 无动作，不进入正文编辑                                                          |
+| 按键                                                               | 动作                                                                            |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
+| `l` / `<CR>` / 双击                                                | Tree 分支切换展开，文件打开                                                     |
+| `h` / `oz`                                                         | 折叠或折叠父目录；递归切换                                                      |
+| `[i` / `]i`                                                        | 父行；最后直接子项或兄弟，Normal/Visual，仅 Tree                                |
+| `<BS>` / `.` / `gb` / `gc` / `gw`                                  | 父 root；当前目录；上一 root；cwd；workspace                                    |
+| `t1` / `t2` / `t3` / `t4`、`H`                                     | selected-only；Tree/List；压缩；隐藏项                                          |
+| `<Tab>` / `ms` / `mc`（`y`）/ `mx`                                 | select；select；copy；cut，同用途切换选中                                       |
+| Visual `<Tab>` / `c`（`y`）/ `x`                                   | 切换范围选择；范围并入选区并设为 copy；cut                                      |
+| `<Esc><Esc>`                                                       | 先取消 copy/cut 并保留选区；普通 select 时清空选区，Normal/Visual               |
+| `c` / `x` / `p`                                                    | 无选区时复制/移动到路径，有选区时标记 copy/cut；paste                           |
+| `a` / `A` / `r` / `d`                                              | 新建；新建目录；rename；delete/trash，Visual `d` 删除范围                       |
+| `o<CR>` / `w` / `J`、`<C-x>` / `L`、`<C-v>` / `<C-t>`              | 打开选区；选窗口；split；vsplit；tab                                            |
+| `[d`、`]d` / `[e`、`]e` / `[w`、`]w` / `[h`、`]h`                  | diagnostic；error；warning；Git 导航                                            |
+| `of` / `os` / `oe` / `oc` / `oi`、`K` / `oo`、`O` / `<C-q>` / `oa` | 查找；搜索；目录；路径；详情；系统打开；quickfix；AI 位置，Visual `oa` 使用范围 |
+| `<Space>` / `R` / `g?` / `q`                                       | 动作和任务；刷新；帮助；关闭 pane                                               |
+| `i` / `I`                                                          | 无动作，不进入正文编辑                                                          |
 
 展开与折叠的执行时机、写入语义及 List 中的处理见 [Treeview expansion](../../ux/treeview/expansion.md#consumer-动作)；
 `oz` 为其中的递归 Toggle。
