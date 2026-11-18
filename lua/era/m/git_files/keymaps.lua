@@ -62,29 +62,42 @@ local function shared(widget)
   }
 end
 
+---Expansion keys typed ahead decide on the tree their earlier keys produce, in typing order; a key that waits for them
+---runs only if the focus stayed where it was pressed.
+---@param widget                        era.m.git_files.Widget
+---@param callback                      fun(): nil
+---@return fun(): nil
+local function after_expansion(widget, callback)
+  local function gated()
+    local pane = widget:current()
+    local winnr = vim.api.nvim_get_current_win() ---@type integer
+    if
+      pane.tree:after_collapse(function()
+        if vim.api.nvim_get_current_win() == winnr then
+          gated()
+        end
+      end)
+    then
+      return
+    end
+    callback()
+  end
+  return gated
+end
+
+---Toggles the expansion of the current row of the most recently used tree and of everything under it.
+---@param widget                        era.m.git_files.Widget
+---@return nil
+local function toggle_recursively(widget)
+  local pane, key = widget:current()
+  if key then
+    pane.tree:collapse(key, "toggle", true)
+  end
+end
+
 ---@param widget                        era.m.git_files.Widget
 ---@return stl.t.IKeymap[]
 function M.tree(widget)
-  -- Expansion keys typed ahead decide on the tree their earlier keys produce, in typing order.
-  ---@param callback                    fun(): nil
-  ---@return fun(): nil
-  local function after_expansion(callback)
-    local function gated()
-      local pane = widget:current()
-      if
-        pane.tree:after_collapse(function()
-          if pane.result:isfocused() then
-            gated()
-          end
-        end)
-      then
-        return
-      end
-      callback()
-    end
-    return gated
-  end
-
   ---@type stl.t.IKeymap[]
   local keys = {
     {
@@ -116,7 +129,7 @@ function M.tree(widget)
       modes = { "n" },
       key = "<CR>",
       desc = "Git Files: expand or open",
-      callback = after_expansion(function()
+      callback = after_expansion(widget, function()
         widget:activate()
       end),
     },
@@ -124,7 +137,7 @@ function M.tree(widget)
       modes = { "n" },
       key = "l",
       desc = "Git Files: expand or open",
-      callback = after_expansion(function()
+      callback = after_expansion(widget, function()
         widget:activate()
       end),
     },
@@ -132,7 +145,7 @@ function M.tree(widget)
       modes = { "n" },
       key = "h",
       desc = "Git Files: collapse or parent",
-      callback = after_expansion(function()
+      callback = after_expansion(widget, function()
         widget:collapse()
       end),
     },
@@ -172,11 +185,8 @@ function M.tree(widget)
       modes = { "n" },
       key = "oz",
       desc = "Git Files: recursive expansion",
-      callback = after_expansion(function()
-        local pane, key = widget:current()
-        if key then
-          pane.tree:collapse(key, "toggle", true)
-        end
+      callback = after_expansion(widget, function()
+        toggle_recursively(widget)
       end),
     },
     {
@@ -498,6 +508,40 @@ function M.input(widget)
       end,
     },
   }
+
+  ---A key that acts on the current row of the target tree, as it does on its own row in a tree.
+  ---@param key                         string
+  ---@param desc                        string
+  ---@param action                      fun(): nil
+  ---@param aliases                     ?string[]
+  ---@return stl.t.IKeymap
+  local function on_target(key, desc, action, aliases)
+    return {
+      modes = { "n" },
+      key = key,
+      aliases = aliases,
+      desc = "Git Files: " .. desc,
+      callback = function()
+        widget:use_target()
+        action()
+      end,
+    }
+  end
+
+  local recursive = after_expansion(widget, function()
+    toggle_recursively(widget)
+  end)
+  -- stylua: ignore
+  vim.list_extend(keys, {
+    on_target("oc", "copy target tree paths", function() widget:copy_paths() end),
+    on_target("oi", "target tree file info", function() widget:browse("info") end, { "K" }),
+    on_target("oe", "target tree directory browser", function() widget:browse("explorer") end),
+    on_target("of", "target tree find files", function() widget:browse("find") end),
+    on_target("os", "target tree search content", function() widget:browse("search") end),
+    on_target("oo", "target tree system open", function() widget:browse("system") end),
+    on_target("oz", "target tree recursive expansion", recursive),
+    on_target("<C-q>", "target tree quickfix", function() widget:browse("quickfix") end),
+  })
   return vim.list_extend(keys, shared(widget))
 end
 

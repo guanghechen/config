@@ -48,14 +48,16 @@ Status: Design。入口代码位于 `lua/era/m/git_files/`，树视图为 `era.v
 - Inputbox 的内容实时作为 [fzf 语法](../yoz/fuzzy.md#查询语法)、smart-case 的路径 query 同时过滤两棵树；
   输入中的 CR / LF 归一化为空格。
   隐藏后重开保留 query。过滤后的树保留连接祖先。
-- 打开后焦点在 inputbox（Normal）。Inputbox 驱动一棵目标树，在打开时以及 inputbox 的移动键、`<CR>` 与 `<Tab>` 触发时解析：
-  首选树有可见行时取首选树，否则取另一棵有可见行的树，两棵都没有可见行时保持首选树。打开时首选 Staged，之后首选
-  最近使用的树；解析出的目标树成为最近使用的树，preview 随之切换。
+- 打开后焦点在 inputbox（Normal）。Inputbox 驱动一棵目标树，在打开时以及 inputbox 的移动键、`<CR>`、`<Tab>` 与行操作
+  触发时解析：首选树有可见行时取首选树，否则取另一棵有可见行的树，两棵都没有可见行时保持首选树。打开时首选 Staged，
+  之后首选最近使用的树；解析出的目标树成为最近使用的树，preview 随之切换。
 - Inputbox 中 `j` / `k`（Normal）以及 `<Down>` / `<Up>`、`<C-j>` / `<C-k>`（Insert / Normal）按 count 逐行移动目标树的光标，
   `gg` / `G`（Normal）移到首行 / 末行，有 count 时移到该行。移动停在边界、不循环；焦点与 mode 不变，位置计数与 preview 随之更新。
 - `/` 聚焦输入并进入 Insert；inputbox 中 `<CR>` 进入目标树，`]p` / `[p`（Normal）分别进入 Staged / Unstaged；
   `<Tab>`（Insert / Normal）切换目标树当前行的选择，目标树成为最近使用的树；`<S-Tab>`（Insert）为空操作，不向 query
   插入缩进。
+- 树 pane 中作用于当前行的 `oc`、`oi` / `K`、`oe`、`of`、`os`、`oo`、`oz` 与 `<C-q>` 在 inputbox（Normal）中同样可用，
+  作用于目标树，效果与在树中按下相同。`gs` / `gu`、`tf` 等会与编辑 query 冲突的键只在树 pane 中。
 - `tf` 切换目录压缩，默认开启。
 
 ## 键位

@@ -282,6 +282,12 @@ function M:target(preferred)
   return preferred
 end
 
+---Makes the inputbox's target tree the most recently used one, which the keys acting on a tree row then act on.
+---@return nil
+function M:use_target()
+  self:_set_active(self:target())
+end
+
 ---Move the inputbox's target tree like its own motions while focus stays in the inputbox; rows do not wrap.
 ---@param motion                        "down"|"up"|"first"|"last"
 ---@param count                         integer `v:count`; zero applies the motion's default.
@@ -879,9 +885,11 @@ end
 ---@return stl.c.Future|nil
 function M:copy_paths()
   local pane = self:current()
+  -- A copy that waits for the selection runs only if the focus stayed where it was asked from.
+  local winnr = vim.api.nvim_get_current_win() ---@type integer
   if
     pane.tree:after_selection(function()
-      if pane.result:isfocused() then
+      if vim.api.nvim_get_current_win() == winnr then
         self:copy_paths()
       end
     end)

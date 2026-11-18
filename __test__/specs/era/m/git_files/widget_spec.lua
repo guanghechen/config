@@ -230,6 +230,63 @@ t:test("copy uses displayed paths for a Visual range and does not modify Git", f
   t.assert_eq(before, git.run(state.root, { "ls-files", "--stage", "-z" }))
 end)
 
+t:test("oc in the inputbox copies the paths of the target tree", function()
+  local state = fixture()
+  local widget = state.widget
+  local copied
+  t:patch_table(era.fn, "select_copy_filepaths", function(options)
+    copied = options.filepaths
+  end)
+  support.cursor(widget, "unstaged", "dir/second.lua")
+  widget:focus("input")
+  for _, keymap in ipairs(require("era.m.git_files.keymaps").input(widget)) do
+    if keymap.key == "oc" then
+      keymap.callback()
+    end
+  end
+  t.wait_until(function()
+    return copied ~= nil
+  end, 5000, "copied paths")
+  t.assert_same({ state.root .. "/dir/second.lua" }, copied)
+end)
+
+t:test("the inputbox takes the row keys of the trees and acts on the target tree", function()
+  local state = fixture()
+  local widget = state.widget
+  local browsed = {} ---@type string[]
+  t:patch_table(widget, "browse", function(_, action)
+    browsed[#browsed + 1] = action .. " " .. widget._active
+  end)
+  local recursive ---@type string|nil
+  t:patch_table(widget.panes.staged.tree, "collapse", function(_, key, how, deep)
+    recursive = key .. " " .. how .. " " .. tostring(deep)
+  end)
+  local keymaps = {} ---@type table<string, stl.t.IKeymap>
+  for _, keymap in ipairs(require("era.m.git_files.keymaps").input(widget)) do
+    keymaps[keymap.key] = keymap
+  end
+  support.cursor(widget, "staged", "dir")
+  widget:focus("input")
+  for _, key in ipairs({ "oi", "oe", "of", "os", "oo", "<C-q>", "oz" }) do
+    assert(keymaps[key], key).callback()
+  end
+  t.assert_same(
+    { "info staged", "explorer staged", "find staged", "search staged", "system staged", "quickfix staged" },
+    browsed
+  )
+  t.assert_eq(Paths.key(state.root .. "/dir") .. " toggle true", recursive)
+  t.assert_same({ "K" }, keymaps.oi.aliases)
+
+  -- With every staged row filtered out, the keys act on the unstaged tree, which becomes the most recently used one.
+  widget._query = "second"
+  for _, pane in pairs(widget.panes) do
+    t.await(pane.result.draw())
+  end
+  browsed = {}
+  keymaps.oi.callback()
+  t.assert_same({ "info unstaged" }, browsed)
+end)
+
 t:test("open returns to the source window and a deleted file never opens an empty replacement", function()
   local state = fixture()
   local widget, opened = state.widget, {}
