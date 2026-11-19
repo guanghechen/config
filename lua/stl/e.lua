@@ -114,6 +114,38 @@ M.TabTypeSet = {
 }
 
 ----------------------------------------------------------------------------------------------------
+-- ToggleKeyEnum
+----------------------------------------------------------------------------------------------------
+
+-- stylua: ignore
+---Keys of the result and pane toggles. A number stands for the same toggle on every surface; a surface without the
+---display toggles (t0 to t3) takes the matching toggles at t1 to t3, and a toggle of one surface takes a letter.
+---@class stl.e.IToggleKeyEnum
+M.ToggleKeyEnum = {
+  SETTINGS             = "t0",
+  SELECTED             = "t1",
+  VIEWTYPE             = "t2",
+  FOLDEMPTY            = "t3",
+  FUZZY                = "t4",
+  CASE_SENSITIVE       = "t5",
+  REGEX                = "t6",
+  EXCLUDE              = "t7",
+  GITIGNORE            = "t8",
+  REPLACE              = "t9",
+  MATCH_FUZZY          = "t1",
+  MATCH_CASE_SENSITIVE = "t2",
+  MATCH_REGEX          = "t3",
+  BUFFER_ONLY          = "tb",
+  HIDDEN               = "th",
+  MATCH_LIMIT          = "tl",
+  PREVIEW              = "tp",
+  REPLACE_MNEMONIC     = "tr",
+  SCOPE                = "ts",
+  UNTRACKED            = "tu",
+  DIFF_FOLDS           = "tz",
+}
+
+----------------------------------------------------------------------------------------------------
 -- WinTypeEnum
 ----------------------------------------------------------------------------------------------------
 

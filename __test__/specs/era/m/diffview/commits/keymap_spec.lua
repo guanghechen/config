@@ -60,7 +60,7 @@ t:test("every pane exposes the current view's fold commands", function()
     assert(find(keymaps, "zM"), "pane zM").callback()
   end
   local sbs = keymap.gen_sbs(ctx, action)
-  for _, key in ipairs({ "t3", "zC", "zO" }) do
+  for _, key in ipairs({ "tz", "zC", "zO" }) do
     assert(find(sbs, key), "side-by-side " .. key).callback()
   end
   t.assert_eq(
@@ -69,6 +69,17 @@ t:test("every pane exposes the current view's fold commands", function()
     diffview.names(calls),
     "commits fold commands"
   )
+end)
+
+t:test("the commits pane toggles with the shared keys, and only the p keys switch layouts", function()
+  local action, calls = diffview.recorder()
+  local commits = keymap.gen_commits(diffview.commits_context({}), action)
+  for _, key in ipairs({ "t2", "t3", "tz" }) do
+    assert(find(commits, key), "commits " .. key).callback()
+  end
+  t.assert_eq("toggle_viewtype,toggle_foldempty,toggle_default_folds", diffview.names(calls))
+  t.assert_nil(find(commits, "t0"), "no layout key among the toggles")
+  t.assert_true(find(commits, "pp") ~= nil, "pp cycles the layouts")
 end)
 
 t:test("commit and file panes scroll the window under the mouse, and side-by-side buffers keep the wheel", function()

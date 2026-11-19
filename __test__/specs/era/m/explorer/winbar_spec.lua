@@ -27,6 +27,7 @@ t:test("winbar follows display root and four fixed flags when tabline is hidden"
   for _, callback in ipairs(widget._callbacks) do
     t.assert_true(winbar:find(callback, 1, true) ~= nil)
   end
+  t.assert_true(winbar:find(stl.icon.symbols.flag_hidden .. "ʰ", 1, true) ~= nil, "hidden files, marked by th")
   local _, enabled = winbar:gsub("f_wl_explorer_flag_blue", "")
   t.assert_eq(3, enabled)
   widget:toggle_flag(4)

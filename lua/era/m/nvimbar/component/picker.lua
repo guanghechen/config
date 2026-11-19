@@ -7,11 +7,20 @@ local txt = stl.nvim.fn.txt
 ---@class era.m.nvimbar.component.picker
 local M = {}
 
+---Shows the flags marked with their keys: the numbered ones in ascending order, then the lettered ones as given.
 ---@param position                      stl.t.NvimbarPositionEnum
 ---@param flags                         era.view.picker.result.IFlagItem[]
----@param flags_start_index             integer
 ---@return era.m.nvimbar.IRawComponent
-function M.result_flags(position, flags, flags_start_index)
+function M.result_flags(position, flags)
+  local ordered = vim.list_slice(flags) ---@type era.view.picker.result.IFlagItem[]
+  local positions = {} ---@type table<era.view.picker.result.IFlagItem, integer>
+  for index, item in ipairs(ordered) do
+    positions[item] = (tonumber(item.key:sub(2)) or 10) * #ordered + index
+  end
+  table.sort(ordered, function(a, b)
+    return positions[a] < positions[b]
+  end)
+
   ---@type era.m.nvimbar.IRawComponent
   local component = {
     name = "picker:result_flags",
@@ -22,18 +31,16 @@ function M.result_flags(position, flags, flags_start_index)
     refresh = function()
       local text = "" ---@type string
       local hl_text = "" ---@type string
-      local index = flags_start_index ---@type integer
-      for _, item in ipairs(flags) do
+      for _, item in ipairs(ordered) do
         if not item.disabled() then
-          local digit = stl.icon.todigit_supscript(index) ---@type string
+          local mark = stl.icon.toggle_supscript(item.key) ---@type string
           local flag_text, flag_hln = item:snapshot() ---@type string, string
-          local piece_text = " " .. flag_text .. digit ---@type string
+          local piece_text = " " .. flag_text .. mark ---@type string
           local piece_hln = string.format("%s_%s", position, flag_hln) ---@type string
 
           text = text .. piece_text ---@type string
           hl_text = hl_text .. btn(txt(piece_text, piece_hln), item.callback) ---@type string
         end
-        index = index + 1 ---@type integer
       end
       return { text = text, hltext = hl_text }
     end,

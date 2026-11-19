@@ -18,12 +18,14 @@ local Nvimbar = nvimbar.Nvimbar
 ---| fun(): string|nil, string|nil
 
 ---@class era.view.picker.result.IFlagItemRaw
+---@field public key                    stl.t.ToggleKeyEnum
 ---@field public desc                   string
 ---@field public callback               fun(): nil
 ---@field public disabled               (fun(): boolean)|boolean|nil
 ---@field public snapshot               fun(): string, string
 
 ---@class era.view.picker.result.IFlagItem
+---@field public key                    stl.t.ToggleKeyEnum
 ---@field public desc                   string
 ---@field public callback               string
 ---@field public disabled               fun(): boolean
@@ -44,7 +46,6 @@ local Nvimbar = nvimbar.Nvimbar
 ---@field public draw                   era.view.picker.result.IDraw
 ---@field public keymaps                stl.t.IKeymap[]
 ---@field public flags                  era.view.picker.result.IFlagItemRaw[]
----@field public flags_start_index      ?0|1
 ---@field public on_drawed              ?era.view.picker.result.IOnDrawed
 ---@field public status                 ?era.view.picker.result.IStatusSnapshot
 ---@field public winbar                 ?boolean False omits the bar; position observables remain available.
@@ -83,7 +84,6 @@ function M.new(props)
   local native_tree = assert(props.tree, "Picker results require a native Treeview owner")
   local draw = props.draw ---@type era.view.picker.result.IDraw
   local keymaps = props.keymaps ---@type stl.t.IKeymap[]
-  local flags_start_index = props.flags_start_index == 0 and 0 or 1 ---@type 0|1
   local status = props.status ---@type era.view.picker.result.IStatusSnapshot|nil
   local winline_hl = props.winline_hl ---@type string
   local augroup_prefix = props.augroup_prefix ---@type string
@@ -121,6 +121,7 @@ function M.new(props)
 
       ---@type era.view.picker.result.IFlagItem
       local item = {
+        key = flag.key,
         desc = flag.desc,
         callback = callback_fn,
         disabled = disabled,
@@ -167,7 +168,7 @@ function M.new(props)
         position = "left",
         priority = 100,
         component = c.lazy(function()
-          return c.picker.result_flags(position, flags, flags_start_index)
+          return c.picker.result_flags(position, flags)
         end),
       })
       :place({

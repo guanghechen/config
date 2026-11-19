@@ -27,4 +27,21 @@ t:test("shared side-by-side mappings do not retain their installation context", 
   t.assert_nil(retained.ctx, "installation context")
 end)
 
+t:test("toggles on a shared preview carry the side-by-side description of their keys", function()
+  local bufnr = t:buffer()
+  local probes = {} ---@type stl.t.IKeymap[]
+  for _, key in ipairs({ "tz", "tu" }) do
+    probes[#probes + 1] = { modes = { "n" }, key = key, desc = "view: " .. key, callback = stl.fn.noop }
+  end
+  sbs_keymap.setup(probes, bufnr, function()
+    return nil
+  end)
+  local descs = {} ---@type table<string, string>
+  for _, mapping in ipairs(vim.api.nvim_buf_get_keymap(bufnr, "n")) do
+    descs[mapping.lhs] = mapping.desc
+  end
+  t.assert_eq("diffview(sbs): Toggle active preview default folds", descs.tz)
+  t.assert_eq("diffview(sbs): Toggle workspace untracked files", descs.tu)
+end)
+
 t:run()

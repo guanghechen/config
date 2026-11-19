@@ -30,10 +30,9 @@ function M.gen_cross_pane(ctx, action)
     { modes = { "n" }, key = "p4", desc = "diffview(commits): Layout 4: 󰊢 commits only", callback = function() action.switch_to_layout(ctx, 4) end },
     { modes = { "n" }, key = "p5", desc = "diffview(commits): Layout 5: 󰙅 commits + filetree", callback = function() action.switch_to_layout(ctx, 5) end },
     { modes = { "n" }, key = "pp", desc = "diffview(commits): Next layout", callback = function() action.cycle_layout(ctx) end },
-    { modes = { "n" }, key = "t0", desc = "diffview(commits): Cycle layout (5 types)", callback = function() action.cycle_layout(ctx) end },
     { modes = { "n" }, key = "zM", desc = "diffview(commits): Close all diff folds", callback = function() action.close_all_folds(ctx) end },
     { modes = { "n" }, key = "zR", desc = "diffview(commits): Open all diff folds", callback = function() action.open_all_folds(ctx) end },
-    { modes = { "n" }, key = "t3", desc = "diffview(commits): Toggle default diff folds", callback = function() action.toggle_default_folds(ctx) end },
+    { modes = { "n" }, key = stl.e.ToggleKeyEnum.DIFF_FOLDS, desc = "diffview(commits): Toggle default diff folds", callback = function() action.toggle_default_folds(ctx) end },
   }
 end
 
@@ -71,8 +70,8 @@ function M.gen_commit_pane(ctx, action)
     { modes = { "n" }, key = "gl", desc = "diffview(commits): Expand commit / directory", callback = function() action.expand(ctx) end },
     { modes = { "n" }, key = "oc", desc = "diffview(commits): Copy filepath", callback = function() action.copy_filepath(ctx) end },
     { modes = { "n" }, key = "q", desc = "diffview(commits): Close diffview", callback = function() action.close(ctx) end },
-    { modes = { "n" }, key = "t1", desc = "diffview(commits): Toggle viewtype (tree/list)", callback = function() action.toggle_viewtype(ctx) end },
-    { modes = { "n" }, key = "t2", desc = "diffview(commits): Toggle compact directory paths", callback = function() action.toggle_foldempty(ctx) end },
+    { modes = { "n" }, key = stl.e.ToggleKeyEnum.VIEWTYPE, desc = "diffview(commits): Toggle viewtype (tree/list)", callback = function() action.toggle_viewtype(ctx) end },
+    { modes = { "n" }, key = stl.e.ToggleKeyEnum.FOLDEMPTY, desc = "diffview(commits): Toggle compact directory paths", callback = function() action.toggle_foldempty(ctx) end },
     { modes = { "n" }, key = "yy", desc = "diffview(commits): Yank commit hash", callback = function() action.yank_hash(ctx) end },
     { modes = { "n" }, key = "za", desc = "diffview(commits): Toggle commit / directory", callback = function() action.toggle_expand(ctx) end },
     { modes = { "n" }, key = "zc", desc = "diffview(commits): Collapse commit / directory", callback = function() action.collapse(ctx) end },
@@ -114,8 +113,8 @@ function M.gen_filetree(ctx, action)
     { modes = { "n" }, key = "gF", desc = "diffview(commits): Open file in new tab", callback = function() action.goto_file_tab(ctx) end },
     { modes = { "n" }, key = "gR", desc = "diffview(commits): Restore file to commit version", callback = function() action.restore_file(ctx) end },
     { modes = { "n" }, key = "gf", desc = "diffview(commits): Open file in previous tab", callback = function() action.goto_file(ctx) end },
-    { modes = { "n" }, key = "t1", desc = "diffview(commits): Toggle viewtype (tree/list)", callback = function() action.toggle_viewtype(ctx) end },
-    { modes = { "n" }, key = "t2", desc = "diffview(commits): Toggle compact directory paths", callback = function() action.toggle_foldempty(ctx) end },
+    { modes = { "n" }, key = stl.e.ToggleKeyEnum.VIEWTYPE, desc = "diffview(commits): Toggle viewtype (tree/list)", callback = function() action.toggle_viewtype(ctx) end },
+    { modes = { "n" }, key = stl.e.ToggleKeyEnum.FOLDEMPTY, desc = "diffview(commits): Toggle compact directory paths", callback = function() action.toggle_foldempty(ctx) end },
   }
 
   -- Append cross-pane keymaps

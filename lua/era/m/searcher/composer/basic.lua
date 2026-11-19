@@ -2,6 +2,8 @@
 ---@diagnostic disable-next-line: unused-local
 local __module_name__ = "era.m.searcher.composer.basic" ---@type string
 
+local Keymap = require("era.view.picker.keymap")
+
 ---@alias era.m.searcher.composer.basic.PaneEnum
 ---| "finder"
 ---| "replacer"
@@ -111,7 +113,6 @@ local __highlights__ = {
 ---@field public permanent              boolean
 ---
 ---@field public flags                  ?era.m.searcher.result.IFlagItemRaw[]
----@field public flags_start_index      ?0|1
 ---@field public height                 ?number
 ---@field public width                  ?number
 ---
@@ -217,7 +218,6 @@ function M.new(props)
   local permanent = not not props.permanent ---@type boolean
 
   local flags = props.flags ---@type era.m.searcher.result.IFlagItemRaw[]
-  local flags_start_index = props.flags_start_index == 0 and 0 or 1 ---@type 0|1
   local pane_focused = "finder" ---@type era.m.searcher.composer.basic.PaneEnum
   local pane_last_focused = "finder" ---@type era.m.searcher.composer.basic.PaneEnum
   local recommended_height = math.max(0.1, props.height or 0.8) ---@type number
@@ -276,11 +276,7 @@ function M.new(props)
   ---@type era.m.searcher.Finder
   local finder = era.m.searcher.Finder.new({
     name = name,
-    keymaps = self:__resolve_keymaps_finder__(
-      flags,
-      flags_start_index,
-      vim.list_extend(vim.list_slice(keymaps_common), keymaps_finder)
-    ),
+    keymaps = self:__resolve_keymaps_finder__(flags, vim.list_extend(vim.list_slice(keymaps_common), keymaps_finder)),
     input = search_pattern,
     title = finder_title,
   })
@@ -292,7 +288,6 @@ function M.new(props)
       name = name .. " (replacer)",
       keymaps = self:__resolve_keymaps_replacer__(
         flags,
-        flags_start_index,
         vim.list_extend(vim.list_slice(keymaps_common), keymaps_replacer)
       ),
       input = replace_pattern,
@@ -325,13 +320,8 @@ function M.new(props)
       end
       return render_result(bufnr)
     end,
-    keymaps = self:__resolve_keymaps_result__(
-      flags,
-      flags_start_index,
-      vim.list_extend(vim.list_slice(keymaps_common), keymaps_result)
-    ),
+    keymaps = self:__resolve_keymaps_result__(flags, vim.list_extend(vim.list_slice(keymaps_common), keymaps_result)),
     flags = flags,
-    flags_start_index = flags_start_index,
     status = result_status,
     ---@type era.m.searcher.result.IOnDrawed
     on_drawed = function(bufnr)
@@ -352,7 +342,6 @@ function M.new(props)
       draw = render_preview,
       keymaps = self:__resolve_keymaps_preview__(
         flags,
-        flags_start_index,
         vim.list_extend(vim.list_slice(keymaps_common), keymaps_preview)
       ),
       ---@type era.m.searcher.preview.IOnDrawed
@@ -1021,9 +1010,8 @@ function M:__layout__()
 end
 
 ---@param flags                         era.m.searcher.result.IFlagItemRaw[]
----@param flags_start_index             0|1
 ---@return stl.t.IKeymap[]
-function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
+function M:__resolve_builtin_keymaps_common__(flags)
   ---@type stl.t.IKeymap[]
   local builtin_keymaps = {
     {
@@ -1073,18 +1061,10 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
     },
   }
 
-  local N = #builtin_keymaps ---@type integer
-
-  local index = flags_start_index ---@type integer
-  local index_maximum = index + #flags - 1 ---@type integer
-  local index_width = #(tostring(index_maximum)) ---@type integer
-  local index_format = string.format("t%%0%dd", index_width) ---@type string
-
   if self._flag_replace ~= nil then
-    N = N + 1 ---@type integer
-    builtin_keymaps[N] = {
+    builtin_keymaps[#builtin_keymaps + 1] = {
       modes = { "n", "x" },
-      key = "tr",
+      key = stl.e.ToggleKeyEnum.REPLACE_MNEMONIC,
       desc = "searcher: toggle replace mode",
       callback = function()
         local flag = self._flag_replace ---@type stl.c.Observable|nil
@@ -1094,38 +1074,8 @@ function M:__resolve_builtin_keymaps_common__(flags, flags_start_index)
       end,
     }
   end
-
-  for _, item in ipairs(flags) do
-    if index <= 9 then
-      ---@type stl.t.IKeymap
-      local keymap = {
-        modes = { "i", "n", "x" },
-        key = string.format("<C-%d>", index),
-        desc = item.desc,
-        callback = item.callback,
-      }
-      N = N + 1 ---@type integer
-      builtin_keymaps[N] = keymap
-    end
-
-    ---@type stl.t.IKeymap
-    local keymap = {
-      modes = { "n", "x" },
-      key = string.format(index_format, index),
-      desc = item.desc,
-      callback = item.callback,
-    }
-    index = index + 1
-
-    N = N + 1 ---@type integer
-    builtin_keymaps[N] = keymap
-  end
-
-  for _, item in ipairs(dot.state.widget.get_keymaps(self)) do
-    N = N + 1 ---@type integer
-    builtin_keymaps[N] = item
-  end
-
+  vim.list_extend(builtin_keymaps, Keymap.flags(flags))
+  vim.list_extend(builtin_keymaps, dot.state.widget.get_keymaps(self))
   return builtin_keymaps
 end
 
@@ -1734,11 +1684,10 @@ function M:__resolve_builtin_keymaps_preview__()
 end
 
 ---@param flags                         era.m.searcher.result.IFlagItemRaw[]
----@param flags_start_index             0|1
 ---@param keymaps                       stl.t.IKeymap[]
 ---@return stl.t.IKeymap[]
-function M:__resolve_keymaps_finder__(flags, flags_start_index, keymaps)
-  local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags, flags_start_index) ---@type stl.t.IKeymap[]
+function M:__resolve_keymaps_finder__(flags, keymaps)
+  local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags) ---@type stl.t.IKeymap[]
   local builtin_keymaps_finder = self:__resolve_builtin_keymaps_finder__() ---@type stl.t.IKeymap[]
   local resolved_keymaps = vim.list_extend(builtin_keymaps_common, builtin_keymaps_finder) ---@type stl.t.IKeymap[]
   vim.list_extend(resolved_keymaps, keymaps)
@@ -1746,11 +1695,10 @@ function M:__resolve_keymaps_finder__(flags, flags_start_index, keymaps)
 end
 
 ---@param flags                         era.m.searcher.result.IFlagItemRaw[]
----@param flags_start_index             0|1
 ---@param keymaps                       stl.t.IKeymap[]
 ---@return stl.t.IKeymap[]
-function M:__resolve_keymaps_replacer__(flags, flags_start_index, keymaps)
-  local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags, flags_start_index) ---@type stl.t.IKeymap[]
+function M:__resolve_keymaps_replacer__(flags, keymaps)
+  local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags) ---@type stl.t.IKeymap[]
   local builtin_keymaps_replacer = self:__resolve_builtin_keymaps_replacer__() ---@type stl.t.IKeymap[]
   local resolved_keymaps = vim.list_extend(builtin_keymaps_common, builtin_keymaps_replacer) ---@type stl.t.IKeymap[]
   vim.list_extend(resolved_keymaps, keymaps)
@@ -1758,11 +1706,10 @@ function M:__resolve_keymaps_replacer__(flags, flags_start_index, keymaps)
 end
 
 ---@param flags                         era.m.searcher.result.IFlagItemRaw[]
----@param flags_start_index             0|1
 ---@param keymaps                       stl.t.IKeymap[]
 ---@return stl.t.IKeymap[]
-function M:__resolve_keymaps_result__(flags, flags_start_index, keymaps)
-  local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags, flags_start_index) ---@type stl.t.IKeymap[]
+function M:__resolve_keymaps_result__(flags, keymaps)
+  local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags) ---@type stl.t.IKeymap[]
   local builtin_keymaps_result = self:__resolve_builtin_keymaps_result__() ---@type stl.t.IKeymap[]
   local resolved_keymaps = vim.list_extend(builtin_keymaps_common, builtin_keymaps_result) ---@type stl.t.IKeymap[]
   vim.list_extend(resolved_keymaps, keymaps)
@@ -1770,11 +1717,10 @@ function M:__resolve_keymaps_result__(flags, flags_start_index, keymaps)
 end
 
 ---@param flags                         era.m.searcher.result.IFlagItemRaw[]
----@param flags_start_index             0|1
 ---@param keymaps                       stl.t.IKeymap[]
 ---@return stl.t.IKeymap[]
-function M:__resolve_keymaps_preview__(flags, flags_start_index, keymaps)
-  local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags, flags_start_index) ---@type stl.t.IKeymap[]
+function M:__resolve_keymaps_preview__(flags, keymaps)
+  local builtin_keymaps_common = self:__resolve_builtin_keymaps_common__(flags) ---@type stl.t.IKeymap[]
   local builtin_keymaps_preview = self:__resolve_builtin_keymaps_preview__() ---@type stl.t.IKeymap[]
   local resolved_keymaps = vim.list_extend(builtin_keymaps_common, builtin_keymaps_preview) ---@type stl.t.IKeymap[]
   vim.list_extend(resolved_keymaps, keymaps)

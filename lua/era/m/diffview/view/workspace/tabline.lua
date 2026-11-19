@@ -141,9 +141,10 @@ function M.status_component()
 
       -- Build flag texts
       local viewtype_icon = is_tree and stl.icon.symbols.flag_tree or stl.icon.symbols.flag_list ---@type string
-      local flag1_text = " " .. viewtype_icon .. "¹" ---@type string
-      local flag3_text = " " .. stl.icon.symbols.flag_fold .. "³" ---@type string
-      local flag4_text = " " .. stl.icon.symbols.flag_untracked .. "⁴" ---@type string
+      local keys = stl.e.ToggleKeyEnum
+      local flag1_text = " " .. viewtype_icon .. stl.icon.toggle_supscript(keys.VIEWTYPE) ---@type string
+      local flag3_text = " " .. stl.icon.symbols.flag_fold .. stl.icon.toggle_supscript(keys.DIFF_FOLDS) ---@type string
+      local flag4_text = " " .. stl.icon.symbols.flag_untracked .. stl.icon.toggle_supscript(keys.UNTRACKED) ---@type string
 
       -- Build content: " Git Changes (N)  [flags]"
       local git_icon = stl.icon.git.Git ---@type string
@@ -153,7 +154,7 @@ function M.status_component()
       local flag2_text = "" ---@type string
       if is_tree then
         local foldempty_icon = stl.icon.symbols.flag_fold_empty_path ---@type string
-        flag2_text = " " .. foldempty_icon .. "²"
+        flag2_text = " " .. foldempty_icon .. stl.icon.toggle_supscript(keys.FOLDEMPTY)
       end
 
       local flags_text = flag1_text .. flag2_text .. flag3_text .. flag4_text

@@ -398,16 +398,16 @@ function M.bind(widget, view)
       end,
     },
   }
-  for index, desc in ipairs({
-    "Explorer: toggle selected-only view",
-    "Explorer: switch Tree/List view",
-    "Explorer: toggle directory compression",
-    "Explorer: toggle hidden files",
+  for index, toggle in ipairs({
+    { stl.e.ToggleKeyEnum.SELECTED, "Explorer: toggle selected-only view" },
+    { stl.e.ToggleKeyEnum.VIEWTYPE, "Explorer: switch Tree/List view" },
+    { stl.e.ToggleKeyEnum.FOLDEMPTY, "Explorer: toggle directory compression" },
+    { stl.e.ToggleKeyEnum.HIDDEN, "Explorer: toggle hidden files" },
   }) do
     keymaps[#keymaps + 1] = {
       modes = { "n" },
-      key = "t" .. index,
-      desc = desc,
+      key = toggle[1],
+      desc = toggle[2],
       callback = function()
         widget:toggle_flag(index)
       end,

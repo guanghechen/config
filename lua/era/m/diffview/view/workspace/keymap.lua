@@ -53,10 +53,10 @@ function M.gen_changes(ctx, action)
     { modes = { "n" }, key = "oc", desc = "diffview(workspace): Copy filepath", callback = function() action.copy_filepath() end },
     { modes = { "n" }, key = "oi", desc = "diffview(workspace): File info", callback = function() action.show_info() end },
     { modes = { "n" }, key = "q", desc = "diffview(workspace): Close diffview", callback = function() action.close(ctx) end },
-    { modes = { "n" }, key = "t1", desc = "diffview(workspace): Toggle viewtype (tree/list)", callback = function() action.toggle_viewtype(ctx) end },
-    { modes = { "n" }, key = "t2", desc = "diffview(workspace): Toggle compact directory paths", callback = function() action.toggle_foldempty(ctx) end },
-    { modes = { "n" }, key = "t3", desc = "diffview(workspace): Toggle default diff folds", callback = function() action.toggle_default_folds(ctx) end },
-    { modes = { "n" }, key = "t4", desc = "diffview(workspace): Toggle untracked files", callback = function() action.toggle_untracked(ctx) end },
+    { modes = { "n" }, key = stl.e.ToggleKeyEnum.VIEWTYPE, desc = "diffview(workspace): Toggle viewtype (tree/list)", callback = function() action.toggle_viewtype(ctx) end },
+    { modes = { "n" }, key = stl.e.ToggleKeyEnum.FOLDEMPTY, desc = "diffview(workspace): Toggle compact directory paths", callback = function() action.toggle_foldempty(ctx) end },
+    { modes = { "n" }, key = stl.e.ToggleKeyEnum.DIFF_FOLDS, desc = "diffview(workspace): Toggle default diff folds", callback = function() action.toggle_default_folds(ctx) end },
+    { modes = { "n" }, key = stl.e.ToggleKeyEnum.UNTRACKED, desc = "diffview(workspace): Toggle untracked files", callback = function() action.toggle_untracked(ctx) end },
     { modes = { "n" }, key = "za", desc = "diffview(workspace): Toggle fold", callback = function() action.toggle_fold(ctx) end },
     { modes = { "n" }, key = "zc", desc = "diffview(workspace): Close fold", callback = function() action.close_fold(ctx) end },
     { modes = { "n" }, key = "zC", desc = "diffview(workspace): Close all diff folds", callback = function() action.close_all_folds(ctx) end },
@@ -91,8 +91,8 @@ function M.gen_sbs(ctx, action, history_action)
     { modes = { "n" }, key = "zM", desc = "diffview(workspace): Close all diff folds", callback = function() dispatch_preview(ctx, action.close_all_folds, history_action, "close_all_folds") end },
     { modes = { "n" }, key = "zO", desc = "diffview(workspace): Open all diff folds", callback = function() dispatch_preview(ctx, action.open_all_folds, history_action, "open_all_folds") end },
     { modes = { "n" }, key = "zR", desc = "diffview(workspace): Open all diff folds", callback = function() dispatch_preview(ctx, action.open_all_folds, history_action, "open_all_folds") end },
-    { modes = { "n" }, key = "t3", desc = "diffview(workspace): Toggle default diff folds", callback = function() dispatch_preview(ctx, action.toggle_default_folds, history_action, "toggle_default_folds") end },
-    { modes = { "n" }, key = "t4", desc = "diffview(workspace): Toggle untracked files", callback = function() action.toggle_untracked(ctx) end },
+    { modes = { "n" }, key = stl.e.ToggleKeyEnum.DIFF_FOLDS, desc = "diffview(workspace): Toggle default diff folds", callback = function() dispatch_preview(ctx, action.toggle_default_folds, history_action, "toggle_default_folds") end },
+    { modes = { "n" }, key = stl.e.ToggleKeyEnum.UNTRACKED, desc = "diffview(workspace): Toggle untracked files", callback = function() action.toggle_untracked(ctx) end },
     { modes = { "n" }, key = "<C-a>r", desc = "diffview(workspace): Refresh", callback = function() ctx:refresh() end, aliases = { "<D-r>", "<M-r>" } },
   }
 
@@ -148,8 +148,8 @@ function M.gen_history(ctx, action, history_action)
     { modes = { "n" }, key = "gl", desc = "diffview(history): Expand commit / directory", callback = function() history_action.expand(history) end },
     { modes = { "n" }, key = "oc", desc = "diffview(history): Copy filepath", callback = function() history_action.copy_filepath(history) end },
     { modes = { "n" }, key = "q", desc = "diffview(history): Close diffview", callback = function() action.close(ctx) end },
-    { modes = { "n" }, key = "t1", desc = "diffview(history): Toggle viewtype (tree/list)", callback = function() history_action.toggle_viewtype(history) end },
-    { modes = { "n" }, key = "t2", desc = "diffview(history): Toggle compact directory paths", callback = function() history_action.toggle_foldempty(history) end },
+    { modes = { "n" }, key = stl.e.ToggleKeyEnum.VIEWTYPE, desc = "diffview(history): Toggle viewtype (tree/list)", callback = function() history_action.toggle_viewtype(history) end },
+    { modes = { "n" }, key = stl.e.ToggleKeyEnum.FOLDEMPTY, desc = "diffview(history): Toggle compact directory paths", callback = function() history_action.toggle_foldempty(history) end },
     { modes = { "n" }, key = "yy", desc = "diffview(history): Yank commit hash", callback = function() history_action.yank_hash(history) end },
     { modes = { "n" }, key = "za", desc = "diffview(history): Toggle commit / directory", callback = function() history_action.toggle_expand(history) end },
     { modes = { "n" }, key = "zc", desc = "diffview(history): Collapse commit / directory", callback = function() history_action.collapse(history) end },
@@ -159,7 +159,7 @@ function M.gen_history(ctx, action, history_action)
     { modes = { "n" }, key = "<C-k>", desc = "diffview(history): Prev commit", callback = function() history_action.goto_prev_commit(history) end },
     { modes = { "n" }, key = "zM", desc = "diffview(history): Close all diff folds", callback = function() history_action.close_all_folds(history) end },
     { modes = { "n" }, key = "zR", desc = "diffview(history): Open all diff folds", callback = function() history_action.open_all_folds(history) end },
-    { modes = { "n" }, key = "t3", desc = "diffview(history): Toggle default diff folds", callback = function() history_action.toggle_default_folds(history) end },
+    { modes = { "n" }, key = stl.e.ToggleKeyEnum.DIFF_FOLDS, desc = "diffview(history): Toggle default diff folds", callback = function() history_action.toggle_default_folds(history) end },
   }
 end
 

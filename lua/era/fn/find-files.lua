@@ -242,9 +242,9 @@ picker = era.m.picker.FiletreeComposer.new({
   flag_case_sensitive = o_flag_case_sensitive,
   flag_selected = o_flag_selected,
   flag_viewtype = o_flag_viewtype,
-  flags_start_index = 0,
   flags_prepend = {
     {
+      key = stl.e.ToggleKeyEnum.SETTINGS,
       desc = string.format("%s: open settings", title),
       callback = function()
         edit_setting(picker)
@@ -256,6 +256,7 @@ picker = era.m.picker.FiletreeComposer.new({
   },
   flags_append = {
     {
+      key = stl.e.ToggleKeyEnum.EXCLUDE,
       desc = string.format("%s: toggle exclude", name),
       callback = function()
         local enabled = o_flag_exclude:snapshot() ---@type boolean
@@ -267,6 +268,7 @@ picker = era.m.picker.FiletreeComposer.new({
       end,
     },
     {
+      key = stl.e.ToggleKeyEnum.GITIGNORE,
       desc = string.format("%s: toggle gitignore", name),
       callback = function()
         local enabled = o_flag_gitignore:snapshot() ---@type boolean

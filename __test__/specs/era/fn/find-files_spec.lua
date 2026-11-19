@@ -209,4 +209,15 @@ t:test("Find Files hands a path outside its root to Find Buffers", function()
   t.assert_same({ pattern = "~/elsewhere" }, handed[2])
 end)
 
+t:test("Find Files takes its settings, exclude and gitignore flags at t0, t7 and t8", function()
+  local values, picker = controls(), facade()
+  t:patch_table(dot.context.select, "find_file", values)
+  assert(loadfile("lua/era/fn/find-files.lua"))()
+  local keys = {} ---@type string[]
+  for _, flag in ipairs(vim.list_extend(vim.list_slice(picker.props.flags_prepend), picker.props.flags_append)) do
+    keys[#keys + 1] = flag.key
+  end
+  t.assert_same({ "t0", "t7", "t8" }, keys)
+end)
+
 t:run()

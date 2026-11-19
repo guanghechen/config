@@ -197,17 +197,18 @@ function M.status_component()
       local lyt = session and session.layout
       local layout_type = lyt and lyt.layout_type or 1 ---@type integer
 
-      -- Build flag texts (layout first for t0)
+      -- Build flag texts: the layout first, marked with its number as p1 to p5 select it
       local layout_icon = LAYOUT_ICONS[layout_type] or LAYOUT_ICONS[1] ---@type string
       local layout_subscript = SUBSCRIPT_DIGITS[layout_type] or SUBSCRIPT_DIGITS[1] ---@type string
       local flag0_text = " " .. layout_icon .. layout_subscript ---@type string
       local viewtype_icon = is_tree and ICON_FLAG_TREE or ICON_FLAG_LIST ---@type string
-      local flag1_text = " " .. viewtype_icon .. "¹" ---@type string
+      local keys = stl.e.ToggleKeyEnum
+      local flag1_text = " " .. viewtype_icon .. stl.icon.toggle_supscript(keys.VIEWTYPE) ---@type string
       local flag2_text = "" ---@type string
       if is_tree then
-        flag2_text = " " .. ICON_FLAG_FOLD_EMPTY .. "²"
+        flag2_text = " " .. ICON_FLAG_FOLD_EMPTY .. stl.icon.toggle_supscript(keys.FOLDEMPTY)
       end
-      local flag3_text = " " .. ICON_FLAG_FOLD .. "³" ---@type string
+      local flag3_text = " " .. ICON_FLAG_FOLD .. stl.icon.toggle_supscript(keys.DIFF_FOLDS) ---@type string
       local flag0_hln = hln_flag_layout ---@type string
       local flag1_hln = is_tree and hln_flag_on or hln_flag_off ---@type string
       local flag2_hln = foldempty and hln_flag_on or hln_flag_off ---@type string

@@ -276,4 +276,20 @@ t:test("a query typed ahead of <CR> confirms from its own results", function()
   t.assert_eq("gamma", ui:lua("return confirmed"))
 end)
 
+t:test("a list picker takes its matching flags at t1 to t3, and <C-1> to <C-3> in the finder's Insert mode", function()
+  local ui = picker.list_ui(t)
+  t.assert_same(
+    { "native list: fuzzy", "native list: sensitive", "native list: regex", "native list: fuzzy" },
+    ui:lua([[
+      local result, finder = picker.result:get_bufnr(), picker.finder:get_bufnr()
+      local function desc(bufnr, mode, key)
+        return vim.api.nvim_buf_call(bufnr, function()
+          return vim.fn.maparg(key, mode, false, true).desc
+        end)
+      end
+      return { desc(result, "n", "t1"), desc(result, "n", "t2"), desc(result, "n", "t3"), desc(finder, "i", "<C-1>") }
+    ]])
+  )
+end)
+
 t:run()

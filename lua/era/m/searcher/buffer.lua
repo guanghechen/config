@@ -29,6 +29,7 @@ local function create_flag_items(o_flag_fuzzy, o_flag_regex, o_flag_case_sensiti
   ---@type era.m.searcher.result.IFlagItemRaw[]
   local raw_flags = {
     {
+      key = stl.e.ToggleKeyEnum.MATCH_FUZZY,
       desc = string.format("%s: toggle fuzzy search", title),
       callback = function()
         o_flag_fuzzy:next(not o_flag_fuzzy:snapshot())
@@ -39,6 +40,7 @@ local function create_flag_items(o_flag_fuzzy, o_flag_regex, o_flag_case_sensiti
       end,
     },
     {
+      key = stl.e.ToggleKeyEnum.MATCH_REGEX,
       desc = string.format("%s: toggle regex search", title),
       callback = function()
         o_flag_regex:next(not o_flag_regex:snapshot())
@@ -49,6 +51,7 @@ local function create_flag_items(o_flag_fuzzy, o_flag_regex, o_flag_case_sensiti
       end,
     },
     {
+      key = stl.e.ToggleKeyEnum.MATCH_CASE_SENSITIVE,
       desc = string.format("%s: toggle case sensitive", title),
       callback = function()
         o_flag_case_sensitive:next(not o_flag_case_sensitive:snapshot())
@@ -59,6 +62,7 @@ local function create_flag_items(o_flag_fuzzy, o_flag_regex, o_flag_case_sensiti
       end,
     },
     {
+      key = stl.e.ToggleKeyEnum.REPLACE,
       desc = string.format("%s: toggle replace mode", title),
       callback = function()
         o_flag_replace:next(not o_flag_replace:snapshot())
@@ -73,6 +77,7 @@ local function create_flag_items(o_flag_fuzzy, o_flag_regex, o_flag_case_sensiti
   local flags = {} ---@type era.m.searcher.result.IFlagItem[]
   for _, flag in ipairs(raw_flags) do
     flags[#flags + 1] = {
+      key = flag.key,
       desc = flag.desc,
       callback = dot.G.register_anonymous_fn(flag.callback) or "dot.G.noop",
       disabled = stl.fn.falsy,
@@ -1148,7 +1153,7 @@ function M:__create_keymaps__(raw_flags, window_type)
   if self.o_flag_replace ~= nil then
     base_keymaps[#base_keymaps + 1] = {
       modes = { "n", "x" },
-      key = "tr",
+      key = stl.e.ToggleKeyEnum.REPLACE_MNEMONIC,
       desc = string.format("%s: toggle replace mode", self.title),
       callback = function()
         local flag = self.o_flag_replace ---@type stl.c.Observable
@@ -1157,10 +1162,10 @@ function M:__create_keymaps__(raw_flags, window_type)
     }
   end
 
-  for index, flag in ipairs(raw_flags) do
+  for _, flag in ipairs(raw_flags) do
     base_keymaps[#base_keymaps + 1] = {
       modes = { "n", "x" },
-      key = string.format("t%d", index),
+      key = flag.key,
       desc = flag.desc,
       callback = flag.callback,
     }
@@ -1224,7 +1229,7 @@ function M:__create_nvimbar__(o_match_index, o_match_total, flags)
       position = "right",
       priority = 100,
       component = c.lazy(function()
-        return c.picker.result_flags(position, flags, 1)
+        return c.picker.result_flags(position, flags)
       end),
     })
 end

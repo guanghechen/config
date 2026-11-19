@@ -43,16 +43,20 @@ function M.todigit_subscript(num)
   return #result > 0 and result or digits_subscript[1]
 end
 
----@param num                           integer
+-- stylua: ignore
+---@class stl.icon.letters_supscript
+local letters_supscript = {
+  a = "ᵃ", b = "ᵇ", c = "ᶜ", d = "ᵈ", e = "ᵉ", f = "ᶠ", g = "ᵍ", h = "ʰ", i = "ⁱ", j = "ʲ", k = "ᵏ", l = "ˡ", m = "ᵐ",
+  n = "ⁿ", o = "ᵒ", p = "ᵖ", r = "ʳ", s = "ˢ", t = "ᵗ", u = "ᵘ", v = "ᵛ", w = "ʷ", x = "ˣ", y = "ʸ", z = "ᶻ",
+}
+
+---The superscript that marks a toggle with its key (`stl.e.ToggleKeyEnum`): the key without its leading `t`.
+---@param key                           string
 ---@return string
-function M.todigit_supscript(num)
-  local result = "" ---@type string
-  while num > 0 do
-    local digit = num % 10
-    num = math.floor((num - digit) / 10)
-    result = digits_supscript[digit + 1] .. result
-  end
-  return #result > 0 and result or digits_supscript[1]
+function M.toggle_supscript(key)
+  local char = key:sub(2) ---@type string
+  local digit = tonumber(char) ---@type integer|nil
+  return digit ~= nil and digits_supscript[digit + 1] or letters_supscript[char] or char
 end
 
 ---@class stl.icon.fillchars

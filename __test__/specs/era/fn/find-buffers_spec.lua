@@ -77,6 +77,7 @@ local function close_in_find_buffers(unsaved)
     },
   })
   t:patch_global("stl", {
+    e = require("stl.e"),
     fileicon = {
       get_file_icon = function()
         return "", ""
@@ -182,6 +183,12 @@ t:test("find-buffers close keeps a buffer with unsaved changes", function()
   t.assert_nil(result.candidates, "no tab let the buffer go")
   t.assert_same({}, result.deleted, "deleted buffers")
   t.assert_same({ "Kept a buffer with unsaved changes: a.lua" }, bootstrap.messages(result.warnings), "report")
+end)
+
+t:test("Find Buffers takes its scope flag at ts", function()
+  local picker = facade()
+  assert(loadfile("lua/era/fn/find-buffers.lua"))()
+  t.assert_eq("ts", picker.props.flags_prepend[1].key)
 end)
 
 t:run()

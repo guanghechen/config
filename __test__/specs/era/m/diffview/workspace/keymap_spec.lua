@@ -144,12 +144,12 @@ t:test("visual ghu exits only after a successful unstage", function()
   t.assert_eq("n", vim.fn.mode(), "newer unstage clears unchanged selection")
 end)
 
-t:test("fold keys control the current view while t3 changes the default", function()
+t:test("fold keys control the current view while tz changes the default", function()
   local action, calls = diffview.recorder()
   local ctx = diffview.workspace_context({ layout = {} })
   local changes = keymap.gen_changes(ctx, action)
   local sbs = keymap.gen_sbs(ctx, action, diffview.recorder())
-  for _, key in ipairs({ "zR", "zM", "zO", "zC", "t3", "t4" }) do
+  for _, key in ipairs({ "zR", "zM", "zO", "zC", "tz", "tu" }) do
     assert(find(changes, key), "Changes " .. key).callback()
   end
   for _, key in ipairs({ "zR", "zM", "zO", "zC" }) do
@@ -194,7 +194,7 @@ t:test("History keys exclude standalone layout controls", function()
     keymap.gen_history(diffview.workspace_context({ history = {} }), diffview.recorder(), diffview.recorder())
   t.assert_true(find(keymaps, "K") ~= nil, "History details")
   t.assert_true(find(keymaps, "yy") ~= nil, "History commit hash")
-  for _, key in ipairs({ "P", "p1", "p2", "p3", "p4", "p5", "pp", "t0" }) do
+  for _, key in ipairs({ "P", "p1", "p2", "p3", "p4", "p5", "pp" }) do
     t.assert_nil(find(keymaps, key), "standalone layout key " .. key)
   end
 end)

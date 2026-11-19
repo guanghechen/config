@@ -90,45 +90,40 @@ function M.tabline(position)
 
     local text = "" ---@type string
     local hl_text = "" ---@type string
-    local index = 1 ---@type integer
-
     local flag_selected = display.selected_only ---@type boolean
     local flag_selected_icon = stl.icon.symbols.flag_selected ---@type string
     local flag_selected_hln = flag_selected and "explorer_flag_orange" or "explorer_flag_grey" ---@type string
     local flag_selected_piece_hln = string.format("%s_%s", position, flag_selected_hln) ---@type string
-    local flag_selected_digit = stl.icon.todigit_supscript(index) ---@type string
-    local flag_selected_piece_text = " " .. flag_selected_icon .. flag_selected_digit ---@type string
+    local flag_selected_mark = stl.icon.toggle_supscript(stl.e.ToggleKeyEnum.SELECTED) ---@type string
+    local flag_selected_piece_text = " " .. flag_selected_icon .. flag_selected_mark ---@type string
     text = text .. flag_selected_piece_text
     hl_text = hl_text .. btn(txt(flag_selected_piece_text, flag_selected_piece_hln), cb_flag_selected)
-    index = index + 1
 
     local flag_viewtype = display.mode ---@type dot.context.explorer.ViewtypeEnum
     local flag_viewtype_icon = flag_viewtype == "tree" and stl.icon.symbols.flag_tree or stl.icon.symbols.flag_list ---@type string
     local flag_viewtype_hln = "explorer_flag_blue" ---@type string
     local flag_viewtype_piece_hln = string.format("%s_%s", position, flag_viewtype_hln) ---@type string
-    local flag_viewtype_digit = stl.icon.todigit_supscript(index) ---@type string
-    local flag_viewtype_piece_text = " " .. flag_viewtype_icon .. flag_viewtype_digit ---@type string
+    local flag_viewtype_mark = stl.icon.toggle_supscript(stl.e.ToggleKeyEnum.VIEWTYPE) ---@type string
+    local flag_viewtype_piece_text = " " .. flag_viewtype_icon .. flag_viewtype_mark ---@type string
     text = text .. flag_viewtype_piece_text
     hl_text = hl_text .. btn(txt(flag_viewtype_piece_text, flag_viewtype_piece_hln), cb_flag_viewtype)
-    index = index + 1
 
     if flag_viewtype == "tree" then
       local flag_foldempty = display.compress ---@type boolean
       local flag_foldempty_icon = stl.icon.symbols.flag_fold_empty_path ---@type string
       local flag_foldempty_hln = flag_foldempty and "explorer_flag_blue" or "explorer_flag_grey" ---@type string
       local flag_foldempty_piece_hln = string.format("%s_%s", position, flag_foldempty_hln) ---@type string
-      local flag_foldempty_digit = stl.icon.todigit_supscript(index) ---@type string
-      local flag_foldempty_piece_text = " " .. flag_foldempty_icon .. flag_foldempty_digit ---@type string
+      local flag_foldempty_mark = stl.icon.toggle_supscript(stl.e.ToggleKeyEnum.FOLDEMPTY) ---@type string
+      local flag_foldempty_piece_text = " " .. flag_foldempty_icon .. flag_foldempty_mark ---@type string
       text = text .. flag_foldempty_piece_text
       hl_text = hl_text .. btn(txt(flag_foldempty_piece_text, flag_foldempty_piece_hln), cb_flag_foldempty)
     end
-    index = index + 1
 
     local flag_hidden_icon = stl.icon.symbols.flag_hidden ---@type string
     local flag_hidden_hln = show_hidden and "explorer_flag_blue" or "explorer_flag_grey" ---@type string
     local flag_hidden_piece_hln = string.format("%s_%s", position, flag_hidden_hln) ---@type string
-    local flag_hidden_digit = stl.icon.todigit_supscript(index) ---@type string
-    local flag_hidden_piece_text = " " .. flag_hidden_icon .. flag_hidden_digit ---@type string
+    local flag_hidden_mark = stl.icon.toggle_supscript(stl.e.ToggleKeyEnum.HIDDEN) ---@type string
+    local flag_hidden_piece_text = " " .. flag_hidden_icon .. flag_hidden_mark ---@type string
     text = text .. flag_hidden_piece_text
     hl_text = hl_text .. btn(txt(flag_hidden_piece_text, flag_hidden_piece_hln), cb_flag_hidden)
 

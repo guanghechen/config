@@ -195,6 +195,19 @@ t:test("every pane refreshes with <C-a>r and its Cmd and Alt aliases, as the Pic
   t.assert_same({ false, false, false }, refreshes, "tree, input and preview refresh as R does")
 end)
 
+t:test("the tree compacts directories with t3, the shared toggle key, and toggles the preview with tp", function()
+  local state = fixture()
+  local keymaps = {} ---@type table<string, stl.t.IKeymap>
+  for _, keymap in ipairs(require("era.m.git_files.keymaps").tree(state.widget)) do
+    keymaps[keymap.key] = keymap
+  end
+  t.assert_nil(keymaps.tf, "tf is gone")
+  t.assert_eq("Git Files: toggle diff preview", keymaps.tp.desc)
+  local compact = state.widget._foldempty
+  keymaps.t3.callback()
+  t.assert_eq(not compact, state.widget._foldempty)
+end)
+
 t:test("a Visual range stages all selected rows", function()
   local state = fixture()
   local widget = state.widget

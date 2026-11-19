@@ -46,4 +46,15 @@ t:test("preview resolves the selected file through the data contract", function(
   t.assert_eq(84, diagnostic_target, "diagnostic preview buffer")
 end)
 
+t:test("Find Diagnostics takes its buffer-only flag at tb", function()
+  local props = nil ---@type era.m.picker.IFiletreeComposerProps|nil
+  t:patch_table(era.m.picker.FiletreeComposer, "new", function(actual_props)
+    props = actual_props
+    return {}
+  end)
+  t:patch_table(stl.fn, "observe", function() end)
+  assert(loadfile("lua/era/fn/find-diagnostics.lua"))()
+  t.assert_eq("tb", assert(props).flags_append[1].key)
+end)
+
 t:run()

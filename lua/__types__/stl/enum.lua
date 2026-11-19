@@ -126,6 +126,53 @@
 ---@field public NORMAL                 stl.t.TabTypeEnum[]
 
 ----------------------------------------------------------------------------------------------------
+-- ToggleKeyEnum
+----------------------------------------------------------------------------------------------------
+
+---@alias stl.t.ToggleKeyEnum
+---| "t0"
+---| "t1"
+---| "t2"
+---| "t3"
+---| "t4"
+---| "t5"
+---| "t6"
+---| "t7"
+---| "t8"
+---| "t9"
+---| "tb"
+---| "th"
+---| "tl"
+---| "tp"
+---| "tr"
+---| "ts"
+---| "tu"
+---| "tz"
+
+---@class stl.e.IToggleKeyEnum
+---@field public SETTINGS               "t0"
+---@field public SELECTED               "t1"
+---@field public VIEWTYPE               "t2"
+---@field public FOLDEMPTY              "t3"
+---@field public FUZZY                  "t4"
+---@field public CASE_SENSITIVE         "t5"
+---@field public REGEX                  "t6"
+---@field public EXCLUDE                "t7"
+---@field public GITIGNORE              "t8"
+---@field public REPLACE                "t9"
+---@field public MATCH_FUZZY            "t1"
+---@field public MATCH_CASE_SENSITIVE   "t2"
+---@field public MATCH_REGEX            "t3"
+---@field public BUFFER_ONLY            "tb"
+---@field public HIDDEN                 "th"
+---@field public MATCH_LIMIT            "tl"
+---@field public PREVIEW                "tp"
+---@field public REPLACE_MNEMONIC       "tr"
+---@field public SCOPE                  "ts"
+---@field public UNTRACKED              "tu"
+---@field public DIFF_FOLDS             "tz"
+
+----------------------------------------------------------------------------------------------------
 -- WinTypeEnum
 ----------------------------------------------------------------------------------------------------
 

@@ -72,7 +72,6 @@ local PRESENTATION = {}
 ---@field public flag_case_sensitive    stl.c.Observable
 ---@field public flags_append           era.m.picker.result.IFlagItemRaw[]|nil
 ---@field public flags_prepend          era.m.picker.result.IFlagItemRaw[]|nil
----@field public flags_start_index      ?0|1
 ---
 ---@field public search_pattern         stl.c.Observable
 ---@field public search_pattern_history ?stl.c.History
@@ -150,7 +149,6 @@ function M.new(props)
   local flag_case_sensitive = props.flag_case_sensitive ---@type stl.c.Observable
   local flags_append = props.flags_append ---@type era.m.picker.result.IFlagItemRaw[]|nil
   local flags_prepend = props.flags_prepend ---@type era.m.picker.result.IFlagItemRaw[]|nil
-  local flags_start_index = props.flags_start_index ---@type 0|1|nil
 
   local on_cancel = props.on_cancel or stl.fn.noop ---@type era.m.picker.composer.list.IOnCancel
   local on_closed = props.on_closed or stl.fn.noop ---@type era.m.picker.composer.list.IOnClosed
@@ -250,6 +248,7 @@ function M.new(props)
       if source then
         for _, flag in ipairs(source) do
           target[#target + 1] = {
+            key = flag.key,
             desc = string.format("%s: %s", prefix, flag.desc),
             callback = flag.callback,
             snapshot = flag.snapshot,
@@ -260,6 +259,7 @@ function M.new(props)
 
     add_flags(flags, flags_prepend, name)
     flags[#flags + 1] = {
+      key = stl.e.ToggleKeyEnum.MATCH_FUZZY,
       desc = string.format("%s: fuzzy", name),
       callback = function()
         flag_fuzzy:next(not flag_fuzzy:snapshot())
@@ -269,6 +269,7 @@ function M.new(props)
       end,
     }
     flags[#flags + 1] = {
+      key = stl.e.ToggleKeyEnum.MATCH_CASE_SENSITIVE,
       desc = string.format("%s: sensitive", name),
       callback = function()
         flag_case_sensitive:next(not flag_case_sensitive:snapshot())
@@ -279,6 +280,7 @@ function M.new(props)
       end,
     }
     flags[#flags + 1] = {
+      key = stl.e.ToggleKeyEnum.MATCH_REGEX,
       desc = string.format("%s: regex", name),
       callback = function()
         flag_regex:next(not flag_regex:snapshot())
@@ -335,7 +337,6 @@ function M.new(props)
     permanent = permanent,
 
     flags = flags,
-    flags_start_index = flags_start_index,
     height = height,
     width = width,
 

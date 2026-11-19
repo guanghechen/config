@@ -22,7 +22,8 @@
 - `gf` / `gF`：在已有普通 tab / 新 tab 打开当前文件。
 - `zC` / `zM`：关闭当前 view 的所有 diff folds。
 - `zO` / `zR`：打开当前 view 的所有 diff folds。
-- `t3`：切换默认 diff fold policy，并应用到当前 preview domain。
+- `tz`：切换默认 diff fold policy，并应用到当前 preview domain。
+- `t*` 开关键的分配与上标见[开关键](../toggle-keys.md)。
 
 ## Git Workspace
 
@@ -43,10 +44,10 @@
 - `gf` / `gF`：打开当前文件。
 - `za` / `zc` / `zo`：切换 / 关闭 / 打开 tree fold。
 - `zC`、`zM`、`zO`、`zR`：控制当前 view 的所有 diff folds。
-- `t1`：切换 tree/list viewtype。
-- `t2`：切换 compact directory paths。
-- `t3`：切换默认 diff fold policy。
-- `t4`：切换 untracked files。
+- `t2`：切换 tree/list viewtype。
+- `t3`：切换 compact directory paths。
+- `tz`：切换默认 diff fold policy。
+- `tu`：切换 untracked files。
 - `q`：关闭 Diffview。
 
 Changes 与 History pane 支持鼠标滚轮。
@@ -73,11 +74,11 @@ History 显式定义以下 bindings，不继承 standalone commits 的 layout co
 - `gH` / `gL`：折叠 / 展开所有 commits。
 - `gf` / `gF`：打开当前 commit file。
 - `gR`：将文件恢复到当前 commit 版本。
-- `t1` / `t2`：切换 viewtype / compact paths。
-- `t3`、`zM`、`zR`：控制 History preview folds。
+- `t2` / `t3`：切换 viewtype / compact paths。
+- `tz`、`zM`、`zR`：控制 History preview folds。
 - `q`：关闭 Diffview。
 
-`P`、`p1..p5`、`pp`、`t0` 仅属于 standalone commits，不得出现在 workspace History。
+`P`、`p1..p5`、`pp` 仅属于 standalone commits，不得出现在 workspace History。
 
 ### SBS pane
 
@@ -85,14 +86,14 @@ History 显式定义以下 bindings，不继承 standalone commits 的 layout co
 - `gs`、`gu`、normal/visual `ghu` 仅在 Changes preview 中执行 workspace mutation。
 - `]p` / `[p`：聚焦 preview 所属的侧栏 pane，即 History 或当前 entry 所在的 Changes pane；它隐藏时聚焦其他可见
   pane，沉浸时它取代当前 pane。不在 SBS 中执行 Neovim 原生的 put。
-- `t4` 始终切换 workspace 的 untracked files。
+- `tu` 始终切换 workspace 的 untracked files。
 - refresh 同时更新 Changes 与 History。
 
 ## 独立 Commits / File History
 
 ### 视图布局控制
 
-`P`、`pp` / `t0` 与 `p1`…`p5` 切换布局，按键与布局的对应见[布局设计](layout.md#独立-commitsdiffview_commits)。
+`P`、`pp` 与 `p1`…`p5` 切换布局，按键与布局的对应见[布局设计](layout.md#独立-commitsdiffview_commits)。
 这些 bindings 与通用 refresh、commit navigation、fold actions 一起应用于 standalone view 的各个 pane。
 
 ### Commits pane
@@ -106,7 +107,7 @@ Commits pane 使用与 workspace History 相同的 commit-domain bindings，并�
 - `l` / `h`：`l` 同 `<CR>`；文件树没有折叠，`h` 跳到 parent。
 - `gf` / `gF`：打开文件。
 - `gR`：将文件恢复到当前 commit 版本。
-- `t1` / `t2`：切换 viewtype / compact paths。
+- `t2` / `t3`：切换 viewtype / compact paths。
 - `q`：关闭 Diffview。
 
 ### SBS pane

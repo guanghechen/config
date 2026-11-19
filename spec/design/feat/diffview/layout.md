@@ -71,7 +71,7 @@ History commit row 从 buffer 第一列显示 abbreviated hash，不显示 activ
 ## 独立 Commits：`diffview_commits`
 
 `path_filter` 可筛选文件或目录历史；设置后 tabline 显示过滤文件名。
-`pp` / `t0` 循环切换布局，`P` 返回上一个布局，`p1`…`p5` 直接选择：
+`pp` 循环切换布局，`P` 返回上一个布局，`p1`…`p5` 直接选择：
 
 | 布局    | Icon | 按键 | 结构                        |
 | ------- | ---- | ---- | --------------------------- |

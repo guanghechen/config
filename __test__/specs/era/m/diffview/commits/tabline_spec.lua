@@ -19,7 +19,7 @@ t:test("layout 3 renders status buttons against the left side-by-side pane", fun
   local text = component.render(component.refresh(context), context, 120)
 
   t.assert_true(text:find(stl.icon.symbols.flag_layout_3 .. "₃", 1, true) ~= nil, "layout button")
-  t.assert_true(text:find(stl.icon.symbols.flag_fold .. "³", 1, true) ~= nil, "fold default button")
+  t.assert_true(text:find(stl.icon.symbols.flag_fold .. "ᶻ", 1, true) ~= nil, "fold default button, tz")
 end)
 
 t:test("the commits pane remains the preferred status width", function()

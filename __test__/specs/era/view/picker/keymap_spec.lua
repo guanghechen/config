@@ -47,4 +47,16 @@ t:test("a read-only pane binds its Normal keys in Insert mode too, and the Norma
   t.assert_eq(1, vim.api.nvim_win_get_cursor(0)[1], "gg")
 end)
 
+t:test("a flag takes its toggle key, and a numbered one <C-number> in Insert mode too", function()
+  local function flag(key)
+    return { key = key, desc = "case: " .. key, callback = stl.fn.noop, snapshot = stl.fn.noop }
+  end
+  local keymaps = Keymap.flags({ flag("t5"), flag("ts") })
+  local bound = {} ---@type table<string, string>
+  for _, keymap in ipairs(keymaps) do
+    bound[keymap.key] = table.concat(keymap.modes, ",")
+  end
+  t.assert_same({ ["<C-5>"] = "i,n,x", t5 = "n,x", ts = "n,x" }, bound)
+end)
+
 t:run()

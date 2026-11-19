@@ -176,10 +176,8 @@ workspace view 拥有组合 layout 与 panel buffers；无论通过 close action
 discard contract 不受影响。隐藏当前选中的 untracked entry 时，workspace 会选择 Changes pane 中第一个
 剩余可见 file row，或在没有可见 file row 时清空 SBS preview。
 
-Workspace tabline 的 status flags：
-
-- `³`：新 Diffview 的默认 fold policy。
-- `󰡯⁴`：untracked 可见性。
+Workspace tabline 的 status flags 显示新 Diffview 的默认 fold policy 与 untracked 可见性，各自以开关键标记，见
+[开关键](../toggle-keys.md)。
 
 ## 文件操作
 

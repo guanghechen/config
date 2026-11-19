@@ -160,10 +160,10 @@ picker = era.m.picker.ListComposer.new({
   flag_fuzzy = o_flag_fuzzy,
   flag_regex = o_flag_regex,
   flag_case_sensitive = o_flag_case_sensitive,
-  flag_start_index = 0,
 
   flags_prepend = {
     {
+      key = stl.e.ToggleKeyEnum.SCOPE,
       desc = "find(buffer): toggle scope",
       callback = function()
         local scope = o_scope:snapshot() ---@type dot.e.FindBufferScope
@@ -180,7 +180,6 @@ picker = era.m.picker.ListComposer.new({
       end,
     },
   },
-  flags_start_index = 0,
 
   keymaps_result = {
     {

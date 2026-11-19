@@ -253,7 +253,7 @@ function M.tree(widget)
     },
     {
       modes = { "n" },
-      key = "tp",
+      key = stl.e.ToggleKeyEnum.PREVIEW,
       desc = "Git Files: toggle diff preview",
       callback = function()
         widget:toggle_preview()
@@ -269,7 +269,7 @@ function M.tree(widget)
     },
     {
       modes = { "n" },
-      key = "tf",
+      key = stl.e.ToggleKeyEnum.FOLDEMPTY,
       desc = "Git Files: compact directories",
       callback = function()
         widget._foldempty = not widget._foldempty
@@ -371,7 +371,7 @@ function M.preview(widget)
     },
     {
       modes = { "n" },
-      key = "tp",
+      key = stl.e.ToggleKeyEnum.PREVIEW,
       desc = "Git Files: toggle diff preview",
       callback = function()
         widget:toggle_preview()
@@ -493,7 +493,7 @@ function M.input(widget)
     },
     {
       modes = { "n" },
-      key = "tp",
+      key = stl.e.ToggleKeyEnum.PREVIEW,
       desc = "Git Files: toggle diff preview",
       callback = function()
         widget:toggle_preview()

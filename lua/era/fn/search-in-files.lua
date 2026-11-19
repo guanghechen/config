@@ -189,9 +189,9 @@ searcher = era.m.searcher.FiletreeComposer.new({
   rootpath = o_rootpath,
   search_pattern = o_search_pattern,
 
-  flags_start_index = 0,
   flags_prepend = {
     {
+      key = stl.e.ToggleKeyEnum.SETTINGS,
       desc = string.format("%s: open settings", title),
       callback = function()
         edit_setting(searcher)
@@ -203,6 +203,7 @@ searcher = era.m.searcher.FiletreeComposer.new({
   },
   flags_append = {
     {
+      key = stl.e.ToggleKeyEnum.EXCLUDE,
       desc = string.format("%s: toggle exclude", name),
       callback = function()
         local enabled = o_flag_exclude:snapshot() ---@type boolean
@@ -214,6 +215,7 @@ searcher = era.m.searcher.FiletreeComposer.new({
       end,
     },
     {
+      key = stl.e.ToggleKeyEnum.GITIGNORE,
       desc = string.format("%s: toggle gitignore", name),
       callback = function()
         local enabled = o_flag_gitignore:snapshot() ---@type boolean
@@ -225,6 +227,7 @@ searcher = era.m.searcher.FiletreeComposer.new({
       end,
     },
     {
+      key = stl.e.ToggleKeyEnum.MATCH_LIMIT,
       desc = string.format("%s: toggle match limit", title),
       callback = function()
         local enabled = o_flag_limit_matches:snapshot() ---@type boolean

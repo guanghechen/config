@@ -32,7 +32,6 @@ local picker = era.m.picker.FiletreeComposer.new({
   flag_case_sensitive = flag_case_sensitive,
   flag_selected = flag_selected,
   flag_viewtype = flag_viewtype,
-  flags_start_index = 1,
 
   on_close = function()
     search_pattern:next("")

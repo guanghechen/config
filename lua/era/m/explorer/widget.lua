@@ -10,6 +10,12 @@ local Subscriber = require("stl.c.subscriber")
 local path_display = require("era.m.explorer.path_display")
 local filepath = require("ux.filetree.path")
 local DISPLAY_FIELDS = { "selected_only", "mode", "compress", "show_hidden" }
+local DISPLAY_KEYS = {
+  stl.e.ToggleKeyEnum.SELECTED,
+  stl.e.ToggleKeyEnum.VIEWTYPE,
+  stl.e.ToggleKeyEnum.FOLDEMPTY,
+  stl.e.ToggleKeyEnum.HIDDEN,
+}
 -- Reserve the same cells for full and self-only marks, including glyph overhang.
 local SELECTION_GLYPHS = {
   select = { selected = "󰄲  ", self_selected = "󰡖  " },
@@ -691,8 +697,8 @@ function M:render_winbar()
     if enabled then
       hlname = index == 1 and "f_wl_explorer_flag_orange" or "f_wl_explorer_flag_blue"
     end
-    local digit = stl.icon.todigit_supscript(index)
-    flags[#flags + 1] = "%#" .. hlname .. "#%@v:lua." .. self._callbacks[index] .. "@ " .. label .. digit .. "%X"
+    local mark = stl.icon.toggle_supscript(DISPLAY_KEYS[index])
+    flags[#flags + 1] = "%#" .. hlname .. "#%@v:lua." .. self._callbacks[index] .. "@ " .. label .. mark .. "%X"
   end
   local status, priority = self:status_text()
   local _, path_hl_text, _, detached_hl_text =

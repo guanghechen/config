@@ -36,6 +36,7 @@ feature。多文档主题使用独立子目录与 `README.md`，例如 [Treeview
   目录浏览见 [Find Explorer](feat/explorer/find.md)。
 - [Result 接入](feat/results.md)：List、Picker、Searcher、LSP 与 Diffview 的 ResultTree records、发布与范围动作。
 - [Picker / Searcher Surface](feat/picker-surface.md)：共享 Result、Preview、feature 边界与按键时的查询同步。
+- [开关键](feat/toggle-keys.md)：结果区与树 pane 开关的 `t*` 键分配、上标与 Insert 别名。
 - [Searcher 请求控制](feat/searcher.md)：请求新鲜度、polling 与清理、match limit 展示与发布性能边界。
 - [原生搜索反馈](feat/search-feedback.md)：`/`、`?`、`n`、`N` 的 winline 状态。
 - [Git](feat/git.md)：status、watcher、hunk、staging、blame 与 ignore cache。

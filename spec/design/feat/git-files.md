@@ -57,8 +57,8 @@ Status: Design。入口代码位于 `lua/era/m/git_files/`，树视图为 `era.v
   `<Tab>`（Insert / Normal）切换目标树当前行的选择，目标树成为最近使用的树；`<S-Tab>`（Insert）为空操作，不向 query
   插入缩进。
 - 树 pane 中作用于当前行的 `oc`、`oi` / `K`、`oe`、`of`、`os`、`oo`、`oz` 与 `<C-q>` 在 inputbox（Normal）中同样可用，
-  作用于目标树，效果与在树中按下相同。`gs` / `gu`、`tf` 等会与编辑 query 冲突的键只在树 pane 中。
-- `tf` 切换目录压缩，默认开启。
+  作用于目标树，效果与在树中按下相同。`gs` / `gu`、`t3` 等会与编辑 query 冲突的键只在树 pane 中。
+- `t3` 切换目录压缩，默认开启；`t*` 开关键的分配见[开关键](toggle-keys.md)。
 
 ## 键位
 
@@ -75,7 +75,7 @@ Status: Design。入口代码位于 `lua/era/m/git_files/`，树视图为 `era.v
 | `gs` / `gu`（Visual）                           | Unstaged 中 stage；Staged 中 unstage                                |
 | `oc`（Visual）                                  | 复制目标路径                                                        |
 | `oe` / `of` / `os` / `oo` / `oi`、`K` / `<C-q>` | Find Explorer；查找文件；内容搜索；system open；文件详情；quickfix  |
-| `/` / `R` / `tp` / `tf`                         | 聚焦输入；刷新；切换 preview；切换压缩                              |
+| `/` / `R` / `tp` / `t3`                         | 聚焦输入；刷新；切换 preview；切换压缩                              |
 | `z;`（Visual）                                  | 切换左栏沉浸模式                                                    |
 | `]p` / `[p`                                     | 按 inputbox → Staged → Unstaged 循环聚焦，两端循环                  |
 | `q`（Visual）                                   | 关闭浮窗                                                            |

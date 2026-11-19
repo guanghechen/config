@@ -6,6 +6,27 @@ local M = {}
 ---Normal-mode motions a read-only pane takes in Insert mode, unless one of its keys takes the same key.
 local MOTIONS = { "j", "k", "gg", "G", "<C-d>", "<C-u>" } ---@type string[]
 
+---Keys of the result flags: each flag's toggle key in Normal and Visual mode, and for a numbered key `<C-<number>>` in
+---Insert mode too.
+---@param flags                         era.view.picker.result.IFlagItemRaw[]
+---@return stl.t.IKeymap[]
+function M.flags(flags)
+  local keymaps = {} ---@type stl.t.IKeymap[]
+  for _, flag in ipairs(flags) do
+    local number = flag.key:match("^t(%d)$") ---@type string|nil
+    if number ~= nil then
+      keymaps[#keymaps + 1] = {
+        modes = { "i", "n", "x" },
+        key = string.format("<C-%s>", number),
+        desc = flag.desc,
+        callback = flag.callback,
+      }
+    end
+    keymaps[#keymaps + 1] = { modes = { "n", "x" }, key = flag.key, desc = flag.desc, callback = flag.callback }
+  end
+  return keymaps
+end
+
 ---Binds the keys of a read-only pane. Insert mode reaches the pane only with a focus move, from the finder for
 ---instance, and the pane takes the keys there as it does in Normal mode: the keys bound in Normal mode are bound in
 ---Insert mode too, and the motions above move the cursor. A key sequence stays in the modes it was written for.

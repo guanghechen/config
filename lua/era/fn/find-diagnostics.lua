@@ -243,6 +243,7 @@ picker = era.m.picker.FiletreeComposer.new({
 
   flags_append = {
     {
+      key = stl.e.ToggleKeyEnum.BUFFER_ONLY,
       desc = string.format("%s: buffer only", name),
       callback = function()
         local enabled = o_flag_buffer:snapshot() ---@type boolean

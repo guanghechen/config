@@ -295,7 +295,7 @@ Status: Design。本文定义 Explorer 的输入、用途、窗口、编辑器�
 | `h` / `oz`                                                         | 折叠或折叠父目录；递归切换                                                      |
 | `[i` / `]i`                                                        | 父行；最后直接子项或兄弟，Normal/Visual，仅 Tree                                |
 | `<BS>` / `.` / `gb` / `gc` / `gw`                                  | 父 root；当前目录；上一 root；cwd；workspace                                    |
-| `t1` / `t2` / `t3` / `t4`、`H`                                     | selected-only；Tree/List；压缩；隐藏项                                          |
+| `t1` / `t2` / `t3` / `th`、`H`                                     | selected-only；Tree/List；压缩；隐藏项                                          |
 | `<Tab>` / `ms` / `mc`（`y`）/ `mx`                                 | select；select；copy；cut，同用途切换选中                                       |
 | Visual `<Tab>` / `c`（`y`）/ `x`                                   | 切换范围选择；范围并入选区并设为 copy；cut                                      |
 | `<Esc><Esc>`                                                       | 先取消 copy/cut 并保留选区；普通 select 时清空选区，Normal/Visual               |
@@ -308,7 +308,7 @@ Status: Design。本文定义 Explorer 的输入、用途、窗口、编辑器�
 | `i` / `I`                                                          | 无动作，不进入正文编辑                                                          |
 
 展开与折叠的执行时机、写入语义及 List 中的处理见 [Treeview expansion](../../ux/treeview/expansion.md#consumer-动作)；
-`oz` 为其中的递归 Toggle。
+`oz` 为其中的递归 Toggle。`t*` 开关键的分配与上标见[开关键](../toggle-keys.md)。
 
 - `l` / `<CR>` / 双击：可展开行以 SelfOnly 切换展开，不自动进入首个 child；不可展开行打开捕获的文件，保留已有逻辑选区。
   List 中目录不执行，文件照常打开。

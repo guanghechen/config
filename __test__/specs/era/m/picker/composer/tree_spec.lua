@@ -373,4 +373,16 @@ t:test("era.m.picker.composer.tree navigates from a List location to its display
   t.assert_eq("one", key)
 end)
 
+t:test("a tree picker numbers its flags from the shared table", function()
+  local descs = {} ---@type table<string, string>
+  for _, keymap in ipairs(action_fixture("keys").result.keymaps) do
+    descs[keymap.key] = keymap.desc
+  end
+  t.assert_same(
+    { "keys: selected only", "keys: viewtype", "keys: compact directory paths", "keys: fuzzy", "keys: sensitive" },
+    { descs.t1, descs.t2, descs.t3, descs.t4, descs.t5 }
+  )
+  t.assert_eq("keys: regex", descs.t6)
+end)
+
 t:run()

@@ -99,7 +99,6 @@ local SEARCH_INDICATOR_DELAY_NS = 120 * 1e6 ---@type integer
 ---
 ---@field public flags_append           era.m.searcher.result.IFlagItemRaw[]|nil
 ---@field public flags_prepend          era.m.searcher.result.IFlagItemRaw[]|nil
----@field public flags_start_index      ?0|1
 ---
 ---@field public frecency               ?stl.c.Frecency
 ---
@@ -264,7 +263,6 @@ function M.new(props)
 
   local flags_append = props.flags_append ---@type era.m.searcher.result.IFlagItemRaw[]|nil
   local flags_prepend = props.flags_prepend ---@type era.m.searcher.result.IFlagItemRaw[]|nil
-  local flags_start_index = props.flags_start_index ---@type 0|1|nil
 
   local frecency = props.frecency ---@type stl.c.Frecency|nil
 
@@ -424,6 +422,7 @@ function M.new(props)
     if flags_prepend ~= nil then
       for _, flag in ipairs(flags_prepend) do
         flags[#flags + 1] = {
+          key = flag.key,
           desc = string.format("%s: %s", name, flag.desc),
           callback = flag.callback,
           snapshot = flag.snapshot,
@@ -431,6 +430,7 @@ function M.new(props)
       end
     end
     flags[#flags + 1] = {
+      key = stl.e.ToggleKeyEnum.SELECTED,
       desc = string.format("%s: selected only", name),
       callback = function()
         local enabled = o_flag_selected:snapshot() ---@type boolean
@@ -442,6 +442,7 @@ function M.new(props)
       end,
     }
     flags[#flags + 1] = {
+      key = stl.e.ToggleKeyEnum.VIEWTYPE,
       desc = string.format("%s: viewtype", name),
       callback = function()
         local viewtype = o_flag_viewtype:snapshot() ---@type era.view.result_tree.Viewtype
@@ -462,6 +463,7 @@ function M.new(props)
       end,
     }
     flags[#flags + 1] = {
+      key = stl.e.ToggleKeyEnum.FOLDEMPTY,
       desc = string.format("%s: compact directory paths", name),
       disabled = function()
         local viewtype = o_flag_viewtype:snapshot() ---@type era.view.result_tree.Viewtype
@@ -478,6 +480,7 @@ function M.new(props)
       end,
     }
     flags[#flags + 1] = {
+      key = stl.e.ToggleKeyEnum.CASE_SENSITIVE,
       desc = string.format("%s: sensitive", name),
       callback = function()
         local enabled = o_flag_case_sensitive:snapshot() ---@type boolean
@@ -489,6 +492,7 @@ function M.new(props)
       end,
     }
     flags[#flags + 1] = {
+      key = stl.e.ToggleKeyEnum.REGEX,
       desc = string.format("%s: regex", name),
       callback = function()
         local enabled = o_flag_regex:snapshot() ---@type boolean
@@ -500,6 +504,7 @@ function M.new(props)
       end,
     }
     flags[#flags + 1] = {
+      key = stl.e.ToggleKeyEnum.REPLACE,
       desc = string.format("%s: replace", name),
       callback = function()
         local enabled = o_flag_replace:snapshot() ---@type boolean
@@ -513,6 +518,7 @@ function M.new(props)
     if flags_append ~= nil then
       for _, flag in ipairs(flags_append) do
         flags[#flags + 1] = {
+          key = flag.key,
           desc = string.format("%s: %s", name, flag.desc),
           callback = flag.callback,
           snapshot = flag.snapshot,
@@ -1385,7 +1391,6 @@ function M.new(props)
     permanent = permanent,
 
     flags = flags,
-    flags_start_index = flags_start_index,
     height = height,
     width = width,
 

@@ -347,11 +347,12 @@ end
 
 local flags = {}
 for _, entry in ipairs({
-  { "fuzzy", flag_fuzzy, stl.icon.symbols.flag_fuzzy },
-  { "sensitive", flag_case_sensitive, stl.icon.symbols.flag_case_sensitive },
-  { "regex", flag_regex, stl.icon.symbols.flag_regex },
+  { "fuzzy", flag_fuzzy, stl.icon.symbols.flag_fuzzy, stl.e.ToggleKeyEnum.MATCH_FUZZY },
+  { "sensitive", flag_case_sensitive, stl.icon.symbols.flag_case_sensitive, stl.e.ToggleKeyEnum.MATCH_CASE_SENSITIVE },
+  { "regex", flag_regex, stl.icon.symbols.flag_regex, stl.e.ToggleKeyEnum.MATCH_REGEX },
 }) do
   flags[#flags + 1] = {
+    key = entry[4],
     desc = "Find Explorer: " .. entry[1],
     callback = function()
       entry[2]:next(not entry[2]:snapshot())
