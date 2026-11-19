@@ -452,8 +452,9 @@ t:test("a session closing in the last tab leaves a window that shows other buffe
     dot.state.status.set_winnr_command(pane_winnr)
     era.m.maximize.toggle()
     session:close()
+    -- Which pane window is left varies: disposing History closes its window once its view is bound, and the
+    -- Changes trees dispose in no fixed order.
     local winnr = vim.api.nvim_get_current_win()
-    t.assert_eq(pane_winnr, winnr, label .. ": the pane left")
     t.assert_nil(dot.state.maximized.get_in_place(), label .. ": the maximize ended")
     t.assert_false(vim.wo[winnr].winfixbuf, label .. ": the last window is free")
     t.assert_true(dot.win.is_sourcefile(winnr), label .. ": a source file window")
