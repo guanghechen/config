@@ -300,6 +300,39 @@ t:test("shared side-by-side mappings keep counts for handled and fallback keys",
   t.assert_eq("xxxa", vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)[1], "the fallback keeps the native count")
 end)
 
+t:test("help on a shared side-by-side buffer lists the keys of the current tab's session", function()
+  diffview.repository(t)
+  local workspace = diffview.open_workspace(t)
+  local log = diffview.open_log(t, { layout = 1 })
+  local bufnr = t:buffer()
+  workspace:setup_sbs(bufnr)
+  log:setup_sbs(bufnr)
+  vim.keymap.set("n", "zx", function() end, { buf = bufnr, desc = "probe: own" })
+  local keysheet = require("era.view.keysheet")
+  local for_buffer = keysheet.for_buffer
+  local listed = {} ---@type string[]
+  t:patch_table(keysheet, "for_buffer", function(props)
+    local keys = {} ---@type table<string, true>
+    for _, keymap in ipairs(for_buffer(props)._sections[1].keymaps) do
+      keys[keymap.key] = true
+    end
+    -- `]p` is a workspace key, `P` a log one.
+    listed[#listed + 1] = table.concat(
+      vim.tbl_map(function(key)
+        return keys[key] and key or "-"
+      end, { "]p", "P", "zx" }),
+      " "
+    )
+    return { open = function() end }
+  end)
+
+  vim.api.nvim_set_current_tabpage(workspace.tabnr)
+  type_into(bufnr, "g?")
+  vim.api.nvim_set_current_tabpage(log.tabnr)
+  type_into(bufnr, "g?")
+  t.assert_same({ "]p - zx", "- P zx" }, listed, "each lists its own keys and those of the buffer")
+end)
+
 t:test("resizing Changes renders them again and remembers the width until the session closes", function()
   diffview.repository(t)
   local session = diffview.open_workspace(t)

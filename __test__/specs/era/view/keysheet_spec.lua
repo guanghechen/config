@@ -120,6 +120,35 @@ t:test("a buffer keysheet lists the global mappings the buffer leaves in effect 
   )
 end)
 
+t:test("a buffer keysheet leaves out its own mappings not in effect, which still keep the global ones out", function()
+  local bufnr = t:buffer()
+  vim.keymap.set("n", "zya", function() end, { desc = "probe: global zya" })
+  t:defer(function()
+    pcall(vim.keymap.del, "n", "zya")
+  end)
+  vim.keymap.set("n", "zya", function() end, { buf = bufnr, desc = "probe: falls back" })
+  vim.keymap.set("n", "zyb", function() end, { buf = bufnr, desc = "probe: own zyb" })
+
+  local sheet = Keysheet.for_buffer({
+    bufnr = bufnr,
+    in_effect = function(mapping)
+      return mapping.lhs ~= "zya"
+    end,
+  })
+  local keys = {} ---@type string[]
+  for _, keymap in ipairs(sheet._sections[1].keymaps) do
+    keys[#keys + 1] = keymap.key
+  end
+  for _, group in ipairs(sheet._more[1].groups) do
+    for _, keymap in ipairs(group.keymaps) do
+      if vim.startswith(keymap.key, "zy") then
+        keys[#keys + 1] = group.title .. " " .. keymap.key
+      end
+    end
+  end
+  t.assert_same({ "zyb" }, keys)
+end)
+
 t:test("a keysheet shows each section under its title, skips an empty one and truncates long descriptions", function()
   local long = string.rep("long ", 20) ---@type string
   local sheet = Keysheet.new({

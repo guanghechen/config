@@ -15,7 +15,8 @@
 
 ## 通用约定
 
-- `g?`：显示快捷键帮助，规则同 [Explorer](../explorer/README.md#默认键位)。
+- `g?`：显示快捷键帮助，规则同 [Explorer](../explorer/README.md#默认键位)；SBS buffer 另见
+  [共享 SBS buffer 契约](#共享-sbs-buffer-契约)。
 - `K`：hover，显示当前项的详情：Changes 为文件详情，History 与 Commits 为 commit details。
 - `<C-a>r`：刷新当前 view；aliases 为 `<D-r>`、`<M-r>`。
 - `<C-j>` / `<C-k>`：选择下一个 / 上一个 domain item。
@@ -129,3 +130,5 @@ SBS buffer 可以跨 Diffview tabs 复用，因此不能持有安装时的 view 
    buffer 的所有窗口生效，因此它只在光标位于显示它的 SBS window 时借用上述 mappings：光标离开、preview 换走它或
    session 关闭时收回。该 buffer 自有的同名 buffer-local mapping 保持不变，收回只删除借出的部分。Diffview 之外显示
    同一文件的窗口始终保留用户的 mapping，例如全局 `<C-a>r`、`<C-j>`、`<C-k>`。
+6. `g?` 的 Current pane 只列当前 context 支持的 SBS key，buffer 的其他 mapping 照常列出。Buffer 上留着各 view
+   装过的 key，当前 context 不支持的按第 4 条返回原 lhs，不列出；它们仍遮住同名全局 mapping，Global 中也不列出。

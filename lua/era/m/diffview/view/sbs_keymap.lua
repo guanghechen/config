@@ -40,6 +40,10 @@ local DESCRIPTIONS = {
 ---@alias era.m.diffview.view.sbs_keymap.IResolve
 ---| fun(mode: string, key: string): stl.t.IKeymap|nil
 
+---How each expression mapping installed here resolves, by its callback; an entry goes once its mapping does.
+---@type table<function, { resolve: era.m.diffview.view.sbs_keymap.IResolve, mode: string, key: string }>
+local resolutions = setmetatable({}, { __mode = "k" })
+
 ---@param resolve                       era.m.diffview.view.sbs_keymap.IResolve
 ---@param mode                          string
 ---@param key                           string
@@ -51,6 +55,15 @@ function M.dispatch(resolve, mode, key)
   end
   keymap.callback()
   return true
+end
+
+---Whether `mapping` of a buffer does what it describes in the current tab: a shared mapping when the current view
+---resolves its key, which otherwise falls back to the native key, and any other mapping always.
+---@param mapping                       vim.api.keyset.get_keymap
+---@return boolean
+function M.in_effect(mapping)
+  local resolution = mapping.callback and resolutions[mapping.callback]
+  return resolution == nil or resolution.resolve(resolution.mode, resolution.key) ~= nil
 end
 
 ---@param mode                           string
@@ -82,12 +95,15 @@ local function install(keymaps, bufnr, resolve, skip)
       local bound = false
       for _, key in ipairs(vim.list_extend({ canonical_key }, keymap.aliases or {})) do
         if not (skip and skip(mode, key)) then
-          vim.keymap.set(mode, key, function()
+          ---@return string
+          local function expr()
             if resolve(mode, canonical_key) then
               return plug
             end
             return key
-          end, {
+          end
+          resolutions[expr] = { resolve = resolve, mode = mode, key = canonical_key }
+          vim.keymap.set(mode, key, expr, {
             buf = bufnr,
             desc = description,
             expr = true,

@@ -47,8 +47,9 @@ File History 使用 `diffview_commits + path_filter`；tabline 显示过滤文�
 
 ```text
 fn / tabline ──> session ───────────────> sbs_keymap
-                    ↓
-      keymap → action → view → pane/state
+                    ↓                         ↑
+      keymap → action → view → pane/state     │
+                    └─────────────────────────┘
 ```
 
 - 打开 workspace 或 log 时创建 tab 与 session，或回到已打开的同一视图；session 按 tab 查找。Workspace session 另持有
@@ -62,8 +63,8 @@ fn / tabline ──> session ───────────────> sbs_
   Session 传入真实模块，路由测试传入记录调用的替身。
 - Session 拥有 Git 订阅、Changes 尺寸监听、预览代次与 untracked discard 队列；`close()` 统一回收。一个模块级
   `TabClosed` autocmd 关闭失去 tab 的 session；漏掉 `TabClosed` 的 session 在下一次查找时关闭。
-- `sbs_keymap` 只安装 buffer-local mappings，按键时的解析与工作区文件的借用见
-  [共享 SBS buffer 契约](keybinding.md#共享-sbs-buffer-契约)。
+- `sbs_keymap` 安装 buffer-local mappings，并替 action 的 `g?` 判断它们在当前 context 是否生效；按键时的解析、
+  工作区文件的借用与帮助的过滤见 [共享 SBS buffer 契约](keybinding.md#共享-sbs-buffer-契约)。
 
 ### 四种 Pane
 

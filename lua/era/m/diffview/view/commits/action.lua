@@ -8,6 +8,7 @@ local pane_commits = require("era.m.diffview.pane.commits")
 local pane_sbs = require("era.m.diffview.pane.sbs")
 local util = require("era.m.diffview.util")
 local commits_view = require("era.m.diffview.view.commits.view")
+local sbs_keymap = require("era.m.diffview.view.sbs_keymap")
 
 ---Commits view actions.
 ---@class era.m.diffview.view.commits.action
@@ -1339,10 +1340,13 @@ end
 -- Help action
 ----------------------------------------------------------------------------------------------------
 
----Shows the keymap help of the pane the key is pressed in, with the keys every pane shares.
+---Shows the keymap help of the pane the key is pressed in, with the keys every pane shares; a side-by-side buffer, which
+---other views may share, lists only the keys this view handles.
 function M.show_help()
   local bufnr = vim.api.nvim_get_current_buf() ---@type integer
-  era.view.Keysheet.for_buffer({ bufnr = bufnr, title = "Diffview Commits Keybindings" }):open()
+  era.view.Keysheet
+    .for_buffer({ bufnr = bufnr, title = "Diffview Commits Keybindings", in_effect = sbs_keymap.in_effect })
+    :open()
 end
 
 ----------------------------------------------------------------------------------------------------

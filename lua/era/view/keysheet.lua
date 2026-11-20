@@ -12,6 +12,7 @@
 ---@class era.view.keysheet.IBufferProps
 ---@field public bufnr                  integer
 ---@field public title                  ?string
+---@field public in_effect              ?fun(mapping: vim.api.keyset.get_keymap): boolean
 
 ---@class era.view.keysheet.IState
 ---@field protected _disposed           boolean
@@ -228,7 +229,8 @@ end
 ---Keysheet of the mappings `bufnr` takes in Normal and Visual mode: its own, without the scopes their descriptions start
 ---with, and on `g?` in the sheet the global ones it leaves in effect, grouped by those scopes with their numbered runs
 ---collapsed. Neither lists which-key prefixes, which go on to the global mappings, or the no-ops that only block a
----fallback.
+---fallback; the sheet also leaves out its own that `in_effect` finds not doing what they describe, which still keep the
+---global ones of their keys from effect.
 ---@param props                         era.view.keysheet.IBufferProps
 ---@return era.view.Keysheet
 function M.for_buffer(props)
@@ -241,7 +243,7 @@ function M.for_buffer(props)
         own[mapping.lhsraw] = mapping.nowait == true or mapping.nowait == 1
       end
       local desc = unscoped(mapping.desc or "", props.title) ---@type string
-      if listed(desc) then
+      if listed(desc) and (props.in_effect == nil or props.in_effect(mapping)) then
         add(pane, pane_entries, mode, mapping, desc)
       end
     end
