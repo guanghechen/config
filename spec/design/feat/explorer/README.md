@@ -327,9 +327,23 @@ Status: Design。本文定义 Explorer 的输入、用途、窗口、编辑器�
 
 Normal `<Space>` 使用 `nowait=false`，保留 `<leader>1` 等全局 leader 组合；单独按 Space 在 `timeoutlen`
 后打开动作菜单（原生 Neovim 默认 300 ms）。其余 Explorer 自有绑定继续使用 `nowait=true`。
-`g?` 从当前 buffer 实际生效的 Normal/Visual 映射生成帮助，包含 Treeview 继承键位、刷新别名与本地覆盖；
-相同按键和说明合并显示 modes，按键排序并省略说明中的标题与作用域前缀（如 `Explorer:`、`picker#result:`、Treeview）；
-不展示 which-key 内部前缀触发器与空操作；`?` 保留为全局反向搜索。
+`g?` 从当前 buffer 实际生效的 Normal/Visual 映射生成帮助，先只显示 Current pane；在帮助中再按 `g?` 加入 Global，
+再按一次收起，窗口底部提示 `g?` 将切换到的内容。两节如下：
+
+- Current pane：buffer 自己的映射，包含 Treeview 继承键位、刷新别名与本地覆盖；省略说明中的标题与作用域前缀
+  （如 `Explorer:`、`picker#result:`、Treeview）。
+- Global：在该 buffer 中仍然生效的全局映射，按说明的作用域前缀（如 `win:`）分组，组名即作用域，说明不再重复它；
+  没有作用域的归入最后的 `other` 组。buffer 自己映射了同一按键，或以 nowait 映射了它开头一段的全局映射不再列出；
+  which-key 前缀触发器会继续交给全局映射，不算遮蔽。
+
+两节都不展示 which-key 内部前缀触发器与空操作，同一按键在不同 mode 的相同说明合并 modes。条目按按键排序，Global
+的组按组名排序、`other` 在最后；自上而下流入尽可能多的列，每列按自身内容取宽，组名不落在列底，组与组之间留空行。
+Current pane 的说明完整显示，Global 另外压缩：
+
+- 只差结尾编号、编号又与说明结尾一致的连续三项及以上合为一个区间，如 `<Space>b10…49` 对应 `focus 10…49`。
+- 说明最长 48 列；整节高于窗口时最低截到 24 列，以换取更多列；只能排一列时按可用宽度截断。
+
+`?` 保留为全局反向搜索。
 
 ## 退出协议
 

@@ -289,7 +289,7 @@ t:test("help shows effective Treeview keys, refresh aliases and local overrides 
   press(widget, "g?")
   t.assert_true(sheet and sheet:isvisible())
   local entries, descriptions = {}, {}
-  for _, keymap in ipairs(sheet._keymaps) do
+  for _, keymap in ipairs(sheet._sections[1].keymaps) do
     local key = vim.keycode(keymap.key)
     local id = key .. "\0" .. keymap.desc
     t.assert_nil(descriptions[id], "help must merge the shared Normal/Visual descriptions")

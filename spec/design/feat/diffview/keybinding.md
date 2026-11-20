@@ -15,7 +15,7 @@
 
 ## 通用约定
 
-- `g?`：显示当前 pane 上生效的快捷键，含各 pane 共用的键，规则同 [Explorer](../explorer/README.md#默认键位)。
+- `g?`：显示快捷键帮助，规则同 [Explorer](../explorer/README.md#默认键位)。
 - `K`：hover，显示当前项的详情：Changes 为文件详情，History 与 Commits 为 commit details。
 - `<C-a>r`：刷新当前 view；aliases 为 `<D-r>`、`<M-r>`。
 - `<C-j>` / `<C-k>`：选择下一个 / 上一个 domain item。
