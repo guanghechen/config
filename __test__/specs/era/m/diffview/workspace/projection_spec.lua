@@ -57,7 +57,7 @@ t:test("adjacent navigation reads only its target after a metadata publication",
   t.assert_eq(5000, frame:adjacent_leaf(nil, false))
   t.assert_nil(frame:adjacent_leaf(0, true))
   t.assert_nil(frame:adjacent_leaf(5001, false))
-  local ctx = context({ panel })
+  local ctx = context({ panel }, entries[1])
   local reads, item = 0, tree.item
   t:patch_table(tree, "item", function(...)
     reads = reads + 1
@@ -70,17 +70,18 @@ t:test("adjacent navigation reads only its target after a metadata publication",
     end
     return set_lines(bufnr, ...)
   end)
-  action.next_entry(ctx)
-  t.assert_eq(2, vim.api.nvim_win_get_cursor(panel.winnr)[1])
+  action.goto_next_entry(ctx)
   t.assert_eq(entries[2].filepath, ctx.state:get_current_entry().filepath)
+  treeview.await(owner:ready())
+  t.assert_eq(2, vim.api.nvim_win_get_cursor(panel.winnr)[1])
   t.assert_true(reads <= 3, "cold navigation must not materialize every row")
   t.assert_eq(0, writes, "cursor movement does not rewrite body text")
 
   plan.source:get(tree.key(nil, entries[1].filepath, false)).presentation.right_text = "changed"
   treeview.await(tree.apply(panel.bufnr, plan, owner))
   reads, writes = 0, 0
-  vim.api.nvim_win_set_cursor(panel.winnr, { 1, 0 })
-  action.next_entry(ctx)
+  ctx.state:set_current_entry(entries[1])
+  action.goto_next_entry(ctx)
   t.assert_true(reads <= 3, "metadata changes must not restore a full-row export")
   t.assert_eq(0, writes)
 end)
@@ -173,8 +174,7 @@ t:test("navigation across collapsed directories exports only the destination", f
     reads = reads + 1
     return item(...)
   end)
-  vim.api.nvim_win_set_cursor(panel.winnr, { 1, 0 })
-  action.next_entry(ctx)
+  action.goto_next_entry(ctx)
   t.assert_eq(target.filepath, ctx.state:get_current_entry().filepath)
   t.assert_true(reads <= 3, "skipped directories must stay native; item reads: " .. reads)
 end)

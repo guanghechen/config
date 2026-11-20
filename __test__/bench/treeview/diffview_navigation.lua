@@ -23,7 +23,7 @@ local tree = require("era.m.diffview.pane.tree")
 local changes = require("era.m.diffview.pane.changes")
 local action = require("era.m.diffview.view.workspace.action")
 if baseline then
-  assert(debug.getinfo(action.next_entry, "S").source:find(baseline, 1, true), "baseline action was not loaded")
+  assert(debug.getinfo(action.goto_next_entry, "S").source:find(baseline, 1, true), "baseline action was not loaded")
 end
 local view = require("era.m.diffview.view.workspace.view")
 local entries = {}
@@ -63,7 +63,6 @@ local ctx = {
   },
 }
 -- Measure route resolution independently of preview I/O and native cursor acknowledgement.
-action.select = function() end
 action.__update_changes_cursor__ = function() end
 view.open_entry = function() end
 local reads, item = 0, tree.item
@@ -75,7 +74,7 @@ end
 ---@param callback                      fun(): nil
 ---@return table
 local function measure(callback)
-  vim.api.nvim_win_set_cursor(0, { 1, 0 })
+  current = entries[1]
   reads = 0
   local started = vim.uv.hrtime()
   callback()
@@ -91,17 +90,13 @@ end
 
 local result = { rows = owner:linecount() }
 result.cold_next = measure(function()
-  action.next_entry(ctx)
+  action.goto_next_entry(ctx)
 end)
 result.warm_next = measure(function()
-  action.next_entry(ctx)
+  action.goto_next_entry(ctx)
 end)
 metadata("first")
 result.metadata_next = measure(function()
-  action.next_entry(ctx)
-end)
-metadata("second")
-result.metadata_global_next = measure(function()
   action.goto_next_entry(ctx)
 end)
 assert(current.filepath == entries[directories and #entries or 2].filepath)

@@ -187,16 +187,17 @@ median / p95 的中位数（ms）；最后一列为停掉 Lua GC 时“后”减
 三次独立运行的中位数（展开、折叠各 10 次，不足 20 个样本不报告 p95）：折叠首屏 2.42 ms，首次展开 155 ms，
 展开 median 3.66 ms（单次最大 4.18 ms），折叠 median 2.02 ms；热循环零 plan 重建、导入与 icon 查找。
 
-`nvim -l __test__/bench/treeview/diffview_navigation.lua <count> [baseline] [directories]` 测量真实 action 的路径解析，
-不含 preview I/O、逻辑 cursor 确认与 UI flush。第二个参数是保留的 baseline 目录；传 `"" directories` 测量跳过折叠目录后定位文件。
+`nvim -l __test__/bench/treeview/diffview_navigation.lua <count> [baseline] [directories]` 测量 `<C-j>`
+（`goto_next_entry`）从当前文件解析下一个文件的路径，不含 preview I/O、逻辑 cursor 确认与 UI flush；
+冷、热各一次后发布一次 metadata 再测。第二个参数是保留的 baseline 目录；传 `"" directories` 测量跳过折叠目录后定位文件。
 
-5 个独立进程的中位数：
+5 个独立进程的中位数，测量时机器负载（load average）约 12–17：
 
-| 场景                            | 冷 J ms | 热 J ms | metadata 后 J ms | metadata 后 Ctrl-j ms | Lua item 读取 |
-| ------------------------------- | ------: | ------: | ---------------: | --------------------: | ------------: |
-| List，5,000 文件                |   0.011 |   0.002 |            0.018 |                  0.51 |             1 |
-| List，50,000 文件               |   0.018 |   0.002 |            0.019 |                  0.48 |             1 |
-| 跳过 5,000 个折叠目录后定位文件 |   0.179 |   0.133 |            0.214 |                  0.70 |             1 |
+| 场景                            | 冷 ms | 热 ms | metadata 后 ms | Lua item 读取 |
+| ------------------------------- | ----: | ----: | -------------: | ------------: |
+| List，5,000 文件                | 0.407 | 0.015 |          0.048 |             1 |
+| List，50,000 文件               | 0.321 | 0.010 |          0.044 |             1 |
+| 跳过 5,000 个折叠目录后定位文件 | 0.571 | 0.195 |          0.262 |             1 |
 
 Native leaf 查询仍扫描实际跳过的行，不承诺任意目录分布下为常数时间。
 
