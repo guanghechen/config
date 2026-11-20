@@ -148,32 +148,6 @@ local __highlights__ = {
 ---@field public on_preview_rendered    ?era.m.searcher.composer.basic.IOnPreviewRendered
 ---@field public on_result_rendered     ?era.m.searcher.composer.basic.IOnResultRendered
 
----Leaves Insert mode in the current window, which just regained the focus and was not edited, without the step back
----to the left that <Esc> takes: the cursor stays where it was unless the caller moved it or changed the buffer.
----@return nil
-local function stop_insert_in_place()
-  local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
-  local autocmd = vim.api.nvim_create_autocmd("InsertLeave", {
-    once = true,
-    callback = function()
-      if not vim.api.nvim_win_is_valid(winnr) or vim.api.nvim_win_get_buf(winnr) ~= bufnr then
-        return
-      end
-      local current = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
-      if current[1] == cursor[1] and current[2] == cursor[2] - 1 then
-        vim.api.nvim_win_set_cursor(winnr, cursor)
-      end
-    end,
-  })
-  -- Insert mode ends before scheduled callbacks run; drop the handler if it did not fire.
-  vim.schedule(function()
-    pcall(vim.api.nvim_del_autocmd, autocmd)
-  end)
-  vim.cmd("stopinsert")
-end
-
 ---@class era.m.searcher.BasicComposer : dot.t.IWidget
 ---@field public uuid                   string
 ---@field public fullname               string
@@ -400,7 +374,7 @@ function M:dispose()
     return
   end
   if self:__holds_insert__() then
-    stop_insert_in_place()
+    stl.nvim.fn.stop_insert_in_place()
   end
   self._disposed = true
 
@@ -897,7 +871,7 @@ function M:__hide__()
     preview:hide()
   end
   if holds_insert then
-    stop_insert_in_place()
+    stl.nvim.fn.stop_insert_in_place()
   end
 end
 

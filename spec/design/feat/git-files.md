@@ -98,6 +98,9 @@ Status: Design。入口代码位于 `lua/era/m/git_files/`，树视图为 `era.v
   preview 向右返回之前的左栏 pane，其余无相邻 pane 的方向不移动。
 - 鼠标滚轮滚动指针下的 pane，焦点不变。树的 cursor 按 Neovim 规则留在窗口内并成为该树的当前行，位置计数随之更新；
   滚动最近使用的树时 preview 随当前行切换。
+- Insert 只属于 inputbox：用键盘或鼠标把焦点移到树或 preview 时都退出 Insert；关闭时仍在 Insert 的同样退出，返回
+  原窗口时原地退出，光标不左移，与 [Picker / Searcher](picker-surface.md#finder-与-basiccomposer) 一致。`i_CTRL-O`
+  执行命令期间挂起的 Insert 同样算作 Insert。
 
 ## Stage 与 unstage
 

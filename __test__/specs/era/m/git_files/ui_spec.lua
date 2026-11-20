@@ -585,4 +585,66 @@ t:test("z; leaves the input and the most recently used tree in the column, which
   t.assert_eq(0, #ui:lua("return errors"))
 end)
 
+t:test("Insert mode stays in the input: entering a tree ends it, and closing leaves none behind", function()
+  local root = support.changes(t, { ["a.lua"] = { "a" } }, { ["a.lua"] = { "a", "b" } })
+  local ui = support.surface(t, 140, 42, root)
+  ui:lua([[
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, { "local value = 1" })
+    vim.api.nvim_win_set_cursor(0, { 1, 6 })
+    source_winnr = vim.api.nvim_get_current_win()
+    open()
+  ]])
+  ---@return { mode: string, source: boolean, cursor: integer[] }
+  local function state()
+    return ui:lua([[return {
+      mode = vim.api.nvim_get_mode().mode,
+      source = vim.api.nvim_get_current_win() == source_winnr,
+      cursor = vim.api.nvim_win_get_cursor(source_winnr),
+    }]])
+  end
+  ---@return nil
+  local function insert()
+    ui:rpc("nvim_input", "i")
+    ui:wait_lua("return vim.api.nvim_get_mode().mode == 'i'", 5000, "Insert mode in the input")
+  end
+
+  insert()
+  ui:rpc("nvim_command", "redraw")
+  local window = ui:lua("return vim.fn.getwininfo(widget.panes.unstaged.result:get_winnr())[1]")
+  ui:rpc("nvim_input_mouse", "left", "press", "", 0, window.winrow, window.wincol + 4)
+  ui:rpc("nvim_input_mouse", "left", "release", "", 0, window.winrow, window.wincol + 4)
+  ui:wait_lua(
+    "return vim.api.nvim_get_current_win() == widget.panes.unstaged.result:get_winnr()",
+    5000,
+    "the click focuses the tree"
+  )
+  t.assert_eq("n", state().mode, "the tree takes the click in Normal mode")
+  ui:rpc("nvim_input", "q")
+  ui:wait_lua("return vim.api.nvim_get_current_win() == source_winnr", 5000, "q returns to the source window")
+  t.assert_same({ mode = "n", source = true, cursor = { 1, 6 } }, state())
+
+  ui:lua("widget:toggle(); support.ready(widget)")
+  insert()
+  ui:rpc("nvim_input", "<C-c>")
+  ui:wait_lua("return vim.api.nvim_get_current_win() == source_winnr", 5000, "<C-c> returns to the source window")
+  t.assert_same({ mode = "n", source = true, cursor = { 1, 6 } }, state(), "the cursor does not step back")
+
+  -- i_CTRL-O holds Insert mode while its command runs and resumes it after.
+  ui:lua("widget:toggle(); support.ready(widget)")
+  insert()
+  ui:rpc("nvim_input", "<C-\\><C-o>q")
+  ui:wait_lua("return vim.api.nvim_get_current_win() == source_winnr", 5000, "i_CTRL-O q returns to the source window")
+  t.assert_same({ mode = "n", source = true, cursor = { 1, 6 } }, state(), "the held Insert mode does not resume")
+  ui:lua("widget:toggle(); support.ready(widget); widget:focus('unstaged'); widget:focus('input')")
+  insert()
+  ui:rpc("nvim_input", "<C-\\><C-o><C-w>p")
+  ui:wait_lua(
+    "return vim.api.nvim_get_current_win() == widget.panes.unstaged.result:get_winnr()",
+    5000,
+    "i_CTRL-O <C-w>p focuses the tree"
+  )
+  t.assert_eq("n", state().mode, "the held Insert mode does not resume in the tree")
+  t.assert_eq(0, #ui:lua("return errors"))
+end)
+
 t:run()

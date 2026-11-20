@@ -57,6 +57,12 @@ local function report(error, subject)
   stl.reporter.warn({ from = __module_name__, subject = subject or "refresh", message = tostring(error) })
 end
 
+---Insert or Replace mode, also while i_CTRL-O runs a command and holds it to resume after.
+---@return boolean
+local function is_inserting()
+  return vim.api.nvim_get_mode().mode:match("^n?[iR]") ~= nil
+end
+
 ---@param tree                          era.view.GitFiles
 ---@param frame                         yoz.ux.treeview.Frame
 ---@param first                         integer
@@ -164,6 +170,11 @@ function M.new()
       if self.input:isfocused() then
         self._last_left = "input"
         return
+      end
+      -- Insert mode belongs to the input. The keys that move the focus to a tree or the preview leave it; a mouse
+      -- click or an i_CTRL-O command there brings it along, so it ends here.
+      if is_inserting() and self:isfocused() then
+        vim.cmd.stopinsert()
       end
       for _, scope in ipairs(scopes) do
         if self.panes[scope].result:isfocused() then
@@ -392,11 +403,11 @@ function M:hide(restore)
     return
   end
   local focused = self:isfocused()
+  -- Insert mode in any pane ends instead of carrying over to the window that takes the focus; when that is the
+  -- origin, the cursor stays in place.
+  local inserting = focused and is_inserting() ---@type boolean
   self._closing = true
   self:_cancel()
-  if self.input:isfocused() then
-    vim.cmd.stopinsert()
-  end
   self.input:sync()
   self.input:hide()
   self.preview:hide()
@@ -406,6 +417,9 @@ function M:hide(restore)
   self._closing = false
   if restore ~= false and focused and self._origin and vim.api.nvim_win_is_valid(self._origin) then
     vim.api.nvim_set_current_win(self._origin)
+  end
+  if inserting then
+    stl.nvim.fn.stop_insert_in_place()
   end
 end
 
