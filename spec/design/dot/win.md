@@ -35,3 +35,6 @@
 - `dot.win.is_swappable(winnr)`：可交换的窗口类型
 
 `wintype` 直接从 `vim.w` 读写，不增加 getter/setter，也不在 `dot.win.IMeta` 中重复存储。
+
+`ux:explorer` 与 `ux:diffview-panel` 只读，不绑定 Insert 键位：从 Insert / Replace 进入时（如鼠标点击、
+Insert 下的窗口切换键）退出该模式（`lua/ark/autocmd.lua`）。

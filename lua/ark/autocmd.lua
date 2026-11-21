@@ -241,6 +241,20 @@ vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
   end,
 })
 
+--- Explorer and Diffview panels take no text: Insert mode that a click or a window key brings in ends there.
+vim.api.nvim_create_autocmd("WinEnter", {
+  group = augroup("panel_stopinsert"),
+  callback = function()
+    local wintype = vim.w.wintype ---@type string|nil
+    if
+      (wintype == stl.e.WinTypeEnum.EXPLORER or wintype == stl.e.WinTypeEnum.DIFFVIEW_PANEL)
+      and vim.api.nvim_get_mode().mode:match("^[iR]")
+    then
+      vim.cmd.stopinsert()
+    end
+  end,
+})
+
 --- Cache buffer filepath mapping
 vim.api.nvim_create_autocmd({ "BufWinEnter", "BufFilePost" }, {
   group = augroup("cache_buf_filepath"),
