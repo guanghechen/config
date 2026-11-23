@@ -633,7 +633,7 @@ picker = era.m.picker.ListComposer.new({
 
   keymaps_result = {
     {
-      modes = { "i", "n", "x" },
+      modes = { "n", "x" },
       key = "<Tab>",
       aliases = { "l", "h", "<Left>", "<Right>" },
       desc = "toggle: execute action",
@@ -642,7 +642,7 @@ picker = era.m.picker.ListComposer.new({
       end,
     },
     {
-      modes = { "i", "n", "x" },
+      modes = { "n", "x" },
       key = "<space>",
       desc = "toggle: execute action",
       callback = function()

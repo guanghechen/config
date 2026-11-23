@@ -189,7 +189,7 @@ function M.select(items, opts, on_choice)
       { modes = { "i", "n", "x" }, key = "<C-h>", callback = do_toggle, desc = "Toggle selection" },
     } or nil,
     keymaps_result = on_toggle and {
-      { modes = { "i", "n", "x" }, key = "<space>", callback = do_toggle, desc = "Toggle selection" },
+      { modes = { "n", "x" }, key = "<space>", callback = do_toggle, desc = "Toggle selection" },
     } or nil,
 
     on_cancel = function()

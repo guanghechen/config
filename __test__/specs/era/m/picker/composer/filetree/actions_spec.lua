@@ -257,9 +257,9 @@ t:test("a creates from the result window, and oi shows the details of the cursor
   end
   t.assert_eq("filetree: create node", assert(effective(composer.result.keymaps, "a")).desc)
   t.assert_nil(effective(composer.finder.keymaps, "a"), "a edits the query in the finder")
-  -- Never in Visual mode, as in the Explorer; the result window also takes them in the Insert mode it can keep.
-  t.assert_same({ "i", "n" }, assert(effective(composer.result.keymaps, "a")).modes, "result a")
-  t.assert_same({ "i", "n" }, assert(effective(composer.result.keymaps, "oi")).modes, "result oi")
+  -- Never in Visual mode, as in the Explorer; the result window takes them in Insert mode as it does every Normal key.
+  t.assert_same({ "n" }, assert(effective(composer.result.keymaps, "a")).modes, "result a")
+  t.assert_same({ "n" }, assert(effective(composer.result.keymaps, "oi")).modes, "result oi")
   t.assert_same({ "n" }, assert(effective(composer.finder.keymaps, "oi")).modes, "finder oi")
   t.assert_same({ "K" }, assert(effective(composer.result.keymaps, "oi")).aliases, "result K")
   t.assert_same({ "K" }, assert(effective(composer.finder.keymaps, "oi")).aliases, "finder K")

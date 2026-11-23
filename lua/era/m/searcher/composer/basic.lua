@@ -1315,7 +1315,7 @@ function M:__resolve_builtin_keymaps_result__()
     },
     {
       disabled = true,
-      modes = { "i", "n", "x" },
+      modes = { "n", "x" },
       key = "<LeftMouse>",
       desc = "searcher#result: focus",
       callback = function()
@@ -1333,7 +1333,7 @@ function M:__resolve_builtin_keymaps_result__()
       end,
     },
     {
-      modes = { "i", "n", "x" },
+      modes = { "n", "x" },
       key = "<C-a>j",
       aliases = { "<D-j>", "<M-j>" },
       desc = "searcher#result: focus down",
@@ -1358,7 +1358,7 @@ function M:__resolve_builtin_keymaps_result__()
       end,
     },
     {
-      modes = { "i", "n", "x" },
+      modes = { "n", "x" },
       key = "<C-a>h",
       aliases = { "<D-h>", "<M-h>" },
       desc = "searcher#result: focus left",
@@ -1369,7 +1369,7 @@ function M:__resolve_builtin_keymaps_result__()
       end,
     },
     {
-      modes = { "i", "n", "x" },
+      modes = { "n", "x" },
       key = "<C-a>l",
       aliases = { "<D-l>", "<M-l>" },
       desc = "searcher#result: focus right",
@@ -1390,7 +1390,7 @@ function M:__resolve_builtin_keymaps_result__()
       end,
     },
     {
-      modes = { "i", "n", "x" },
+      modes = { "n", "x" },
       key = "<C-a>k",
       aliases = { "<D-k>", "<M-k>" },
       desc = "searcher#result: focus up",
@@ -1592,7 +1592,7 @@ function M:__resolve_builtin_keymaps_preview__()
       end,
     },
     {
-      modes = { "i", "n", "x" },
+      modes = { "n", "x" },
       key = "<C-a>j",
       aliases = { "<D-j>", "<M-j>" },
       desc = "searcher#preview: focus down",
@@ -1604,7 +1604,7 @@ function M:__resolve_builtin_keymaps_preview__()
       end,
     },
     {
-      modes = { "i", "n", "x" },
+      modes = { "n", "x" },
       key = "<C-a>h",
       aliases = { "<D-h>", "<M-h>" },
       desc = "searcher#preview: focus left",
@@ -1621,7 +1621,7 @@ function M:__resolve_builtin_keymaps_preview__()
       end,
     },
     {
-      modes = { "i", "n", "x" },
+      modes = { "n", "x" },
       key = "<C-a>l",
       aliases = { "<D-l>", "<M-l>" },
       desc = "searcher#result: focus right",
@@ -1636,7 +1636,7 @@ function M:__resolve_builtin_keymaps_preview__()
       end,
     },
     {
-      modes = { "i", "n", "x" },
+      modes = { "n", "x" },
       key = "<C-a>k",
       aliases = { "<D-k>", "<M-k>" },
       desc = "searcher#preview: focus up",

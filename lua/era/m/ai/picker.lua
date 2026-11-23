@@ -515,7 +515,7 @@ function M.show_attach(params)
       },
     } or nil,
     keymaps_result = on_toggle and {
-      { modes = { "i", "n", "x" }, key = "<space>", callback = do_toggle, desc = "Toggle attach/detach" },
+      { modes = { "n", "x" }, key = "<space>", callback = do_toggle, desc = "Toggle attach/detach" },
     } or nil,
     on_cancel = function()
       restore_window(winnr)
