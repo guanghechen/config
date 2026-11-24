@@ -75,7 +75,6 @@ M.nsnr = {
   searcher_searched_cur = cn("ux:searcher:searched:cur"),
   select                = cn("ux:select"),
   view_plainfile        = cn("ux:view:plainfile"),
-  view_printer          = cn("ux:view:printer"),
   virtcolumn            = cn("ux:virtcolumn"),
   -- stylua: ignore end
 }

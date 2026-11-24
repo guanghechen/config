@@ -2,7 +2,6 @@
 local __mods = {
   action = "era.m.notepad.action",
   FolderSource = "era.m.notepad.source-folder",
-  JsonSource = "era.m.notepad.source-json",
   state = "era.m.notepad.state",
   View = "era.m.notepad.view",
 }
@@ -11,7 +10,6 @@ local __mods = {
 ---@field public __mods                 era.m.notepad.__mods
 ---@field public action                 era.m.notepad.action
 ---@field public FolderSource           era.m.notepad.state.source.Folder
----@field public JsonSource             era.m.notepad.state.source.Json
 ---@field public state                  era.m.notepad.state
 ---@field public View                   era.m.notepad.View
 local M = setmetatable({

@@ -40,7 +40,7 @@ t:test("source selection handlers survive closed forks without accumulating regi
         notepad = {
           state = {
             retrieve_source = function()
-              return nil, { engine = "json" }
+              return nil, { engine = "folder" }
             end,
           },
         },
@@ -107,7 +107,7 @@ t:test("source selection handlers survive closed forks without accumulating regi
   })
   bar:refresh()
   t.wait_until(function()
-    return bar:snapshot():find("notes@json", 1, true) ~= nil
+    return bar:snapshot():find("notes@folder", 1, true) ~= nil
   end, 5000, "source label is published")
   local source_handler = assert(bar:snapshot():match("dot%.G%.(_%d+)"))
   local initial_count = count_handlers()
@@ -117,7 +117,7 @@ t:test("source selection handlers survive closed forks without accumulating regi
     local fork = bar:fork(target_winnr)
     fork:refresh()
     t.wait_until(function()
-      return vim.api.nvim_get_option_value("winbar", { win = target_winnr }):find("notes@json", 1, true) ~= nil
+      return vim.api.nvim_get_option_value("winbar", { win = target_winnr }):find("notes@folder", 1, true) ~= nil
     end, 5000, "fork publishes the source label")
     vim.api.nvim_win_close(target_winnr, true)
     t.assert_true(fork:isdisposed())

@@ -80,7 +80,7 @@ Explorer (`lua/era/m/explorer/`) and the other consumers live in `era`; see [Tre
 Key capabilities:
 
 - Environment/runtime helpers (`stl.env`, `stl.shell`, `stl.tmux`)
-- Common utilities (`stl.string`, `stl.table`, `stl.fs`, `stl.json`)
+- Common utilities (`stl.string`, `stl.table`, `stl.fs`)
 - OS boundary layer (`stl.os.path`, `stl.os.fs`) for filepath/os_path conversion and filesystem facade
 - UI/runtime primitives (`stl.icon`, `stl.fileicon`, `stl.filetype`, `stl.reporter`)
 - Async and state primitives in `stl.c.*` (`Observable`, `Future`, `Scheduler`, `History`, `CancellationToken`, etc.)

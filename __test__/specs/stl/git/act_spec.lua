@@ -36,37 +36,32 @@ t:test("actions convert filesystem arguments and pass paths as literal pathspecs
     return { kill = function() end }
   end)
 
-  act.add_intent_to_add("C:/repo", "lua/era/m/git/status.lua")
-  act.apply_patch("C:/repo", "patch")
   act.clone("https://example.test/repo.git", "C:/repos/example", nil)
   act.hash_object("C:/repo", "lua/era/m/git/status.lua", "content")
-  act.reset_file("C:/repo", "lua/era/m/git/status.lua")
   act.stage_file("C:/repo", "lua/era/m/git/status.lua")
-  act.unstage_file("C:/repo", "lua/era/m/git/status.lua")
   act.update_index("C:/repo", "100644", "abc123", "lua/era/m/git/status.lua")
   act.stage_file("//server/share/repo", "lua/era/m/git/status.lua")
 
-  t.assert_eq(9, #commands, "Git commands")
+  t.assert_eq(5, #commands, "Git commands")
   for index, command in ipairs(commands) do
-    if index == 3 then
+    if index == 1 then
       t.assert_eq([[C:\repos\example]], command[#command], "clone destination")
-    elseif index == 9 then
+    elseif index == 5 then
       t.assert_eq([[\\server\share\repo]], command[3], "UNC Git cwd")
     else
       t.assert_eq([[C:\repo]], command[3], "Git cwd " .. index)
     end
   end
-  t.assert_eq("lua/era/m/git/status.lua", commands[1][#commands[1]], "add pathspec")
-  t.assert_eq("lua/era/m/git/status.lua", commands[4][8], "hash-object path")
-  t.assert_eq("lua/era/m/git/status.lua", commands[5][#commands[5]], "checkout pathspec")
-  t.assert_eq("100644,abc123,lua/era/m/git/status.lua", commands[8][#commands[8]], "cacheinfo path")
-  -- Without it `a[1].txt` also matches `a1.txt`, so checkout would discard that file's changes too.
-  for _, index in ipairs({ 1, 5, 6, 7, 9 }) do
+  t.assert_eq("lua/era/m/git/status.lua", commands[2][8], "hash-object path")
+  t.assert_eq("lua/era/m/git/status.lua", commands[3][#commands[3]], "add pathspec")
+  t.assert_eq("100644,abc123,lua/era/m/git/status.lua", commands[4][#commands[4]], "cacheinfo path")
+  -- Without it `a[1].txt` also matches `a1.txt`, so add would stage that file too.
+  for _, index in ipairs({ 3, 5 }) do
     t.assert_eq("--literal-pathspecs", commands[index][4], "literal pathspecs " .. index)
   end
 end)
 
-t:test("a bracketed path restores and stages only itself, not the files its pattern matches", function()
+t:test("a bracketed path stages only itself, not the files its pattern matches", function()
   t:patch_table(yoz.canonical_path, "to_os_path", function(filepath)
     return filepath
   end)
@@ -77,11 +72,6 @@ t:test("a bracketed path restores and stages only itself, not the files its patt
   fs.write(root .. "/a[1].txt", { "x2" })
   fs.write(root .. "/a1.txt", { "y2" })
 
-  t.assert_true(t.await(act.reset_file(root, "a[1].txt")), "restored")
-  t.assert_same({ "x" }, vim.fn.readfile(root .. "/a[1].txt"), "the path itself is restored")
-  t.assert_same({ "y2" }, vim.fn.readfile(root .. "/a1.txt"), "the file its pattern matches keeps its change")
-
-  fs.write(root .. "/a[1].txt", { "x3" })
   t.assert_true(t.await(act.stage_file(root, "a[1].txt")), "staged")
   t.assert_eq("a[1].txt\n", git.run(root, { "diff", "--cached", "--name-only" }), "only the path itself is staged")
 end)

@@ -45,21 +45,11 @@
 
 ---@class era.m.git.Repo
 ---@field public abbrev_head            string
----@field public add_intent_to_add      fun(self: era.m.git.Repo, file: string, token: stl.c.CancellationToken|nil): stl.c.Future
----@field public apply_patch            fun(self: era.m.git.Repo, patch: string, reverse: boolean|nil, token: stl.c.CancellationToken|nil): stl.c.Future
 ---@field public commondir              ?string
 ---@field public detached               boolean
----@field public get_file_info          fun(self: era.m.git.Repo, file: string, token: stl.c.CancellationToken|nil): stl.c.Future Resolves with stl.git.IFileInfoResult
 ---@field public get_relpath            fun(self: era.m.git.Repo, file: string): string
----@field public get_show_blob          fun(self: era.m.git.Repo, object: string, token: stl.c.CancellationToken|nil): stl.c.Future Resolves with stl.git.IBlobResult
----@field public get_show_text          fun(self: era.m.git.Repo, object: string, token: stl.c.CancellationToken|nil): stl.c.Future
 ---@field public gitdir                 string
----@field public hash_object            fun(self: era.m.git.Repo, file: string, content: string, token: stl.c.CancellationToken|nil): stl.c.Future
----@field public reset_file             fun(self: era.m.git.Repo, file: string, token: stl.c.CancellationToken|nil): stl.c.Future
----@field public stage_file             fun(self: era.m.git.Repo, file: string, token: stl.c.CancellationToken|nil): stl.c.Future
 ---@field public toplevel               string
----@field public unstage_file           fun(self: era.m.git.Repo, file: string, token: stl.c.CancellationToken|nil): stl.c.Future
----@field public update_index           fun(self: era.m.git.Repo, mode_bits: string, object_name: string, file: string, token: stl.c.CancellationToken|nil, add: boolean|nil): stl.c.Future
 
 ---@class era.m.git.FileInfo
 ---@field public has_conflicts          ?boolean

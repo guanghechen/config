@@ -26,13 +26,6 @@ bootstrap.with_global(t, "stl", {
   },
   os = { path = { relative = function() end } },
 })
-bootstrap.with_global(t, "era", {
-  m = {
-    git = {
-      index = require("era.m.git.index"),
-    },
-  },
-})
 
 local Repo = require("era.m.git.repo")
 
@@ -127,32 +120,6 @@ t:test("get_relpath delegates to the Git path boundary", function()
   t.assert_eq([[C:\repo]], received.from, "relative path root")
   ---@diagnostic disable-next-line: need-check-nil
   t.assert_eq(filepath, received.to, "relative path target")
-end)
-
-t:test("repository mutations share the index FIFO", function()
-  local release = nil ---@type (fun(result: nil): nil)|nil
-  local started = false ---@type boolean
-  era.m.git.index.run("/repo", function(resolve)
-    release = resolve
-  end)
-
-  t:patch_table(stl.os.path, "relative", function()
-    return "f.txt"
-  end)
-  t:patch_table(stl.git, "act", {
-    stage_file = function()
-      started = true
-      return Future.resolve(true)
-    end,
-  })
-
-  local repo = setmetatable({ toplevel = "/repo" }, Repo)
-  local future = repo:stage_file("/repo/f.txt")
-  t.assert_false(started, "repository mutation waits")
-
-  assert(release)(nil)
-  t.assert_true(started, "repository mutation starts after release")
-  t.assert_eq(true, future:get_result(), "mutation result")
 end)
 
 t:run()

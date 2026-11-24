@@ -1,7 +1,7 @@
 # Notepad 设计
 
 `era.m.notepad` 提供 Markdown 便签、浮动编辑窗口和 nvimbar 导航。
-便签按 source 隔离，每个 source 使用 `folder` 或 `json` storage engine。
+便签按 source 隔离，每个 source 使用 `folder` storage engine。
 
 ## 模块边界
 
@@ -9,7 +9,6 @@
 | ----------------------------------------- | --------------------------------------------- |
 | `lua/era/m/notepad/state.lua`             | Source 配置、实例缓存、名称索引与当前便签通知 |
 | `lua/era/m/notepad/source-folder.lua`     | Markdown 文件与 metadata 存储                 |
-| `lua/era/m/notepad/source-json.lua`       | 单 JSON 文件存储                              |
 | `lua/era/m/notepad/view.lua`              | 编辑 buffer、浮窗、内容同步与 nvimbar 组装    |
 | `lua/era/m/notepad/action.lua`            | 用户命令、picker、输入与确认交互              |
 | `lua/era/m/nvimbar/component/notepad.lua` | 便签列表、新增按钮与 source 切换入口          |
@@ -48,11 +47,9 @@ Source 身份由容器持有，不要求每个 item 增加 `source` 字段。
 ## 持久化
 
 - `folder`：便签写为 `.md`，名称先转换为 filesystem-safe filename；`.__notepad__` 保存 metadata。
-- `json`：在一个文件中保存 `items`、`orders` 与 `activated_item_uuid`。
-- 两个 engine 均使用 3000 ms debounce；`source:flush()` 强制落盘，退出 Neovim 时 flush 所有已加载的 source。
-  `folder` 的编辑只改内存，flush 原子写入未保存的便签和有变化的 metadata，没有改动时不写盘；
+- 使用 3000 ms debounce；`source:flush()` 强制落盘，退出 Neovim 时 flush 所有已加载的 source。
+  编辑只改内存，flush 原子写入未保存的便签和有变化的 metadata，没有改动时不写盘；
   metadata 缺失或损坏时从目录中的 `.md` 重建索引，不覆盖已有便签。
-- Engine 由 source 配置决定，运行时不切换。
 
 View 切换 source 前同步当前 buffer 内容并 flush。Action 将保存、创建、重命名、删除与 source 选择
 分派到 view/source，输入与确认使用 UI prompt，结果由 `stl.reporter` 报告。

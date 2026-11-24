@@ -2,7 +2,6 @@
 local __module_name__ = "era.m.notepad.state" ---@type string
 
 ---@alias era.m.notepad.state.SourceEngine
----| "json"
 ---| "folder"
 
 ---@class era.m.notepad.state.ISourceConfig : era.m.notepad.state.INotepadSourceConfig
@@ -170,14 +169,7 @@ function M.retrieve_source(name)
       return _source_cache[name], config
     end
 
-    local source
-    if config.engine == "folder" then
-      source = S.FolderSource.new(config)
-    elseif config.engine == "json" then
-      source = S.JsonSource.new(config)
-    else
-      source = S.JsonSource.new(config)
-    end
+    local source = S.FolderSource.new(config)
     _source_cache[name] = source
     return source, config
   end
@@ -185,13 +177,7 @@ function M.retrieve_source(name)
   local default_config = source_configs[1]
   local default_name = default_config.name
   if _source_cache[default_name] == nil then
-    if default_config.engine == "folder" then
-      _source_cache[default_name] = S.FolderSource.new(default_config)
-    elseif default_config.engine == "json" then
-      _source_cache[default_name] = S.JsonSource.new(default_config)
-    else
-      _source_cache[default_name] = S.JsonSource.new(default_config)
-    end
+    _source_cache[default_name] = S.FolderSource.new(default_config)
   end
   return _source_cache[default_name], default_config
 end

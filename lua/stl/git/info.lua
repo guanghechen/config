@@ -148,31 +148,6 @@ function M.get_branch(repo)
   return nil
 end
 
----Get origin URL from git config
----@param repo                          string
----@return string|nil
-function M.get_origin(repo)
-  local content = read_all(repo .. "/.git/config")
-  if not content then
-    return nil
-  end
-
-  local in_origin = false ---@type boolean
-  for line in content:gmatch("[^\n]+") do
-    if line:match('^%s*%[remote "origin"%]') then
-      in_origin = true
-    elseif line:match("^%s*%[") then
-      in_origin = false
-    elseif in_origin then
-      local url = line:match("^%s*url%s*=%s*(.+)%s*$")
-      if url then
-        return url
-      end
-    end
-  end
-  return nil
-end
-
 ---Compare two git info objects (by first 7 chars of commit)
 ---@param a                             stl.git.IGitInfo
 ---@param b                             stl.git.IGitInfo
@@ -636,56 +611,6 @@ function M.get_head_file_mode(cwd, relpath, token)
           proc:kill(9)
         end
         finish({ ok = false, missing = false, err = "Operation cancelled" })
-      end)
-    end
-  end)
-end
-
----@param cwd                           string
----@param object                        string
----@param token                         ?stl.c.CancellationToken
----@return stl.c.Future                 Resolves with ?string[]
-function M.get_show_text(cwd, object, token)
-  return stl.c.Future.new(function(resolve)
-    if token and token:is_cancelled() then
-      resolve(nil)
-      return
-    end
-
-    local proc ---@type vim.SystemObj|nil
-    proc = vim.system(exec.command({ "cat-file", "-p", object }, cwd), { text = true }, function(obj)
-      vim.schedule(function()
-        if token and token:is_cancelled() then
-          return
-        end
-
-        if obj.code == 0 then
-          local lines = vim.split(obj.stdout or "", "\n", { plain = true })
-          -- Keep trailing empty string to preserve no_nl_at_eof information
-          resolve(lines)
-        else
-          proc = vim.system(exec.command({ "show", object }, cwd), { text = true }, function(obj2)
-            vim.schedule(function()
-              if token and token:is_cancelled() then
-                return
-              end
-              if obj2.code == 0 then
-                local lines = vim.split(obj2.stdout or "", "\n", { plain = true })
-                resolve(lines)
-              else
-                resolve(nil)
-              end
-            end)
-          end)
-        end
-      end)
-    end)
-
-    if token then
-      token:on_cancel(function()
-        if proc then
-          proc:kill(9)
-        end
       end)
     end
   end)

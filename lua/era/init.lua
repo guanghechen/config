@@ -16,7 +16,6 @@ local __fn__mods = {
   find_pinned_files = "era.fn.find-pinned-files",
   find_vim_options = "era.fn.find-vim-options",
   mock_miniicons = "era.fn.mock-miniicons",
-  mock_web_devicons = "era.fn.mock-web-devicons",
   paste_image = "era.fn.paste-image",
   paste_image_as_base64 = "era.fn.paste-image-as-base64",
   pick_win = "era.fn.pick-win",
@@ -46,7 +45,6 @@ local __fn__mods = {
 ---@field public find_pinned_files      fun(): nil
 ---@field public find_vim_options       fun(): nil
 ---@field public mock_miniicons         fun(): nil
----@field public mock_web_devicons      fun(): nil
 ---@field public paste_image            fun(): nil
 ---@field public paste_image_as_base64  fun(): string|nil
 ---@field public pick_win               era.fn.pick_win
@@ -174,7 +172,6 @@ local __view__mods = {
   Plainfile = "era.view.plainfile",
   PickerPreview = "era.view.picker.preview",
   PickerResult = "era.view.picker.result",
-  Printer = "era.view.printer",
   Setting = "era.view.setting",
   Textarea = "era.view.textarea",
 }
@@ -186,7 +183,6 @@ local __view__mods = {
 ---@field public Plainfile              era.view.Plainfile
 ---@field public PickerPreview          era.view.PickerPreview
 ---@field public PickerResult           era.view.PickerResult
----@field public Printer                era.view.Printer
 ---@field public Setting                era.view.Setting
 ---@field public Textarea               era.view.Textarea
 local view = setmetatable({

@@ -6,8 +6,9 @@
 
 `era.m.git` 按单仓库组织编辑器侧职责：
 
-- 仓库与状态：`repo` 是 Git 仓库抽象，封装常用操作，支持 worktree（commondir）；`state` 持有 status snapshot
-  并合并、节流刷新；`watcher` 监听 gitdir、index 与 commondir；`user` 提供当前仓库的 Git 身份，供 blame 判断作者。
+- 仓库与状态：`repo` 解析仓库信息（toplevel、gitdir、abbrev_head）与 worktree 的 commondir，并提供 relpath 转换；
+  `state` 持有 status snapshot 并合并、节流刷新；`watcher` 监听 gitdir、index 与 commondir；`user` 提供当前仓库的
+  Git 身份，供 blame 判断作者。
 - Buffer 与 hunk：`buffer` 计算并缓存各 buffer 的 hunks；`sign` 渲染 signs；`hunk` 提供查询、stage / unstage / reset
   与 hunk preview；`hunk_nav` 管理 hunk navigation；Visual stage 成功且选区未变时，`visual` 退出 Visual mode。
 - Index 写入：`index` 串行化同一仓库的 index mutation；`staging` 负责 buffer capture、native staging 与 legacy iconv。
