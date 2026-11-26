@@ -14,8 +14,8 @@ function M.new(native)
   return setmetatable({ _native = native }, M)
 end
 
----@param records                       ux.treeview.Records
----@return ux.treeview.IReply
+---@param records                       yoz.ux.treeview.Records
+---@return yoz.ux.treeview.IReply
 function M:append(records)
   return self._native:append(records)
 end

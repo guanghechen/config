@@ -9,7 +9,7 @@ local await, write = fixture.await, fixture.write
 ---@param state                         ux.treeview.State
 ---@param node                          string
 ---@return ux.treeview.Task task
----@return ux.treeview.IReadyReply ready
+---@return yoz.ux.treeview.IReadyReply ready
 local function prepare_selection(state, node)
   await(state:select_node({ node }, true))
   local task = await(state:lock_selection())
@@ -21,7 +21,7 @@ end
 ---@param data                          ux.filetree.Data
 ---@param state                         ux.treeview.State
 ---@param task                          ux.treeview.Task
----@param ready                         ux.treeview.IReadyReply
+---@param ready                         yoz.ux.treeview.IReadyReply
 ---@param target                        yoz.ux.filetree.Resource
 ---@return yoz.ux.filetree.Job
 local function start_copy(data, state, task, ready, target)

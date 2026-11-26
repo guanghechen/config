@@ -6,7 +6,7 @@ local Git = require("era.m.git.state")
 
 ---@param widget                        era.m.explorer.Widget
 ---@param name                          string
----@return ux.filetree.IAnnotation|nil
+---@return yoz.ux.filetree.IAnnotation|nil
 local function annotation(widget, name)
   local _, view = widget:context()
   local frame, cache = view:frame(), view._filetree_annotations

@@ -22,7 +22,7 @@ list = project(tree, display; display_context)
 ## Display 选项
 
 `DisplayOptions` 由 `create_state(root, display?)` 和 SetDisplay 整体提交；SetDisplay 替换全部字段，省略的字段取默认值。
-Lua 类型见 `ux.treeview.IDisplay`。
+Lua 类型见 `yoz.ux.treeview.IDisplay`。
 
 | 字段              | 默认     | 取值与约束                                                             | 影响                                    |
 | ----------------- | -------- | ---------------------------------------------------------------------- | --------------------------------------- |

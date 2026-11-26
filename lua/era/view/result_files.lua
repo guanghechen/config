@@ -70,7 +70,7 @@ end
 ---@param col                           integer
 ---@param label                         string
 ---@param expanded                      boolean
----@return ux.treeview.INode|nil
+---@return yoz.ux.treeview.INode|nil
 function M:decorate_row(view, frame, row, id, col, label, expanded)
   local node = ResultTree.decorate_row(self, view, frame, row, id, col, label, expanded)
   local version = self._versions[self:_read_frame(frame).header.data_revision]

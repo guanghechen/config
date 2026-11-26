@@ -45,7 +45,8 @@ Explorer 的输入与 UI 见 [Explorer Design](../../feat/explorer/README.md)，
 | `job:status()` / `job:results(first, last)`         | 读取进度/终态和有界逐项结果，不一次导出全部任务记录                                                                                                                              |
 | `job:confirm(token, accept)` / `job:cancel()`       | 提交一次性确认或取消请求，不能被解释为 IO 已结束                                                                                                                                 |
 
-具体字段见 [Lua 类型](../../../../lua/__types__/ux/filetree.lua)，入口适配见 [Lua facade](../../../../lua/ux/filetree/init.lua)。
+原生字段见 [yoz/ux_filetree.lua](../../../../lua/__types__/yoz/ux_filetree.lua)，Lua surface 类型见
+[ux/filetree.lua](../../../../lua/__types__/ux/filetree.lua)，入口适配见 [Lua facade](../../../../lua/ux/filetree/init.lua)。
 
 ### Data 请求的完成边界
 

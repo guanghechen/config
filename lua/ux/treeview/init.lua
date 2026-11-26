@@ -11,7 +11,7 @@ local Upload = require("ux.treeview.upload")
 ---@field _pending_deadlines            boolean
 ---@field _native                       yoz.ux.treeview.Data
 ---@field _read_children                ?fun(request: ux.treeview.IRequest): ux.treeview.IPage|stl.c.Future
----@field _on_effect                    ?fun(effect: ux.treeview.IEffect): nil
+---@field _on_effect                    ?fun(effect: yoz.ux.treeview.IEffect): nil
 ---@field _after_poll                   ?fun(preparing: boolean): boolean|nil
 ---@field _views                        table<ux.treeview.View, boolean>
 ---@field _queries                      table<string, ux.treeview.Query>
@@ -19,15 +19,15 @@ local Upload = require("ux.treeview.upload")
 local Data = {}
 Data.__index = Data
 
----@param scope                         ?ux.treeview.IDataScope
+---@param scope                         ?yoz.ux.treeview.IDataScope
 ---@param base_revision                 ?string
 ---@return ux.treeview.Upload
 function Data:begin_import(scope, base_revision)
   return Upload.new(self._native:begin_import(scope, base_revision or self:source():revision()))
 end
 
----@param records                       ux.treeview.Records
----@param scope                         ?ux.treeview.IDataScope
+---@param records                       yoz.ux.treeview.Records
+---@param scope                         ?yoz.ux.treeview.IDataScope
 ---@param base_revision                 ?string
 ---@return stl.c.Future
 function Data:import(records, scope, base_revision)
@@ -38,7 +38,7 @@ function Data:import(records, scope, base_revision)
   }))
 end
 
----@param operations                    ux.treeview.IOperation[]
+---@param operations                    yoz.ux.treeview.IOperation[]
 ---@param base_revision                 ?string
 ---@return stl.c.Future
 function Data:batch(operations, base_revision)
@@ -49,7 +49,7 @@ function Data:batch(operations, base_revision)
 end
 
 ---@param authorization                 string
----@param operations                    ux.treeview.IOperation[]
+---@param operations                    yoz.ux.treeview.IOperation[]
 ---@param base_revision                 ?string
 ---@return stl.c.Future
 function Data:task_batch(authorization, operations, base_revision)
@@ -70,8 +70,8 @@ function Data:source()
   return self._native:source()
 end
 
----@param root                          ux.treeview.IRoot
----@param display                       ?ux.treeview.IDisplay
+---@param root                          yoz.ux.treeview.IRoot
+---@param display                       ?yoz.ux.treeview.IDisplay
 ---@return stl.c.Future
 function Data:create_state(root, display)
   return async.run(self._native:create_state(root, display)):map(function(value)
@@ -79,7 +79,7 @@ function Data:create_state(root, display)
   end)
 end
 
----@param scope                         ux.treeview.IDataScope
+---@param scope                         yoz.ux.treeview.IDataScope
 ---@return stl.c.Future
 function Data:create_provider(scope)
   return async.run(self._native:create_provider(scope)):map(function(value)

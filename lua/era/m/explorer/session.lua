@@ -11,7 +11,7 @@ local filepath = require("ux.filetree.path")
 ---@field state                         ux.treeview.State
 ---@field native                        yoz.ux.explorer.State
 ---@field views                         table<ux.filetree.View, fun(): nil>
----@field watch                         ?ux.filetree.IWatchStatus
+---@field watch                         ?yoz.ux.filetree.IWatchStatus
 ---@field preparing                     boolean
 ---@field job                           ?yoz.ux.filetree.Job
 ---@field operation                     ?era.m.explorer.OperationKind
@@ -19,7 +19,7 @@ local filepath = require("ux.filetree.path")
 ---@field issues                        era.m.explorer.IItemResult[]
 ---@field issues_omitted                integer
 ---@field _issue_bytes                  integer
----@field progress                      ?ux.filetree.IJobStatus
+---@field progress                      ?yoz.ux.filetree.IJobStatus
 ---@field _preparation                  ?era.m.explorer.IPreparation
 ---@field _direct_task                  ?ux.treeview.Task
 ---@field _result_offset                integer
@@ -56,9 +56,9 @@ function M.report(error)
 end
 
 ---@param root                          string
----@param display                       ux.treeview.IDisplay
+---@param display                       yoz.ux.treeview.IDisplay
 ---@param data                          ?ux.filetree.Data
----@param workspace                     ?ux.filetree.Path
+---@param workspace                     ?yoz.ux.filetree.Path
 ---@return stl.c.Future
 function M.open(root, display, data, workspace)
   return async.run_future(function()

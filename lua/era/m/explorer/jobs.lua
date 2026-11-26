@@ -28,7 +28,7 @@ local OPERATIONS = { ---@type table<era.m.explorer.JobKind, era.m.explorer.Opera
 ---@param session                       era.m.explorer.Session
 ---@param label                         string
 ---@param acquire                       fun(state: ux.treeview.State): stl.c.Future
----@param run                           async fun(task: ux.treeview.Task|nil, preparation: era.m.explorer.IPreparation, reply: ux.treeview.IReply): ux.treeview.IReply|yoz.ux.filetree.Job|nil
+---@param run                           async fun(task: ux.treeview.Task|nil, preparation: era.m.explorer.IPreparation, reply: yoz.ux.treeview.IReply): yoz.ux.treeview.IReply|yoz.ux.filetree.Job|nil
 ---@return stl.c.Future
 local function with_preparation(session, label, acquire, run)
   if session._disposed then
@@ -77,7 +77,7 @@ end
 ---@param session                       era.m.explorer.Session
 ---@param task                          ux.treeview.Task
 ---@param preparation                   era.m.explorer.IPreparation
----@return ux.treeview.IReadyReply|nil
+---@return yoz.ux.treeview.IReadyReply|nil
 local function prepare_sources(session, task, preparation)
   local retry = true
   while not preparation.cancelled do
@@ -232,7 +232,7 @@ end
 
 ---@param session                       era.m.explorer.Session
 ---@param job                           yoz.ux.filetree.Job
----@param status                        ux.filetree.IJobStatus
+---@param status                        yoz.ux.filetree.IJobStatus
 ---@return nil
 local function update(session, job, status)
   if session.job ~= job then

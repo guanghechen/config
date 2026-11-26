@@ -8,11 +8,11 @@ local views = setmetatable({}, { __mode = "v" }) ---@type table<integer, ux.file
 local M = {}
 
 ---@class ux.filetree.IViewOptions : ux.treeview.IViewOptions
----@field public prepare_frame          fun(view: ux.treeview.View, frame: yoz.ux.treeview.Frame, first: integer, last: integer, rows: ux.treeview.IRows): stl.c.Future Always installed by ux.filetree.attach.
+---@field public prepare_frame          fun(view: ux.treeview.View, frame: yoz.ux.treeview.Frame, first: integer, last: integer, rows: yoz.ux.treeview.IRows): stl.c.Future Always installed by ux.filetree.attach.
 
 ---@class ux.filetree.View : ux.treeview.View
 ---@field _options                      ux.filetree.IViewOptions
----@field _filetree_annotations         ?ux.filetree.IAnnotationRows
+---@field _filetree_annotations         ?yoz.ux.filetree.IAnnotationRows
 ---@field _filetree_pending             ?stl.c.Future
 ---@field _filetree_annotation_key      ?string
 ---@field _filetree_annotation_data     ?string
@@ -20,7 +20,7 @@ local M = {}
 ---@field _filetree_annotation_source   ?yoz.ux.treeview.Source
 
 ---@param view                          ux.filetree.View
----@param header                        ux.treeview.IFrameHeader
+---@param header                        yoz.ux.treeview.IFrameHeader
 ---@param source                        yoz.ux.treeview.Source
 ---@return boolean
 local function same_rows(view, header, source)
@@ -32,7 +32,7 @@ local function same_rows(view, header, source)
 end
 
 ---@param view                          ux.filetree.View
----@param value                         ?ux.filetree.IAnnotationRows
+---@param value                         ?yoz.ux.filetree.IAnnotationRows
 ---@param first                         integer
 ---@param last                          integer
 ---@param revision                      string
@@ -211,7 +211,7 @@ function M.poll(owner, native)
   return busy
 end
 
----@param value                         ux.filetree.IAnnotation
+---@param value                         yoz.ux.filetree.IAnnotation
 ---@return table[]
 local function chunks(value)
   local result = {}

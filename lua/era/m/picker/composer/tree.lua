@@ -51,7 +51,7 @@ local __module_name__ = "era.m.picker.composer.tree" ---@type string
 ---@field public title                  string
 ---@field public height                 ?number
 ---@field public width                  ?number
----@field public present                fun(key: string, data: table, entry: era.view.result_tree.IEntry): ux.treeview.INodeData
+---@field public present                fun(key: string, data: table, entry: era.view.result_tree.IEntry): yoz.ux.treeview.INodeData
 ---@field public node_sorter            era.m.picker.composer.tree.INodeSorter
 ---
 ---@field public keymaps_common         ?stl.t.IKeymap[]

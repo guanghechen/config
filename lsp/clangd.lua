@@ -3,7 +3,7 @@ local __module_name__ = "lsp.clangd" ---@type string
 -- https://github.com/neovim/nvim-lspconfig/blob/cfc12beefe39cdcb77ff81fa49e71cc42cdf4fbc/lsp/clangd.lua
 -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#clangd
 
----@class era.lsp.ClangdInitializeResult: lsp.InitializeResult
+---@class lsp.clangd.InitializeResult: lsp.InitializeResult
 ---@field offsetEncoding? string
 
 -- https://clangd.llvm.org/extensions.html#switch-between-sourceheader
@@ -88,7 +88,7 @@ local function on_attach(client, bufnr)
 end
 
 ---@param client                        vim.lsp.Client
----@param init_result                   era.lsp.ClangdInitializeResult
+---@param init_result                   lsp.clangd.InitializeResult
 local function on_init(client, init_result)
   if init_result.offsetEncoding then
     client.offset_encoding = init_result.offsetEncoding

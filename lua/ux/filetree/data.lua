@@ -12,11 +12,11 @@ local filepath = require("ux.filetree.path")
 
 ---@class ux.filetree.IJobObserver
 ---@field revision                      ?string
----@field on_update                     ?fun(status: ux.filetree.IJobStatus): nil
+---@field on_update                     ?fun(status: yoz.ux.filetree.IJobStatus): nil
 
 ---@class ux.filetree.IRegistration
 ---@field observer                      ?ux.filetree.IObserver
----@field source_revision               ux.treeview.Revision
+---@field source_revision               yoz.ux.treeview.Revision
 
 ---@class ux.filetree.Data
 ---@field _native                       yoz.ux.filetree.Data
@@ -31,8 +31,8 @@ local filepath = require("ux.filetree.path")
 ---@field _watch_revision               ?string
 ---@field _watch_error                  ?string
 ---@field _watching                     ?boolean
----@field _acknowledged                 ?ux.treeview.Revision
----@field _source_delivery              ?ux.treeview.Revision
+---@field _acknowledged                 ?yoz.ux.treeview.Revision
+---@field _source_delivery              ?yoz.ux.treeview.Revision
 local M = {}
 M.__index = M
 
@@ -167,7 +167,7 @@ function M:_poll(preparing)
   local finished_jobs = false
   for job, observer in pairs(self._jobs) do
     local revision = observer.revision
-    local status ---@type ux.filetree.IJobStatus|nil
+    local status ---@type yoz.ux.filetree.IJobStatus|nil
     if revision then
       status = job:status(revision)
     else
@@ -227,7 +227,7 @@ end
 
 ---Reports the progress of `job` to `on_update` while it runs.
 ---@param job                           yoz.ux.filetree.Job
----@param on_update                     ?fun(status: ux.filetree.IJobStatus): nil
+---@param on_update                     ?fun(status: yoz.ux.filetree.IJobStatus): nil
 ---@return yoz.ux.filetree.Job
 function M:track_job(job, on_update)
   self._jobs[job] = { on_update = on_update }
@@ -246,8 +246,8 @@ function M:source()
   return self._native:source()
 end
 
----@param root                          ?ux.treeview.IRoot
----@param display                       ?ux.treeview.IDisplay
+---@param root                          ?yoz.ux.treeview.IRoot
+---@param display                       ?yoz.ux.treeview.IDisplay
 ---@return stl.c.Future
 function M:create_state(root, display)
   return async.run(self._native:create_state(root, display)):map(function(value)
@@ -296,7 +296,7 @@ function M:refresh(state)
   return async.run(self._native:refresh(state:native()))
 end
 
----@return ux.filetree.IWatchStatus
+---@return yoz.ux.filetree.IWatchStatus
 function M:watch_status()
   return assert(self._native:watch_status())
 end
@@ -310,15 +310,16 @@ end
 ---@param plan                          ux.filetree.IOperationPlan
 ---@return yoz.ux.filetree.Job
 function M:start_operation(plan)
+  local native = plan --[[@as yoz.ux.filetree.IOperationPlan]]
   if plan.task then
-    plan = vim.tbl_extend("force", plan, {
+    native = vim.tbl_extend("force", plan, {
       task = { state = plan.task.state:native(), lock = plan.task.lock, cleanup = plan.task.cleanup },
-    })
+    }) --[[@as yoz.ux.filetree.IOperationPlan]]
   end
-  return self:track_job(self._native:start_operation(plan))
+  return self:track_job(self._native:start_operation(native))
 end
 
----@param plan                          ux.filetree.ICreatePlan
+---@param plan                          yoz.ux.filetree.ICreatePlan
 ---@return yoz.ux.filetree.Job
 function M:start_create(plan)
   return self:track_job(self._native:start_create(plan))

@@ -24,7 +24,7 @@ local M = {}
 
 ---@param session                       era.m.explorer.Session
 ---@param frame                         yoz.ux.treeview.Frame
----@param rows                          ux.treeview.IRows
+---@param rows                          yoz.ux.treeview.IRows
 ---@param previous                      ?era.m.explorer.IIconCache
 ---@param current                       fun(): boolean
 ---@return stl.c.Future

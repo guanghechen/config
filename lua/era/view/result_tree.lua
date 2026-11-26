@@ -72,7 +72,7 @@ end
 
 ---@class era.view.result_tree.IRead
 ---@field frame                         yoz.ux.treeview.Frame
----@field header                        ux.treeview.IFrameHeader
+---@field header                        yoz.ux.treeview.IFrameHeader
 ---@field source                        yoz.ux.treeview.Source
 ---@field selected                      table<boolean, yoz.ux.treeview.NodeIds>
 
@@ -113,7 +113,7 @@ local function checked_change(result)
 end
 
 ---@param state                         ux.treeview.State
----@param command                       ux.treeview.ICommand
+---@param command                       yoz.ux.treeview.ICommand
 ---@return stl.c.Future
 local function absolute(state, command)
   ---@param attempts                    integer
@@ -1468,7 +1468,7 @@ end
 ---@param col                           integer
 ---@param label                         string
 ---@param expanded                      boolean
----@return ux.treeview.INode|nil
+---@return yoz.ux.treeview.INode|nil
 function M:decorate_row(view, frame, row, id, col, label, expanded)
   local node = frame:node(id)
   local directory = node and node.fields.directory_icon
@@ -1547,7 +1547,7 @@ function M:decorate_row(view, frame, row, id, col, label, expanded)
 end
 
 ---Right-aligned chunks of a decorated row, placed before the View's right text and selection mark.
----@param node                          ux.treeview.INode|nil
+---@param node                          yoz.ux.treeview.INode|nil
 ---@return table[]|nil
 function M:right_chunks(node)
   return node and node.fields.overlay

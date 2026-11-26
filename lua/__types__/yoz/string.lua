@@ -22,7 +22,7 @@ function M.parse_comma_list(text) end
 
 ---@param text                          string
 ---@param offsets                       integer[]
----@return dot.t.IMatchLocation[]
+---@return yoz.t.IMatchLocation[]
 function M.get_locations(text, offsets) end
 ---@param text                          string
 ---@param widths                        integer[]|nil

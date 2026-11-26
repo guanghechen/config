@@ -116,7 +116,8 @@ ResultTree 准备版本化 metadata 与有界列式输入；这些 producer 不�
 - 提交结果只返回结果与必要句柄，不默认返回整份 key 到 NodeId 映射；单项定位按需查询。
 
 Rust 原生路径与 Lua 路径共享逻辑语义，不要求两者都经过 Lua 列式编码。
-Binding 方法和列字段见 [Lua 类型](../../../../lua/__types__/ux/treeview.lua)，使用方式见[接入指南](integration.md)。
+Binding 方法见 [yoz/ux.lua](../../../../lua/__types__/yoz/ux.lua)，列字段见
+[yoz/ux_treeview.lua](../../../../lua/__types__/yoz/ux_treeview.lua)，使用方式见[接入指南](integration.md)。
 
 ## Snapshot 与出站读取
 

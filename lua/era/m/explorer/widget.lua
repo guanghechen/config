@@ -52,13 +52,13 @@ era.m.maximize.register(stl.e.WinTypeEnum.EXPLORER, era.m.maximize.in_place)
 ---@field _disposed                     boolean
 ---@field _group                        integer
 ---@field _navigation                   integer
----@field _workspace                    ux.filetree.Path
+---@field _workspace                    yoz.ux.filetree.Path
 ---@field _input_data                   ?ux.filetree.Data
 ---@field _on_disposed                  ?fun(): nil
 local M = {}
 M.__index = M
 
----@return ux.treeview.IDisplay
+---@return yoz.ux.treeview.IDisplay
 function M:get_display()
   if self._session then
     return (self._session.state:display())

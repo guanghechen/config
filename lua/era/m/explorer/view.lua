@@ -10,7 +10,7 @@ local Ignore = require("era.m.git.ignore")
 local LINK_MARKER = "  " ---@type string
 local M = {}
 
----@param value                         ?ux.filetree.IAnnotation
+---@param value                         ?yoz.ux.filetree.IAnnotation
 ---@return string|nil
 local function git_highlight(value)
   if not value then
@@ -46,7 +46,7 @@ local function git_highlight(value)
   return nil
 end
 
----@param value                         ?ux.filetree.IAnnotation
+---@param value                         ?yoz.ux.filetree.IAnnotation
 ---@param git_group                     ?string
 ---@return string
 local function highlight(value, git_group)

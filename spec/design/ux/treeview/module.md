@@ -1,6 +1,7 @@
 # Treeview 核心契约
 
-Lua 字段见[类型定义](../../../../lua/__types__/ux/treeview.lua)，使用方式见[接入指南](integration.md)。
+Lua 字段见[协议类型](../../../../lua/__types__/yoz/ux_treeview.lua)与
+[Lua surface 类型](../../../../lua/__types__/ux/treeview.lua)，使用方式见[接入指南](integration.md)。
 
 ## 模块边界
 

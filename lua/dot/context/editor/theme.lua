@@ -49,9 +49,9 @@ local integrations = {
 }
 
 ---@param integration                   dot.e.ThemeIntegration
----@param theme                         dot.e.ThemeFamily
+---@param theme                         stl.t.theme.Family
 ---@return dot.theme.hlgroup.IIntegration
----@overload fun(integration: "basic", theme: dot.e.ThemeFamily): dot.theme.hlgroup.basic.IIntegration
+---@overload fun(integration: "basic", theme: stl.t.theme.Family): dot.theme.hlgroup.basic.IIntegration
 local function load_integration(integration, theme)
   local prefix = "dot.theme.hlgroup." .. integration ---@type string
   local module = prefix .. "." .. theme ---@type string

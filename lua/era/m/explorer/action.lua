@@ -449,7 +449,7 @@ function M:auxiliary(kind)
   end
   ---@async
   ---@param range                       ?era.m.explorer.IInputRange
-  ---@return ux.treeview.IReply|nil
+  ---@return yoz.ux.treeview.IReply|nil
   local function run(range)
     local cursor = session:cursor(view)
     if kind == "find" or kind == "directory" then

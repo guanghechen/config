@@ -43,7 +43,7 @@ local M = {}
 ---@field public remain_offsets         integer[]
 
 ---@class yoz.replace.IReplaceFileResult
----@field public locations              dot.t.IMatchLocation[]
+---@field public locations              yoz.t.IMatchLocation[]
 
 ---@class yoz.replace.IReplaceFilePreviewParams
 ---@field public filepath               string
@@ -69,7 +69,7 @@ local M = {}
 
 ---@class yoz.replace.IReplacePreviewResult
 ---@field public text                   string
----@field public matches                dot.t.IMatchPoint[]
+---@field public matches                yoz.t.IMatchPoint[]
 
 ---Fails with the reason when replacing cannot use a search pattern, as for one that matches bytes outside UTF-8.
 ---@param params                        yoz.replace.IReplaceCheckPatternParams

@@ -1,5 +1,32 @@
 ---@meta
 
+---@alias stl.t.theme.Family
+---| "catppuccin"
+---| "gruvbox"
+---| "kanagawa"
+---| "rosepine"
+---| "tokyonight"
+---| "vsc"
+
+---@alias stl.t.theme.Variant
+---| "frappe"
+---| "latte"
+---| "macchiato"
+---| "mocha"
+---| "light"
+---| "light-modern"
+---| "dark"
+---| "dark-modern"
+---| "dragon"
+---| "lotus"
+---| "wave"
+---| "main"
+---| "moon"
+---| "dawn"
+---| "day"
+---| "night"
+---| "storm"
+
 ---@class stl.t.theme.IContext
 ---@field public theme                  string
 ---@field public variant                string|nil
@@ -566,8 +593,8 @@
 ---@field public vsc                    stl.t.theme.IVscPalette|nil
 
 ---@class stl.t.theme.IScheme
----@field public theme                  dot.e.ThemeFamily
----@field public variant                dot.e.ThemeVariant|nil
----@field public opposite               dot.e.ThemeVariant|nil
+---@field public theme                  stl.t.theme.Family
+---@field public variant                stl.t.theme.Variant|nil
+---@field public opposite               stl.t.theme.Variant|nil
 ---@field public darken                 boolean
 ---@field public palette                stl.t.theme.IPalette

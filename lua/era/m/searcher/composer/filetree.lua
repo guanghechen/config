@@ -857,7 +857,7 @@ function M.new(props)
             return
           end
 
-          local preview_locations = advance_result.locations ---@type dot.t.IMatchLocation[]
+          local preview_locations = advance_result.locations ---@type yoz.t.IMatchLocation[]
 
           -- The other matches may share its line or follow it; searching the file again shows them as a new search
           -- would.
@@ -880,7 +880,7 @@ function M.new(props)
             if i ~= st and treeview:isvisible(location.locationuuid) then
               -- Published metadata stays immutable; the next import reads the producer.
               local producer = treeview.entries[location.locationuuid] --[[@as era.m.searcher.view.filetree.ILocationEntry]]
-              local pl = nil ---@type dot.t.IMatchLocation|nil
+              local pl = nil ---@type yoz.t.IMatchLocation|nil
               if i > st then
                 nt = nt + 1 ---@type integer
                 pl = preview_locations[nt]

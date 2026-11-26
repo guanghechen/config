@@ -4,7 +4,7 @@ local __module_name__ = "era.view.fileinfo" ---@type string
 ---@class era.view.fileinfo.IProps
 ---@field public filepath               string
 ---@field public kind                   string
----@field public details                ux.filetree.IResourceDetails
+---@field public details                yoz.ux.filetree.IResourceDetails
 
 ---@class era.view.fileinfo.IState
 ---@field protected _disposed           boolean
@@ -13,7 +13,7 @@ local __module_name__ = "era.view.fileinfo" ---@type string
 ---@field protected _ns                 integer
 ---@field protected _filepath           string
 ---@field protected _kind               string
----@field protected _details            ux.filetree.IResourceDetails
+---@field protected _details            yoz.ux.filetree.IResourceDetails
 
 ---@class era.view.Fileinfo : era.view.fileinfo.IState
 local M = {}

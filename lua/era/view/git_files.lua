@@ -280,7 +280,7 @@ function M:targets(keys, frame)
   return targets
 end
 
----@param node                          ux.treeview.INode|nil
+---@param node                          yoz.ux.treeview.INode|nil
 ---@return table[]|nil
 function M:right_chunks(node)
   local git = node and node.fields.git

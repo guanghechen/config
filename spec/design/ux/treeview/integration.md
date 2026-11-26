@@ -1,7 +1,8 @@
 # Treeview 接入
 
 Lua surface 使用 `require("ux.treeview")`。权威语义见 [Treeview 设计](README.md)，Lua 字段与原生方法见
-[treeview.lua](../../../../lua/__types__/ux/treeview.lua) 和 [yoz/ux.lua](../../../../lua/__types__/yoz/ux.lua)。
+[yoz/ux_treeview.lua](../../../../lua/__types__/yoz/ux_treeview.lua)、
+[ux/treeview.lua](../../../../lua/__types__/ux/treeview.lua) 和 [yoz/ux.lua](../../../../lua/__types__/yoz/ux.lua)。
 
 ## 选择入口
 
@@ -66,7 +67,7 @@ Ready 中的 `source` 是对应版本的不可变 source；两组 NodeIds 使用
 ## Provider 与分块输入
 
 `data:create_provider(scope)` 创建独占写入范围，scope 语义见[写入范围](data.md#写入范围)。
-少量数据可直接使用行式输入；列式输入见 `ux.treeview.IColumns`，`parent_keys` 适合跨 chunk 的父子关系。
+少量数据可直接使用行式输入；列式输入见 `yoz.ux.treeview.IColumns`，`parent_keys` 适合跨 chunk 的父子关系。
 
 完整大 snapshot 使用 `data:begin_import(scope)` 或 `provider:begin_import()` 分块 append，再一次 commit；
 每块的条数与 Lua 输入字节上限见 [默认容量](action.md#默认容量)：

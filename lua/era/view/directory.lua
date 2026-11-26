@@ -7,11 +7,11 @@ local Future = require("stl.c.future")
 local namespace = vim.api.nvim_create_namespace("era.directory")
 
 ---@class era.view.directory.IListing
----@field layout                        ux.treeview.Revision
+---@field layout                        yoz.ux.treeview.Revision
 ---@field source                        yoz.ux.treeview.Source
 ---@field first                         integer
 ---@field last                          integer
----@field entries                       table<ux.treeview.NodeId, ux.filetree.IListingRow>
+---@field entries                       table<yoz.ux.treeview.NodeId, yoz.ux.filetree.IListingRow>
 
 ---A Directory owner caches listing rows on whichever Treeview View it decorates.
 ---@class era.view.directory.View : ux.treeview.View
@@ -23,7 +23,7 @@ local namespace = vim.api.nvim_create_namespace("era.directory")
 ---@field view                          ?ux.treeview.View
 ---@field _disposed                     boolean
 ---@field _generation                   integer
----@field _display                      ux.treeview.IDisplay
+---@field _display                      yoz.ux.treeview.IDisplay
 ---@field _icons                        table<string, table>
 ---@field _icon_count                   integer
 local M = {}
@@ -39,7 +39,7 @@ local function checked(value)
 end
 
 ---@param state                         ux.treeview.State
----@param command                       ux.treeview.ICommand
+---@param command                       yoz.ux.treeview.ICommand
 ---@param retries                       ?integer
 ---@return stl.c.Future
 local function absolute(state, command, retries)
@@ -164,7 +164,7 @@ function M:open(directory, focus)
   return future
 end
 
----@param display                       ux.treeview.IDisplay
+---@param display                       yoz.ux.treeview.IDisplay
 ---@return nil
 function M:filter(display)
   local next_display = vim.tbl_extend("force", self._display, display)
@@ -194,7 +194,7 @@ function M:_filter()
 end
 
 ---Whether the rows show `display`: no filter is on its way, and the view has drawn the state since.
----@param display                       ux.treeview.IDisplay
+---@param display                       yoz.ux.treeview.IDisplay
 ---@return boolean
 function M:shows(display)
   if self._filtering or not self.state then
@@ -385,7 +385,7 @@ function M:decorate_row(view, frame, row, id, col, label, expanded)
 end
 
 ---Directory rows have no right-aligned chunks; previews call this on any owner.
----@param _                             ux.treeview.INode|nil
+---@param _                             yoz.ux.treeview.INode|nil
 ---@return nil
 function M:right_chunks(_)
   return nil

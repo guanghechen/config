@@ -8,7 +8,7 @@
 ---@class yoz.ux.treeview
 local M = {}
 
----@param limits                        ?ux.treeview.ILimits
+---@param limits                        ?yoz.ux.treeview.ILimits
 ---@return yoz.ux.treeview.Data
 function M.new_data(limits) end
 
@@ -23,55 +23,55 @@ local NodeIds = {}
 ---@return integer
 function NodeIds:len() end
 ---@param index                         integer
----@return ux.treeview.NodeId|nil
+---@return yoz.ux.treeview.NodeId|nil
 function NodeIds:get(index) end
 ---@param first                         integer
 ---@param last                          integer
----@return ux.treeview.NodeId[]
+---@return yoz.ux.treeview.NodeId[]
 function NodeIds:slice(first, last) end
 
 ---@class yoz.ux.treeview.Source
 local Source = {}
----@return ux.treeview.Revision
+---@return yoz.ux.treeview.Revision
 function Source:revision() end
 
 ---@param other                         yoz.ux.treeview.Source
 ---@return boolean
 function Source:same_content(other) end
----@param scope                         ux.treeview.IDataScope
+---@param scope                         yoz.ux.treeview.IDataScope
 ---@return table|nil
 function Source:query_result(scope) end
 ---@return integer
 function Source:len() end
 ---@param key                           string
----@return ux.treeview.NodeId|nil
+---@return yoz.ux.treeview.NodeId|nil
 function Source:id(key) end
 ---Node ids of `keys` in order, skipping keys this source does not hold.
 ---@param keys                          string[]
 ---@return yoz.ux.treeview.NodeIds
 function Source:ids(keys) end
 ---Identity-only lookup; nil for a missing node, at most 1 MiB of key data.
----@param node                          ux.treeview.NodeId
+---@param node                          yoz.ux.treeview.NodeId
 ---@return string|nil
 function Source:key(node) end
 ---Source parent identity, including parents outside the visible projection.
----@param node                          ux.treeview.NodeId
----@return ux.treeview.NodeId|nil
+---@param node                          yoz.ux.treeview.NodeId
+---@return yoz.ux.treeview.NodeId|nil
 function Source:parent(node) end
----@param node                          ux.treeview.NodeId
----@return ux.treeview.INode|nil
+---@param node                          yoz.ux.treeview.NodeId
+---@return yoz.ux.treeview.INode|nil
 function Source:node(node) end
----@param node                          ?ux.treeview.NodeId
+---@param node                          ?yoz.ux.treeview.NodeId
 ---@param first                         integer
 ---@param last                          integer
----@return ux.treeview.NodeId[]
+---@return yoz.ux.treeview.NodeId[]
 function Source:children(node, first, last) end
 
 ---@class yoz.ux.treeview.Frame
 local Frame = {}
 ---@return string
 function Frame:id() end
----@return ux.treeview.IFrameHeader
+---@return yoz.ux.treeview.IFrameHeader
 function Frame:header() end
 ---Proves identical row data and topology, excluding cursor and external consumer decorations.
 ---@param other                         yoz.ux.treeview.Frame
@@ -83,11 +83,11 @@ function Frame:same_rows(other) end
 function Frame:marked_nodes(visible_only) end
 ---Checks explicit identities, including hidden/filtered nodes. Empty input is true.
 ---Missing IDs raise an error, even after an unmarked node.
----@param nodes                         ux.treeview.NodeId[]
+---@param nodes                         yoz.ux.treeview.NodeId[]
 ---@return boolean
 function Frame:all_marked(nodes) end
 ---Identity-only export, bounded to 1024 nodes and 1 MiB of keys.
----@param nodes                         ux.treeview.NodeId[]
+---@param nodes                         yoz.ux.treeview.NodeId[]
 ---@return string[]
 function Frame:node_keys(nodes) end
 ---Read a prefix of a 1-based inclusive range of at most 1024 rows, within 1 MiB of keys.
@@ -97,9 +97,9 @@ function Frame:node_keys(nodes) end
 ---@return string[]
 function Frame:row_keys(first, last) end
 ---@param row                           integer
----@return ux.treeview.NodeId|nil
+---@return yoz.ux.treeview.NodeId|nil
 function Frame:node_at(row) end
----@param node                          ux.treeview.NodeId
+---@param node                          yoz.ux.treeview.NodeId
 ---@return integer|nil
 function Frame:position(node) end
 ---Last displayed descendant, including this row; nil for a row outside this Frame.
@@ -112,24 +112,24 @@ function Frame:subtree_end(row) end
 ---@return integer|nil
 function Frame:adjacent_leaf(row, forward) end
 ---@param row                           integer
----@param direction                     ux.treeview.Direction
+---@param direction                     yoz.ux.treeview.Direction
 ---@return integer|nil
 function Frame:navigate(row, direction) end
 ---Viewport reads are bounded to 512 rows, 1 MiB of row data, and 8192 matches/guides.
 ---@param first                         integer
 ---@param last                          integer
----@return ux.treeview.IRows
+---@return yoz.ux.treeview.IRows
 function Frame:rows(first, last) end
 ---Visible cursor path, top to bottom; 1-based inclusive rows, at most 512 viewport rows.
 ---@param row                           integer
 ---@param first                         integer
 ---@param last                          integer
----@return ux.treeview.IGuideSegment[]
+---@return yoz.ux.treeview.IGuideSegment[]
 function Frame:guide_path(row, first, last) end
----@param node                          ux.treeview.NodeId
----@return ux.treeview.INode|nil
+---@param node                          yoz.ux.treeview.NodeId
+---@return yoz.ux.treeview.INode|nil
 function Frame:node(node) end
----@param node                          ux.treeview.NodeId
+---@param node                          yoz.ux.treeview.NodeId
 ---@return {marked: boolean, expanded: boolean}|nil
 function Frame:flags(node) end
 ---@return yoz.ux.treeview.Source
@@ -150,62 +150,62 @@ local Data = {}
 ---@param descriptor                    integer
 ---@return yoz.ux.treeview.Notifications
 function Data:subscribe(descriptor) end
----@param revision                      ux.treeview.Revision
+---@param revision                      yoz.ux.treeview.Revision
 ---@return nil
 function Data:acknowledge_publication(revision) end
----@param scope                         ?ux.treeview.IDataScope
----@param base                          ux.treeview.Revision
+---@param scope                         ?yoz.ux.treeview.IDataScope
+---@param base                          yoz.ux.treeview.Revision
 ---@return yoz.ux.treeview.Upload
 function Data:begin_import(scope, base) end
 ---@return yoz.ux.treeview.Source
 function Data:source() end
----@param batch                         ux.treeview.IBatch
+---@param batch                         yoz.ux.treeview.IBatch
 ---@return yoz.ux.treeview.Ticket
 function Data:batch(batch) end
----@param batch                         ux.treeview.IBatch
+---@param batch                         yoz.ux.treeview.IBatch
 ---@param authorization                 string
 ---@return yoz.ux.treeview.Ticket
 function Data:task_batch(batch, authorization) end
----@param input                         ux.treeview.IImport
+---@param input                         yoz.ux.treeview.IImport
 ---@return yoz.ux.treeview.Ticket
 function Data:import(input) end
----@param root                          ux.treeview.IRoot
----@param display                       ?ux.treeview.IDisplay
+---@param root                          yoz.ux.treeview.IRoot
+---@param display                       ?yoz.ux.treeview.IDisplay
 ---@return yoz.ux.treeview.Ticket
 function Data:create_state(root, display) end
----@param scope                         ux.treeview.IDataScope
+---@param scope                         yoz.ux.treeview.IDataScope
 ---@return yoz.ux.treeview.Ticket
 function Data:create_provider(scope) end
----@param nodes                         ux.treeview.NodeId[]
+---@param nodes                         yoz.ux.treeview.NodeId[]
 ---@param retry                         ?boolean
 ---@return yoz.ux.treeview.Ticket
 function Data:request_children(nodes, retry) end
----@return ux.treeview.IEffect[]
+---@return yoz.ux.treeview.IEffect[]
 ---@return boolean pending_deadlines
 function Data:events() end
 ---@param token                         yoz.ux.treeview.ReadToken
----@param sequence                      ux.treeview.Revision
----@param records                       ux.treeview.Records
+---@param sequence                      yoz.ux.treeview.Revision
+---@param records                       yoz.ux.treeview.Records
 ---@param done                          boolean
 ---@return yoz.ux.treeview.Ticket
 function Data:children_page(token, sequence, records, done) end
 ---@param token                         yoz.ux.treeview.ReadToken
----@param sequence                      ux.treeview.Revision
----@param error                         ux.treeview.IError|string
+---@param sequence                      yoz.ux.treeview.Revision
+---@param error                         yoz.ux.treeview.IError|string
 ---@return yoz.ux.treeview.Ticket
 function Data:children_failed(token, sequence, error) end
 ---@param token                         yoz.ux.treeview.ReadToken
 ---@return yoz.ux.treeview.Ticket
 function Data:children_cancelled(token) end
 ---@param token                         yoz.ux.treeview.QueryToken
----@param sequence                      ux.treeview.Revision
----@param records                       ux.treeview.Records
+---@param sequence                      yoz.ux.treeview.Revision
+---@param records                       yoz.ux.treeview.Records
 ---@param done                          boolean
 ---@return yoz.ux.treeview.Ticket
 function Data:query_page(token, sequence, records, done) end
 ---@param token                         yoz.ux.treeview.QueryToken
----@param sequence                      ux.treeview.Revision
----@param error                         ux.treeview.IError|string
+---@param sequence                      yoz.ux.treeview.Revision
+---@param error                         yoz.ux.treeview.IError|string
 ---@return yoz.ux.treeview.Ticket
 function Data:query_failed(token, sequence, error) end
 ---@param token                         yoz.ux.treeview.QueryToken
@@ -224,27 +224,27 @@ local State = {}
 ---@return yoz.ux.treeview.Ticket
 function State:refresh() end
 ---@param plan                          yoz.ux.treeview.RenderPlan
----@param minimum                       ?ux.treeview.Revision
+---@param minimum                       ?yoz.ux.treeview.Revision
 ---@return yoz.ux.treeview.RenderPlan|nil
 function State:retarget_plan(plan, minimum) end
 ---@return string
 function State:id() end
 ---@return yoz.ux.treeview.Frame
 function State:snapshot() end
----@return ux.treeview.IStateStatus
+---@return yoz.ux.treeview.IStateStatus
 function State:status() end
----@return ux.treeview.IDisplay
----@return ux.treeview.Revision
+---@return yoz.ux.treeview.IDisplay
+---@return yoz.ux.treeview.Revision
 function State:display() end
 ---@param frame                         yoz.ux.treeview.Frame
----@param minimum                       ?ux.treeview.Revision
+---@param minimum                       ?yoz.ux.treeview.Revision
 ---@return boolean
 function State:applicable(frame, minimum) end
----@param command                       ux.treeview.ICommand
----@param context                       ?ux.treeview.IContext
+---@param command                       yoz.ux.treeview.ICommand
+---@param context                       ?yoz.ux.treeview.IContext
 ---@return yoz.ux.treeview.Ticket
 function State:dispatch(command, context) end
----@param revision                      ?ux.treeview.Revision
+---@param revision                      ?yoz.ux.treeview.Revision
 ---@param deadline_ms                   ?integer
 ---@return yoz.ux.treeview.Ticket
 function State:lock_selection(revision, deadline_ms) end
@@ -261,16 +261,16 @@ function State:attach() end
 
 ---@class yoz.ux.treeview.Provider
 local Provider = {}
----@param base                          ux.treeview.Revision
+---@param base                          yoz.ux.treeview.Revision
 ---@return yoz.ux.treeview.Upload
 function Provider:begin_import(base) end
 ---@return string
 function Provider:id() end
----@param revision                      ux.treeview.Revision
----@param records                       ux.treeview.Records
+---@param revision                      yoz.ux.treeview.Revision
+---@param records                       yoz.ux.treeview.Records
 ---@return yoz.ux.treeview.Ticket
 function Provider:import(revision, records) end
----@param batch                         ux.treeview.IBatch
+---@param batch                         yoz.ux.treeview.IBatch
 ---@return yoz.ux.treeview.Ticket
 function Provider:batch(batch) end
 ---@return yoz.ux.treeview.Ticket
@@ -282,7 +282,7 @@ local Query = {}
 function Query:id() end
 ---@return table
 function Query:info() end
----@param input                         ux.treeview.IQueryInput
+---@param input                         yoz.ux.treeview.IQueryInput
 ---@return yoz.ux.treeview.Ticket
 function Query:start(input) end
 ---@return yoz.ux.treeview.Ticket
@@ -298,12 +298,12 @@ function View:detach() end
 function View:snapshot() end
 ---@param previous                      ?yoz.ux.treeview.Frame
 ---@return yoz.ux.treeview.Frame|nil
----@return ux.treeview.IError|nil
+---@return yoz.ux.treeview.IError|nil
 function View:poll_frame(previous) end
 ---@param base                          ?yoz.ux.treeview.Frame
 ---@param target                        yoz.ux.treeview.Frame
----@param context                       ?ux.treeview.IRenderContext
----@param old_context                   ?ux.treeview.IRenderContext
+---@param context                       ?yoz.ux.treeview.IRenderContext
+---@param old_context                   ?yoz.ux.treeview.IRenderContext
 ---@param reset                         boolean
 ---@return yoz.ux.treeview.Ticket
 function View:plan(base, target, context, old_context, reset) end
@@ -324,8 +324,8 @@ function RenderPlan:text(first, last, byte_limit) end
 
 ---@class yoz.ux.treeview.Upload
 local Upload = {}
----@param records                       ux.treeview.Records
----@return ux.treeview.IReply
+---@param records                       yoz.ux.treeview.Records
+---@return yoz.ux.treeview.IReply
 function Upload:append(records) end
 ---@return yoz.ux.treeview.Ticket
 function Upload:commit() end

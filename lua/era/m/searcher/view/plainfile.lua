@@ -148,7 +148,7 @@ function M:calc_preview_data(context)
     local lwidths = yoz.string.calc_linewidths(preview_text) ---@type integer[]
     lines = yoz.string.parse_lines(preview_text, lwidths) ---@type string[]
     highlights = {} ---@type era.m.searcher.IPlainfileViewHighlight[]
-    local matches = preview_result.matches ---@type dot.t.IMatchPoint[]
+    local matches = preview_result.matches ---@type yoz.t.IMatchPoint[]
 
     local lnum0 = 1 ---@type integer
     local k = 1 ---@type integer

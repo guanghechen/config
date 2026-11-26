@@ -5,7 +5,7 @@ local M = {}
 
 ---@param data                          yoz.ux.filetree.Data
 ---@param state                         yoz.ux.treeview.State
----@param workspace                     ux.filetree.Path|yoz.ux.filetree.Resource
+---@param workspace                     yoz.ux.filetree.Path|yoz.ux.filetree.Resource
 ---@return yoz.ux.explorer.State
 function M.new(data, state, workspace) end
 
@@ -14,7 +14,7 @@ local State = {}
 
 ---@return string|nil
 function State:workspace() end
----@return ux.filetree.Path
+---@return yoz.ux.filetree.Path
 function State:workspace_path() end
 ---@return string|nil
 function State:previous() end
@@ -58,12 +58,12 @@ function State:navigate(node, reveal) end
 ---Resolve the current root's parent at this request's position in the owner queue.
 ---@return yoz.ux.treeview.Ticket
 function State:navigate_parent() end
----@param path                          ux.filetree.Path
+---@param path                          yoz.ux.filetree.Path
 ---@return yoz.ux.treeview.Ticket
 function State:reveal_path(path) end
----@param plan                          ux.filetree.IOperationPlan
+---@param plan                          yoz.ux.filetree.IOperationPlan
 ---@return yoz.ux.filetree.Job
 function State:start_operation(plan) end
----@param plan                          ux.filetree.ICreatePlan
+---@param plan                          yoz.ux.filetree.ICreatePlan
 ---@return yoz.ux.filetree.Job
 function State:start_create(plan) end

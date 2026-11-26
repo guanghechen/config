@@ -22,7 +22,7 @@ local function report(message)
   stl.reporter.error({ from = __module_name__, message = tostring(message) })
 end
 
----@return ux.treeview.IDisplay
+---@return yoz.ux.treeview.IDisplay
 local function display()
   return {
     pattern = search_pattern:snapshot(),
@@ -132,7 +132,7 @@ local function show_outcome(target, observed_root, position)
   end
 end
 
----@param plan                          ux.filetree.IOperationPlan|ux.filetree.ICreatePlan
+---@param plan                          ux.filetree.IOperationPlan|yoz.ux.filetree.ICreatePlan
 ---@param target                        ?string
 ---@param observed_root                 yoz.ux.filetree.Resource
 ---@param position                      {row: integer, sequence: integer}

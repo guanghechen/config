@@ -10,7 +10,7 @@ local async = require("ux.treeview.async")
 local Query = {}
 Query.__index = Query
 
----@param input                         ux.treeview.IQueryInput
+---@param input                         yoz.ux.treeview.IQueryInput
 ---@return stl.c.Future
 function Query:start(input)
   return async.run(self._native:start(input))
@@ -45,14 +45,14 @@ function M.new(data, native)
   return setmetatable({ _data = data, _native = native }, M)
 end
 
----@param records                       ux.treeview.Records
+---@param records                       yoz.ux.treeview.Records
 ---@param base_revision                 ?string
 ---@return stl.c.Future
 function M:import(records, base_revision)
   return async.run(self._native:import(base_revision or self._data:source():revision(), records))
 end
 
----@param operations                    ux.treeview.IOperation[]
+---@param operations                    yoz.ux.treeview.IOperation[]
 ---@param base_revision                 ?string
 ---@return stl.c.Future
 function M:batch(operations, base_revision)

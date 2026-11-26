@@ -32,21 +32,11 @@
 ---@field public end_lnum               ?integer
 ---@field public end_col                ?integer
 
----@class dot.t.IMatchLocation
----@field public offset                 integer
----@field public lnum                   integer
----@field public col                    integer
----@field public line                   string
-
----@class dot.t.IMatchPoint
----@field public l                      integer
----@field public r                      integer
-
 ---@class dot.t.IScoredMatch
 ---@field public order                  integer
 ---@field public uuid                   string
 ---@field public score                  integer
----@field public matches                dot.t.IMatchPoint[]
+---@field public matches                yoz.t.IMatchPoint[]
 
 ---@class dot.t.IWinDimension
 ---@field public width                  integer

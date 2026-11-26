@@ -56,17 +56,17 @@ function M.show_info(path)
 end
 
 ---@param data                          ux.filetree.Data
----@param plan                          ux.filetree.IOperationPlan|ux.filetree.ICreatePlan
+---@param plan                          ux.filetree.IOperationPlan|yoz.ux.filetree.ICreatePlan
 ---@param overwrite                     ?fun(confirmation: table): stl.c.Future
 ---@return stl.c.Future
 function M.run(data, plan, overwrite)
   local future, resolve = Future.new_with_resolver()
   -- Only IOperationPlan carries kind.
   local job = plan.kind and data:start_operation(plan --[[@as ux.filetree.IOperationPlan]])
-    or data:start_create(plan --[[@as ux.filetree.ICreatePlan]])
+    or data:start_create(plan --[[@as yoz.ux.filetree.ICreatePlan]])
   local work = { job = job, data = data, results = {}, operation = plan.kind or "create", report = report }
   active[job] = work
-  ---@param status                      ux.filetree.IJobStatus
+  ---@param status                      yoz.ux.filetree.IJobStatus
   ---@return nil
   local function update(status)
     if not active[job] then

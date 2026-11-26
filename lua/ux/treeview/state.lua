@@ -29,19 +29,19 @@ function M:snapshot()
   return self._native:snapshot()
 end
 
----@return ux.treeview.IStateStatus
+---@return yoz.ux.treeview.IStateStatus
 function M:status()
   return self._native:status()
 end
 
----@return ux.treeview.IDisplay
----@return ux.treeview.Revision
+---@return yoz.ux.treeview.IDisplay
+---@return yoz.ux.treeview.Revision
 function M:display()
   return self._native:display()
 end
 
----@param command                       ux.treeview.ICommand
----@param context                       ?ux.treeview.IContext
+---@param command                       yoz.ux.treeview.ICommand
+---@param context                       ?yoz.ux.treeview.IContext
 ---@return stl.c.Future
 function M:dispatch(command, context)
   local kind = command.kind
@@ -69,13 +69,13 @@ function M:navigation_sequence()
   return self._navigation_sequence
 end
 
----@param root                          ux.treeview.IRoot
+---@param root                          yoz.ux.treeview.IRoot
 ---@return stl.c.Future
 function M:set_root(root)
   return self:dispatch({ kind = "set_root", root = root }, { expected_state = self:status().revisions.state })
 end
 
----@param display                       ux.treeview.IDisplay
+---@param display                       yoz.ux.treeview.IDisplay
 ---@return stl.c.Future
 function M:set_display(display)
   return self:dispatch({ kind = "set_display", display = display }, { expected_state = self:status().revisions.state })
@@ -122,7 +122,7 @@ function M:clear_selection()
 end
 
 ---@param deadline_ms                   ?integer
----@param selection_revision            ?ux.treeview.Revision
+---@param selection_revision            ?yoz.ux.treeview.Revision
 ---@return stl.c.Future
 function M:lock_selection(deadline_ms, selection_revision)
   return async.run(self._native:lock_selection(selection_revision, deadline_ms)):map(function(result)

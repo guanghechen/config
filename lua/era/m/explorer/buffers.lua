@@ -214,7 +214,7 @@ function M.prepare(job, confirmation)
   end)
 end
 
----@param item                          ux.filetree.IItemResult
+---@param item                          yoz.ux.filetree.IItemResult
 ---@param report                        fun(message: string): nil
 ---@return nil
 local function sync_editor(item, report)
@@ -288,7 +288,7 @@ local function sync_editor(item, report)
 end
 
 ---@param session                       {operation: string, report: fun(error: any): nil}
----@param item                          ux.filetree.IItemResult
+---@param item                          yoz.ux.filetree.IItemResult
 ---@return era.m.explorer.IEditorSyncError|nil
 function M.sync(session, item)
   if item.status ~= "success" or session.operation ~= "move" then

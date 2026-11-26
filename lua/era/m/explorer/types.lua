@@ -12,13 +12,13 @@ local __module_name__ = "era.m.explorer.types" ---@type string
 
 ---@alias era.m.explorer.JobKind "create"|"copy"|"move"|"paste"|"delete"|"rename"|"copy_to_path"|"move_to_path"|"copy_to_directory"|"move_to_directory"
 ---@alias era.m.explorer.OperationKind "create"|"copy"|"move"|"delete"|"trash"
----@alias era.m.explorer.OnJobComplete fun(status: ux.filetree.IJobStatus, results: era.m.explorer.IItemResult[]): nil
+---@alias era.m.explorer.OnJobComplete fun(status: yoz.ux.filetree.IJobStatus, results: era.m.explorer.IItemResult[]): nil
 
 ---@class era.m.explorer.IEditorSyncError
 ---@field message                       string First diagnostic, at most 4 KiB; additional failures are counted.
 ---@field failures                      integer
 
----@class era.m.explorer.IItemResult: ux.filetree.IItemResult
+---@class era.m.explorer.IItemResult: yoz.ux.filetree.IItemResult
 ---@field editor_error                  ?era.m.explorer.IEditorSyncError
 
 ---@class era.m.explorer.IJobRequestBase
@@ -33,7 +33,7 @@ local __module_name__ = "era.m.explorer.types" ---@type string
 ---@class (exact) era.m.explorer.ICreateRequest: era.m.explorer.IJobRequestBase
 ---@field kind                          "create"
 ---@field target                        ?yoz.ux.filetree.Resource
----@field path                          ?ux.filetree.Path
+---@field path                          ?yoz.ux.filetree.Path
 ---@field directory                     ?boolean
 
 ---@class (exact) era.m.explorer.IRenameRequest: era.m.explorer.IJobRequestBase
@@ -42,13 +42,13 @@ local __module_name__ = "era.m.explorer.types" ---@type string
 
 ---@class (exact) era.m.explorer.IPathRequest: era.m.explorer.IJobRequestBase
 ---@field kind                          "copy_to_path"|"move_to_path"
----@field path                          ?ux.filetree.Path Prompt when omitted.
----@field default_path                  ?ux.filetree.Path
+---@field path                          ?yoz.ux.filetree.Path Prompt when omitted.
+---@field default_path                  ?yoz.ux.filetree.Path
 ---@field cursor                        ?era.m.explorer.ICursorInput
 
 ---@class (exact) era.m.explorer.IDirectoryRequest: era.m.explorer.IJobRequestBase
 ---@field kind                          "copy_to_directory"|"move_to_directory"
----@field path                          ?ux.filetree.Path Prompt when omitted.
+---@field path                          ?yoz.ux.filetree.Path Prompt when omitted.
 
 ---@class (exact) era.m.explorer.IDeleteRequest: era.m.explorer.IJobRequestBase
 ---@field kind                          "delete"
@@ -71,7 +71,7 @@ local __module_name__ = "era.m.explorer.types" ---@type string
 
 ---@class era.m.explorer.widget.IProps
 ---@field name                          string
----@field root                          ?ux.filetree.Path
+---@field root                          ?yoz.ux.filetree.Path
 ---@field data                          ?ux.filetree.Data Share resources with an independent state.
 ---@field session                       ?era.m.explorer.Session Share complete interaction state and jobs.
 ---@field o_width                       ?stl.c.Observable

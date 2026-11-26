@@ -31,7 +31,7 @@ local decorations = require("ux.treeview.decorations")
 ---@field _group                        ?integer
 ---@field _frame                        ?yoz.ux.treeview.Frame
 ---@field _latest                       ?yoz.ux.treeview.Frame
----@field _header                       ?ux.treeview.IFrameHeader
+---@field _header                       ?yoz.ux.treeview.IFrameHeader
 ---@field _publication                  ?table
 ---@field _decorations                  ?table
 ---@field _guide_path                   ?table
