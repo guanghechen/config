@@ -109,27 +109,47 @@ function M.bindkeys(keymaps, keymap_override)
 end
 
 ---Leaves Insert mode in the current window, which just regained the focus and was not edited, without the step back
----to the left that <Esc> takes: the cursor stays where it was unless the caller moved it or changed the buffer.
+---to the left that <Esc> takes: the cursor stays where it is when Insert mode ends, also after the caller moves it.
 ---@return nil
 function M.stop_insert_in_place()
-  local winnr = vim.api.nvim_get_current_win() ---@type integer
-  local bufnr = vim.api.nvim_win_get_buf(winnr) ---@type integer
-  local cursor = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
-  local autocmd = vim.api.nvim_create_autocmd("InsertLeave", {
+  -- Under i_CTRL-O Insert mode is already left, without the step back; stopinsert only cancels the return to it.
+  if vim.api.nvim_get_mode().mode:sub(1, 1) == "n" then
+    vim.cmd("stopinsert")
+    return
+  end
+  local winnr, bufnr, cursor ---@type integer, integer, integer[]|nil
+  -- InsertLeavePre comes before the step back, InsertLeave after it.
+  local before = vim.api.nvim_create_autocmd("InsertLeavePre", {
     once = true,
     callback = function()
-      if not vim.api.nvim_win_is_valid(winnr) or vim.api.nvim_win_get_buf(winnr) ~= bufnr then
+      winnr = vim.api.nvim_get_current_win()
+      bufnr = vim.api.nvim_win_get_buf(winnr)
+      cursor = vim.api.nvim_win_get_cursor(winnr)
+    end,
+  })
+  local after = vim.api.nvim_create_autocmd("InsertLeave", {
+    once = true,
+    callback = function()
+      if cursor == nil or not vim.api.nvim_win_is_valid(winnr) or vim.api.nvim_win_get_buf(winnr) ~= bufnr then
         return
       end
       local current = vim.api.nvim_win_get_cursor(winnr) ---@type integer[]
-      if current[1] == cursor[1] and current[2] == cursor[2] - 1 then
+      if current[1] ~= cursor[1] or current[2] >= cursor[2] then
+        return
+      end
+      -- The step back is one character, which may take several bytes and carry composing characters.
+      local line = vim.api.nvim_buf_get_lines(bufnr, cursor[1] - 1, cursor[1], false)[1] or "" ---@type string
+      -- Vimscript takes a line with NUL bytes as a Blob; NL, as the buffer stores NUL, keeps the byte offsets.
+      line = line:gsub("%z", "\n")
+      if vim.fn.charidx(line, current[2]) == vim.fn.charidx(line, cursor[2]) - 1 then
         vim.api.nvim_win_set_cursor(winnr, cursor)
       end
     end,
   })
-  -- Insert mode ends before scheduled callbacks run; drop the handler if it did not fire.
+  -- Insert mode ends before scheduled callbacks run; drop the handlers if they did not fire.
   vim.schedule(function()
-    pcall(vim.api.nvim_del_autocmd, autocmd)
+    pcall(vim.api.nvim_del_autocmd, before)
+    pcall(vim.api.nvim_del_autocmd, after)
   end)
   vim.cmd("stopinsert")
 end

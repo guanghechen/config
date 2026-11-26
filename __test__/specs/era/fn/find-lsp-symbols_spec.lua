@@ -1,6 +1,10 @@
 local t = require("__test__.support.harness").new()
 
-t:test("symbol preview clears its range when the filter or source removes the target", function()
+---Opens a UI child whose tab source is a Lua file with the single symbol `sample`, named at {1, 15}, and loads the
+---symbol picker there as the `find_symbols` global; the child also keeps `composer`, `controls`, `current_source` and
+---the reported `errors` as globals.
+---@return __test__.support.UI
+local function open()
   local filepath = vim.fs.joinpath(t:tempdir(), "sample.lua")
   vim.fn.writefile({ "local function sample()", "  return true", "end" }, filepath)
   local ui = require("__test__.support.ui").open(t, { width = 160, height = 50, runtime = "ark" })
@@ -39,11 +43,18 @@ t:test("symbol preview clears its range when the filter or source removes the ta
       return composer
     end
     find_symbols = assert(loadfile(vim.api.nvim_get_runtime_file("lua/era/fn/find-lsp-symbols.lua", false)[1]))()
-    find_symbols()
-    preview = composer.preview
   ]],
     filepath
   )
+  return ui
+end
+
+t:test("symbol preview clears its range when the filter or source removes the target", function()
+  local ui = open()
+  ui:lua([[
+    find_symbols()
+    preview = composer.preview
+  ]])
 
   ---@param title                       ?string
   ---@param has_range                   boolean
@@ -82,6 +93,48 @@ t:test("symbol preview clears its range when the filter or source removes the ta
   local missing = wait_preview("No Source File", false)
   t.assert_eq(0, missing.marks, "missing sources clear the previous range")
   t.assert_true(missing.winhighlight:find("CursorLine:m_pk_preview_current", 1, true) ~= nil)
+end)
+
+t:test("confirming a symbol puts the cursor on its name from Insert or Normal mode", function()
+  local ui = open()
+
+  ---Opens the picker from Normal mode with the source cursor at `cursor`, types `keys` once the symbol is previewed
+  ---and returns the source cursor after the picker closed.
+  ---@param cursor                      integer[]
+  ---@param keys                        string
+  ---@return integer[]
+  local function confirm(cursor, keys)
+    ui:lua(
+      [[
+      vim.api.nvim_win_set_buf(0, current_source)
+      vim.api.nvim_win_set_cursor(0, ...)
+      find_symbols()
+    ]],
+      cursor
+    )
+    ui:wait_lua(
+      [[
+      local result = composer:isfocused() and composer.preview._last_result
+      return result and result.has_range
+    ]],
+      5000,
+      "symbol previewed"
+    )
+    ui:rpc("nvim_input", keys)
+    return ui:wait_lua(
+      [[
+      return vim.api.nvim_get_mode().mode == "n" and not composer:isvisible() and vim.api.nvim_win_get_cursor(0)
+    ]],
+      5000,
+      "picker closed in Normal mode"
+    )
+  end
+
+  -- From the second character of the name, a cursor left in place would stay one character right of the symbol.
+  t.assert_same({ 1, 15 }, confirm({ 1, 16 }, "a<CR>"), "Insert mode in the finder")
+  t.assert_same({ 1, 15 }, confirm({ 3, 0 }, "<CR>"), "Normal mode in the finder")
+  local errors = ui:lua([[return errors]])
+  t.assert_eq(0, #errors, vim.inspect(errors))
 end)
 
 t:run()

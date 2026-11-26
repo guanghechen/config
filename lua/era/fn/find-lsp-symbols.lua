@@ -677,7 +677,7 @@ local function goto_symbol(nodeuuid)
   vim.api.nvim_win_set_buf(target_winid, target_bufnr)
   vim.api.nvim_set_current_win(target_winid)
   vim.api.nvim_win_set_cursor(target_winid, { lnum, col })
-  vim.cmd("normal! zv zz")
+  vim.cmd("normal! zvzz")
 end
 
 picker = era.m.picker.TreeComposer.new({

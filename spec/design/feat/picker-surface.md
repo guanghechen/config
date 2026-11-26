@@ -104,7 +104,8 @@ Finder 与 BasicComposer 保持 feature-owned，不提取共同基类：统一 F
 - Picker 是 single-line 输入；多行变更会归一化为空格分隔的单行内容。
 - Searcher 保留 multiline 内容，并拥有 custom prompt sign、rich title accent、replacer pane 与 replace history。
 - Picker 与 Searcher 关闭时回到打开前的模式：从 Normal 模式打开、关闭时仍在 Insert 的（如 finder 输入后，或 Insert
-  随焦点带入 result 后关闭），在返回的窗口原地退出 Insert，光标不左移；从 Insert 模式打开的保持 Insert。
+  随焦点带入 result 后关闭），在返回的窗口原地退出 Insert，光标不左移，确认后跳转的停在目标位置；从 Insert 模式
+  打开的保持 Insert。
 - Result 与 preview 的 `A`、`a`、`I`、`i`（Searcher result 另有 `o`、`O`）聚焦 finder 编辑 query。在 Insert 模式下按时，
   `a`、`i` 保留 finder 光标，其余按对应的 Normal 命令定位，按键不输入 query。
 
