@@ -79,7 +79,7 @@ end
 ---@field public context                era.m.nvimbar.INvimbarContext
 ---@field public task                   ?era.m.nvimbar.queue.ITask
 
----@class era.m.nvimbar.Nvimbar
+---@class era.m.nvimbar.Nvimbar : dot.win.IWinlineBar
 ---@field public fullname               string
 ---@field protected _value              string
 ---@field protected _drawn_snapshots    ?era.m.nvimbar.ISnapshot[]

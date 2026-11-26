@@ -4,9 +4,6 @@ vim.api.nvim_create_autocmd("BufDelete", {
     local bufnr = event.buf ---@type integer
     dot.tab.on_buf_delete(bufnr)
     dot.buf.on_close(bufnr)
-    if package.loaded["era.m.term.state"] ~= nil then
-      era.m.term.event.on_buf_deleted(bufnr)
-    end
   end,
 })
 
@@ -300,11 +297,6 @@ vim.api.nvim_create_autocmd("LspDetach", {
   group = stl.nvim.fn.augroup("bootstrap_on_LspDetach"),
   callback = function(args)
     local client_id = args.data and args.data.client_id or nil
-    local client = client_id and vim.lsp.get_client_by_id(client_id) or nil
-    local bufnr = args.buf
-    if client ~= nil then
-      era.m.lsp.event.on_detach(client, bufnr)
-    end
 
     -- Clear symbol ready status only if client has no more attached buffers
     if client_id then

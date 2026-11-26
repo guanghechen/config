@@ -88,7 +88,7 @@ local function resolve_nvimbar(winnr, name, status_component, validate)
   end
   local winline = meta.winline ---@type dot.win.IWinline|nil
   if winline and not winline.nvimbar:isdisposed() then
-    return winline.nvimbar
+    return winline.nvimbar --[[@as era.m.nvimbar.Nvimbar]]
   end
 
   local c = era.m.nvimbar.component

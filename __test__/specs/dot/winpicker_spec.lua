@@ -20,7 +20,7 @@ bootstrap.with_runtime(t, {
   },
 })
 
-local Winpicker = assert(loadfile("lua/era/m/winpicker.lua"))()
+local Winpicker = assert(loadfile("lua/dot/winpicker.lua"))()
 
 ---@return integer[]
 local function hint_bufnrs()

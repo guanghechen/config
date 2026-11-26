@@ -309,6 +309,23 @@ t:test("keymaps: client-specific mappings win and detach restores fallback", fun
   t.assert_nil(map_desc(bufnr, "n", "gK"), "last detach signature help")
 end)
 
+t:test("keymaps: the LspDetach event takes back what attaching the client set up", function()
+  local bufnr = new_buffer() ---@type integer
+  local vtsls = add_client(bufnr, "vtsls")
+  Event.on_attach(vtsls, bufnr)
+  Event.bindkeys(vtsls, bufnr, {
+    { modes = { "n" }, key = "gR", callback = function() end, desc = "lsp: find all file references" },
+  })
+  t.assert_eq("lsp: find all file references", map_desc(bufnr, "n", "gR"), "client mapping")
+
+  -- Neovim fires the event while the client is still attached.
+  vim.api.nvim_exec_autocmds("LspDetach", { buffer = bufnr, data = { client_id = vtsls.id } })
+  vtsls.attached_buffers[bufnr] = nil
+
+  t.assert_nil(map_desc(bufnr, "n", "gR"), "client mapping")
+  t.assert_nil(map_desc(bufnr, "n", "K"), "hover")
+end)
+
 t:test("keymaps: generic and client mappings do not wait for Neovim's default gr* mappings", function()
   t.assert_true(vim.fn.maparg("grr", "n") ~= "", "default grr mapping")
   local bufnr = new_buffer() ---@type integer

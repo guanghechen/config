@@ -3,6 +3,7 @@ local __module_name__ = "era.m.lsp.event" ---@type string
 
 local Methods = vim.lsp.protocol.Methods
 
+local augroup_detach = stl.nvim.fn.augroup("era.m.lsp.event.detach") ---@type integer
 local augroup_foldexpr = stl.nvim.fn.augroup("era.m.lsp.event.foldexpr") ---@type integer
 local augroup_inlayhint = stl.nvim.fn.augroup("era.m.lsp.event.inlayhint") ---@type integer
 local augroup_keymaps = stl.nvim.fn.augroup("era.m.lsp.event.keymaps") ---@type integer
@@ -548,6 +549,16 @@ function M.dressing()
     callback = function()
       if next(inlay_hints_paused) ~= nil or is_typing(vim.api.nvim_get_mode().mode) then
         queue_inlay_hints_reconcile()
+      end
+    end,
+  })
+  -- Server configs attach through on_attach; LSP config has no detach callback, so the event takes it back.
+  vim.api.nvim_create_autocmd("LspDetach", {
+    group = augroup_detach,
+    callback = function(args)
+      local client = vim.lsp.get_client_by_id(args.data.client_id) ---@type vim.lsp.Client|nil
+      if client ~= nil then
+        M.on_detach(client, args.buf)
       end
     end,
   })

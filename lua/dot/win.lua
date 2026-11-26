@@ -5,13 +5,19 @@ local __module_name__ = "dot.win" ---@type string
 ---@field public bufnr                  ?integer
 ---@field public filepath               ?string
 
+---A bar that the winline of a window shows, which the window refreshes and disposes.
+---@class dot.win.IWinlineBar
+---@field public dispose                fun(): nil
+---@field public isdisposed             fun(): boolean
+---@field public refresh                fun(): any
+
 ---@class dot.win.IWinline
 ---@field public bufnr                  integer
 ---@field public lsp_symbols            ?dot.t.ILspSymbol[]
----@field public nvimbar                era.m.nvimbar.Nvimbar
----@field public fork                   ?fun(winnr: integer): era.m.nvimbar.Nvimbar|nil
+---@field public nvimbar                dot.win.IWinlineBar
+---@field public fork                   ?fun(winnr: integer): dot.win.IWinlineBar|nil
 ---@field public fork_source_winnr      integer|nil
----@field public forks                  ?table<integer, era.m.nvimbar.Nvimbar>
+---@field public forks                  ?table<integer, dot.win.IWinlineBar>
 
 ---@class dot.win.IMeta
 ---@field public history                ?stl.c.History
@@ -186,13 +192,13 @@ end
 ---@param winnr_candidate               ?integer
 ---@return integer|nil
 function M.pick_focusable(winnr_candidate)
-  return era.fn.pick_win(M.is_focusable, winnr_candidate, false)
+  return dot.winpicker.pick(M.is_focusable, winnr_candidate, false)
 end
 
 ---@param winnr_candidate               ?integer
 ---@return integer|nil
 function M.pick_projectable(winnr_candidate)
-  return era.fn.pick_win(M.is_projectable, winnr_candidate, false)
+  return dot.winpicker.pick(M.is_projectable, winnr_candidate, false)
 end
 
 ---@param winnr_candidate               ?integer
@@ -201,13 +207,13 @@ function M.pick_sourcefile(winnr_candidate)
   if winnr_candidate ~= nil and stl.nvim.win.is_valid(winnr_candidate) and M.is_sourcefile(winnr_candidate) then
     return winnr_candidate
   end
-  return era.fn.pick_win(M.is_sourcefile, winnr_candidate, true)
+  return dot.winpicker.pick(M.is_sourcefile, winnr_candidate, true)
 end
 
 ---@param winnr_candidate               ?integer
 ---@return integer|nil
 function M.pick_swappable(winnr_candidate)
-  return era.fn.pick_win(M.is_swappable, winnr_candidate, false)
+  return dot.winpicker.pick(M.is_swappable, winnr_candidate, false)
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -379,7 +385,7 @@ function M.open_filepaths(winnr_source, filepaths, lnum, col)
     and M.is_sourcefile(winnr_source)
   )
       and winnr_source
-    or era.fn.pick_win(M.is_sourcefile, winnr_source, true)
+    or dot.winpicker.pick(M.is_sourcefile, winnr_source, true)
 
   if winnr == nil then
     return

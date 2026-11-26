@@ -130,6 +130,7 @@ local __mods = {
   uri = "dot.uri",
   var = "dot.var",
   win = "dot.win",
+  winpicker = "dot.winpicker",
 }
 
 ---@class dot
@@ -147,6 +148,7 @@ local __mods = {
 ---@field public tab                    dot.tab
 ---@field public var                    dot.var
 ---@field public win                    dot.win
+---@field public winpicker              dot.winpicker
 ---
 ---@field public get_default_storage    fun(): dot.context.storage
 ---@field public setup_context          fun(storage: dot.context.storage|nil): nil

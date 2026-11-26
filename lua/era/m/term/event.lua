@@ -3,15 +3,6 @@ local S = era.m.term
 ---@class era.m.term.event
 local M = {}
 
----@param bufnr                         integer|nil
----@return nil
-function M.on_buf_deleted(bufnr)
-  local _, termmeta = S.state.indexof_by_bufnr(bufnr)
-  if termmeta ~= nil then
-    M.on_closed(termmeta)
-  end
-end
-
 ---@param termmeta                      era.m.term.IMeta
 ---@return nil
 function M.on_closed(termmeta)

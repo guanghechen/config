@@ -18,7 +18,6 @@ local __fn__mods = {
   mock_miniicons = "era.fn.mock-miniicons",
   paste_image = "era.fn.paste-image",
   paste_image_as_base64 = "era.fn.paste-image-as-base64",
-  pick_win = "era.fn.pick-win",
   refresh_all = "era.fn.refresh-all",
   resume_last_widget = "era.fn.resume-last-widget",
   run_code = "era.fn.run-code",
@@ -47,7 +46,6 @@ local __fn__mods = {
 ---@field public mock_miniicons         fun(): nil
 ---@field public paste_image            fun(): nil
 ---@field public paste_image_as_base64  fun(): string|nil
----@field public pick_win               era.fn.pick_win
 ---@field public refresh_all            fun(): nil
 ---@field public resume_last_widget     fun(): nil
 ---@field public run_code               fun(force: boolean): nil
@@ -96,7 +94,6 @@ local __m__mods = {
   select = "era.m.select",
   term = "era.m.term",
   toggle = "era.m.toggle",
-  winpicker = "era.m.winpicker",
 }
 
 ---@class era.m
@@ -124,7 +121,6 @@ local __m__mods = {
 ---@field public select                 era.m.select
 ---@field public term                   era.m.term
 ---@field public toggle                 era.m.toggle
----@field public winpicker              era.m.winpicker
 local m = setmetatable({
   __mods = __m__mods,
 }, {

@@ -1,9 +1,12 @@
+---@diagnostic disable-next-line: unused-local
+local __module_name__ = "dot.winpicker" ---@type string
+
 local winhighlight = table.concat({
   "FloatBorder:FloatBorder",
   "Normal:NormalFloat",
 }, ",")
 
----@class era.m.winpicker
+---@class dot.winpicker
 ---@field public char                   string
 ---@field public hint                   string[]
 ---@field public bufnr_hint             integer|nil
@@ -12,10 +15,10 @@ local winhighlight = table.concat({
 local M = {}
 M.__index = M
 
-M.renderers = {} ---@type table<string, era.m.winpicker>
+M.renderers = {} ---@type table<string, dot.winpicker>
 
 ---@param char                          string
----@return era.m.winpicker
+---@return dot.winpicker
 function M.new(char)
   if M.renderers[char] ~= nil then
     return M.renderers[char]
@@ -115,6 +118,141 @@ function M:hide()
   if winnr_hint ~= nil and vim.api.nvim_win_is_valid(winnr_hint) then
     vim.api.nvim_win_close(winnr_hint, true)
   end
+end
+
+----------------------------------------------------------------------------------------------------
+
+---Labels of the windows a pick offers, in the order the tab lists them.
+local PICK_CHARS = {
+  "F",
+  "J",
+  "D",
+  "K",
+  "S",
+  "L",
+  "A",
+  ";",
+  "C",
+  "M",
+  "R",
+  "U",
+  "E",
+  "I",
+  "W",
+  "O",
+  "Q",
+  "P",
+} ---@type string[]
+
+---@return string|nil
+local function get_user_input_char()
+  local ok, c = pcall(vim.fn.getchar)
+
+  if not ok then
+    return
+  end
+
+  while type(c) ~= "number" do
+    c = vim.fn.getchar()
+  end
+
+  return vim.fn.nr2char(c)
+end
+
+---@alias dot.winpicker.Filter fun(winnr: integer): boolean
+
+---Picks a window of the current tab that `filter` accepts, besides `winnr_candidate`: the only one at once, or the one
+---whose label the user types; with none, `split_as_needed` splits a scratch window off the first non-floating one.
+---@param filter                        dot.winpicker.Filter
+---@param winnr_candidate               integer|nil
+---@param split_as_needed               boolean
+---@return integer|nil
+function M.pick(filter, winnr_candidate, split_as_needed)
+  local winnr_original = vim.api.nvim_get_current_win() ---@type integer
+  local tabnr_current = vim.api.nvim_get_current_tabpage() ---@type integer
+
+  local winnrs = vim.api.nvim_tabpage_list_wins(tabnr_current) ---@type integer[]
+  local N = 0 ---@type integer
+  for i = 1, #winnrs, 1 do
+    local winnr = winnrs[i] ---@type integer
+    if winnr ~= winnr_candidate and filter(winnr) then
+      N = N + 1 ---@type integer
+      winnrs[N] = winnr
+    end
+  end
+
+  if N < 1 then
+    if split_as_needed then
+      for _, winnr in ipairs(winnrs) do
+        if not stl.nvim.win.is_float(winnr) then
+          local bufnr = vim.api.nvim_create_buf(false, true) ---@type integer
+          vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = bufnr })
+          vim.api.nvim_set_option_value("buflisted", true, { buf = bufnr })
+          vim.api.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
+          vim.api.nvim_set_option_value("filetype", "text", { buf = bufnr })
+          vim.api.nvim_set_option_value("swapfile", false, { buf = bufnr })
+
+          vim.api.nvim_set_current_win(winnr)
+          vim.cmd("vsplit")
+          local winnr_new = vim.api.nvim_get_current_win() ---@type integer
+          vim.api.nvim_win_set_buf(winnr_new, bufnr)
+          return winnr_new
+        end
+      end
+    end
+
+    stl.reporter.warn({
+      from = __module_name__,
+      subject = "pick",
+      message = "No windows left to pick after filtering",
+    })
+    return nil
+  end
+
+  if N == 1 then
+    return winnrs[1]
+  end
+
+  local masks = {} ---@type table<integer, dot.winpicker>
+  local winnr_target = nil ---@type integer|nil
+
+  pcall(function()
+    for i = 1, N, 1 do
+      local winnr = winnrs[i] ---@type integer
+      local char = PICK_CHARS[i] ---@type string
+      local mask = M.new(char:lower()) ---@type dot.winpicker
+      masks[winnr] = mask
+    end
+
+    for winnr, mask in pairs(masks) do
+      mask:show(winnr)
+    end
+
+    vim.api.nvim__redraw({ flush = true })
+
+    local char = get_user_input_char() ---@type string|nil
+    if char ~= nil then
+      char = char:lower() ---@type string
+      for winnr, mask in pairs(masks) do
+        if char == mask.char then
+          winnr_target = winnr ---@type integer
+          break
+        end
+      end
+    end
+  end)
+
+  for _, mask in pairs(masks) do
+    mask:hide()
+  end
+  vim.api.nvim__redraw({ flush = true })
+
+  --- Refocus the original window if no window selected.
+  if winnr_target == nil then
+    vim.api.nvim_set_current_win(winnr_original)
+  end
+
+  return winnr_target
 end
 
 return M

@@ -12,7 +12,6 @@ local t = harness.new()
 ---@field tab_close_argc               integer|nil
 ---@field tab_delete_bufnr             integer|nil
 ---@field buf_close_bufnr              integer|nil
----@field term_delete_bufnr            integer|nil
 ---@field current_tabnr                integer
 ---@field equalized_tabnrs             integer[]
 ---@field status_updates               integer
@@ -34,7 +33,6 @@ local function setup()
     tab_close_argc = nil,
     tab_delete_bufnr = nil,
     buf_close_bufnr = nil,
-    term_delete_bufnr = nil,
     current_tabnr = 1,
     equalized_tabnrs = {},
     status_updates = 0,
@@ -162,17 +160,6 @@ local function setup()
       end,
     },
   })
-  t:patch_global("era", {
-    m = {
-      term = {
-        event = {
-          on_buf_deleted = function(bufnr)
-            runtime.term_delete_bufnr = bufnr
-          end,
-        },
-      },
-    },
-  })
   t:patch_global("yoz", {
     path = {
       is_exist_directory = function()
@@ -219,27 +206,13 @@ t:test("LspProgress publishes a literal percentage for the statusline to escape"
   t.assert_eq("S 45% 351 Indexing", runtime.msg_lsp, "progress text")
 end)
 
-t:test("BufDelete forwards the deleted buffer to every owner", function()
+t:test("BufDelete forwards the deleted buffer to the tab and buffer owners", function()
   local runtime = setup()
-  t:patch_table(package.loaded, "era.m.term.state", {})
 
   runtime.autocmds.bootstrap_on_BufDelete.callback({ buf = 42 })
 
   t.assert_eq(42, runtime.tab_delete_bufnr, "tab metadata")
   t.assert_eq(42, runtime.buf_close_bufnr, "buffer metadata")
-  t.assert_eq(42, runtime.term_delete_bufnr, "terminal metadata")
-end)
-
-t:test("BufDelete skips an unused terminal subsystem", function()
-  local runtime = setup()
-  t:patch_table(package.loaded, "era.m.term.state", nil)
-  t:patch_global("era", {})
-
-  runtime.autocmds.bootstrap_on_BufDelete.callback({ buf = 42 })
-
-  t.assert_eq(42, runtime.tab_delete_bufnr, "tab metadata")
-  t.assert_eq(42, runtime.buf_close_bufnr, "buffer metadata")
-  t.assert_nil(runtime.term_delete_bufnr, "terminal metadata")
 end)
 
 t:test("concurrent refreshes keep one query in flight and apply the final result", function()

@@ -83,7 +83,7 @@ end
 
 t:test("default opening uses the remembered source without invoking window selection", function()
   local fixture = setup_open()
-  t:patch_table(era.fn, "pick_win", function()
+  t:patch_table(dot.winpicker, "pick", function()
     error("remembered source should bypass the picker")
   end)
   await(fixture.action:open())
@@ -103,7 +103,7 @@ end)
 
 t:test("explicit window selection can be cancelled even when a source is remembered", function()
   local fixture = setup_open()
-  t:patch_table(era.fn, "pick_win", function()
+  t:patch_table(dot.winpicker, "pick", function()
     return nil
   end)
   await(fixture.action:open("pick"))

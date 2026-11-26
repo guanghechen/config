@@ -149,7 +149,7 @@ local function resolve_nvimbar(winnr)
       winline.lsp_symbols = symbols
     end
     era.m.lsp.symbols.request(winnr, deliver_symbols)
-    return winline.nvimbar
+    return winline.nvimbar --[[@as era.m.nvimbar.Nvimbar]]
   end
 
   return nil
