@@ -12,7 +12,7 @@ __test__/
   support/    # harness, shared primitives and domain support
   specs/      # Lua specs; paths mirror the production modules they test
   fixtures/   # shared data, Lua oracles and child-process entry scripts
-  node/       # Node tests of script/ and the benchmark CLIs
+  node/       # Node tests of script/, the benchmark CLIs and repository-wide constraints
   manual/     # manual checks against real servers or a full configuration
   bench/      # optional benchmarks; see bench/README.md
 ```

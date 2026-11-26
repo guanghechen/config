@@ -12,14 +12,14 @@ yoz -> stl -> dot -> era -> ark
 
 `ux` sits beside `dot`: it depends only on `yoz`/`stl` and is used by `era`.
 
-| Layer | Module   | Description                                                                 |
-| :---- | :------- | :-------------------------------------------------------------------------- |
-| L0    | `yoz`    | Rust-native library, independent Lua extension, no Neovim dependency        |
-| L1    | `stl`    | Standard library, may use `yoz` and `vim` globals                           |
-| L2    | `dot`    | Core framework: configuration, context, theme, commands; depends on yoz/stl |
-| L2    | `ux`     | Treeview/Filetree Lua facades and Neovim surfaces; depends on yoz/stl       |
-| L3    | `era`    | Business layer: actions, UI modules, plugin configs; depends on yoz/stl/dot |
-| L4    | `ark`    | Entry layer: bootstrap, global options/keymaps/autocmds, vendor entries     |
+| Layer | Module | Description                                                                    |
+| :---- | :----- | :----------------------------------------------------------------------------- |
+| L0    | `yoz`  | Rust-native library, independent Lua extension, no Neovim dependency           |
+| L1    | `stl`  | Standard library, may use `yoz` and `vim` globals                              |
+| L2    | `dot`  | Core framework: configuration, context, theme, commands; depends on yoz/stl    |
+| L2    | `ux`   | Treeview/Filetree Lua facades and Neovim surfaces; depends on yoz/stl          |
+| L3    | `era`  | Business layer: actions, UI modules, plugin configs; depends on yoz/stl/dot/ux |
+| L4    | `ark`  | Entry layer: bootstrap, global options/keymaps/autocmds, vendor entries        |
 
 ## Global Variables
 

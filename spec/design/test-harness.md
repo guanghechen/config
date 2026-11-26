@@ -158,7 +158,8 @@ Rust unit tests 定义在被测模块的 `#[cfg(test)] mod tests` 中，保留 p
 断言一段时间内不发生某事，或跨越 deadline、watch 合并窗口等时间阈值。
 
 Node 测试是 `__test__/node/` 下平铺的 `*.test.mjs`，按被测脚本命名（`script/benchmark/*` 与 bench CLI 加
-`benchmark-` 前缀），直接导入生产脚本。跨语言共享 fixture 路径相对于 checkout root 解析。
+`benchmark-` 前缀），直接导入生产脚本。仓库级静态约束是例外：按约束命名，直接读取 checkout，例如
+`layering.test.mjs` 检查 AGENTS.md 的层级方向。跨语言共享 fixture 路径相对于 checkout root 解析。
 
 ## 基础设施验证
 

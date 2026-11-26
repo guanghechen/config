@@ -18,6 +18,8 @@ yoz -> stl -> dot -> era -> ark
 
 - Lower layers must not depend on higher layers.
 - `ux` (Treeview/Filetree surfaces) sits beside `dot`: it may use `yoz`/`stl` only and is used by `era`.
+- Type annotations and `lua/__types__/<layer>/` declarations count as dependencies, and a layer's types are declared
+  in its own directories. `__test__/node/layering.test.mjs` checks both.
 - Global modules are initialized in `lua/ark/bootstrap.lua`: `_G.yoz`, `_G.stl`, `_G.dot`, `_G.era`.
 
 ## Base Coding Rules
